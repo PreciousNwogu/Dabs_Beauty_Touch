@@ -19,12 +19,15 @@ class Booking extends Model
         'name',
         'email',
         'phone',
+        'address',
         'service',
+        'length',
         'appointment_date',
         'appointment_time',
         'message',
         'status',
         'notes',
+        'sample_picture',
     ];
 
     /**

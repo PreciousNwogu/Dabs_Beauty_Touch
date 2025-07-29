@@ -15,17 +15,26 @@ class BookingController extends Controller
      */
     public function store(Request $request)
     {
+        // Debug: Log the incoming request
+        Log::info('Booking request received', [
+            'method' => $request->method(),
+            'url' => $request->url(),
+            'headers' => $request->headers->all(),
+            'data' => $request->all()
+        ]);
+
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
-            'email' => 'required|email|max:255',
+            'email' => 'nullable|email|max:255',
             'phone' => 'required|string|max:20',
             'service' => 'required|string|max:255',
-            'date' => 'required|date|after:today',
-            'time' => 'required|string',
+            // 'address' => 'nullable|string|max:255', // Temporarily commented out until migration is run
             'message' => 'nullable|string|max:1000',
+            'sample_picture' => 'nullable|file|image|max:2048',
         ]);
 
         if ($validator->fails()) {
+            Log::warning('Booking validation failed', ['errors' => $validator->errors()]);
             return response()->json([
                 'success' => false,
                 'errors' => $validator->errors()
@@ -33,15 +42,25 @@ class BookingController extends Controller
         }
 
         try {
-            // Create the booking
+            // Handle file upload if present
+            $samplePicturePath = null;
+            if ($request->hasFile('sample_picture')) {
+                $file = $request->file('sample_picture');
+                $filename = time() . '_' . $file->getClientOriginalName();
+                $samplePicturePath = $file->storeAs('sample_pictures', $filename, 'public');
+            }
+
+            // Create the booking with default appointment date/time
             $booking = Booking::create([
                 'name' => $request->name,
                 'email' => $request->email,
                 'phone' => $request->phone,
+                // 'address' => $request->address, // Temporarily commented out until migration is run
                 'service' => $request->service,
-                'appointment_date' => $request->date,
-                'appointment_time' => $request->time,
                 'message' => $request->message,
+                'sample_picture' => $samplePicturePath,
+                'appointment_date' => now()->addDays(1)->toDateString(), // Default to tomorrow
+                'appointment_time' => '09:00', // Default time
                 'status' => 'pending'
             ]);
 
@@ -57,7 +76,9 @@ class BookingController extends Controller
             ]);
 
         } catch (\Exception $e) {
-            Log::error('Error creating booking: ' . $e->getMessage());
+            Log::error('Error creating booking: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString()
+            ]);
 
             return response()->json([
                 'success' => false,
