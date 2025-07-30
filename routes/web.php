@@ -3,6 +3,7 @@
 use App\Http\Controllers\ApiController;
 use App\Http\Controllers\BookingController;
 use App\Http\Controllers\BookingAvailabilityController;
+use App\Http\Controllers\AppointmentController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
@@ -11,6 +12,16 @@ use Illuminate\Http\Request;
 Route::get('/', function () {
     return view('home');
 })->name('home');
+
+// Calendar booking page
+Route::get('/calendar', function () {
+    return view('calendar');
+})->name('calendar');
+
+// Admin dashboard
+Route::get('/admin', function () {
+    return view('admin.dashboard');
+})->name('admin.dashboard');
 
 // Test route to verify routing is working
 Route::get('/test', function () {
@@ -39,6 +50,18 @@ Route::post('/test-form', function (Request $request) {
 // Booking routes
 Route::post('/bookings', [BookingController::class, 'store'])->name('bookings.store');
 Route::post('/contact', [BookingController::class, 'contact'])->name('contact.store');
+
+// Appointment routes
+Route::get('/appointments/slots', [AppointmentController::class, 'getAvailableSlots'])->name('appointments.slots');
+Route::post('/appointments/book', [AppointmentController::class, 'bookAppointment'])->name('appointments.book');
+Route::get('/appointments/calendar', [AppointmentController::class, 'getCalendarData'])->name('appointments.calendar');
+Route::post('/appointments/cancel', [AppointmentController::class, 'cancelAppointment'])->name('appointments.cancel');
+Route::get('/appointments/details', [AppointmentController::class, 'getAppointmentDetails'])->name('appointments.details');
+
+// Admin appointment routes
+Route::get('/appointments/stats', [AppointmentController::class, 'getStats'])->name('appointments.stats');
+Route::get('/appointments/list', [AppointmentController::class, 'getAppointmentsList'])->name('appointments.list');
+Route::post('/appointments/update-status', [AppointmentController::class, 'updateStatus'])->name('appointments.update-status');
 
 // API routes for frontend (if needed for future AJAX calls)
 Route::prefix('api')->group(function () {
