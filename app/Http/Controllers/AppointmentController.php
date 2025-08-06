@@ -51,17 +51,26 @@ class AppointmentController extends Controller
      */
     public function bookAppointment(Request $request)
     {
+        // Log incoming request data for debugging
+        Log::info('Appointment booking request received', [
+            'all_data' => $request->all(),
+            'headers' => $request->headers->all()
+        ]);
+
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
             'email' => 'nullable|email|max:255',
             'phone' => 'required|string|max:20',
-            'service' => 'required|string|max:255',
+            'service' => 'nullable|string|max:255',
             'appointment_date' => 'required|date|after_or_equal:today',
             'appointment_time' => 'required|date_format:H:i',
             'notes' => 'nullable|string|max:1000'
         ]);
 
         if ($validator->fails()) {
+            Log::warning('Appointment booking validation failed', [
+                'errors' => $validator->errors()->toArray()
+            ]);
             return response()->json([
                 'success' => false,
                 'errors' => $validator->errors()
@@ -69,48 +78,47 @@ class AppointmentController extends Controller
         }
 
         try {
-            // Check if slot is still available
-            if (!Appointment::isSlotAvailable($request->appointment_date, $request->appointment_time)) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'This time slot is no longer available. Please select another time.'
-                ], 409);
-            }
-
-            // Create the appointment
-            $appointment = Appointment::create([
+            // Temporarily use the bookings table instead of appointments table
+            // until the appointments migration is run
+            $booking = \App\Models\Booking::create([
                 'name' => $request->name,
-                'email' => $request->email,
+                'email' => $request->email ?: 'no-email@example.com', // Provide default if email is null
                 'phone' => $request->phone,
-                'service' => $request->service,
+                'service' => $request->service ?: 'General Service', // Use service from form or default
                 'appointment_date' => $request->appointment_date,
                 'appointment_time' => $request->appointment_time,
-                'notes' => $request->notes,
-                'status' => 'confirmed'
+                'message' => $request->notes,
+                'status' => 'pending'
             ]);
 
+            // Generate a simple booking ID and confirmation code
+            $bookingId = 'BK' . str_pad($booking->id, 6, '0', STR_PAD_LEFT);
+            $confirmationCode = 'CONF' . strtoupper(substr(md5($booking->id . time()), 0, 8));
+
             Log::info('New appointment booked', [
-                'booking_id' => $appointment->booking_id,
-                'confirmation_code' => $appointment->confirmation_code
+                'booking_id' => $bookingId,
+                'confirmation_code' => $confirmationCode
             ]);
 
             return response()->json([
                 'success' => true,
                 'message' => 'Appointment booked successfully!',
                 'appointment' => [
-                    'booking_id' => $appointment->booking_id,
-                    'confirmation_code' => $appointment->confirmation_code,
-                    'appointment_date' => $appointment->appointment_date->format('l, F j, Y'),
-                    'appointment_time' => $appointment->appointment_time->format('g:i A'),
-                    'service' => $appointment->service
+                    'booking_id' => $bookingId,
+                    'confirmation_code' => $confirmationCode,
+                    'appointment_date' => date('l, F j, Y', strtotime($request->appointment_date)),
+                    'appointment_time' => date('g:i A', strtotime($request->appointment_time)),
+                    'service' => $request->service ?: 'General Service', // Show actual service booked
+                    'email_provided' => !empty($request->email)
                 ]
             ]);
 
         } catch (\Exception $e) {
             Log::error('Error booking appointment: ' . $e->getMessage());
+            Log::error('Error details: ' . $e->getTraceAsString());
             return response()->json([
                 'success' => false,
-                'message' => 'Error booking appointment. Please try again.'
+                'message' => 'Error booking appointment. Please try again. Error: ' . $e->getMessage()
             ], 500);
         }
     }
@@ -238,6 +246,44 @@ class AppointmentController extends Controller
         }
 
         try {
+            // Try to find in bookings table first (since that's what we're currently using)
+            $booking = \App\Models\Booking::find($request->id);
+            
+            if ($booking) {
+                return response()->json([
+                    'success' => true,
+                    'appointment' => [
+                        'id' => $booking->id,
+                        'booking_id' => 'BK-' . str_pad($booking->id, 6, '0', STR_PAD_LEFT),
+                        'confirmation_code' => null, // Add if you have this field
+                        'name' => $booking->name,
+                        'email' => $booking->email,
+                        'phone' => $booking->phone,
+                        'address' => $booking->address,
+                        'service' => $booking->service,
+                        'length' => $booking->length,
+                        'appointment_date' => $booking->appointment_date,
+                        'appointment_time' => $booking->appointment_time,
+                        'message' => $booking->message,
+                        'status' => $booking->status,
+                        'notes' => $booking->notes,
+                        'sample_picture' => $booking->sample_picture,
+                        'confirmed_at' => $booking->confirmed_at,
+                        'completed_at' => $booking->completed_at,
+                        'cancelled_at' => $booking->cancelled_at,
+                        'completed_by' => $booking->completed_by,
+                        'completion_notes' => $booking->completion_notes,
+                        'service_duration_minutes' => $booking->service_duration_minutes,
+                        'final_price' => $booking->final_price,
+                        'payment_status' => $booking->payment_status,
+                        'status_history' => $booking->getFormattedStatusHistory(),
+                        'created_at' => $booking->created_at,
+                        'updated_at' => $booking->updated_at
+                    ]
+                ]);
+            }
+
+            // Fallback to appointments table
             $appointment = Appointment::find($request->id);
 
             if (!$appointment) {
@@ -308,7 +354,8 @@ class AppointmentController extends Controller
     public function getAppointmentsList(Request $request)
     {
         try {
-            $query = Appointment::query();
+            // Since we're using bookings table currently, query from there
+            $query = \App\Models\Booking::query();
 
             // Apply filters
             if ($request->filled('status')) {
@@ -324,9 +371,41 @@ class AppointmentController extends Controller
             }
 
             // Order by date and time
-            $appointments = $query->orderBy('appointment_date', 'asc')
-                                 ->orderBy('appointment_time', 'asc')
-                                 ->get();
+            $bookings = $query->orderBy('appointment_date', 'asc')
+                             ->orderBy('appointment_time', 'asc')
+                             ->get();
+
+            // Transform bookings to include all necessary fields
+            $appointments = $bookings->map(function ($booking) {
+                return [
+                    'id' => $booking->id,
+                    'booking_id' => 'BK-' . str_pad($booking->id, 6, '0', STR_PAD_LEFT),
+                    'confirmation_code' => null, // Add if you have this field
+                    'name' => $booking->name,
+                    'email' => $booking->email,
+                    'phone' => $booking->phone,
+                    'address' => $booking->address,
+                    'service' => $booking->service,
+                    'length' => $booking->length,
+                    'appointment_date' => $booking->appointment_date,
+                    'appointment_time' => $booking->appointment_time,
+                    'message' => $booking->message,
+                    'status' => $booking->status,
+                    'notes' => $booking->notes,
+                    'sample_picture' => $booking->sample_picture,
+                    'confirmed_at' => $booking->confirmed_at,
+                    'completed_at' => $booking->completed_at,
+                    'cancelled_at' => $booking->cancelled_at,
+                    'completed_by' => $booking->completed_by,
+                    'completion_notes' => $booking->completion_notes,
+                    'service_duration_minutes' => $booking->service_duration_minutes,
+                    'final_price' => $booking->final_price,
+                    'payment_status' => $booking->payment_status,
+                    'status_history' => $booking->status_history ?: [],
+                    'created_at' => $booking->created_at,
+                    'updated_at' => $booking->updated_at
+                ];
+            });
 
             return response()->json([
                 'success' => true,
@@ -350,7 +429,11 @@ class AppointmentController extends Controller
         $validator = Validator::make($request->all(), [
             'appointment_id' => 'required|integer',
             'status' => 'required|in:pending,confirmed,completed,cancelled',
-            'notes' => 'nullable|string|max:1000'
+            'completed_by' => 'nullable|string|max:255',
+            'completion_notes' => 'nullable|string|max:1000',
+            'final_price' => 'nullable|numeric|min:0',
+            'service_duration_minutes' => 'nullable|integer|min:1',
+            'payment_status' => 'nullable|in:pending,deposit_paid,fully_paid'
         ]);
 
         if ($validator->fails()) {
@@ -361,7 +444,40 @@ class AppointmentController extends Controller
         }
 
         try {
+            // Try to find in appointments table first, then bookings table
             $appointment = Appointment::find($request->appointment_id);
+            if (!$appointment) {
+                // Fallback to bookings table (for backward compatibility)
+                $booking = \App\Models\Booking::find($request->appointment_id);
+                if ($booking) {
+                    // Use the enhanced updateStatus method for bookings
+                    $booking->updateStatus(
+                        $request->status,
+                        $request->completed_by,
+                        $request->completion_notes,
+                        $request->final_price,
+                        $request->service_duration_minutes
+                    );
+
+                    // Update payment status if provided
+                    if ($request->filled('payment_status')) {
+                        $booking->payment_status = $request->payment_status;
+                        $booking->save();
+                    }
+
+                    Log::info('Booking status updated', [
+                        'booking_id' => $booking->id,
+                        'old_status' => $booking->getOriginal('status'),
+                        'new_status' => $request->status,
+                        'updated_by' => $request->completed_by
+                    ]);
+
+                    return response()->json([
+                        'success' => true,
+                        'message' => 'Appointment status updated successfully'
+                    ]);
+                }
+            }
 
             if (!$appointment) {
                 return response()->json([
@@ -372,7 +488,7 @@ class AppointmentController extends Controller
 
             $appointment->update([
                 'status' => $request->status,
-                'notes' => $request->notes ?: $appointment->notes
+                'notes' => $request->completion_notes ?: $appointment->notes
             ]);
 
             Log::info('Appointment status updated', [
@@ -392,6 +508,96 @@ class AppointmentController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Error updating appointment status'
+            ], 500);
+        }
+    }
+
+    /**
+     * Search for appointments by booking ID, phone, or name
+     */
+    public function searchAppointment(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'search' => 'required|string|min:2'
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        try {
+            $searchTerm = $request->search;
+            
+            // Try to find in bookings table first (since that's what we're currently using)
+            $booking = \App\Models\Booking::where(function($query) use ($searchTerm) {
+                $query->where('id', $searchTerm)
+                      ->orWhere('phone', 'like', '%' . $searchTerm . '%')
+                      ->orWhere('name', 'like', '%' . $searchTerm . '%')
+                      ->orWhere('email', 'like', '%' . $searchTerm . '%');
+            })
+            ->where('status', '!=', 'cancelled')
+            ->where('status', '!=', 'completed')
+            ->orderBy('appointment_date', 'desc')
+            ->first();
+
+            if ($booking) {
+                return response()->json([
+                    'success' => true,
+                    'appointment' => [
+                        'id' => $booking->id,
+                        'name' => $booking->name,
+                        'email' => $booking->email,
+                        'phone' => $booking->phone,
+                        'service' => $booking->service,
+                        'appointment_date' => $booking->appointment_date->format('M j, Y'),
+                        'appointment_time' => $booking->appointment_time,
+                        'status' => $booking->status
+                    ]
+                ]);
+            }
+
+            // If not found in bookings, try appointments table
+            $appointment = Appointment::where(function($query) use ($searchTerm) {
+                $query->where('booking_id', 'like', '%' . $searchTerm . '%')
+                      ->orWhere('phone', 'like', '%' . $searchTerm . '%')
+                      ->orWhere('name', 'like', '%' . $searchTerm . '%')
+                      ->orWhere('email', 'like', '%' . $searchTerm . '%');
+            })
+            ->where('status', '!=', 'cancelled')
+            ->where('status', '!=', 'completed')
+            ->orderBy('appointment_date', 'desc')
+            ->first();
+
+            if ($appointment) {
+                return response()->json([
+                    'success' => true,
+                    'appointment' => [
+                        'id' => $appointment->id,
+                        'booking_id' => $appointment->booking_id,
+                        'name' => $appointment->name,
+                        'email' => $appointment->email,
+                        'phone' => $appointment->phone,
+                        'service' => $appointment->service,
+                        'appointment_date' => $appointment->appointment_date->format('M j, Y'),
+                        'appointment_time' => $appointment->appointment_time->format('g:i A'),
+                        'status' => $appointment->status
+                    ]
+                ]);
+            }
+
+            return response()->json([
+                'success' => false,
+                'message' => 'No pending or confirmed appointments found for this search term'
+            ], 404);
+
+        } catch (\Exception $e) {
+            Log::error('Error searching appointments: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Error searching for appointments'
             ], 500);
         }
     }

@@ -23,6 +23,11 @@ Route::get('/admin', function () {
     return view('admin.dashboard');
 })->name('admin.dashboard');
 
+// Admin service completion page
+Route::get('/admin/complete-service', function () {
+    return view('admin.complete-service');
+})->name('admin.complete-service');
+
 // Test route to verify routing is working
 Route::get('/test', function () {
     return response()->json(['message' => 'Route is working']);
@@ -62,6 +67,7 @@ Route::get('/appointments/details', [AppointmentController::class, 'getAppointme
 Route::get('/appointments/stats', [AppointmentController::class, 'getStats'])->name('appointments.stats');
 Route::get('/appointments/list', [AppointmentController::class, 'getAppointmentsList'])->name('appointments.list');
 Route::post('/appointments/update-status', [AppointmentController::class, 'updateStatus'])->name('appointments.update-status');
+Route::post('/appointments/search', [AppointmentController::class, 'searchAppointment'])->name('appointments.search');
 
 // API routes for frontend (if needed for future AJAX calls)
 Route::prefix('api')->group(function () {
