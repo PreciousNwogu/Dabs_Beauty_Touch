@@ -1,0 +1,33 @@
+services:
+  - type: web
+    name: dabs-beauty-touch
+    runtime: php
+    plan: free
+    buildCommand: "./render-build.sh"
+    startCommand: "./render-start.sh"
+    healthCheckPath: /
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: false
+      - key: APP_NAME
+        value: "Dab's Beauty Touch"
+      - key: LOG_LEVEL
+        value: error
+      - key: SESSION_DRIVER
+        value: database
+      - key: CACHE_STORE
+        value: database
+      - key: QUEUE_CONNECTION
+        value: database
+      - key: DB_CONNECTION
+        value: pgsql
+    # You'll need to add these in Render dashboard:
+    # - DATABASE_URL (will be auto-populated when you add PostgreSQL)
+    # - APP_KEY (generate with: php artisan key:generate --show)
+    
+databases:
+  - name: dabs-beauty-touch-db
+    databaseName: dabs_beauty_touch
+    plan: free

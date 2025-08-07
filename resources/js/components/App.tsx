@@ -1,11 +1,11 @@
-import HeroNew from "./HeroNew.jsx";
+import Hero from "./Hero";
 import About from "./About";
 import Services from "./Services";
 
 function App() {
     return (
         <div className="App">
-            <HeroNew />
+            <Hero />
             <About />
             <Services />
         </div>

@@ -76,6 +76,7 @@
             padding: 40px 30px;
             box-shadow: 0 8px 32px rgba(0,0,0,0.2);
             display: inline-block;
+            max-width: 90%;
         }
 
         .hero-content h1 {
@@ -96,6 +97,44 @@
             letter-spacing: 0.02em;
         }
 
+        /* Mobile Responsive Styles */
+        @media (max-width: 768px) {
+            .hero-content {
+                padding: 30px 20px;
+                max-width: 95%;
+            }
+            
+            .hero-content h1 {
+                font-size: 2.5rem;
+                margin-bottom: 1rem;
+                line-height: 1.1;
+            }
+            
+            .hero-content p {
+                font-size: 1.1rem;
+                margin-bottom: 1.5rem;
+            }
+            
+            .hero-section {
+                min-height: 80vh;
+                padding: 60px 0 40px;
+            }
+        }
+        
+        @media (max-width: 576px) {
+            .hero-content h1 {
+                font-size: 2rem;
+            }
+            
+            .hero-content p {
+                font-size: 1rem;
+            }
+            
+            .hero-content {
+                padding: 25px 15px;
+            }
+        }
+
         .btn-book {
             background-color: #ff6600;
             color: white;
@@ -114,9 +153,215 @@
             text-decoration: none;
         }
 
+        /* About Section Styles */
+        .about-section {
+            padding: 80px 0;
+            background-color: #f8f9fa;
+        }
+        
+        @media (max-width: 768px) {
+            .about-section {
+                padding: 60px 0;
+            }
+            
+            .about-section .card {
+                flex-direction: column !important;
+                margin: 0 15px;
+            }
+            
+            .about-section .col-md-7,
+            .about-section .col-md-5 {
+                width: 100% !important;
+                max-width: 100% !important;
+                flex: none !important;
+            }
+            
+            .about-section .col-md-7 {
+                padding: 2rem 1.5rem !important;
+            }
+            
+            .about-section .col-md-5 {
+                padding: 1.5rem !important;
+            }
+            
+            .about-section h2.section-title {
+                font-size: 2rem !important;
+                text-align: center;
+            }
+            
+            .about-section .lead {
+                font-size: 1.1rem !important;
+                text-align: center;
+            }
+            
+            .about-section img {
+                max-width: 280px !important;
+                margin: 0 auto;
+                display: block;
+            }
+        }
+        
+        @media (max-width: 576px) {
+            .about-section h2.section-title {
+                font-size: 1.8rem !important;
+            }
+            
+            .about-section .col-md-7 {
+                padding: 1.5rem 1rem !important;
+            }
+            
+            .about-section img {
+                max-width: 250px !important;
+            }
+        }
+
+        /* Contact Section Styles */
+        .contact-section {
+            padding: 80px 0;
+            background-color: #fff;
+        }
+        
+        @media (max-width: 768px) {
+            .contact-section {
+                padding: 60px 0;
+            }
+            
+            .contact-section .card {
+                flex-direction: column !important;
+                margin: 0 15px;
+            }
+            
+            .contact-section .col-md-6 {
+                width: 100% !important;
+                max-width: 100% !important;
+                flex: none !important;
+                border-right: none !important;
+            }
+            
+            .contact-section .col-md-6:first-child {
+                border-bottom: 1px solid #e3eafc !important;
+            }
+            
+            .contact-section .col-md-6 {
+                padding: 2rem 1.5rem !important;
+            }
+            
+            .contact-section h2.section-title {
+                font-size: 1.8rem !important;
+                text-align: center;
+            }
+            
+            .contact-section .social-links {
+                text-align: center;
+                margin-top: 1.5rem;
+            }
+            
+            .contact-section .social-links .btn {
+                margin-bottom: 0.5rem;
+                width: auto;
+                font-size: 0.9rem;
+                padding: 0.5rem 1rem;
+            }
+        }
+        
+        @media (max-width: 576px) {
+            .contact-section .col-md-6 {
+                padding: 1.5rem 1rem !important;
+            }
+            
+            .contact-section h2.section-title {
+                font-size: 1.6rem !important;
+            }
+            
+            .contact-section .social-links .btn {
+                display: block;
+                width: 100%;
+                margin-bottom: 0.5rem;
+                margin-right: 0 !important;
+            }
+        }
+
         .services-section {
             padding: 80px 0;
             background-color: #f8f9fa;
+        }
+        
+        /* Services Section Mobile Styles */
+        @media (max-width: 768px) {
+            .services-section {
+                padding: 60px 0;
+            }
+            
+            .services-section .container {
+                padding: 0 15px;
+            }
+            
+            .services-section h2 {
+                font-size: 2rem;
+                text-align: center;
+            }
+            
+            .services-section .lead {
+                font-size: 1.1rem;
+                text-align: center;
+            }
+        }
+        
+        @media (max-width: 576px) {
+            .services-section h2 {
+                font-size: 1.8rem;
+            }
+        }
+
+        /* Navigation Mobile Improvements */
+        @media (max-width: 991px) {
+            .navbar-nav .nav-link {
+                padding: 0.8rem 1rem;
+                text-align: center;
+            }
+            
+            .navbar-collapse {
+                background: rgba(255, 255, 255, 0.98);
+                margin-top: 1rem;
+                border-radius: 8px;
+                padding: 1rem;
+                box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+            }
+        }
+
+        /* General Mobile Layout Improvements */
+        @media (max-width: 768px) {
+            .container {
+                padding-left: 15px;
+                padding-right: 15px;
+            }
+            
+            .section-title {
+                font-size: 1.8rem !important;
+                text-align: center;
+                margin-bottom: 1.5rem;
+            }
+            
+            .lead {
+                font-size: 1.1rem;
+                text-align: center;
+            }
+            
+            /* Card responsive improvements */
+            .card {
+                border-radius: 16px;
+                margin: 0 10px;
+            }
+        }
+        
+        @media (max-width: 576px) {
+            .section-title {
+                font-size: 1.6rem !important;
+            }
+            
+            .card {
+                margin: 0 5px;
+            }
         }
 
         .service-card {
@@ -182,6 +427,199 @@
             color: #030f68;
             font-weight: 700;
             margin-top: 10px;
+        }
+
+        /* Service Card Mobile Improvements */
+        @media (max-width: 768px) {
+            .service-card {
+                margin-bottom: 20px;
+                padding: 24px 16px 20px 16px;
+            }
+            
+            .service-card img {
+                width: 180px;
+                height: 180px;
+            }
+            
+            .service-card h4 {
+                font-size: 1.3rem;
+            }
+            
+            .service-card p {
+                font-size: 1rem;
+                margin-bottom: 6px;
+            }
+        }
+        
+        @media (max-width: 576px) {
+            .service-card {
+                padding: 20px 14px 18px 14px;
+            }
+            
+            .service-card img {
+                width: 160px;
+                height: 160px;
+            }
+            
+            .service-card h4 {
+                font-size: 1.2rem;
+            }
+            
+            .service-card p {
+                font-size: 0.95rem;
+            }
+        }
+
+        /* Image Slider Mobile Improvements */
+        @media (max-width: 768px) {
+            .image-slider-section {
+                padding: 60px 0 !important;
+            }
+            
+            .carousel-inner .row {
+                flex-direction: column;
+            }
+            
+            .carousel-inner .col-lg-6 {
+                width: 100%;
+                max-width: 100%;
+            }
+            
+            .slide-content {
+                padding: 20px !important;
+                text-align: center;
+            }
+            
+            .slide-content h3 {
+                font-size: 1.6rem !important;
+                margin-bottom: 15px !important;
+            }
+            
+            .slide-content p {
+                font-size: 1rem !important;
+                margin-bottom: 20px !important;
+            }
+            
+            .feature-item {
+                justify-content: center;
+                margin-bottom: 10px !important;
+            }
+            
+            .carousel-item img {
+                max-height: 300px;
+                object-fit: cover;
+                border-radius: 12px;
+                margin-bottom: 20px;
+            }
+        }
+        
+        @media (max-width: 576px) {
+            .slide-content h3 {
+                font-size: 1.4rem !important;
+            }
+            
+            .slide-content {
+                padding: 15px !important;
+            }
+            
+            .carousel-item img {
+                max-height: 250px;
+            }
+        }
+
+        /* Important Information Section Mobile Styles */
+        @media (max-width: 768px) {
+            .important-info-content .row {
+                flex-direction: column-reverse;
+            }
+            
+            .important-info-content .col-lg-8,
+            .important-info-content .col-lg-4 {
+                width: 100%;
+                max-width: 100%;
+            }
+            
+            .equipment-image {
+                width: 280px !important;
+                height: 280px !important;
+                margin-bottom: 2rem;
+            }
+            
+            .contact-info-grid {
+                grid-template-columns: 1fr !important;
+                gap: 10px !important;
+            }
+            
+            .info-item h5 {
+                font-size: 1.1rem;
+                text-align: center;
+                margin-bottom: 10px !important;
+            }
+            
+            .info-item p {
+                font-size: 1rem !important;
+                text-align: center;
+            }
+            
+            .contact-item {
+                text-align: center;
+            }
+        }
+        
+        @media (max-width: 576px) {
+            .equipment-image {
+                width: 250px !important;
+                height: 250px !important;
+            }
+            
+            .info-item h5 {
+                font-size: 1rem;
+            }
+            
+            .info-item p {
+                font-size: 0.9rem !important;
+            }
+            
+            .contact-item {
+                padding: 12px !important;
+            }
+            
+            .contact-item a {
+                font-size: 1rem !important;
+            }
+        }
+
+        /* Terms and Conditions Mobile Styles */
+        @media (max-width: 768px) {
+            .terms-section .card {
+                margin-bottom: 1.5rem;
+            }
+            
+            .terms-section h4 {
+                font-size: 1.4rem;
+            }
+            
+            .terms-section .card-body {
+                padding: 1.5rem !important;
+            }
+            
+            .terms-section i {
+                font-size: 2.5rem !important;
+            }
+        }
+        
+        @media (max-width: 576px) {
+            .terms-section h4 {
+                font-size: 1.2rem;
+            }
+            
+            .terms-section .card-body {
+                padding: 1rem !important;
+            }
+            
+            .terms-section i {
+                font-size: 2rem !important;
+            }
         }
 
         .about-section {
@@ -613,11 +1051,13 @@
             cursor: not-allowed;
             opacity: 0.7;
             position: relative;
+            pointer-events: none;
         }
 
         .calendar-day.booked:hover {
             background-color: #f8d7da;
             transform: none;
+            box-shadow: none;
         }
 
         .calendar-day.booked::after {
@@ -634,21 +1074,19 @@
             background-color: #e9ecef;
             color: #6c757d;
             cursor: not-allowed;
+            pointer-events: none;
+            opacity: 0.6;
+        }
+
+        .calendar-day.past:hover {
+            background-color: #e9ecef;
+            transform: none;
+            box-shadow: none;
         }
 
         .calendar-day.other-month {
             background-color: #f8f9fa;
             color: #adb5bd;
-        }
-
-        /* Hide completely unavailable dates */
-        .calendar-day.hidden-date {
-            visibility: hidden !important;
-            opacity: 0 !important;
-            pointer-events: none !important;
-            background-color: transparent !important;
-            border-color: transparent !important;
-            min-height: 50px; /* Maintain grid structure */
         }
 
         .time-slot-btn {
@@ -1461,7 +1899,7 @@
 
 
                     <!-- Single Booking Form -->
-                    <form id="bookingForm" action="{{ route('appointments.book') }}" method="POST" autocomplete="off">
+                    <form id="bookingForm" action="{{ route('appointments.book') }}" method="POST" enctype="multipart/form-data" autocomplete="off">
                         @csrf
                         <input type="hidden" id="appointment_date" name="appointment_date">
                         <input type="hidden" id="appointment_time_hidden" name="appointment_time">
@@ -2284,6 +2722,73 @@
 
 <!-- Additional JavaScript -->
 <script>
+    // IMMEDIATE BUTTON TEST - runs as soon as script loads
+    console.log('=== BUTTON DEBUG TEST ===');
+    console.log('Script loading...');
+    
+    // Test function to check button status
+    function testButtonAndForm() {
+        console.log('Testing button and form...');
+        
+        // Test button
+        const btn = document.getElementById('bookAppointmentBtn');
+        console.log('Button found:', !!btn);
+        if (btn) {
+            console.log('Button details:', {
+                id: btn.id,
+                disabled: btn.disabled,
+                type: btn.type,
+                form: btn.form ? btn.form.id : 'no form',
+                display: window.getComputedStyle(btn).display,
+                visibility: window.getComputedStyle(btn).visibility,
+                pointerEvents: window.getComputedStyle(btn).pointerEvents
+            });
+        }
+        
+        // Test form
+        const form = document.getElementById('bookingForm');
+        console.log('Form found:', !!form);
+        if (form) {
+            console.log('Form details:', {
+                id: form.id,
+                action: form.action,
+                method: form.method,
+                elements: form.elements.length
+            });
+        }
+        
+        // Add simple click handler if both exist
+        if (btn && form) {
+            console.log('Adding simple click handler...');
+            btn.onclick = function(e) {
+                console.log('=== BUTTON CLICKED! ===');
+                e.preventDefault();
+                
+                // Try to submit form manually
+                try {
+                    console.log('Attempting manual form submission...');
+                    form.dispatchEvent(new Event('submit'));
+                    console.log('Form submit event dispatched');
+                } catch (error) {
+                    console.error('Form submission error:', error);
+                }
+                
+                return false;
+            };
+            console.log('Simple click handler added successfully');
+        }
+    }
+    
+    // Test multiple times to catch dynamic loading
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', testButtonAndForm);
+    } else {
+        testButtonAndForm();
+    }
+    
+    setTimeout(testButtonAndForm, 500);
+    setTimeout(testButtonAndForm, 2000);
+
     // Smooth scrolling for navigation links
     document.querySelectorAll('a[href^="#"]').forEach(anchor => {
         anchor.addEventListener('click', function (e) {
@@ -2302,34 +2807,22 @@
 
     // Get CSRF token from form or meta tag
     function getCSRFToken() {
-        // First try meta tag (most reliable)
-        const metaToken = document.querySelector('meta[name="csrf-token"]');
-        if (metaToken) {
-            const token = metaToken.getAttribute('content');
-            console.log('CSRF token from meta tag:', token);
-            return token;
-        }
-
-        // Then try form input
         const tokenInput = document.querySelector('input[name="_token"]');
         if (tokenInput) {
-            const token = tokenInput.value;
-            console.log('CSRF token from form input:', token);
-            return token;
+            return tokenInput.value;
         }
-
+        const metaToken = document.querySelector('meta[name="csrf-token"]');
+        if (metaToken) {
+            return metaToken.getAttribute('content');
+        }
         // Fallback: try to get from any form with CSRF token
         const anyForm = document.querySelector('form');
         if (anyForm) {
             const formToken = anyForm.querySelector('input[name="_token"]');
             if (formToken) {
-                const token = formToken.value;
-                console.log('CSRF token from form fallback:', token);
-                return token;
+                return formToken.value;
             }
         }
-
-        console.error('No CSRF token found!');
         return '';
     }
 
@@ -2489,14 +2982,24 @@
         console.log('Time input is read-only - users must use calendar modal');
     });
 
+    /* TEMPORARILY COMMENTED OUT - COMPLEX FORM HANDLER
     // Handle booking form submission
-    document.getElementById('bookingForm').addEventListener('submit', function(e) {
-        e.preventDefault();
-        e.stopPropagation();
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('DOM loaded - Setting up form submission handler');
+        
+        const bookingForm = document.getElementById('bookingForm');
+        if (!bookingForm) {
+            console.error('Booking form not found!');
+            return;
+        }
+        
+        bookingForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
 
-        console.log('Form submission started');
-        console.log('Form action:', this.action);
-        console.log('Form method:', this.method);
+            console.log('Form submission started');
+            console.log('Form action:', this.action);
+            console.log('Form method:', this.method);
 
         // Basic form validation
         const requiredFields = ['name', 'phone', 'bookingDate', 'timeInput'];
@@ -2512,6 +3015,52 @@
         if (missingFields.length > 0) {
             alert('Please fill in all required fields: ' + missingFields.join(', '));
             return;
+        }
+
+        // Validate email format if provided
+        const emailField = document.getElementById('email');
+        if (emailField && emailField.value.trim()) {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(emailField.value.trim())) {
+                alert('Please enter a valid email address');
+                return;
+            }
+        }
+
+        // Validate phone format
+        const phoneField = document.getElementById('phone');
+        if (phoneField && phoneField.value.trim()) {
+            const phoneRegex = /^[\d\s\-\(\)\+]{10,}$/;
+            if (!phoneRegex.test(phoneField.value.trim())) {
+                alert('Please enter a valid phone number (at least 10 digits)');
+                return;
+            }
+        }
+
+        // Check if date is not in the past
+        const bookingDate = document.getElementById('bookingDate');
+        const appointmentDate = document.getElementById('appointment_date');
+        const selectedDate = appointmentDate ? appointmentDate.value : null;
+        
+        if (selectedDate) {
+            const selected = new Date(selectedDate);
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            
+            if (selected < today) {
+                alert('Please select a future date for your appointment');
+                return;
+            }
+        }
+
+        // Validate time format
+        const timeHidden = document.getElementById('appointment_time_hidden');
+        if (timeHidden && timeHidden.value) {
+            const timeRegex = /^([01]?[0-9]|2[0-3]):[0-5][0-9]$/;
+            if (!timeRegex.test(timeHidden.value)) {
+                alert('Invalid time format. Please select a time from the calendar modal.');
+                return;
+            }
         }
 
         // Check if time and date were selected via modal
@@ -2554,6 +3103,31 @@
 
         // Log form data for debugging
         console.log('Form data being sent:');
+        console.log('Name:', formData.get('name'));
+        console.log('Email:', formData.get('email'));
+        console.log('Phone:', formData.get('phone'));
+        console.log('Service:', formData.get('service'));
+        console.log('Appointment Date:', formData.get('appointment_date'));
+        console.log('Appointment Time:', formData.get('appointment_time'));
+        console.log('Notes:', formData.get('notes'));
+        console.log('CSRF Token:', formData.get('_token'));
+
+        // Validate critical fields before sending
+        if (!formData.get('appointment_date')) {
+            alert('Missing appointment date. Please use the calendar modal to select a date.');
+            return;
+        }
+
+        if (!formData.get('appointment_time')) {
+            alert('Missing appointment time. Please use the calendar modal to select a time.');
+            return;
+        }
+
+        if (!formData.get('_token')) {
+            alert('Missing security token. Please refresh the page and try again.');
+            return;
+        }
+
         for (let [key, value] of formData.entries()) {
             console.log(key + ': ' + value);
         }
@@ -2580,44 +3154,70 @@
         .then(response => {
             console.log('Response status:', response.status);
             console.log('Response headers:', response.headers);
-
-            // First get the text to see what we're actually receiving
+            
+            // For debugging - log the raw response text
             return response.text().then(text => {
-                console.log('Raw response text:', text);
-
-                // Try to parse as JSON
+                console.log('Raw response:', text);
                 try {
                     const data = JSON.parse(text);
-                    return { data, status: response.status, ok: response.ok };
+                    return { ok: response.ok, status: response.status, data: data };
                 } catch (e) {
-                    console.error('JSON parse error:', e);
-                    console.error('Response text that failed to parse:', text);
-                    throw new Error(`Server returned non-JSON response: ${text.substring(0, 200)}...`);
+                    console.error('Failed to parse JSON response:', e);
+                    throw new Error(`Server returned invalid JSON. Status: ${response.status}, Response: ${text.substring(0, 200)}...`);
                 }
             });
         })
-        .then(({ data, status, ok }) => {
-            if (!ok) {
-                throw new Error(`HTTP error! status: ${status}`);
-            }
-
+        .then(({ ok, status, data }) => {
             console.log('Parsed response data:', data);
+            
+            if (!ok) {
+                // Handle different HTTP status codes
+                if (status === 422) {
+                    // Validation errors
+                    let errorMessage = 'Validation failed:\n\n';
+                    if (data.errors) {
+                        // Laravel validation errors format
+                        Object.keys(data.errors).forEach(field => {
+                            const fieldErrors = data.errors[field];
+                            errorMessage += `• ${field}: ${fieldErrors.join(', ')}\n`;
+                        });
+                    } else if (data.message) {
+                        errorMessage += data.message;
+                    } else {
+                        errorMessage += 'Please check your form data and try again.';
+                    }
+                    throw new Error(errorMessage);
+                } else if (status === 419) {
+                    throw new Error('Security token expired. Please refresh the page and try again.');
+                } else if (status === 500) {
+                    throw new Error(data.message || 'Server error occurred. Please try again later.');
+                } else {
+                    throw new Error(data.message || `HTTP error! status: ${status}`);
+                }
+            }
+            
+            return data;
+        })
+        .then(data => {
+            console.log('Response data:', data);
             if (data.success) {
-                // Show success message
+                // Show styled success modal
                 const bookingId = data.appointment ? data.appointment.booking_id : 'N/A';
                 const confirmationCode = data.appointment ? data.appointment.confirmation_code : 'N/A';
                 const service = data.appointment ? data.appointment.service : 'General Service';
-                const emailProvided = data.appointment ? data.appointment.email_provided : false;
+                const appointmentDate = data.appointment ? data.appointment.appointment_date : 'N/A';
+                const appointmentTime = data.appointment ? data.appointment.appointment_time : 'N/A';
 
-                let successMessage = `✅ Appointment booked successfully!\n\n📋 Booking ID: ${bookingId}\n🔢 Confirmation Code: ${confirmationCode}\n💇‍♀️ Service: ${service}\n\n💰 Please contact us to arrange the $20 deposit payment.\n\n📞 Phone: (123) 456-7890\n📧 Email: info@dabsbeautytouch.com`;
+                // Update modal content with actual booking data
+                document.getElementById('successBookingId').textContent = bookingId;
+                document.getElementById('successConfirmationCode').textContent = confirmationCode;
+                document.getElementById('successService').textContent = service;
+                document.getElementById('successAppointmentDate').textContent = appointmentDate;
+                document.getElementById('successAppointmentTime').textContent = appointmentTime;
 
-                if (!emailProvided) {
-                    successMessage += '\n\n📝 Note: No email provided. We will contact you via phone only.';
-                }
-
-                successMessage += '\n\nWe\'ll confirm your appointment once payment is received!';
-
-                alert(successMessage);
+                // Show the success modal
+                const successModal = new bootstrap.Modal(document.getElementById('successModal'));
+                successModal.show();
 
                 // Clear the form completely
                 this.reset();
@@ -2629,6 +3229,25 @@
                 });
 
                 // Clear any hidden fields except CSRF token
+                const hiddenInputs = this.querySelectorAll('input[type="hidden"]:not([name="_token"])');
+                hiddenInputs.forEach(input => {
+                    input.value = '';
+                });
+
+                // Clear textarea
+                const textareas = this.querySelectorAll('textarea');
+                textareas.forEach(textarea => {
+                    textarea.value = '';
+                });
+
+                // Close the booking modal
+                const bookingModal = bootstrap.Modal.getInstance(document.getElementById('bookingModal'));
+                if (bookingModal) {
+                    bookingModal.hide();
+                }
+
+                // Force browser to clear form cache
+                this.setAttribute('autocomplete', 'off');
                 const hiddenInputs = this.querySelectorAll('input[type="hidden"]:not([name="_token"])');
                 hiddenInputs.forEach(input => {
                     input.value = '';
@@ -2658,16 +3277,18 @@
             }
         })
         .catch(error => {
-            console.error('Error:', error);
-            let errorMessage = 'An error occurred. Please try again.';
-
-            // Handle specific CSRF token errors
-            if (error.message && error.message.includes('419')) {
-                errorMessage = '🔒 Security token expired. Please refresh the page and try again.';
-            } else if (error.message) {
-                errorMessage += ' Error: ' + error.message;
+            console.error('Network or parsing error:', error);
+            let errorMessage = 'An error occurred while submitting your appointment:';
+            
+            if (error.message) {
+                errorMessage += '\n\n' + error.message;
+            } else {
+                errorMessage += '\n\nPlease check your internet connection and try again.';
             }
-
+            
+            // Add helpful suggestions
+            errorMessage += '\n\nTips:\n• Make sure all required fields are filled\n• Check that your email format is valid\n• Ensure your phone number is complete\n• Try refreshing the page if the issue persists';
+            
             alert(errorMessage);
         })
         .finally(() => {
@@ -2675,21 +3296,216 @@
             submitBtn.innerHTML = originalText;
             submitBtn.disabled = false;
         });
+        }); // End of form.addEventListener('submit')
+    }); // End of DOMContentLoaded for form submission
+    END COMMENTED OUT SECTION */
+
+    // SIMPLE FORM HANDLER FOR TESTING
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('=== SIMPLE FORM HANDLER SETUP ===');
+        
+        const form = document.getElementById('bookingForm');
+        const button = document.getElementById('bookAppointmentBtn');
+        
+        console.log('Form found:', !!form);
+        console.log('Button found:', !!button);
+        
+        if (form && button) {
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                console.log('=== FORM SUBMIT EVENT CAPTURED ===');
+                
+                // Get form data and handle file input properly
+                const formData = new FormData();
+                
+                // Manually add each form field INCLUDING textareas and selects
+                const inputs = this.querySelectorAll('input:not([type="file"]), textarea, select');
+                inputs.forEach(input => {
+                    if (input.name && (input.value || input.type === 'hidden')) {
+                        formData.append(input.name, input.value);
+                        console.log(`Added field ${input.name}:`, input.value);
+                    }
+                });
+                
+                // Handle file input separately (if it exists)
+                const fileInput = document.getElementById('samplePicture');
+                console.log('=== FILE INPUT DEBUG ===');
+                console.log('File input element:', fileInput);
+                console.log('File input exists:', !!fileInput);
+                
+                if (fileInput) {
+                    console.log('File input files property:', fileInput.files);
+                    console.log('Files length:', fileInput.files.length);
+                    console.log('Files array:', Array.from(fileInput.files));
+                    
+                    if (fileInput.files && fileInput.files.length > 0 && fileInput.files[0]) {
+                        const file = fileInput.files[0];
+                        console.log('File selected - Name:', file.name);
+                        console.log('File selected - Size:', file.size);
+                        console.log('File selected - Type:', file.type);
+                        formData.append('sample_picture', file);
+                        console.log('✅ File added to FormData');
+                    } else {
+                        console.log('❌ No file selected');
+                    }
+                } else {
+                    console.log('❌ File input element not found');
+                }
+                
+                console.log('Form data being sent:');
+                for (let [key, value] of formData.entries()) {
+                    console.log(key + ':', value);
+                }
+                
+                // Simple fetch request
+                fetch(this.action, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
+                    }
+                })
+                .then(response => {
+                    console.log('Response status:', response.status);
+                    console.log('Response headers:', response.headers);
+                    
+                    // Get the raw response text first
+                    return response.text().then(text => {
+                        console.log('Raw response text:', text);
+                        
+                        // Try to parse as JSON
+                        try {
+                            const data = JSON.parse(text);
+                            return { ok: response.ok, status: response.status, data: data };
+                        } catch (e) {
+                            console.error('Failed to parse JSON response:', e);
+                            console.error('Response was:', text.substring(0, 500));
+                            throw new Error(`Server returned invalid JSON. Status: ${response.status}, Response: ${text.substring(0, 200)}...`);
+                        }
+                    });
+                })
+                .then(({ ok, status, data }) => {
+                    console.log('Parsed response data:', data);
+                    
+                    if (!ok) {
+                        // Handle different HTTP status codes
+                        if (status === 422) {
+                            // Validation errors
+                            let errorMessage = 'Validation failed:\n\n';
+                            if (data.errors) {
+                                Object.keys(data.errors).forEach(field => {
+                                    const fieldErrors = data.errors[field];
+                                    errorMessage += `• ${field}: ${fieldErrors.join(', ')}\n`;
+                                });
+                            } else if (data.message) {
+                                errorMessage += data.message;
+                            } else {
+                                errorMessage += 'Please check your form data and try again.';
+                            }
+                            throw new Error(errorMessage);
+                        } else if (status === 419) {
+                            throw new Error('Security token expired. Please refresh the page and try again.');
+                        } else if (status === 500) {
+                            throw new Error(data.message || 'Server error occurred. Please try again later.');
+                        } else {
+                            throw new Error(data.message || `HTTP error! status: ${status}`);
+                        }
+                    }
+                    
+                    return data;
+                })
+                .then(data => {
+                    console.log('Final response data:', data);
+                    if (data.success) {
+                        // Show styled success modal
+                        const bookingId = data.appointment ? data.appointment.booking_id : 'N/A';
+                        const confirmationCode = data.appointment ? data.appointment.confirmation_code : 'N/A';
+                        const service = data.appointment ? data.appointment.service : 'General Service';
+                        const appointmentDate = data.appointment ? data.appointment.appointment_date : 'N/A';
+                        const appointmentTime = data.appointment ? data.appointment.appointment_time : 'N/A';
+
+                        // Update modal content with actual booking data
+                        document.getElementById('successBookingId').textContent = bookingId;
+                        document.getElementById('successConfirmationCode').textContent = confirmationCode;
+                        document.getElementById('successService').textContent = service;
+                        document.getElementById('successAppointmentDate').textContent = appointmentDate;
+                        document.getElementById('successAppointmentTime').textContent = appointmentTime;
+
+                        // Show the success modal
+                        const successModal = new bootstrap.Modal(document.getElementById('successModal'));
+                        successModal.show();
+
+                        // Clear the form completely
+                        this.reset();
+                        clearBookingForm();
+
+                        // Close the booking modal
+                        const bookingModal = bootstrap.Modal.getInstance(document.getElementById('bookingModal'));
+                        if (bookingModal) {
+                            bookingModal.hide();
+                        }
+                    } else {
+                        // Show error message
+                        let errorMessage = 'Something went wrong. Please try again.';
+                        if (data.message) {
+                            errorMessage = data.message;
+                        } else if (data.errors) {
+                            errorMessage = Object.values(data.errors).flat().join(', ');
+                        }
+                        alert('Error: ' + errorMessage);
+                    }
+                })
+                .catch(error => {
+                    console.error('Network or parsing error:', error);
+                    let errorMessage = 'An error occurred while submitting your appointment:';
+                    
+                    if (error.message) {
+                        errorMessage += '\n\n' + error.message;
+                    } else {
+                        errorMessage += '\n\nPlease check your internet connection and try again.';
+                    }
+                    
+                    // Add helpful suggestions
+                    errorMessage += '\n\nTips:\n• Make sure all required fields are filled\n• Check that your email format is valid\n• Ensure your phone number is complete\n• Try refreshing the page if the issue persists';
+                    
+                    alert(errorMessage);
+                });
+            });
+            
+            button.addEventListener('click', function(e) {
+                console.log('=== BUTTON CLICK EVENT CAPTURED ===');
+                console.log('Button click detected!');
+                // Don't prevent default here - let it trigger form submission
+            });
+            
+            console.log('Simple handlers attached successfully');
+        } else {
+            console.error('Missing form or button for simple handler');
+        }
     });
 
-    // Add click event listener to test button functionality
+    // Add click event listener to test button functionality - SEPARATE DOM READY HANDLER
     document.addEventListener('DOMContentLoaded', function() {
+        console.log('DOM Content Loaded - Setting up button handlers');
+        
         const bookBtn = document.getElementById('bookAppointmentBtn');
         if (bookBtn) {
             console.log('Book Appointment button found and ready');
+            console.log('Button element:', bookBtn);
+            console.log('Button disabled state:', bookBtn.disabled);
+            console.log('Button style display:', window.getComputedStyle(bookBtn).display);
+            console.log('Button style pointer-events:', window.getComputedStyle(bookBtn).pointerEvents);
 
             // Add click handler for better user feedback
             bookBtn.addEventListener('click', function(e) {
-                console.log('Book Appointment button clicked');
+                console.log('Book Appointment button clicked!');
+                console.log('Event:', e);
 
                 // Check if form is valid before submission
                 const form = document.getElementById('bookingForm');
                 if (form) {
+                    console.log('Form found:', form);
                     // Trigger form validation
                     if (form.checkValidity()) {
                         console.log('Form is valid, proceeding with submission');
@@ -2699,10 +3515,18 @@
                         // Show validation messages
                         form.reportValidity();
                     }
+                } else {
+                    console.error('Form not found!');
                 }
             });
         } else {
             console.error('Book Appointment button not found!');
+            // Try to find all buttons in the document
+            const allButtons = document.querySelectorAll('button');
+            console.log('All buttons found:', allButtons.length);
+            allButtons.forEach((btn, index) => {
+                console.log(`Button ${index}:`, btn.id, btn.className, btn.textContent.substring(0, 30));
+            });
         }
 
         // Check if form exists
@@ -2771,12 +3595,10 @@
                     } else if (date < new Date().setHours(0, 0, 0, 0)) {
                         dayDiv.classList.add('past');
                     } else if (bookedDates.includes(dateString)) {
-                        // HIDE dates that are booked with non-completed appointments
-                        // Instead of showing them as disabled, don't render them at all
-                        dayDiv.style.visibility = 'hidden';
-                        dayDiv.style.pointerEvents = 'none';
-                        dayDiv.innerHTML = ''; // Remove date number
-                        dayDiv.classList.add('hidden-date');
+                        // Date is booked with non-completed appointment
+                        dayDiv.classList.add('booked');
+                        dayDiv.title = 'This date is already booked';
+                        // Don't add click event for booked dates
                     } else {
                         dayDiv.classList.add('available');
                         dayDiv.onclick = () => selectCalendarDate(date);
@@ -2787,7 +3609,7 @@
             })
             .catch(error => {
                 console.error('Error fetching booked dates:', error);
-
+                
                 // Fallback: render calendar without booking checks
                 for (let i = 0; i < 42; i++) {
                     const date = new Date(startDate);
@@ -2895,10 +3717,7 @@
         const timeSlots = document.getElementById('timeSlots');
         timeSlots.innerHTML = '';
 
-        // Filter to only show available slots
-        const availableSlots = slots.filter(slot => slot.available);
-
-        if (availableSlots.length === 0) {
+        if (slots.length === 0) {
             timeSlots.innerHTML = '<div class="alert alert-info">No available slots for this date</div>';
             return;
         }
@@ -2909,14 +3728,14 @@
         messageDiv.innerHTML = '<i class="bi bi-info-circle me-2"></i>Click on a time slot below to select it, then click "CONFIRM SELECTION" to book your appointment.';
         timeSlots.appendChild(messageDiv);
 
-        availableSlots.forEach(slot => {
+        slots.forEach(slot => {
             const slotDiv = document.createElement('div');
             slotDiv.className = `col-md-4 mb-2`;
             slotDiv.innerHTML = `
-                <button class="btn btn-outline-primary w-100 time-slot-btn available"
-                        onclick="selectCalendarTime('${slot.time}', '${slot.formatted_time}')">
+                <button class="btn btn-outline-primary w-100 time-slot-btn ${slot.available ? 'available' : 'booked'}"
+                        ${slot.available ? `onclick="selectCalendarTime('${slot.time}', '${slot.formatted_time}')"` : 'disabled'}>
                     ${slot.formatted_time}
-                    <br><small>Available</small>
+                    <br><small>${slot.available ? 'Available' : 'Booked'}</small>
                 </button>
             `;
             timeSlots.appendChild(slotDiv);
@@ -2974,6 +3793,34 @@
     function nextMonth() {
         calendarCurrentDate.setMonth(calendarCurrentDate.getMonth() + 1);
         renderCalendarModal();
+    }
+
+    // Test function for file input debugging
+    function testFileInput() {
+        console.log('=== FILE INPUT TEST ===');
+        const fileInput = document.getElementById('samplePicture');
+        console.log('File input element:', fileInput);
+        
+        if (!fileInput) {
+            alert('❌ File input not found!');
+            return;
+        }
+        
+        console.log('Files:', fileInput.files);
+        console.log('Files length:', fileInput.files.length);
+        
+        if (fileInput.files.length === 0) {
+            alert('❌ No file selected. Please select a file first.');
+            return;
+        }
+        
+        const file = fileInput.files[0];
+        console.log('Selected file:', file);
+        console.log('File name:', file.name);
+        console.log('File size:', file.size);
+        console.log('File type:', file.type);
+        
+        alert(`✅ File detected!\nName: ${file.name}\nSize: ${file.size} bytes\nType: ${file.type}`);
     }
 
 
@@ -3083,6 +3930,134 @@
             </div>
         </div>
     </div>
+
+<!-- Success Modal -->
+<div class="modal fade" id="successModal" tabindex="-1" aria-labelledby="successModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content" style="border-radius: 20px; border: none; overflow: hidden;">
+            <!-- Header -->
+            <div class="modal-header" style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white; border: none; padding: 30px; text-align: center;">
+                <div class="w-100">
+                    <div style="background: rgba(255,255,255,0.2); width: 80px; height: 80px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px;">
+                        <i class="bi bi-check-circle-fill" style="font-size: 3rem;"></i>
+                    </div>
+                    <h4 class="modal-title fw-bold mb-2" id="successModalLabel">Appointment booked successfully!</h4>
+                    <p class="mb-0" style="opacity: 0.9;">Your booking has been confirmed</p>
+                </div>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close" style="position: absolute; top: 15px; right: 20px;"></button>
+            </div>
+            
+            <!-- Body -->
+            <div class="modal-body" style="padding: 40px 30px;">
+                <!-- Booking Details Card -->
+                <div class="card border-0 mb-4" style="background: linear-gradient(135deg, #f8f9fa 0%, #e3f2fd 100%); border-radius: 15px;">
+                    <div class="card-body p-4">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <div class="d-flex align-items-center">
+                                    <i class="bi bi-bookmark-fill text-primary me-3" style="font-size: 1.5rem;"></i>
+                                    <div>
+                                        <small class="text-muted d-block">Booking ID</small>
+                                        <strong id="successBookingId" class="text-dark fs-5">BK000024</strong>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <div class="d-flex align-items-center">
+                                    <i class="bi bi-key-fill text-warning me-3" style="font-size: 1.5rem;"></i>
+                                    <div>
+                                        <small class="text-muted d-block">Confirmation Code</small>
+                                        <strong id="successConfirmationCode" class="text-dark fs-6">CONFEAB923BD</strong>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <div class="d-flex align-items-center">
+                                    <i class="bi bi-calendar3 text-info me-3" style="font-size: 1.5rem;"></i>
+                                    <div>
+                                        <small class="text-muted d-block">Appointment Date</small>
+                                        <strong id="successAppointmentDate" class="text-dark">Tuesday, August 26, 2025</strong>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <div class="d-flex align-items-center">
+                                    <i class="bi bi-clock-fill text-success me-3" style="font-size: 1.5rem;"></i>
+                                    <div>
+                                        <small class="text-muted d-block">Appointment Time</small>
+                                        <strong id="successAppointmentTime" class="text-dark">10:00 AM</strong>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="d-flex align-items-center">
+                                    <i class="bi bi-scissors text-danger me-3" style="font-size: 1.5rem;"></i>
+                                    <div>
+                                        <small class="text-muted d-block">Service</small>
+                                        <strong id="successService" class="text-dark">Large Knotless Braids</strong>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Deposit Information -->
+                <div class="alert alert-warning d-flex align-items-center mb-4" style="border-radius: 15px; border: none;">
+                    <i class="bi bi-exclamation-triangle-fill me-3" style="font-size: 1.5rem;"></i>
+                    <div>
+                        <strong>Please contact us to arrange the ₵50 deposit payment.</strong>
+                        <br>
+                        <small>We'll confirm your appointment once payment is received!</small>
+                    </div>
+                </div>
+
+                <!-- Contact Information -->
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-center p-3 bg-light rounded-3 mb-3">
+                            <i class="bi bi-telephone-fill text-primary me-3" style="font-size: 1.5rem;"></i>
+                            <div>
+                                <strong>Phone</strong>
+                                <br>
+                                <a href="tel:(123)456-7890" class="text-decoration-none">(123) 456-7890</a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-center p-3 bg-light rounded-3 mb-3">
+                            <i class="bi bi-envelope-fill text-success me-3" style="font-size: 1.5rem;"></i>
+                            <div>
+                                <strong>Email</strong>
+                                <br>
+                                <a href="mailto:info@dabsbeautytouch.com" class="text-decoration-none">info@dabsbeautytouch.com</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Footer -->
+            <div class="modal-footer border-0" style="padding: 20px 30px 30px;">
+                <div class="w-100 text-center">
+                    <label class="form-check-label mb-3 text-muted">
+                        <input type="checkbox" class="form-check-input me-2" id="dontShowAgain">
+                        Don't allow 127.0.0.1:8000 to prompt you again
+                    </label>
+                    <br>
+                    <button type="button" class="btn btn-success btn-lg px-5" data-bs-dismiss="modal" style="border-radius: 25px; font-weight: 600;">
+                        OK
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 </body>
 </html>
 

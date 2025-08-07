@@ -6,10 +6,6 @@ use App\Models\Appointment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Notification;
-use App\Notifications\BookingConfirmation;
-use App\Notifications\AdminBookingNotification;
-use App\Models\User;
 
 class AppointmentController extends Controller
 {
@@ -33,12 +29,12 @@ class AppointmentController extends Controller
         try {
             $date = $request->date;
             $service = $request->service;
-
+            
             // Check if this date is already booked with non-completed appointment
             $existingBooking = \App\Models\Booking::where('appointment_date', $date)
                 ->where('status', '!=', 'completed')
                 ->first();
-
+            
             if ($existingBooking) {
                 return response()->json([
                     'success' => true,
@@ -47,9 +43,9 @@ class AppointmentController extends Controller
                     'message' => 'This date is already booked. Please select another date.'
                 ]);
             }
-
+            
             $slots = Appointment::getAvailableSlots($date, $service);
-
+            
             return response()->json([
                 'success' => true,
                 'slots' => $slots,
@@ -69,13 +65,27 @@ class AppointmentController extends Controller
      */
     public function bookAppointment(Request $request)
     {
+        // Clear any output buffer to prevent warnings from mixing with JSON
+        if (ob_get_level()) {
+            ob_clean();
+        }
+        
         // Log incoming request data for debugging
         Log::info('Appointment booking request received', [
-            'all_data' => $request->all(),
+            'all_data' => $request->except(['sample_picture']), // Exclude file from logs
+            'has_sample_picture' => $request->hasFile('sample_picture'),
+            'sample_picture_valid' => $request->hasFile('sample_picture') && $request->file('sample_picture')->isValid(),
+            'sample_picture_details' => $request->hasFile('sample_picture') ? [
+                'original_name' => $request->file('sample_picture')->getClientOriginalName(),
+                'mime_type' => $request->file('sample_picture')->getMimeType(),
+                'size' => $request->file('sample_picture')->getSize(),
+                'extension' => $request->file('sample_picture')->getClientOriginalExtension(),
+            ] : 'No file uploaded',
             'headers' => $request->headers->all()
         ]);
 
-        $validator = Validator::make($request->all(), [
+        // Handle sample_picture validation separately to avoid empty file issues
+        $validationRules = [
             'name' => 'required|string|max:255',
             'email' => 'nullable|email|max:255',
             'phone' => 'required|string|max:20',
@@ -83,7 +93,17 @@ class AppointmentController extends Controller
             'appointment_date' => 'required|date|after_or_equal:today',
             'appointment_time' => 'required|date_format:H:i',
             'message' => 'nullable|string|max:1000'
-        ]);
+        ];
+
+        // Only validate sample_picture if a file was actually uploaded
+        if ($request->hasFile('sample_picture')) {
+            $file = $request->file('sample_picture');
+            if ($file->isValid() && $file->getError() === UPLOAD_ERR_OK) {
+                $validationRules['sample_picture'] = 'file|image|mimes:jpeg,png,jpg,gif|max:2048';
+            }
+        }
+
+        $validator = Validator::make($request->all(), $validationRules);
 
         if ($validator->fails()) {
             Log::warning('Appointment booking validation failed', [
@@ -100,7 +120,7 @@ class AppointmentController extends Controller
             $existingBooking = \App\Models\Booking::where('appointment_date', $request->appointment_date)
                 ->where('status', '!=', 'completed')
                 ->first();
-
+            
             if ($existingBooking) {
                 return response()->json([
                     'success' => false,
@@ -108,17 +128,71 @@ class AppointmentController extends Controller
                 ], 422);
             }
 
-            // Temporarily use the bookings table instead of appointments table
-            // until the appointments migration is run
+            // Handle sample picture upload if provided
+            $samplePicturePath = null;
+            if ($request->hasFile('sample_picture')) {
+                $file = $request->file('sample_picture');
+                
+                Log::info('File upload debug', [
+                    'hasFile' => $request->hasFile('sample_picture'),
+                    'isValid' => $file->isValid(),
+                    'error' => $file->getError(),
+                    'errorMessage' => $file->getErrorMessage(),
+                    'size' => $file->getSize(),
+                    'name' => $file->getClientOriginalName()
+                ]);
+                
+                if ($file->isValid() && $file->getError() === UPLOAD_ERR_OK) {
+                    Log::info('Processing file upload', [
+                        'file_name' => $file->getClientOriginalName(),
+                        'file_size' => $file->getSize(),
+                        'mime_type' => $file->getMimeType(),
+                    ]);
+                    
+                    try {
+                        // Ensure storage directory exists
+                        $storageDir = storage_path('app/public/sample_pictures');
+                        if (!file_exists($storageDir)) {
+                            mkdir($storageDir, 0755, true);
+                        }
+                        
+                        // Use custom file name to avoid conflicts
+                        $fileName = time() . '_' . uniqid() . '_' . $file->getClientOriginalName();
+                        $samplePicturePath = $file->storeAs('sample_pictures', $fileName, 'public');
+                        
+                        Log::info('File stored successfully', ['path' => $samplePicturePath]);
+                    } catch (\Exception $e) {
+                        Log::error('File storage failed', ['error' => $e->getMessage()]);
+                        // Don't return error - continue without file upload
+                        $samplePicturePath = null;
+                    }
+                } else {
+                    Log::warning('File upload error', [
+                        'error_code' => $file->getError(),
+                        'error_message' => $file->getErrorMessage()
+                    ]);
+                }
+            } else {
+                Log::info('No file uploaded');
+            }
+
+            // Create the booking
             $booking = \App\Models\Booking::create([
                 'name' => $request->name,
-                'email' => $request->email ?: 'no-email@example.com', // Provide default if email is null
+                'email' => $request->email ?: 'no-email@example.com',
                 'phone' => $request->phone,
-                'service' => $request->service ?: 'General Service', // Use service from form or default
+                'service' => $request->service ?: 'General Service',
                 'appointment_date' => $request->appointment_date,
                 'appointment_time' => $request->appointment_time,
                 'message' => $request->message,
+                'sample_picture' => $samplePicturePath,
                 'status' => 'pending'
+            ]);
+
+            Log::info('Booking created successfully', [
+                'booking_id' => $booking->id,
+                'sample_picture_saved' => $booking->sample_picture,
+                'sample_picture_variable' => $samplePicturePath
             ]);
 
             // Generate a simple booking ID and confirmation code
@@ -130,37 +204,9 @@ class AppointmentController extends Controller
                 'confirmation_code' => $confirmationCode
             ]);
 
-            // Send email notifications
-            try {
-                // Send confirmation email to customer if email is provided
-                if (!empty($request->email) && $request->email !== 'no-email@example.com') {
-                    $customerUser = new User();
-                    $customerUser->name = $request->name;
-                    $customerUser->email = $request->email;
-                    
-                    $customerUser->notify(new BookingConfirmation($booking, $bookingId, $confirmationCode));
-                    Log::info('Customer confirmation email sent', ['email' => $request->email]);
-                }
-
-                // Send admin notification emails
-                $adminEmails = [
-                    env('ADMIN_EMAIL', 'admin@dabsbeautytouch.com'),
-                    env('BOOKING_NOTIFICATION_EMAIL', 'bookings@dabsbeautytouch.com')
-                ];
-
-                foreach ($adminEmails as $adminEmail) {
-                    if (!empty($adminEmail)) {
-                        $adminUser = new User();
-                        $adminUser->name = 'Admin';
-                        $adminUser->email = $adminEmail;
-                        
-                        $adminUser->notify(new AdminBookingNotification($booking, $bookingId, $confirmationCode));
-                        Log::info('Admin notification email sent', ['email' => $adminEmail]);
-                    }
-                }
-            } catch (\Exception $e) {
-                Log::error('Error sending notification emails: ' . $e->getMessage());
-                // Don't fail the booking if email fails, just log the error
+            // Ensure clean JSON response
+            if (ob_get_level()) {
+                ob_clean();
             }
 
             return response()->json([
@@ -171,7 +217,7 @@ class AppointmentController extends Controller
                     'confirmation_code' => $confirmationCode,
                     'appointment_date' => date('l, F j, Y', strtotime($request->appointment_date)),
                     'appointment_time' => date('g:i A', strtotime($request->appointment_time)),
-                    'service' => $request->service ?: 'General Service', // Show actual service booked
+                    'service' => $request->service ?: 'General Service',
                     'email_provided' => !empty($request->email)
                 ]
             ]);
@@ -179,6 +225,12 @@ class AppointmentController extends Controller
         } catch (\Exception $e) {
             Log::error('Error booking appointment: ' . $e->getMessage());
             Log::error('Error details: ' . $e->getTraceAsString());
+            
+            // Ensure clean JSON response
+            if (ob_get_level()) {
+                ob_clean();
+            }
+            
             return response()->json([
                 'success' => false,
                 'message' => 'Error booking appointment. Please try again. Error: ' . $e->getMessage()
@@ -206,12 +258,12 @@ class AppointmentController extends Controller
         try {
             $year = $request->year;
             $month = $request->month;
-
+            
             $startDate = "$year-$month-01";
             $endDate = date('Y-m-t', strtotime($startDate));
-
+            
             $appointments = Appointment::getAppointmentsForDateRange($startDate, $endDate);
-
+            
             $calendarData = [];
             foreach ($appointments as $appointment) {
                 $date = $appointment->appointment_date->format('Y-m-d');
@@ -224,7 +276,7 @@ class AppointmentController extends Controller
                     'name' => $appointment->name
                 ];
             }
-
+            
             return response()->json([
                 'success' => true,
                 'calendar_data' => $calendarData,
@@ -311,7 +363,7 @@ class AppointmentController extends Controller
         try {
             // Try to find in bookings table first (since that's what we're currently using)
             $booking = \App\Models\Booking::find($request->id);
-
+            
             if ($booking) {
                 return response()->json([
                     'success' => true,
@@ -593,7 +645,7 @@ class AppointmentController extends Controller
 
         try {
             $searchTerm = $request->search;
-
+            
             // Try to find in bookings table first (since that's what we're currently using)
             $booking = \App\Models\Booking::where(function($query) use ($searchTerm) {
                 $query->where('id', $searchTerm)
@@ -685,11 +737,11 @@ class AppointmentController extends Controller
         try {
             $year = $request->year;
             $month = $request->month;
-
+            
             // Create start and end dates for the month
             $startDate = "$year-" . str_pad($month, 2, '0', STR_PAD_LEFT) . "-01";
             $endDate = date('Y-m-t', strtotime($startDate));
-
+            
             // Get bookings that are not completed (status != 'completed')
             $bookedDates = \App\Models\Booking::whereBetween('appointment_date', [$startDate, $endDate])
                 ->where('status', '!=', 'completed')
@@ -701,13 +753,13 @@ class AppointmentController extends Controller
                     return \Carbon\Carbon::parse($date)->format('Y-m-d');
                 })
                 ->toArray();
-
+            
             Log::info('Booked dates retrieved', [
                 'year' => $year,
                 'month' => $month,
                 'booked_dates' => $bookedDates
             ]);
-
+            
             return response()->json([
                 'success' => true,
                 'booked_dates' => $bookedDates,
@@ -722,4 +774,54 @@ class AppointmentController extends Controller
             ], 500);
         }
     }
-}
+
+    /**
+     * Get booked time slots for a specific date
+     */
+    public function getBookedTimeSlots(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'date' => 'required|date|after_or_equal:today'
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        try {
+            $date = $request->date;
+            
+            // Get booked time slots for this specific date (excluding completed/cancelled)
+            $bookedTimeSlots = \App\Models\Booking::where('appointment_date', $date)
+                ->whereNotIn('status', ['completed', 'cancelled'])
+                ->whereNotNull('appointment_time')
+                ->select('appointment_time')
+                ->pluck('appointment_time')
+                ->map(function($time) {
+                    // Ensure time is in H:i format
+                    return \Carbon\Carbon::parse($time)->format('H:i');
+                })
+                ->toArray();
+            
+            Log::info('Booked time slots retrieved', [
+                'date' => $date,
+                'booked_time_slots' => $bookedTimeSlots
+            ]);
+            
+            return response()->json([
+                'success' => true,
+                'booked_time_slots' => $bookedTimeSlots,
+                'date' => $date
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error getting booked time slots: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Error retrieving booked time slots'
+            ], 500);
+        }
+    }
+} 

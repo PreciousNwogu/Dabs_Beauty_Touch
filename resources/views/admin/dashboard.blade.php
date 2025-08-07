@@ -405,24 +405,24 @@
                                 <option value="cancelled">Cancelled</option>
                             </select>
                         </div>
-
+                        
                         <!-- Completion fields - only show when status is 'completed' -->
                         <div id="completionFields" style="display: none;">
                             <div class="mb-3">
                                 <label for="completedBy" class="form-label">Completed By (Staff Member)</label>
                                 <input type="text" class="form-control" id="completedBy" placeholder="Enter staff member name">
                             </div>
-
+                            
                             <div class="mb-3">
                                 <label for="serviceDuration" class="form-label">Service Duration (minutes)</label>
                                 <input type="number" class="form-control" id="serviceDuration" placeholder="e.g., 180" min="1">
                             </div>
-
+                            
                             <div class="mb-3">
-                                <label for="finalPrice" class="form-label">Final Price ($)</label>
+                                <label for="finalPrice" class="form-label">Final Price (₵)</label>
                                 <input type="number" class="form-control" id="finalPrice" placeholder="e.g., 150.00" min="0" step="0.01">
                             </div>
-
+                            
                             <div class="mb-3">
                                 <label for="paymentStatus" class="form-label">Payment Status</label>
                                 <select class="form-select" id="paymentStatus">
@@ -432,7 +432,7 @@
                                 </select>
                             </div>
                         </div>
-
+                        
                         <div class="mb-3">
                             <label for="statusNotes" class="form-label">Notes (Optional)</label>
                             <textarea class="form-control" id="statusNotes" rows="3" placeholder="Add any additional notes..."></textarea>
@@ -507,7 +507,7 @@
                         document.getElementById('pendingAppointments').textContent = data.stats.pending || 0;
                         document.getElementById('confirmedAppointments').textContent = data.stats.confirmed || 0;
                         document.getElementById('completedAppointments').textContent = data.stats.completed || 0;
-
+                        
                         // Update revenue stats
                         document.getElementById('revenueToday').textContent = (data.stats.revenue_today || 0).toFixed(2);
                         document.getElementById('revenueMonth').textContent = (data.stats.revenue_month || 0).toFixed(2);
@@ -532,7 +532,7 @@
             const serviceFilter = document.getElementById('serviceFilter').value;
 
             // Show loading
-            document.getElementById('appointmentsTable').innerHTML =
+            document.getElementById('appointmentsTable').innerHTML = 
                 '<tr><td colspan="7" class="text-center">Loading appointments...</td></tr>';
 
             // Build query parameters
@@ -548,20 +548,20 @@
                     if (data.success) {
                         renderAppointments(data.appointments);
                     } else {
-                        document.getElementById('appointmentsTable').innerHTML =
+                        document.getElementById('appointmentsTable').innerHTML = 
                             '<tr><td colspan="7" class="text-center text-danger">Error loading appointments: ' + (data.message || 'Unknown error') + '</td></tr>';
                     }
                 })
                 .catch(error => {
                     console.error('Error loading appointments:', error);
-                    document.getElementById('appointmentsTable').innerHTML =
+                    document.getElementById('appointmentsTable').innerHTML = 
                         '<tr><td colspan="7" class="text-center text-danger">Error loading appointments. Please try again.</td></tr>';
                 });
         }
 
         function renderAppointments(appointments) {
             const tbody = document.getElementById('appointmentsTable');
-
+            
             if (!appointments || appointments.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="8" class="text-center">No appointments found.</td></tr>';
                 return;
@@ -590,12 +590,12 @@
                         <small class="text-muted">${formatTime(appointment.appointment_time)}</small>
                     </td>
                     <td>
-                        ${appointment.sample_picture ?
-                            `<img src="/storage/${appointment.sample_picture}"
-                                 alt="Sample"
-                                 style="width: 50px; height: 50px; object-fit: cover; border-radius: 8px; cursor: pointer;"
+                        ${appointment.sample_picture ? 
+                            `<img src="/storage/${appointment.sample_picture}" 
+                                 alt="Sample" 
+                                 style="width: 50px; height: 50px; object-fit: cover; border-radius: 8px; cursor: pointer;" 
                                  onclick="viewImageModal('/storage/${appointment.sample_picture}', '${appointment.name}')"
-                                 title="Click to view full size">`
+                                 title="Click to view full size">` 
                             : '<span class="text-muted">No image</span>'
                         }
                     </td>
@@ -616,11 +616,11 @@
 
         function formatDate(dateString) {
             const date = new Date(dateString);
-            return date.toLocaleDateString('en-US', {
-                weekday: 'short',
-                year: 'numeric',
-                month: 'short',
-                day: 'numeric'
+            return date.toLocaleDateString('en-US', { 
+                weekday: 'short', 
+                year: 'numeric', 
+                month: 'short', 
+                day: 'numeric' 
             });
         }
 
@@ -689,7 +689,7 @@
                     modal.hide();
                     loadAppointments();
                     loadDashboardStats();
-
+                    
                     // Show success message
                     alert('Appointment status updated successfully!');
                 } else {
@@ -710,7 +710,7 @@
         function toggleCompletionFields() {
             const status = document.getElementById('newStatus').value;
             const completionFields = document.getElementById('completionFields');
-
+            
             if (status === 'completed') {
                 completionFields.style.display = 'block';
                 // Make completion fields required when status is completed
@@ -730,7 +730,7 @@
             document.getElementById('imageModalTitle').textContent = `Sample Image - ${customerName}`;
             document.getElementById('imageModalImg').src = imageSrc;
             document.getElementById('imageDownloadLink').href = imageSrc;
-
+            
             const modal = new bootstrap.Modal(document.getElementById('imageModal'));
             modal.show();
         }
@@ -795,8 +795,8 @@
                                     <h6 class="mb-0"><i class="bi bi-image me-2"></i>Sample Image</h6>
                                 </div>
                                 <div class="card-body text-center">
-                                    <img src="/storage/${appointment.sample_picture}"
-                                         alt="Sample Image"
+                                    <img src="/storage/${appointment.sample_picture}" 
+                                         alt="Sample Image" 
                                          style="max-width: 100%; height: auto; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);"
                                          onclick="viewImageModal('/storage/${appointment.sample_picture}', '${appointment.name}')"
                                          class="cursor-pointer">
@@ -945,20 +945,20 @@
                     </div>
                 </div>
             `;
-
+            
             // Remove existing modal if any
             const existingModal = document.getElementById('detailsModal');
             if (existingModal) {
                 existingModal.remove();
             }
-
+            
             // Add new modal to body
             document.body.insertAdjacentHTML('beforeend', detailsHtml);
-
+            
             // Show modal
             const modal = new bootstrap.Modal(document.getElementById('detailsModal'));
             modal.show();
-
+            
             // Remove modal from DOM after hiding
             document.getElementById('detailsModal').addEventListener('hidden.bs.modal', function() {
                 this.remove();
@@ -982,4 +982,4 @@
         }, 30000);
     </script>
 </body>
-</html>
+</html> 

@@ -78,27 +78,44 @@
             background-color: #f8d7da;
             border-color: #f5c6cb;
             cursor: not-allowed;
+            pointer-events: none;
+            opacity: 0.7;
+            position: relative;
+        }
+
+        .calendar-day.booked:hover {
+            background-color: #f8d7da;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .calendar-day.booked::after {
+            content: '×';
+            position: absolute;
+            top: 2px;
+            right: 4px;
+            color: #dc3545;
+            font-weight: bold;
+            font-size: 12px;
         }
 
         .calendar-day.past {
             background-color: #e9ecef;
             color: #6c757d;
             cursor: not-allowed;
+            pointer-events: none;
+            opacity: 0.6;
+        }
+
+        .calendar-day.past:hover {
+            background-color: #e9ecef;
+            transform: none;
+            box-shadow: none;
         }
 
         .calendar-day.other-month {
             background-color: #f8f9fa;
             color: #adb5bd;
-        }
-
-        /* Hide completely unavailable dates */
-        .calendar-day.hidden-date {
-            visibility: hidden !important;
-            opacity: 0 !important;
-            pointer-events: none !important;
-            background-color: transparent !important;
-            border-color: transparent !important;
-            min-height: 80px; /* Maintain grid structure */
         }
 
         .time-slots {
@@ -435,15 +452,15 @@
                             dayDiv.classList.add('other-month');
                         } else if (date < new Date().setHours(0, 0, 0, 0)) {
                             dayDiv.classList.add('past');
+                            dayDiv.title = 'Past dates are not available';
                         } else if (bookedDates.includes(dateString)) {
-                            // HIDE dates that are booked with non-completed appointments
-                            dayDiv.style.visibility = 'hidden';
-                            dayDiv.style.pointerEvents = 'none';
-                            dayDiv.innerHTML = ''; // Remove date number
-                            dayDiv.classList.add('hidden-date');
+                            dayDiv.classList.add('booked');
+                            dayDiv.title = 'This date is already booked';
+                            // Don't add click event for booked dates
                         } else {
                             dayDiv.classList.add('available');
                             dayDiv.onclick = () => selectDate(date);
+                            dayDiv.title = 'Click to see available time slots';
                         }
 
                         calendarDays.appendChild(dayDiv);
@@ -526,22 +543,23 @@
             const timeSlots = document.getElementById('timeSlots');
             timeSlots.innerHTML = '';
 
-            // Filter to only show available slots
-            const availableSlots = slots.filter(slot => slot.available);
-
-            if (availableSlots.length === 0) {
+            if (slots.length === 0) {
                 timeSlots.innerHTML = '<div class="alert alert-info">No available slots for this date</div>';
                 return;
             }
 
-            availableSlots.forEach(slot => {
+            slots.forEach(slot => {
                 const slotDiv = document.createElement('div');
-                slotDiv.className = 'time-slot available';
+                slotDiv.className = `time-slot ${slot.available ? 'available' : 'booked'}`;
                 slotDiv.innerHTML = `
                     <span>${slot.formatted_time}</span>
-                    <span>Available</span>
+                    <span>${slot.available ? 'Available' : 'Booked'}</span>
                 `;
-                slotDiv.onclick = () => selectTimeSlot(slot);
+
+                if (slot.available) {
+                    slotDiv.onclick = () => selectTimeSlot(slot);
+                }
+
                 timeSlots.appendChild(slotDiv);
             });
         }

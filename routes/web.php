@@ -8,21 +8,10 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 
-// Include test email routes
-require __DIR__.'/test-email.php';
-
-// Include database test routes
-require __DIR__.'/test-database.php';
-
 // Main route - show the home page
 Route::get('/', function () {
     return view('home');
 })->name('home');
-
-// Simple test route without Vite
-Route::get('/simple', function () {
-    return view('simple');
-})->name('simple');
 
 // Calendar booking page
 Route::get('/calendar', function () {
@@ -38,35 +27,6 @@ Route::get('/admin', function () {
 Route::get('/admin/complete-service', function () {
     return view('admin.complete-service');
 })->name('admin.complete-service');
-
-// Test email notification (remove in production)
-Route::get('/test-email', function () {
-    try {
-        $testBooking = new \App\Models\Booking();
-        $testBooking->name = 'Test Customer';
-        $testBooking->email = 'test@example.com';
-        $testBooking->phone = '(123) 456-7890';
-        $testBooking->service = 'Box Braids';
-        $testBooking->appointment_date = now()->addDays(7);
-        $testBooking->appointment_time = '14:00';
-        $testBooking->message = 'This is a test booking';
-        $testBooking->status = 'pending';
-        
-        $testUser = new \App\Models\User();
-        $testUser->name = 'Test Customer';
-        $testUser->email = 'test@example.com';
-        
-        $testUser->notify(new \App\Notifications\BookingConfirmation(
-            $testBooking, 
-            'BK123456', 
-            'CONF12345678'
-        ));
-        
-        return 'Test email sent! Check your mail logs.';
-    } catch (\Exception $e) {
-        return 'Error: ' . $e->getMessage();
-    }
-})->name('test.email');
 
 // Test route to verify routing is working
 Route::get('/test', function () {
@@ -101,6 +61,7 @@ Route::get('/appointments/slots', [AppointmentController::class, 'getAvailableSl
 Route::post('/appointments/book', [AppointmentController::class, 'bookAppointment'])->name('appointments.book');
 Route::get('/appointments/calendar', [AppointmentController::class, 'getCalendarData'])->name('appointments.calendar');
 Route::get('/appointments/booked-dates', [AppointmentController::class, 'getBookedDates'])->name('appointments.booked-dates');
+Route::get('/appointments/booked-time-slots', [AppointmentController::class, 'getBookedTimeSlots'])->name('appointments.booked-time-slots');
 Route::post('/appointments/cancel', [AppointmentController::class, 'cancelAppointment'])->name('appointments.cancel');
 Route::get('/appointments/details', [AppointmentController::class, 'getAppointmentDetails'])->name('appointments.details');
 
