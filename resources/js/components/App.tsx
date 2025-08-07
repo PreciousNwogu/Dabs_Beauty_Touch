@@ -1,4 +1,4 @@
-import HeroNew from "./HeroNew";
+import HeroNew from "./HeroNew.jsx";
 import About from "./About";
 import Services from "./Services";
 

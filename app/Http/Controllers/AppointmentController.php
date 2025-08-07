@@ -6,6 +6,10 @@ use App\Models\Appointment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Notification;
+use App\Notifications\BookingConfirmation;
+use App\Notifications\AdminBookingNotification;
+use App\Models\User;
 
 class AppointmentController extends Controller
 {
@@ -29,9 +33,23 @@ class AppointmentController extends Controller
         try {
             $date = $request->date;
             $service = $request->service;
-            
+
+            // Check if this date is already booked with non-completed appointment
+            $existingBooking = \App\Models\Booking::where('appointment_date', $date)
+                ->where('status', '!=', 'completed')
+                ->first();
+
+            if ($existingBooking) {
+                return response()->json([
+                    'success' => true,
+                    'slots' => [],
+                    'date' => $date,
+                    'message' => 'This date is already booked. Please select another date.'
+                ]);
+            }
+
             $slots = Appointment::getAvailableSlots($date, $service);
-            
+
             return response()->json([
                 'success' => true,
                 'slots' => $slots,
@@ -64,7 +82,7 @@ class AppointmentController extends Controller
             'service' => 'nullable|string|max:255',
             'appointment_date' => 'required|date|after_or_equal:today',
             'appointment_time' => 'required|date_format:H:i',
-            'notes' => 'nullable|string|max:1000'
+            'message' => 'nullable|string|max:1000'
         ]);
 
         if ($validator->fails()) {
@@ -78,6 +96,18 @@ class AppointmentController extends Controller
         }
 
         try {
+            // Check if this date is already booked with non-completed appointment
+            $existingBooking = \App\Models\Booking::where('appointment_date', $request->appointment_date)
+                ->where('status', '!=', 'completed')
+                ->first();
+
+            if ($existingBooking) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'This date is already booked with another appointment. Please select a different date.'
+                ], 422);
+            }
+
             // Temporarily use the bookings table instead of appointments table
             // until the appointments migration is run
             $booking = \App\Models\Booking::create([
@@ -87,7 +117,7 @@ class AppointmentController extends Controller
                 'service' => $request->service ?: 'General Service', // Use service from form or default
                 'appointment_date' => $request->appointment_date,
                 'appointment_time' => $request->appointment_time,
-                'message' => $request->notes,
+                'message' => $request->message,
                 'status' => 'pending'
             ]);
 
@@ -99,6 +129,39 @@ class AppointmentController extends Controller
                 'booking_id' => $bookingId,
                 'confirmation_code' => $confirmationCode
             ]);
+
+            // Send email notifications
+            try {
+                // Send confirmation email to customer if email is provided
+                if (!empty($request->email) && $request->email !== 'no-email@example.com') {
+                    $customerUser = new User();
+                    $customerUser->name = $request->name;
+                    $customerUser->email = $request->email;
+                    
+                    $customerUser->notify(new BookingConfirmation($booking, $bookingId, $confirmationCode));
+                    Log::info('Customer confirmation email sent', ['email' => $request->email]);
+                }
+
+                // Send admin notification emails
+                $adminEmails = [
+                    config('mail.admin_email', 'admin@dabsbeautytouch.com'),
+                    config('mail.admin_email_secondary', 'bookings@dabsbeautytouch.com')
+                ];
+
+                foreach ($adminEmails as $adminEmail) {
+                    if (!empty($adminEmail)) {
+                        $adminUser = new User();
+                        $adminUser->name = 'Admin';
+                        $adminUser->email = $adminEmail;
+                        
+                        $adminUser->notify(new AdminBookingNotification($booking, $bookingId, $confirmationCode));
+                        Log::info('Admin notification email sent', ['email' => $adminEmail]);
+                    }
+                }
+            } catch (\Exception $e) {
+                Log::error('Error sending notification emails: ' . $e->getMessage());
+                // Don't fail the booking if email fails, just log the error
+            }
 
             return response()->json([
                 'success' => true,
@@ -143,12 +206,12 @@ class AppointmentController extends Controller
         try {
             $year = $request->year;
             $month = $request->month;
-            
+
             $startDate = "$year-$month-01";
             $endDate = date('Y-m-t', strtotime($startDate));
-            
+
             $appointments = Appointment::getAppointmentsForDateRange($startDate, $endDate);
-            
+
             $calendarData = [];
             foreach ($appointments as $appointment) {
                 $date = $appointment->appointment_date->format('Y-m-d');
@@ -161,7 +224,7 @@ class AppointmentController extends Controller
                     'name' => $appointment->name
                 ];
             }
-            
+
             return response()->json([
                 'success' => true,
                 'calendar_data' => $calendarData,
@@ -248,7 +311,7 @@ class AppointmentController extends Controller
         try {
             // Try to find in bookings table first (since that's what we're currently using)
             $booking = \App\Models\Booking::find($request->id);
-            
+
             if ($booking) {
                 return response()->json([
                     'success' => true,
@@ -530,7 +593,7 @@ class AppointmentController extends Controller
 
         try {
             $searchTerm = $request->search;
-            
+
             // Try to find in bookings table first (since that's what we're currently using)
             $booking = \App\Models\Booking::where(function($query) use ($searchTerm) {
                 $query->where('id', $searchTerm)
@@ -601,4 +664,62 @@ class AppointmentController extends Controller
             ], 500);
         }
     }
-} 
+
+    /**
+     * Get booked dates for a month to deactivate them in the calendar
+     */
+    public function getBookedDates(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'year' => 'required|integer|min:2024|max:2030',
+            'month' => 'required|integer|min:1|max:12'
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        try {
+            $year = $request->year;
+            $month = $request->month;
+
+            // Create start and end dates for the month
+            $startDate = "$year-" . str_pad($month, 2, '0', STR_PAD_LEFT) . "-01";
+            $endDate = date('Y-m-t', strtotime($startDate));
+
+            // Get bookings that are not completed (status != 'completed')
+            $bookedDates = \App\Models\Booking::whereBetween('appointment_date', [$startDate, $endDate])
+                ->where('status', '!=', 'completed')
+                ->whereNotNull('appointment_date')
+                ->select('appointment_date')
+                ->distinct()
+                ->pluck('appointment_date')
+                ->map(function($date) {
+                    return \Carbon\Carbon::parse($date)->format('Y-m-d');
+                })
+                ->toArray();
+
+            Log::info('Booked dates retrieved', [
+                'year' => $year,
+                'month' => $month,
+                'booked_dates' => $bookedDates
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'booked_dates' => $bookedDates,
+                'year' => $year,
+                'month' => $month
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error getting booked dates: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Error retrieving booked dates'
+            ], 500);
+        }
+    }
+}

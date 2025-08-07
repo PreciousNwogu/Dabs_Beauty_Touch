@@ -6,6 +6,13 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Dab's Beauty Touch - Professional Hair Braiding Services</title>
 
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('images/icon.ico.jpg') }}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('images/icon.ico.jpg') }}">
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('images/icon.ico.jpg') }}">
+    <meta name="msapplication-TileImage" content="{{ asset('images/icon.ico.jpg') }}">
+
     <!-- CSS Files -->
     <link rel="stylesheet" href="{{ asset('css/bootstrap.css') }}">
     <link rel="stylesheet" href="{{ asset('css/fonts.css') }}">
@@ -604,6 +611,23 @@
             background-color: #f8d7da;
             border-color: #f5c6cb;
             cursor: not-allowed;
+            opacity: 0.7;
+            position: relative;
+        }
+
+        .calendar-day.booked:hover {
+            background-color: #f8d7da;
+            transform: none;
+        }
+
+        .calendar-day.booked::after {
+            content: '×';
+            position: absolute;
+            top: 2px;
+            right: 4px;
+            color: #dc3545;
+            font-weight: bold;
+            font-size: 12px;
         }
 
         .calendar-day.past {
@@ -717,11 +741,11 @@
 </head>
 <body>
     <!-- Navigation -->
-    <nav class="navbar navbar-expand-lg navbar-light bg-white" style="margin-bottom: 0; box-shadow: 0 2px 8px rgba(0,0,0,0.04);">
-        <div class="container-fluid py-2">
+    <nav class="navbar navbar-expand-lg navbar-light bg-white" style="margin-bottom: 0; box-shadow: 0 2px 8px rgba(0,0,0,0.04); min-height: 80px;">
+        <div class="container-fluid py-3">
             <a class="navbar-brand d-flex align-items-center" href="#home">
-                <img src="{{ asset('images/logo.jpg') }}" alt="Logo" style="height: 40px; margin-right: 10px;">
-                <span style="font-weight: bold; font-size: 1.3rem; color: #ff6600;">Dab's Beauty Touch</span>
+                <img src="{{ asset('images/logo.jpg') }}" alt="Logo" style="height: 60px; margin-right: 15px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                <span style="font-weight: bold; font-size: 1.4rem; color: #ff6600;">Dab's Beauty Touch</span>
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
@@ -1454,14 +1478,14 @@
                             <div class="col-md-6">
                                 <label class="form-label">Appointment Date *</label>
                                 <div class="input-group">
-                                    <input type="date" class="form-control" id="bookingDate" required autocomplete="off">
+                                    <input type="text" class="form-control" id="bookingDate" placeholder="Click calendar to select date" readonly required style="background-color: #f8f9fa; cursor: pointer;" onclick="openCalendarModal()">
                                     <button class="btn btn-outline-secondary" type="button" onclick="openCalendarModal()">
                                         <i class="bi bi-calendar"></i>
                                     </button>
                                 </div>
                                 <small class="form-text text-muted mt-2">
                                     <i class="bi bi-calendar me-1"></i>
-                                    Select your preferred date
+                                    Click the calendar button to select your preferred date and time
                                 </small>
                             </div>
 
@@ -1469,14 +1493,14 @@
                             <div class="col-md-6">
                                 <label class="form-label">Appointment Time *</label>
                                 <div class="input-group">
-                                    <input type="text" class="form-control" id="timeInput" placeholder="e.g., 2:30 PM, 2:30, or 14:30" required autocomplete="off">
+                                    <input type="text" class="form-control" id="timeInput" placeholder="Click calendar to select time" readonly required style="background-color: #f8f9fa; cursor: pointer;" onclick="openCalendarModal()">
                                     <button class="btn btn-outline-secondary" type="button" onclick="openCalendarModal()">
                                         <i class="bi bi-calendar"></i>
                                     </button>
                                 </div>
                                 <small class="form-text text-muted mt-2">
-                                    <i class="bi bi-clock me-1"></i>
-                                    Easy input: Type "2:30 PM" or "2:30" - AM/PM is optional
+                                    <i class="bi bi-calendar me-1"></i>
+                                    Click the calendar button to select your preferred date and time
                                 </small>
                                 <small class="form-text text-muted d-block">
                                     <i class="bi bi-info-circle me-1"></i>
@@ -2268,22 +2292,34 @@
 
     // Get CSRF token from form or meta tag
     function getCSRFToken() {
-        const tokenInput = document.querySelector('input[name="_token"]');
-        if (tokenInput) {
-            return tokenInput.value;
-        }
+        // First try meta tag (most reliable)
         const metaToken = document.querySelector('meta[name="csrf-token"]');
         if (metaToken) {
-            return metaToken.getAttribute('content');
+            const token = metaToken.getAttribute('content');
+            console.log('CSRF token from meta tag:', token);
+            return token;
         }
+
+        // Then try form input
+        const tokenInput = document.querySelector('input[name="_token"]');
+        if (tokenInput) {
+            const token = tokenInput.value;
+            console.log('CSRF token from form input:', token);
+            return token;
+        }
+
         // Fallback: try to get from any form with CSRF token
         const anyForm = document.querySelector('form');
         if (anyForm) {
             const formToken = anyForm.querySelector('input[name="_token"]');
             if (formToken) {
-                return formToken.value;
+                const token = formToken.value;
+                console.log('CSRF token from form fallback:', token);
+                return token;
             }
         }
+
+        console.error('No CSRF token found!');
         return '';
     }
 
@@ -2437,140 +2473,10 @@
         }
     }
 
-    // Function to parse and validate time input
-    function parseTimeInput(timeString) {
-        // Remove extra spaces and convert to uppercase
-        timeString = timeString.trim().toUpperCase();
-
-        // First, try to auto-format if user typed without colon
-        if (timeString.match(/^\d{3,4}\s*(AM|PM)?$/)) {
-            // User typed something like "230 PM" or "1430"
-            const digits = timeString.replace(/[^\d]/g, '');
-            const period = timeString.match(/(AM|PM)/)?.[1] || '';
-
-            if (digits.length === 3) {
-                // 3 digits like "230" - assume first digit is hour, last two are minutes
-                timeString = digits[0] + ':' + digits.substring(1) + ' ' + period;
-            } else if (digits.length === 4) {
-                // 4 digits like "1430" - assume first two are hour, last two are minutes
-                timeString = digits.substring(0, 2) + ':' + digits.substring(2) + ' ' + period;
-            }
-        }
-
-        // Regex to match time patterns like "2:30 PM", "14:30", "2:30PM", "2:30", etc.
-        const timeRegex = /^(\d{1,2}):(\d{2})\s*(AM|PM)?$/;
-        const match = timeString.match(timeRegex);
-
-        if (!match) {
-            return null;
-        }
-
-        let hour = parseInt(match[1]);
-        const minute = parseInt(match[2]);
-        const period = match[3] || '';
-
-        // Validate minute
-        if (minute < 0 || minute > 59) {
-            return null;
-        }
-
-        // Handle 12-hour format (with or without AM/PM)
-        if (period) {
-            // User specified AM/PM
-            if (hour < 1 || hour > 12) {
-                return null;
-            }
-
-            if (period === 'PM' && hour !== 12) {
-                hour += 12;
-            } else if (period === 'AM' && hour === 12) {
-                hour = 0;
-            }
-        } else {
-            // No AM/PM specified - assume 12-hour format and treat as AM
-            if (hour < 1 || hour > 12) {
-                return null;
-            }
-            // Keep as is (AM format)
-        }
-
-        return {
-            hour: hour.toString().padStart(2, '0'),
-            minute: minute.toString().padStart(2, '0'),
-            time24: hour.toString().padStart(2, '0') + ':' + minute.toString().padStart(2, '0')
-        };
-    }
-
-    // Function to validate business hours
-    function validateBusinessHours(timeString) {
-        // If no timeString provided, return false
-        if (!timeString) {
-            return false;
-        }
-
-        const parsed = parseTimeInput(timeString);
-        if (!parsed) {
-            alert('Please enter a valid time format (e.g., 2:30 PM, 2:30, 14:30). AM/PM is optional.');
-            return false;
-        }
-
-        const time24 = parsed.time24;
-
-        // Business hours: 9:00 AM to 6:00 PM (excluding 12:00-1:00 PM break)
-        const businessStart = '09:00';
-        const businessEnd = '18:00';
-        const breakStart = '12:00';
-        const breakEnd = '13:00';
-
-        if (time24 < businessStart || time24 >= businessEnd) {
-            alert('Please select a time between 9:00 AM and 6:00 PM.');
-            return false;
-        }
-
-        if (time24 >= breakStart && time24 < breakEnd) {
-            alert('Please note: We have a lunch break from 12:00 PM to 1:00 PM. Please select a different time.');
-            return false;
-        }
-
-        return true;
-    }
-
     // Add event listener for time input
     document.addEventListener('DOMContentLoaded', function() {
-        const timeInput = document.getElementById('timeInput');
-        if (timeInput) {
-            // Auto-format time input as user types
-            timeInput.addEventListener('input', function(e) {
-                let value = this.value.replace(/[^\d]/g, ''); // Remove non-digits
-
-                if (value.length >= 2) {
-                    // Add colon after first two digits
-                    value = value.substring(0, 2) + ':' + value.substring(2);
-                }
-
-                if (value.length >= 5) {
-                    // Add space before AM/PM
-                    value = value.substring(0, 5) + ' ' + value.substring(5);
-                }
-
-                // Limit to reasonable length
-                if (value.length > 8) {
-                    value = value.substring(0, 8);
-                }
-
-                this.value = value;
-            });
-
-            // Validate on blur (temporarily disabled for testing)
-            /*
-            timeInput.addEventListener('blur', function() {
-                const timeString = this.value;
-                if (timeString && !validateBusinessHours(timeString)) {
-                    this.focus();
-                }
-            });
-            */
-        }
+        // Time input is now read-only and uses modal for selection
+        console.log('Time input is read-only - users must use calendar modal');
     });
 
     // Handle booking form submission
@@ -2598,39 +2504,33 @@
             return;
         }
 
-        // Validate and process time input before submission
+        // Check if time and date were selected via modal
         const timeInput = document.getElementById('timeInput');
         const timeHidden = document.getElementById('appointment_time_hidden');
+        const bookingDate = document.getElementById('bookingDate');
+        const appointmentDate = document.getElementById('appointment_date');
 
-        if (timeInput && timeInput.value) {
-            if (!validateBusinessHours(timeInput.value)) {
-                timeInput.focus();
-                return;
-            }
-
-            // Parse the time input and set the hidden field
-            const parsed = parseTimeInput(timeInput.value);
-            if (parsed) {
-                timeHidden.value = parsed.time24;
-                console.log('Time parsed successfully:', parsed.time24);
-            } else {
-                alert('Please enter a valid time format (e.g., 2:30 PM, 2:30, 14:30). AM/PM is optional.');
-                timeInput.focus();
-                return;
-            }
-        } else {
-            alert('Please enter appointment time');
-            timeInput.focus();
+        if (!timeInput || !timeInput.value) {
+            alert('Please select appointment time using the calendar modal');
             return;
         }
 
-        // Set the appointment date
-        const bookingDate = document.getElementById('bookingDate');
-        const appointmentDate = document.getElementById('appointment_date');
-        if (bookingDate.value) {
-            appointmentDate.value = bookingDate.value;
-            console.log('Date set:', bookingDate.value);
+        if (!bookingDate || !bookingDate.value) {
+            alert('Please select appointment date using the calendar modal');
+            return;
         }
+
+        // Values should already be set by the modal, just ensure they're in the hidden fields
+        if (timeHidden && !timeHidden.value) {
+            timeHidden.value = timeInput.value; // This should already be in 24-hour format from modal
+        }
+
+        if (appointmentDate && !appointmentDate.value) {
+            appointmentDate.value = bookingDate.value;
+        }
+
+        console.log('Date set:', bookingDate.value);
+        console.log('Time set:', timeInput.value);
 
         const submitBtn = this.querySelector('button[type="submit"]');
         const originalText = submitBtn.innerHTML;
@@ -2669,13 +2569,29 @@
         })
         .then(response => {
             console.log('Response status:', response.status);
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            return response.json();
+            console.log('Response headers:', response.headers);
+
+            // First get the text to see what we're actually receiving
+            return response.text().then(text => {
+                console.log('Raw response text:', text);
+
+                // Try to parse as JSON
+                try {
+                    const data = JSON.parse(text);
+                    return { data, status: response.status, ok: response.ok };
+                } catch (e) {
+                    console.error('JSON parse error:', e);
+                    console.error('Response text that failed to parse:', text);
+                    throw new Error(`Server returned non-JSON response: ${text.substring(0, 200)}...`);
+                }
+            });
         })
-        .then(data => {
-            console.log('Response data:', data);
+        .then(({ data, status, ok }) => {
+            if (!ok) {
+                throw new Error(`HTTP error! status: ${status}`);
+            }
+
+            console.log('Parsed response data:', data);
             if (data.success) {
                 // Show success message
                 const bookingId = data.appointment ? data.appointment.booking_id : 'N/A';
@@ -2734,9 +2650,14 @@
         .catch(error => {
             console.error('Error:', error);
             let errorMessage = 'An error occurred. Please try again.';
-            if (error.message) {
+
+            // Handle specific CSRF token errors
+            if (error.message && error.message.includes('419')) {
+                errorMessage = '🔒 Security token expired. Please refresh the page and try again.';
+            } else if (error.message) {
                 errorMessage += ' Error: ' + error.message;
             }
+
             alert(errorMessage);
         })
         .finally(() => {
@@ -2818,28 +2739,72 @@
         const calendarDays = document.getElementById('calendarDays');
         calendarDays.innerHTML = '';
 
-        for (let i = 0; i < 42; i++) {
-            const date = new Date(startDate);
-            date.setDate(startDate.getDate() + i);
+        // Fetch booked dates for this month
+        fetch(`/appointments/booked-dates?year=${year}&month=${month + 1}`)
+            .then(response => response.json())
+            .then(data => {
+                const bookedDates = data.success ? data.booked_dates : [];
+                console.log('Booked dates for month:', bookedDates);
 
-            const dayDiv = document.createElement('div');
-            dayDiv.className = 'col calendar-day';
-            dayDiv.textContent = date.getDate();
+                // Render calendar days
+                for (let i = 0; i < 42; i++) {
+                    const date = new Date(startDate);
+                    date.setDate(startDate.getDate() + i);
+                    const dateString = date.toISOString().split('T')[0];
 
-            if (date.getMonth() !== month) {
-                dayDiv.classList.add('other-month');
-            } else if (date < new Date().setHours(0, 0, 0, 0)) {
-                dayDiv.classList.add('past');
-            } else {
-                dayDiv.classList.add('available');
-                dayDiv.onclick = () => selectCalendarDate(date);
-            }
+                    const dayDiv = document.createElement('div');
+                    dayDiv.className = 'col calendar-day';
+                    dayDiv.textContent = date.getDate();
 
-            calendarDays.appendChild(dayDiv);
-        }
+                    if (date.getMonth() !== month) {
+                        dayDiv.classList.add('other-month');
+                    } else if (date < new Date().setHours(0, 0, 0, 0)) {
+                        dayDiv.classList.add('past');
+                    } else if (bookedDates.includes(dateString)) {
+                        // Date is booked with non-completed appointment
+                        dayDiv.classList.add('booked');
+                        dayDiv.title = 'This date is already booked';
+                    } else {
+                        dayDiv.classList.add('available');
+                        dayDiv.onclick = () => selectCalendarDate(date);
+                    }
+
+                    calendarDays.appendChild(dayDiv);
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching booked dates:', error);
+
+                // Fallback: render calendar without booking checks
+                for (let i = 0; i < 42; i++) {
+                    const date = new Date(startDate);
+                    date.setDate(startDate.getDate() + i);
+
+                    const dayDiv = document.createElement('div');
+                    dayDiv.className = 'col calendar-day';
+                    dayDiv.textContent = date.getDate();
+
+                    if (date.getMonth() !== month) {
+                        dayDiv.classList.add('other-month');
+                    } else if (date < new Date().setHours(0, 0, 0, 0)) {
+                        dayDiv.classList.add('past');
+                    } else {
+                        dayDiv.classList.add('available');
+                        dayDiv.onclick = () => selectCalendarDate(date);
+                    }
+
+                    calendarDays.appendChild(dayDiv);
+                }
+            });
     }
 
     function selectCalendarDate(date) {
+        // Check if the clicked day is booked
+        if (event.target.classList.contains('booked')) {
+            alert('This date is already booked with a pending or confirmed appointment. Please select another date.');
+            return;
+        }
+
         selectedCalendarDate = date;
 
         // Update calendar display
@@ -2888,10 +2853,19 @@
                 loading.style.display = 'none';
                 timeSlotsContainer.style.display = 'block';
 
-                if (data.success && data.slots && data.slots.length > 0) {
-                    renderTimeSlotsInModal(data.slots);
+                if (data.success) {
+                    if (data.message) {
+                        // Date is booked, show message
+                        timeSlots.innerHTML = `<div class="alert alert-warning"><i class="bi bi-exclamation-triangle me-2"></i>${data.message}</div>`;
+                        document.getElementById('confirmDateTimeBtn').disabled = true;
+                    } else if (data.slots && data.slots.length > 0) {
+                        renderTimeSlotsInModal(data.slots);
+                    } else {
+                        // Use default slots if no slots returned
+                        renderTimeSlotsInModal(defaultSlots);
+                    }
                 } else {
-                    // Use default slots if API fails or returns no slots
+                    // Use default slots if API returns error
                     renderTimeSlotsInModal(defaultSlots);
                 }
             })
@@ -2954,32 +2928,21 @@
 
     function confirmDateTime() {
         if (selectedCalendarDate && selectedCalendarTime) {
+            // Format date for display (readable format)
+            const formattedDate = selectedCalendarDate.toLocaleDateString('en-US', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+
             // Set the values in the booking form
-            document.getElementById('bookingDate').value = selectedCalendarDate.toISOString().split('T')[0];
+            document.getElementById('bookingDate').value = formattedDate;
             document.getElementById('appointment_date').value = selectedCalendarDate.toISOString().split('T')[0];
             document.getElementById('appointment_time_hidden').value = selectedCalendarTime.time;
 
-            // Convert 24-hour time to 12-hour format for display
-            const timeString = selectedCalendarTime.time;
-            const [hour24, minute] = timeString.split(':');
-            const hour24Int = parseInt(hour24);
-
-            // Convert to 12-hour format
-            let hour12 = hour24Int;
-            let period = 'AM';
-
-            if (hour24Int >= 12) {
-                period = 'PM';
-                if (hour24Int > 12) {
-                    hour12 = hour24Int - 12;
-                }
-            } else if (hour24Int === 0) {
-                hour12 = 12;
-            }
-
-            // Set the manual time input
-            const formattedTime = `${hour12}:${minute} ${period}`;
-            document.getElementById('timeInput').value = formattedTime;
+            // Set the time input with the formatted time from modal
+            document.getElementById('timeInput').value = selectedCalendarTime.formattedTime;
 
             // Close calendar modal
             const calendarModal = bootstrap.Modal.getInstance(document.getElementById('calendarModal'));
