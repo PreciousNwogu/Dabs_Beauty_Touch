@@ -8,6 +8,12 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 
+// Include test email routes
+require __DIR__.'/test-email.php';
+
+// Include database test routes
+require __DIR__.'/test-database.php';
+
 // Main route - show the home page
 Route::get('/', function () {
     return view('home');

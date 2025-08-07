@@ -41,48 +41,34 @@ class AdminBookingNotification extends Notification implements ShouldQueue
      */
     public function toMail(object $notifiable): MailMessage
     {
-        $appointmentDate = $this->booking->appointment_date;
-        $createdAt = $this->booking->created_at;
-        
-        // Handle both Carbon instances and string dates
-        if (is_string($appointmentDate)) {
-            $appointmentDate = \Carbon\Carbon::parse($appointmentDate);
-        }
-        if (is_string($createdAt)) {
-            $createdAt = \Carbon\Carbon::parse($createdAt);
-        }
-        
         return (new MailMessage)
-            ->subject('🔔 New Booking Alert - Dab\'s Beauty Touch')
+            ->subject('New Booking Alert - Dabs Beauty Touch')
             ->greeting('New Appointment Booking!')
             ->line('A new appointment has been booked and requires your attention.')
             ->line('')
-            ->line('**Customer Details:**')
-            ->line('• **Name:** ' . $this->booking->name)
-            ->line('• **Email:** ' . $this->booking->email)
-            ->line('• **Phone:** ' . $this->booking->phone)
+            ->line('Customer Details:')
+            ->line('Name: ' . $this->booking->name)
+            ->line('Email: ' . $this->booking->email)
+            ->line('Phone: ' . $this->booking->phone)
             ->line('')
-            ->line('**Booking Information:**')
-            ->line('• **Booking ID:** ' . $this->bookingId)
-            ->line('• **Confirmation Code:** ' . $this->confirmationCode)
-            ->line('• **Service:** ' . $this->booking->service)
-            ->line('• **Date:** ' . $appointmentDate->format('l, F j, Y'))
-            ->line('• **Time:** ' . $this->booking->appointment_time)
-            ->line('• **Status:** ' . ucfirst($this->booking->status))
-            ->line('• **Created:** ' . $createdAt->format('M j, Y g:i A'))
+            ->line('Booking Information:')
+            ->line('Booking ID: ' . $this->bookingId)
+            ->line('Confirmation Code: ' . $this->confirmationCode)
+            ->line('Service: ' . $this->booking->service)
+            ->line('Date: ' . $this->booking->appointment_date)
+            ->line('Time: ' . $this->booking->appointment_time)
+            ->line('Status: ' . ucfirst($this->booking->status))
             ->line('')
-            ->line('**Required Actions:**')
-            ->line('🔹 Contact customer to arrange $20 deposit payment')
-            ->line('🔹 Confirm appointment once deposit is received')
-            ->line('🔹 Update booking status in admin panel')
-            ->line('🔹 Add any special notes or requirements')
+            ->line('Required Actions:')
+            ->line('- Contact customer to arrange $20 deposit payment')
+            ->line('- Confirm appointment once deposit is received')
+            ->line('- Update booking status in admin panel')
             ->line('')
-            ->action('View in Admin Panel', url('/admin/bookings/' . $this->bookingId))
-            ->line('**Customer Message/Notes:**')
-            ->line($this->booking->message ?? 'No additional message provided.')
+            ->action('View in Admin Panel', url('/admin/bookings'))
+            ->line('Customer Message: ' . ($this->booking->message ?? 'No additional message provided.'))
             ->line('')
             ->line('Please reach out to the customer promptly to confirm their appointment.')
-            ->salutation('Dab\'s Beauty Touch Admin System');
+            ->salutation('Dabs Beauty Touch Admin System');
     }
 
     /**
@@ -102,7 +88,6 @@ class AdminBookingNotification extends Notification implements ShouldQueue
             'appointment_date' => $this->booking->appointment_date,
             'appointment_time' => $this->booking->appointment_time,
             'status' => $this->booking->status,
-            'created_at' => $this->booking->created_at,
         ];
     }
 }

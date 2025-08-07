@@ -641,6 +641,16 @@
             color: #adb5bd;
         }
 
+        /* Hide completely unavailable dates */
+        .calendar-day.hidden-date {
+            visibility: hidden !important;
+            opacity: 0 !important;
+            pointer-events: none !important;
+            background-color: transparent !important;
+            border-color: transparent !important;
+            min-height: 50px; /* Maintain grid structure */
+        }
+
         .time-slot-btn {
             transition: all 0.3s ease;
             border-radius: 8px;
@@ -2761,9 +2771,12 @@
                     } else if (date < new Date().setHours(0, 0, 0, 0)) {
                         dayDiv.classList.add('past');
                     } else if (bookedDates.includes(dateString)) {
-                        // Date is booked with non-completed appointment
-                        dayDiv.classList.add('booked');
-                        dayDiv.title = 'This date is already booked';
+                        // HIDE dates that are booked with non-completed appointments
+                        // Instead of showing them as disabled, don't render them at all
+                        dayDiv.style.visibility = 'hidden';
+                        dayDiv.style.pointerEvents = 'none';
+                        dayDiv.innerHTML = ''; // Remove date number
+                        dayDiv.classList.add('hidden-date');
                     } else {
                         dayDiv.classList.add('available');
                         dayDiv.onclick = () => selectCalendarDate(date);
@@ -2882,7 +2895,10 @@
         const timeSlots = document.getElementById('timeSlots');
         timeSlots.innerHTML = '';
 
-        if (slots.length === 0) {
+        // Filter to only show available slots
+        const availableSlots = slots.filter(slot => slot.available);
+
+        if (availableSlots.length === 0) {
             timeSlots.innerHTML = '<div class="alert alert-info">No available slots for this date</div>';
             return;
         }
@@ -2893,14 +2909,14 @@
         messageDiv.innerHTML = '<i class="bi bi-info-circle me-2"></i>Click on a time slot below to select it, then click "CONFIRM SELECTION" to book your appointment.';
         timeSlots.appendChild(messageDiv);
 
-        slots.forEach(slot => {
+        availableSlots.forEach(slot => {
             const slotDiv = document.createElement('div');
             slotDiv.className = `col-md-4 mb-2`;
             slotDiv.innerHTML = `
-                <button class="btn btn-outline-primary w-100 time-slot-btn ${slot.available ? 'available' : 'booked'}"
-                        ${slot.available ? `onclick="selectCalendarTime('${slot.time}', '${slot.formatted_time}')"` : 'disabled'}>
+                <button class="btn btn-outline-primary w-100 time-slot-btn available"
+                        onclick="selectCalendarTime('${slot.time}', '${slot.formatted_time}')">
                     ${slot.formatted_time}
-                    <br><small>${slot.available ? 'Available' : 'Booked'}</small>
+                    <br><small>Available</small>
                 </button>
             `;
             timeSlots.appendChild(slotDiv);

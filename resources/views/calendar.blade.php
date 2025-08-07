@@ -91,6 +91,16 @@
             color: #adb5bd;
         }
 
+        /* Hide completely unavailable dates */
+        .calendar-day.hidden-date {
+            visibility: hidden !important;
+            opacity: 0 !important;
+            pointer-events: none !important;
+            background-color: transparent !important;
+            border-color: transparent !important;
+            min-height: 80px; /* Maintain grid structure */
+        }
+
         .time-slots {
             background: white;
             border-radius: 20px;
@@ -405,25 +415,64 @@
             const calendarDays = document.getElementById('calendarDays');
             calendarDays.innerHTML = '';
 
-            for (let i = 0; i < 42; i++) {
-                const date = new Date(startDate);
-                date.setDate(startDate.getDate() + i);
+            // Fetch booked dates for this month
+            fetch(`/appointments/booked-dates?year=${year}&month=${month + 1}`)
+                .then(response => response.json())
+                .then(data => {
+                    const bookedDates = data.success ? data.booked_dates : [];
+                    console.log('Booked dates for month:', bookedDates);
 
-                const dayDiv = document.createElement('div');
-                dayDiv.className = 'col calendar-day';
-                dayDiv.textContent = date.getDate();
+                    for (let i = 0; i < 42; i++) {
+                        const date = new Date(startDate);
+                        date.setDate(startDate.getDate() + i);
+                        const dateString = date.toISOString().split('T')[0];
 
-                if (date.getMonth() !== month) {
-                    dayDiv.classList.add('other-month');
-                } else if (date < new Date().setHours(0, 0, 0, 0)) {
-                    dayDiv.classList.add('past');
-                } else {
-                    dayDiv.classList.add('available');
-                    dayDiv.onclick = () => selectDate(date);
-                }
+                        const dayDiv = document.createElement('div');
+                        dayDiv.className = 'col calendar-day';
+                        dayDiv.textContent = date.getDate();
 
-                calendarDays.appendChild(dayDiv);
-            }
+                        if (date.getMonth() !== month) {
+                            dayDiv.classList.add('other-month');
+                        } else if (date < new Date().setHours(0, 0, 0, 0)) {
+                            dayDiv.classList.add('past');
+                        } else if (bookedDates.includes(dateString)) {
+                            // HIDE dates that are booked with non-completed appointments
+                            dayDiv.style.visibility = 'hidden';
+                            dayDiv.style.pointerEvents = 'none';
+                            dayDiv.innerHTML = ''; // Remove date number
+                            dayDiv.classList.add('hidden-date');
+                        } else {
+                            dayDiv.classList.add('available');
+                            dayDiv.onclick = () => selectDate(date);
+                        }
+
+                        calendarDays.appendChild(dayDiv);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching booked dates:', error);
+                    
+                    // Fallback: render calendar without booking checks
+                    for (let i = 0; i < 42; i++) {
+                        const date = new Date(startDate);
+                        date.setDate(startDate.getDate() + i);
+
+                        const dayDiv = document.createElement('div');
+                        dayDiv.className = 'col calendar-day';
+                        dayDiv.textContent = date.getDate();
+
+                        if (date.getMonth() !== month) {
+                            dayDiv.classList.add('other-month');
+                        } else if (date < new Date().setHours(0, 0, 0, 0)) {
+                            dayDiv.classList.add('past');
+                        } else {
+                            dayDiv.classList.add('available');
+                            dayDiv.onclick = () => selectDate(date);
+                        }
+
+                        calendarDays.appendChild(dayDiv);
+                    }
+                });
         }
 
         function selectDate(date) {
@@ -477,23 +526,22 @@
             const timeSlots = document.getElementById('timeSlots');
             timeSlots.innerHTML = '';
 
-            if (slots.length === 0) {
+            // Filter to only show available slots
+            const availableSlots = slots.filter(slot => slot.available);
+
+            if (availableSlots.length === 0) {
                 timeSlots.innerHTML = '<div class="alert alert-info">No available slots for this date</div>';
                 return;
             }
 
-            slots.forEach(slot => {
+            availableSlots.forEach(slot => {
                 const slotDiv = document.createElement('div');
-                slotDiv.className = `time-slot ${slot.available ? 'available' : 'booked'}`;
+                slotDiv.className = 'time-slot available';
                 slotDiv.innerHTML = `
                     <span>${slot.formatted_time}</span>
-                    <span>${slot.available ? 'Available' : 'Booked'}</span>
+                    <span>Available</span>
                 `;
-
-                if (slot.available) {
-                    slotDiv.onclick = () => selectTimeSlot(slot);
-                }
-
+                slotDiv.onclick = () => selectTimeSlot(slot);
                 timeSlots.appendChild(slotDiv);
             });
         }

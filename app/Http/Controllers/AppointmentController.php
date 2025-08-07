@@ -144,8 +144,8 @@ class AppointmentController extends Controller
 
                 // Send admin notification emails
                 $adminEmails = [
-                    config('mail.admin_email', 'admin@dabsbeautytouch.com'),
-                    config('mail.admin_email_secondary', 'bookings@dabsbeautytouch.com')
+                    env('ADMIN_EMAIL', 'admin@dabsbeautytouch.com'),
+                    env('BOOKING_NOTIFICATION_EMAIL', 'bookings@dabsbeautytouch.com')
                 ];
 
                 foreach ($adminEmails as $adminEmail) {
