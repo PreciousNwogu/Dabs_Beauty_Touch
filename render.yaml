@@ -1,18 +1,21 @@
 services:
   - type: web
     name: dabs-beauty-touch
-    runtime: php
+    runtime: docker
     plan: free
-    buildCommand: "./render-build.sh"
-    startCommand: "./render-start.sh"
+    region: oregon
+    branch: main
+    dockerfilePath: ./Dockerfile
     healthCheckPath: /
     envVars:
+      - key: APP_NAME
+        value: "Dab's Beauty Touch"
       - key: APP_ENV
         value: production
       - key: APP_DEBUG
         value: false
-      - key: APP_NAME
-        value: "Dab's Beauty Touch"
+      - key: APP_KEY
+        value: base64:eB1ucQSBfg/NXJHIBMvIs2+p3zCcpAqO3XitD5J30bQ=
       - key: LOG_LEVEL
         value: error
       - key: SESSION_DRIVER
@@ -23,9 +26,27 @@ services:
         value: database
       - key: DB_CONNECTION
         value: pgsql
-    # You'll need to add these in Render dashboard:
-    # - DATABASE_URL (will be auto-populated when you add PostgreSQL)
-    # - APP_KEY (generate with: php artisan key:generate --show)
+      - key: MAIL_MAILER
+        value: smtp
+      - key: MAIL_HOST
+        value: smtp.zohocloud.ca
+      - key: MAIL_PORT
+        value: 465
+      - key: MAIL_USERNAME
+        value: info@dabsbeautytouch.com
+      - key: MAIL_PASSWORD
+        value: 66gtsfMNmgeH
+      - key: MAIL_ENCRYPTION
+        value: ssl
+      - key: MAIL_FROM_ADDRESS
+        value: info@dabsbeautytouch.com
+      - key: MAIL_FROM_NAME
+        value: "Dab's Beauty Touch"
+      - key: ADMIN_EMAIL
+        value: info@dabsbeautytouch.com
+      - key: BOOKING_NOTIFICATION_EMAIL
+        value: info@dabsbeautytouch.com
+    # Database connection will be auto-populated when you connect PostgreSQL
     
 databases:
   - name: dabs-beauty-touch-db

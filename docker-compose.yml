@@ -1,0 +1,59 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8000:80"
+    environment:
+      - APP_NAME=Dab's Beauty Touch
+      - APP_ENV=production
+      - APP_DEBUG=false
+      - APP_KEY=base64:eB1ucQSBfg/NXJHIBMvIs2+p3zCcpAqO3XitD5J30bQ=
+      - APP_URL=http://localhost:8000
+      - DB_CONNECTION=pgsql
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_DATABASE=dabs_beauty_touch
+      - DB_USERNAME=postgres
+      - DB_PASSWORD=password
+      - SESSION_DRIVER=database
+      - CACHE_STORE=database
+      - QUEUE_CONNECTION=database
+      - LOG_LEVEL=error
+      - MAIL_MAILER=smtp
+      - MAIL_HOST=smtp.zohocloud.ca
+      - MAIL_PORT=465
+      - MAIL_USERNAME=info@dabsbeautytouch.com
+      - MAIL_PASSWORD=66gtsfMNmgeH
+      - MAIL_ENCRYPTION=ssl
+      - MAIL_FROM_ADDRESS=info@dabsbeautytouch.com
+      - MAIL_FROM_NAME=Dab's Beauty Touch
+      - ADMIN_EMAIL=info@dabsbeautytouch.com
+      - BOOKING_NOTIFICATION_EMAIL=info@dabsbeautytouch.com
+    volumes:
+      - ./storage/app/public:/var/www/html/storage/app/public
+    depends_on:
+      - db
+    networks:
+      - app-network
+
+  db:
+    image: postgres:15
+    environment:
+      - POSTGRES_DB=dabs_beauty_touch
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - app-network
+
+volumes:
+  postgres_data:
+
+networks:
+  app-network:
+    driver: bridge
