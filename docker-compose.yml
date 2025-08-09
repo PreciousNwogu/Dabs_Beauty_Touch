@@ -9,7 +9,7 @@ services:
       - APP_NAME=Dab's Beauty Touch
       - APP_ENV=production
       - APP_DEBUG=false
-      - APP_KEY=base64:eB1ucQSBfg/NXJHIBMvIs2+p3zCcpAqO3XitD5J30bQ=
+      - APP_KEY=base64:YOUR_APP_KEY_HERE
       - APP_URL=http://localhost:8000
       - DB_CONNECTION=pgsql
       - DB_HOST=db
@@ -25,7 +25,7 @@ services:
       - MAIL_HOST=smtp.zohocloud.ca
       - MAIL_PORT=465
       - MAIL_USERNAME=info@dabsbeautytouch.com
-      - MAIL_PASSWORD=66gtsfMNmgeH
+      - MAIL_PASSWORD=YOUR_MAIL_PASSWORD
       - MAIL_ENCRYPTION=ssl
       - MAIL_FROM_ADDRESS=info@dabsbeautytouch.com
       - MAIL_FROM_NAME=Dab's Beauty Touch

@@ -15,7 +15,7 @@ services:
       - key: APP_DEBUG
         value: false
       - key: APP_KEY
-        value: base64:eB1ucQSBfg/NXJHIBMvIs2+p3zCcpAqO3XitD5J30bQ=
+        value: [SET_IN_RENDER_DASHBOARD]
       - key: LOG_LEVEL
         value: error
       - key: SESSION_DRIVER
@@ -35,7 +35,7 @@ services:
       - key: MAIL_USERNAME
         value: info@dabsbeautytouch.com
       - key: MAIL_PASSWORD
-        value: 66gtsfMNmgeH
+        value: [SET_IN_RENDER_DASHBOARD]
       - key: MAIL_ENCRYPTION
         value: ssl
       - key: MAIL_FROM_ADDRESS

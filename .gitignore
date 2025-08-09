@@ -22,3 +22,33 @@
 Homestead.json
 Homestead.yaml
 Thumbs.db
+
+# Developer Documentation (not for end users)
+BOOKING_ID_SYSTEM.md
+BOOKING_STATUS_GUIDE.md
+DATABASE_MIGRATION_DOCUMENTATION.md
+EMAIL_SYSTEM_DOCUMENTATION.md
+BUSINESS_EMAIL_INTEGRATION.md
+ZOHO_AUTO_EXPUNGE_GUIDE.md
+ZOHO_EMAIL_SETUP.md
+DOCKER_TESTING.md
+DIGITALOCEAN_DEPLOYMENT.md
+RAILWAY_DEPLOYMENT.md
+
+# Development Helper Files
+zoho-env-template.txt
+zoho-setup-helper.php
+zoho-troubleshooting.txt
+create_database.php
+deploy-docker.sh
+
+# Test Files
+test-*.php
+simple-email-test.php
+test-email-simple.php
+test-email-system.php
+test-mailtrap.php
+
+# Route Test Files
+routes/test-*.php
+routes/web-simple.php
