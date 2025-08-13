@@ -148,12 +148,12 @@
                         <i class="fas fa-home me-2"></i>
                         Back to Home
                     </a>
-                    <div class="mt-3">
-                        <small class="text-muted">
-                            <i class="fas fa-phone me-1"></i>
-                            Questions? Call us at <strong>(647) 834-8549</strong>
-                        </small>
-                    </div>
+                        <div class="text-center mt-4">
+                            <small class="text-muted">
+                                <i class="fas fa-phone me-1"></i>
+                                Questions? Call us at <strong>(647) 834-8549</strong>
+                            </small>
+                        </div>
                 </div>
             </div>
         </div>

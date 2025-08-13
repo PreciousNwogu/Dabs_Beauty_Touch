@@ -103,33 +103,33 @@
                 padding: 30px 20px;
                 max-width: 95%;
             }
-            
+
             .hero-content h1 {
                 font-size: 2.5rem;
                 margin-bottom: 1rem;
                 line-height: 1.1;
             }
-            
+
             .hero-content p {
                 font-size: 1.1rem;
                 margin-bottom: 1.5rem;
             }
-            
+
             .hero-section {
                 min-height: 80vh;
                 padding: 60px 0 40px;
             }
         }
-        
+
         @media (max-width: 576px) {
             .hero-content h1 {
                 font-size: 2rem;
             }
-            
+
             .hero-content p {
                 font-size: 1rem;
             }
-            
+
             .hero-content {
                 padding: 25px 15px;
             }
@@ -158,58 +158,58 @@
             padding: 80px 0;
             background-color: #f8f9fa;
         }
-        
+
         @media (max-width: 768px) {
             .about-section {
                 padding: 60px 0;
             }
-            
+
             .about-section .card {
                 flex-direction: column !important;
                 margin: 0 15px;
             }
-            
+
             .about-section .col-md-7,
             .about-section .col-md-5 {
                 width: 100% !important;
                 max-width: 100% !important;
                 flex: none !important;
             }
-            
+
             .about-section .col-md-7 {
                 padding: 2rem 1.5rem !important;
             }
-            
+
             .about-section .col-md-5 {
                 padding: 1.5rem !important;
             }
-            
+
             .about-section h2.section-title {
                 font-size: 2rem !important;
                 text-align: center;
             }
-            
+
             .about-section .lead {
                 font-size: 1.1rem !important;
                 text-align: center;
             }
-            
+
             .about-section img {
                 max-width: 280px !important;
                 margin: 0 auto;
                 display: block;
             }
         }
-        
+
         @media (max-width: 576px) {
             .about-section h2.section-title {
                 font-size: 1.8rem !important;
             }
-            
+
             .about-section .col-md-7 {
                 padding: 1.5rem 1rem !important;
             }
-            
+
             .about-section img {
                 max-width: 250px !important;
             }
@@ -220,42 +220,42 @@
             padding: 80px 0;
             background-color: #fff;
         }
-        
+
         @media (max-width: 768px) {
             .contact-section {
                 padding: 60px 0;
             }
-            
+
             .contact-section .card {
                 flex-direction: column !important;
                 margin: 0 15px;
             }
-            
+
             .contact-section .col-md-6 {
                 width: 100% !important;
                 max-width: 100% !important;
                 flex: none !important;
                 border-right: none !important;
             }
-            
+
             .contact-section .col-md-6:first-child {
                 border-bottom: 1px solid #e3eafc !important;
             }
-            
+
             .contact-section .col-md-6 {
                 padding: 2rem 1.5rem !important;
             }
-            
+
             .contact-section h2.section-title {
                 font-size: 1.8rem !important;
                 text-align: center;
             }
-            
+
             .contact-section .social-links {
                 text-align: center;
                 margin-top: 1.5rem;
             }
-            
+
             .contact-section .social-links .btn {
                 margin-bottom: 0.5rem;
                 width: auto;
@@ -263,16 +263,16 @@
                 padding: 0.5rem 1rem;
             }
         }
-        
+
         @media (max-width: 576px) {
             .contact-section .col-md-6 {
                 padding: 1.5rem 1rem !important;
             }
-            
+
             .contact-section h2.section-title {
                 font-size: 1.6rem !important;
             }
-            
+
             .contact-section .social-links .btn {
                 display: block;
                 width: 100%;
@@ -285,28 +285,28 @@
             padding: 80px 0;
             background-color: #f8f9fa;
         }
-        
+
         /* Services Section Mobile Styles */
         @media (max-width: 768px) {
             .services-section {
                 padding: 60px 0;
             }
-            
+
             .services-section .container {
                 padding: 0 15px;
             }
-            
+
             .services-section h2 {
                 font-size: 2rem;
                 text-align: center;
             }
-            
+
             .services-section .lead {
                 font-size: 1.1rem;
                 text-align: center;
             }
         }
-        
+
         @media (max-width: 576px) {
             .services-section h2 {
                 font-size: 1.8rem;
@@ -319,7 +319,7 @@
                 padding: 0.8rem 1rem;
                 text-align: center;
             }
-            
+
             .navbar-collapse {
                 background: rgba(255, 255, 255, 0.98);
                 margin-top: 1rem;
@@ -335,30 +335,30 @@
                 padding-left: 15px;
                 padding-right: 15px;
             }
-            
+
             .section-title {
                 font-size: 1.8rem !important;
                 text-align: center;
                 margin-bottom: 1.5rem;
             }
-            
+
             .lead {
                 font-size: 1.1rem;
                 text-align: center;
             }
-            
+
             /* Card responsive improvements */
             .card {
                 border-radius: 16px;
                 margin: 0 10px;
             }
         }
-        
+
         @media (max-width: 576px) {
             .section-title {
                 font-size: 1.6rem !important;
             }
-            
+
             .card {
                 margin: 0 5px;
             }
@@ -435,36 +435,36 @@
                 margin-bottom: 20px;
                 padding: 24px 16px 20px 16px;
             }
-            
+
             .service-card img {
                 width: 180px;
                 height: 180px;
             }
-            
+
             .service-card h4 {
                 font-size: 1.3rem;
             }
-            
+
             .service-card p {
                 font-size: 1rem;
                 margin-bottom: 6px;
             }
         }
-        
+
         @media (max-width: 576px) {
             .service-card {
                 padding: 20px 14px 18px 14px;
             }
-            
+
             .service-card img {
                 width: 160px;
                 height: 160px;
             }
-            
+
             .service-card h4 {
                 font-size: 1.2rem;
             }
-            
+
             .service-card p {
                 font-size: 0.95rem;
             }
@@ -475,36 +475,36 @@
             .image-slider-section {
                 padding: 60px 0 !important;
             }
-            
+
             .carousel-inner .row {
                 flex-direction: column;
             }
-            
+
             .carousel-inner .col-lg-6 {
                 width: 100%;
                 max-width: 100%;
             }
-            
+
             .slide-content {
                 padding: 20px !important;
                 text-align: center;
             }
-            
+
             .slide-content h3 {
                 font-size: 1.6rem !important;
                 margin-bottom: 15px !important;
             }
-            
+
             .slide-content p {
                 font-size: 1rem !important;
                 margin-bottom: 20px !important;
             }
-            
+
             .feature-item {
                 justify-content: center;
                 margin-bottom: 10px !important;
             }
-            
+
             .carousel-item img {
                 max-height: 300px;
                 object-fit: cover;
@@ -512,16 +512,16 @@
                 margin-bottom: 20px;
             }
         }
-        
+
         @media (max-width: 576px) {
             .slide-content h3 {
                 font-size: 1.4rem !important;
             }
-            
+
             .slide-content {
                 padding: 15px !important;
             }
-            
+
             .carousel-item img {
                 max-height: 250px;
             }
@@ -532,58 +532,58 @@
             .important-info-content .row {
                 flex-direction: column-reverse;
             }
-            
+
             .important-info-content .col-lg-8,
             .important-info-content .col-lg-4 {
                 width: 100%;
                 max-width: 100%;
             }
-            
+
             .equipment-image {
                 width: 280px !important;
                 height: 280px !important;
                 margin-bottom: 2rem;
             }
-            
+
             .contact-info-grid {
                 grid-template-columns: 1fr !important;
                 gap: 10px !important;
             }
-            
+
             .info-item h5 {
                 font-size: 1.1rem;
                 text-align: center;
                 margin-bottom: 10px !important;
             }
-            
+
             .info-item p {
                 font-size: 1rem !important;
                 text-align: center;
             }
-            
+
             .contact-item {
                 text-align: center;
             }
         }
-        
+
         @media (max-width: 576px) {
             .equipment-image {
                 width: 250px !important;
                 height: 250px !important;
             }
-            
+
             .info-item h5 {
                 font-size: 1rem;
             }
-            
+
             .info-item p {
                 font-size: 0.9rem !important;
             }
-            
+
             .contact-item {
                 padding: 12px !important;
             }
-            
+
             .contact-item a {
                 font-size: 1rem !important;
             }
@@ -594,29 +594,29 @@
             .terms-section .card {
                 margin-bottom: 1.5rem;
             }
-            
+
             .terms-section h4 {
                 font-size: 1.4rem;
             }
-            
+
             .terms-section .card-body {
                 padding: 1.5rem !important;
             }
-            
+
             .terms-section i {
                 font-size: 2.5rem !important;
             }
         }
-        
+
         @media (max-width: 576px) {
             .terms-section h4 {
                 font-size: 1.2rem;
             }
-            
+
             .terms-section .card-body {
                 padding: 1rem !important;
             }
-            
+
             .terms-section i {
                 font-size: 2rem !important;
             }
@@ -2789,11 +2789,11 @@
     // IMMEDIATE BUTTON TEST - runs as soon as script loads
     console.log('=== BUTTON DEBUG TEST ===');
     console.log('Script loading...');
-    
+
     // Test function to check button status
     function testButtonAndForm() {
         console.log('Testing button and form...');
-        
+
         // Test button
         const btn = document.getElementById('bookAppointmentBtn');
         console.log('Button found:', !!btn);
@@ -2808,7 +2808,7 @@
                 pointerEvents: window.getComputedStyle(btn).pointerEvents
             });
         }
-        
+
         // Test form
         const form = document.getElementById('bookingForm');
         console.log('Form found:', !!form);
@@ -2820,14 +2820,14 @@
                 elements: form.elements.length
             });
         }
-        
+
         // Add simple click handler if both exist
         if (btn && form) {
             console.log('Adding simple click handler...');
             btn.onclick = function(e) {
                 console.log('=== BUTTON CLICKED! ===');
                 e.preventDefault();
-                
+
                 // Try to submit form manually
                 try {
                     console.log('Attempting manual form submission...');
@@ -2836,20 +2836,20 @@
                 } catch (error) {
                     console.error('Form submission error:', error);
                 }
-                
+
                 return false;
             };
             console.log('Simple click handler added successfully');
         }
     }
-    
+
     // Test multiple times to catch dynamic loading
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', testButtonAndForm);
     } else {
         testButtonAndForm();
     }
-    
+
     setTimeout(testButtonAndForm, 500);
     setTimeout(testButtonAndForm, 2000);
 
@@ -3050,13 +3050,13 @@
     // Handle booking form submission
     document.addEventListener('DOMContentLoaded', function() {
         console.log('DOM loaded - Setting up form submission handler');
-        
+
         const bookingForm = document.getElementById('bookingForm');
         if (!bookingForm) {
             console.error('Booking form not found!');
             return;
         }
-        
+
         bookingForm.addEventListener('submit', function(e) {
             e.preventDefault();
             e.stopPropagation();
@@ -3105,12 +3105,12 @@
         const bookingDate = document.getElementById('bookingDate');
         const appointmentDate = document.getElementById('appointment_date');
         const selectedDate = appointmentDate ? appointmentDate.value : null;
-        
+
         if (selectedDate) {
             const selected = new Date(selectedDate);
             const today = new Date();
             today.setHours(0, 0, 0, 0);
-            
+
             if (selected < today) {
                 alert('Please select a future date for your appointment');
                 return;
@@ -3207,25 +3207,33 @@
         // Submit via AJAX with improved error handling
         const csrfToken = getCSRFToken();
 
+        // Ensure the form action uses HTTPS in production
+        let actionUrl = this.action;
+        if (window.location.protocol === 'https:' && actionUrl.startsWith('http:')) {
+            actionUrl = actionUrl.replace('http:', 'https:');
+        }
+
         // Add a timeout to the fetch request
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
 
-        fetch(this.action, {
+        fetch(actionUrl, {
             method: 'POST',
             body: formData,
             headers: {
                 'X-Requested-With': 'XMLHttpRequest',
                 'X-CSRF-TOKEN': csrfToken,
-                'Accept': 'application/json'
+                'Accept': 'application/json',
+                'Cache-Control': 'no-cache'
             },
-            signal: controller.signal
+            signal: controller.signal,
+            credentials: 'same-origin'
         })
         .then(response => {
             clearTimeout(timeoutId); // Clear the timeout
             console.log('Response status:', response.status);
             console.log('Response headers:', response.headers);
-            
+
             // For debugging - log the raw response text
             return response.text().then(text => {
                 console.log('Raw response:', text);
@@ -3240,7 +3248,7 @@
         })
         .then(({ ok, status, data }) => {
             console.log('Parsed response data:', data);
-            
+
             if (!ok) {
                 // Handle different HTTP status codes
                 if (status === 422) {
@@ -3266,7 +3274,7 @@
                     throw new Error(data.message || `HTTP error! status: ${status}`);
                 }
             }
-            
+
             return data;
         })
         .then(data => {
@@ -3350,9 +3358,9 @@
         .catch(error => {
             clearTimeout(timeoutId); // Clear the timeout
             console.error('Network or parsing error:', error);
-            
+
             let errorMessage = 'An error occurred while submitting your appointment:';
-            
+
             if (error.name === 'AbortError') {
                 errorMessage += '\n\nRequest timed out. This may be due to a slow connection.';
             } else if (error.message && error.message.includes('Failed to fetch')) {
@@ -3365,11 +3373,11 @@
             } else {
                 errorMessage += '\n\nPlease check your internet connection and try again.';
             }
-            
+
             // Add helpful suggestions
             errorMessage += '\n\nTips:\n• Make sure all required fields are filled\n• Check that your email format is valid\n• Ensure your phone number is complete\n• Try refreshing the page if the issue persists';
             errorMessage += '\n\nIf the problem continues, please call us at (647) 834-8549';
-            
+
             alert(errorMessage);
         })
         .finally(() => {
@@ -3384,21 +3392,21 @@
     // SIMPLE FORM HANDLER FOR TESTING
     document.addEventListener('DOMContentLoaded', function() {
         console.log('=== SIMPLE FORM HANDLER SETUP ===');
-        
+
         const form = document.getElementById('bookingForm');
         const button = document.getElementById('bookAppointmentBtn');
-        
+
         console.log('Form found:', !!form);
         console.log('Button found:', !!button);
-        
+
         if (form && button) {
             form.addEventListener('submit', function(e) {
                 e.preventDefault();
                 console.log('=== FORM SUBMIT EVENT CAPTURED ===');
-                
+
                 // Get form data and handle file input properly
                 const formData = new FormData();
-                
+
                 // Manually add each form field INCLUDING textareas and selects
                 const inputs = this.querySelectorAll('input:not([type="file"]), textarea, select');
                 inputs.forEach(input => {
@@ -3407,18 +3415,18 @@
                         console.log(`Added field ${input.name}:`, input.value);
                     }
                 });
-                
+
                 // Handle file input separately (if it exists)
                 const fileInput = document.getElementById('samplePicture');
                 console.log('=== FILE INPUT DEBUG ===');
                 console.log('File input element:', fileInput);
                 console.log('File input exists:', !!fileInput);
-                
+
                 if (fileInput) {
                     console.log('File input files property:', fileInput.files);
                     console.log('Files length:', fileInput.files.length);
                     console.log('Files array:', Array.from(fileInput.files));
-                    
+
                     if (fileInput.files && fileInput.files.length > 0 && fileInput.files[0]) {
                         const file = fileInput.files[0];
                         console.log('File selected - Name:', file.name);
@@ -3432,12 +3440,12 @@
                 } else {
                     console.log('❌ File input element not found');
                 }
-                
+
                 console.log('Form data being sent:');
                 for (let [key, value] of formData.entries()) {
                     console.log(key + ':', value);
                 }
-                
+
                 // Simple fetch request
                 fetch(this.action, {
                     method: 'POST',
@@ -3450,11 +3458,11 @@
                 .then(response => {
                     console.log('Response status:', response.status);
                     console.log('Response headers:', response.headers);
-                    
+
                     // Get the raw response text first
                     return response.text().then(text => {
                         console.log('Raw response text:', text);
-                        
+
                         // Try to parse as JSON
                         try {
                             const data = JSON.parse(text);
@@ -3468,7 +3476,7 @@
                 })
                 .then(({ ok, status, data }) => {
                     console.log('Parsed response data:', data);
-                    
+
                     if (!ok) {
                         // Handle different HTTP status codes
                         if (status === 422) {
@@ -3493,7 +3501,7 @@
                             throw new Error(data.message || `HTTP error! status: ${status}`);
                         }
                     }
-                    
+
                     return data;
                 })
                 .then(data => {
@@ -3540,26 +3548,26 @@
                 .catch(error => {
                     console.error('Network or parsing error:', error);
                     let errorMessage = 'An error occurred while submitting your appointment:';
-                    
+
                     if (error.message) {
                         errorMessage += '\n\n' + error.message;
                     } else {
                         errorMessage += '\n\nPlease check your internet connection and try again.';
                     }
-                    
+
                     // Add helpful suggestions
                     errorMessage += '\n\nTips:\n• Make sure all required fields are filled\n• Check that your email format is valid\n• Ensure your phone number is complete\n• Try refreshing the page if the issue persists';
-                    
+
                     alert(errorMessage);
                 });
             });
-            
+
             button.addEventListener('click', function(e) {
                 console.log('=== BUTTON CLICK EVENT CAPTURED ===');
                 console.log('Button click detected!');
                 // Don't prevent default here - let it trigger form submission
             });
-            
+
             console.log('Simple handlers attached successfully');
         } else {
             console.error('Missing form or button for simple handler');
@@ -3569,7 +3577,7 @@
     // Add click event listener to test button functionality - SEPARATE DOM READY HANDLER
     document.addEventListener('DOMContentLoaded', function() {
         console.log('DOM Content Loaded - Setting up button handlers');
-        
+
         const bookBtn = document.getElementById('bookAppointmentBtn');
         if (bookBtn) {
             console.log('Book Appointment button found and ready');
@@ -3690,7 +3698,7 @@
             })
             .catch(error => {
                 console.error('Error fetching booked dates:', error);
-                
+
                 // Fallback: render calendar without booking checks
                 for (let i = 0; i < 42; i++) {
                     const date = new Date(startDate);
@@ -3881,26 +3889,26 @@
         console.log('=== FILE INPUT TEST ===');
         const fileInput = document.getElementById('samplePicture');
         console.log('File input element:', fileInput);
-        
+
         if (!fileInput) {
             alert('❌ File input not found!');
             return;
         }
-        
+
         console.log('Files:', fileInput.files);
         console.log('Files length:', fileInput.files.length);
-        
+
         if (fileInput.files.length === 0) {
             alert('❌ No file selected. Please select a file first.');
             return;
         }
-        
+
         const file = fileInput.files[0];
         console.log('Selected file:', file);
         console.log('File name:', file.name);
         console.log('File size:', file.size);
         console.log('File type:', file.type);
-        
+
         alert(`✅ File detected!\nName: ${file.name}\nSize: ${file.size} bytes\nType: ${file.type}`);
     }
 
@@ -4014,123 +4022,79 @@
 
 <!-- Success Modal -->
 <div class="modal fade" id="successModal" tabindex="-1" aria-labelledby="successModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content" style="border-radius: 20px; border: none; overflow: hidden;">
-            <!-- Header -->
-            <div class="modal-header" style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white; border: none; padding: 30px; text-align: center;">
-                <div class="w-100">
-                    <div style="background: rgba(255,255,255,0.2); width: 80px; height: 80px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px;">
-                        <i class="bi bi-check-circle-fill" style="font-size: 3rem;"></i>
-                    </div>
-                    <h4 class="modal-title fw-bold mb-2" id="successModalLabel">Appointment booked successfully!</h4>
-                    <p class="mb-0" style="opacity: 0.9;">Your booking has been confirmed</p>
-                </div>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close" style="position: absolute; top: 15px; right: 20px;"></button>
+    <div class="modal-dialog modal-dialog-centered" style="max-width: 500px;">
+        <div class="modal-content" style="border-radius: 12px; border: none; background: #4a5568; color: white; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);">
+            <!-- Header with Site Icon -->
+            <div style="position: absolute; top: 15px; left: 20px; background: white; width: 24px; height: 24px; border-radius: 4px; display: flex; align-items: center; justify-content: center;">
+                <i class="bi bi-globe" style="color: #4a5568; font-size: 12px;"></i>
             </div>
-            
+            <div style="position: absolute; top: 15px; left: 50px; color: white; font-size: 14px; font-weight: 500;">
+                127.0.0.1:8000
+            </div>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close" style="position: absolute; top: 15px; right: 20px; opacity: 0.8;"></button>
+
             <!-- Body -->
-            <div class="modal-body" style="padding: 40px 30px;">
-                <!-- Booking Details Card -->
-                <div class="card border-0 mb-4" style="background: linear-gradient(135deg, #f8f9fa 0%, #e3f2fd 100%); border-radius: 15px;">
-                    <div class="card-body p-4">
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <div class="d-flex align-items-center">
-                                    <i class="bi bi-bookmark-fill text-primary me-3" style="font-size: 1.5rem;"></i>
-                                    <div>
-                                        <small class="text-muted d-block">Booking ID</small>
-                                        <strong id="successBookingId" class="text-dark fs-5">BK000024</strong>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <div class="d-flex align-items-center">
-                                    <i class="bi bi-key-fill text-warning me-3" style="font-size: 1.5rem;"></i>
-                                    <div>
-                                        <small class="text-muted d-block">Confirmation Code</small>
-                                        <strong id="successConfirmationCode" class="text-dark fs-6">CONFEAB923BD</strong>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <div class="d-flex align-items-center">
-                                    <i class="bi bi-calendar3 text-info me-3" style="font-size: 1.5rem;"></i>
-                                    <div>
-                                        <small class="text-muted d-block">Appointment Date</small>
-                                        <strong id="successAppointmentDate" class="text-dark">Tuesday, August 26, 2025</strong>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <div class="d-flex align-items-center">
-                                    <i class="bi bi-clock-fill text-success me-3" style="font-size: 1.5rem;"></i>
-                                    <div>
-                                        <small class="text-muted d-block">Appointment Time</small>
-                                        <strong id="successAppointmentTime" class="text-dark">10:00 AM</strong>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-12">
-                                <div class="d-flex align-items-center">
-                                    <i class="bi bi-scissors text-danger me-3" style="font-size: 1.5rem;"></i>
-                                    <div>
-                                        <small class="text-muted d-block">Service</small>
-                                        <strong id="successService" class="text-dark">Large Knotless Braids</strong>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+            <div class="modal-body" style="padding: 60px 30px 30px; text-align: left;">
+                <!-- Success Icon and Message -->
+                <div class="text-center mb-4">
+                    <div style="display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; background: #10b981; border-radius: 50%; margin-bottom: 15px;">
+                        <i class="bi bi-check" style="color: white; font-size: 16px; font-weight: bold;"></i>
+                    </div>
+                    <h5 class="mb-0" style="color: rgb(9, 121, 58)55, 255, 255)55, 255, 255)55, 255, 255); font-weight: 500;">Appointment booked successfully!</h5>
+                </div>
+
+                <!-- Booking Details -->
+                <div class="mb-3">
+                    <div style="display: flex; align-items: center; margin-bottom: 8px;">
+                        <i class="bi bi-bookmark-fill" style="color: #60a5fa; margin-right: 10px; font-size: 14px;"></i>
+                        <span style="color: #cbd5e0; font-size: 14px;">Booking ID: </span>
+                        <strong id="successBookingId" style="color: white; margin-left: 5px;">BK000024</strong>
+                    </div>
+
+                    <div style="display: flex; align-items: center; margin-bottom: 8px;">
+                        <i class="bi bi-shield-check" style="color: #34d399; margin-right: 10px; font-size: 14px;"></i>
+                        <span style="color: #cbd5e0; font-size: 14px;">Confirmation Code: </span>
+                        <strong id="successConfirmationCode" style="color: white; margin-left: 5px;">CONFEAB923BD</strong>
                     </div>
                 </div>
 
-                <!-- Deposit Information -->
-                <div class="alert alert-warning d-flex align-items-center mb-4" style="border-radius: 15px; border: none;">
-                    <i class="bi bi-exclamation-triangle-fill me-3" style="font-size: 1.5rem;"></i>
-                    <div>
-                        <strong>Please contact us to arrange the ₵50 deposit payment.</strong>
-                        <br>
-                        <small>We'll confirm your appointment once payment is received!</small>
-                    </div>
+                <!-- Deposit Warning -->
+                <div style="display: flex; align-items: flex-start; margin-bottom: 15px; background: rgba(251, 146, 60, 0.1); padding: 12px; border-radius: 8px; border-left: 3px solid #f59e0b;">
+                    <i class="bi bi-exclamation-triangle-fill" style="color: #f59e0b; margin-right: 8px; font-size: 14px; margin-top: 2px;"></i>
+                    <span style="color: #fed7aa; font-size: 14px; line-height: 1.4;">Please contact us to arrange the $50 deposit payment.</span>
                 </div>
 
                 <!-- Contact Information -->
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="d-flex align-items-center p-3 bg-light rounded-3 mb-3">
-                            <i class="bi bi-telephone-fill text-primary me-3" style="font-size: 1.5rem;"></i>
-                            <div>
-                                <strong>Phone</strong>
-                                <br>
-                                <a href="tel:(123)456-7890" class="text-decoration-none">(123) 456-7890</a>
-                            </div>
-                        </div>
+                <div class="mb-4">
+                    <div style="display: flex; align-items: center; margin-bottom: 8px;">
+                        <i class="bi bi-telephone-fill" style="color: #f87171; margin-right: 10px; font-size: 14px;"></i>
+                        <span style="color: #cbd5e0; font-size: 14px;">Phone: </span>
+                        <a href="tel:(647)834-8549" style="color: white; text-decoration: none; margin-left: 5px;">(647) 834-8549</a>
                     </div>
-                    <div class="col-md-6">
-                        <div class="d-flex align-items-center p-3 bg-light rounded-3 mb-3">
-                            <i class="bi bi-envelope-fill text-success me-3" style="font-size: 1.5rem;"></i>
-                            <div>
-                                <strong>Email</strong>
-                                <br>
-                                <a href="mailto:info@dabsbeautytouch.com" class="text-decoration-none">info@dabsbeautytouch.com</a>
-                            </div>
-                        </div>
+
+                    <div style="display: flex; align-items: center; margin-bottom: 15px;">
+                        <i class="bi bi-envelope-fill" style="color: #60a5fa; margin-right: 10px; font-size: 14px;"></i>
+                        <span style="color: #cbd5e0; font-size: 14px;">Email: </span>
+                        <a href="mailto:info@dabsbeautytouch.com" style="color: white; text-decoration: none; margin-left: 5px;">info@dabsbeautytouch.com</a>
                     </div>
                 </div>
-            </div>
-            
-            <!-- Footer -->
-            <div class="modal-footer border-0" style="padding: 20px 30px 30px;">
-                <div class="w-100 text-center">
-                    <label class="form-check-label mb-3 text-muted">
-                        <input type="checkbox" class="form-check-input me-2" id="dontShowAgain">
-                        Don't allow 127.0.0.1:8000 to prompt you again
+
+                <!-- Confirmation Message -->
+                <p style="color: #cbd5e0; font-size: 14px; margin-bottom: 20px; line-height: 1.5;">
+                    We'll confirm your appointment once payment is received!
+                </p>
+
+                <!-- Don't Show Again Checkbox -->
+                <div style="margin-bottom: 20px;">
+                    <label class="form-check-label" style="display: flex; align-items: center; color: #9ca3af; font-size: 13px; cursor: pointer;">
+                        <input type="checkbox" class="form-check-input me-2" id="dontShowAgain" style="margin-right: 8px; background-color: transparent; border-color: #6b7280;">
+                        <span>Don't allow 127.0.0.1:8000 to prompt you again</span>
                     </label>
-                    <br>
-                    <button type="button" class="btn btn-success btn-lg px-5" data-bs-dismiss="modal" style="border-radius: 25px; font-weight: 600;">
+                </div>
+
+                <!-- OK Button -->
+                <div class="text-center">
+                    <button type="button" class="btn" data-bs-dismiss="modal" style="background: #0891b2; color: white; border: none; padding: 8px 30px; border-radius: 6px; font-weight: 500; font-size: 14px;">
                         OK
                     </button>
                 </div>
