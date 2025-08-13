@@ -23,17 +23,30 @@ Homestead.json
 Homestead.yaml
 Thumbs.db
 
-# Developer Documentation (not for end users)
-BOOKING_ID_SYSTEM.md
-BOOKING_STATUS_GUIDE.md
-DATABASE_MIGRATION_DOCUMENTATION.md
-EMAIL_SYSTEM_DOCUMENTATION.md
-BUSINESS_EMAIL_INTEGRATION.md
-ZOHO_AUTO_EXPUNGE_GUIDE.md
-ZOHO_EMAIL_SETUP.md
-DOCKER_TESTING.md
-DIGITALOCEAN_DEPLOYMENT.md
-RAILWAY_DEPLOYMENT.md
+# All Environment Files (keep secure)
+.env*
+!.env.example
+!.env.docker
+
+# Development & Internal Documentation
+*_GUIDE.md
+*_DOCUMENTATION.md
+*_INSTRUCTIONS.md
+*_CHECKLIST.md
+*_SETUP.md
+*_FIX.md
+*_FIXES.md
+*_WARNING.md
+BOOKING_*.md
+RENDER_*.md
+SECURITY_*.md
+SERVER_*.md
+ZOHO_*.md
+MIGRATION_*.md
+EMAIL_SYSTEM*.md
+BUSINESS_*.md
+DOCKER_*.md
+*DEPLOYMENT*.md
 
 # Development Helper Files
 zoho-env-template.txt
@@ -41,14 +54,24 @@ zoho-setup-helper.php
 zoho-troubleshooting.txt
 create_database.php
 deploy-docker.sh
+render-*.sh
 
 # Test Files
 test-*.php
 simple-email-test.php
-test-email-simple.php
-test-email-system.php
-test-mailtrap.php
+*-test.php
+resources/views/emails/test.blade.php
 
 # Route Test Files
 routes/test-*.php
 routes/web-simple.php
+
+# Backup Files
+*.backup
+*.bak
+*.old
+
+# Logs and Debug Files
+*.log
+debug.log
+error.log

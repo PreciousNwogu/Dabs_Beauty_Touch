@@ -1,14 +1,41 @@
-# Dab's Beauty Touch - Laravel + React Application
+# Dab's Beauty Touch
 
-A professional hair braiding booking system built with Laravel 12 and React 19.
+Professional hair braiding and beauty services booking system.
 
-## 🚀 Features
+## About
 
-- **Appointment Booking System**: Complete booking management with calendar integration
-- **File Upload**: Sample picture uploads for consultations  
-- **Admin Dashboard**: Manage appointments and services
-- **Responsive Design**: Mobile-first design with Bootstrap
-- **Real-time Availability**: Calendar showing available time slots
+Dab's Beauty Touch is a modern web application for booking hair braiding appointments and beauty services. Our platform provides an easy-to-use interface for customers to schedule appointments and for administrators to manage bookings.
+
+## Features
+
+- **Online Appointment Booking**: Easy-to-use booking system with calendar integration
+- **Service Selection**: Choose from various braiding styles and beauty services
+- **Admin Dashboard**: Comprehensive management system for appointments
+- **Email Notifications**: Automated confirmation and reminder emails
+- **Responsive Design**: Works perfectly on desktop and mobile devices
+- **Secure**: Built with Laravel's security features
+
+## Services Offered
+
+- Box Braids
+- Knotless Braids
+- Twist Styles
+- Wig Installation
+- Hair Styling
+- And more...
+
+## Contact
+
+**Phone**: (647) 834-8549  
+**Email**: info@dabsbeautytouch.com
+
+## Technology
+
+Built with Laravel and modern web technologies for a reliable and secure booking experience.
+
+---
+
+© 2025 Dab's Beauty Touch. All rights reserved.
 
 ## 🛠️ Tech Stack
 
