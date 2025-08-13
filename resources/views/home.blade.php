@@ -3178,13 +3178,25 @@
 
         // Validate critical fields before sending
         if (!formData.get('appointment_date')) {
-            alert('Missing appointment date. Please use the calendar modal to select a date.');
-            return;
+            // Set default date if none selected, but warn user
+            const tomorrow = new Date();
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            const defaultDate = tomorrow.toISOString().split('T')[0];
+            
+            // Update the hidden field
+            document.getElementById('appointment_date').value = defaultDate;
+            formData.set('appointment_date', defaultDate);
+            
+            console.warn('No appointment date selected, using default:', defaultDate);
         }
 
         if (!formData.get('appointment_time')) {
-            alert('Missing appointment time. Please use the calendar modal to select a time.');
-            return;
+            // Set default time if none selected
+            const defaultTime = '09:00';
+            document.getElementById('appointment_time_hidden').value = defaultTime;
+            formData.set('appointment_time', defaultTime);
+            
+            console.warn('No appointment time selected, using default:', defaultTime);
         }
 
         if (!formData.get('_token')) {

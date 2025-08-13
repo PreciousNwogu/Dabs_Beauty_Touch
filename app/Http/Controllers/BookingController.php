@@ -39,6 +39,8 @@ class BookingController extends Controller
             'email' => 'nullable|email|max:255',
             'phone' => 'required|string|max:20',
             'service' => 'required|string|max:255',
+            'appointment_date' => 'nullable|date|after_or_equal:today',
+            'appointment_time' => 'nullable|string',
             // 'address' => 'nullable|string|max:255', // Temporarily commented out until migration is run
             'message' => 'nullable|string|max:1000',
             'sample_picture' => 'nullable|file|image|max:2048',
@@ -61,7 +63,10 @@ class BookingController extends Controller
                 $samplePicturePath = $file->storeAs('sample_pictures', $filename, 'public');
             }
 
-            // Create the booking with default appointment date/time
+            // Create the booking with form data or sensible defaults
+            $appointmentDate = $request->appointment_date ?: now()->addDays(1)->toDateString();
+            $appointmentTime = $request->appointment_time ?: '09:00';
+            
             $booking = Booking::create([
                 'name' => $request->name,
                 'email' => $request->email,
@@ -70,8 +75,8 @@ class BookingController extends Controller
                 'service' => $request->service,
                 'message' => $request->message,
                 'sample_picture' => $samplePicturePath,
-                'appointment_date' => now()->addDays(1)->toDateString(), // Default to tomorrow
-                'appointment_time' => '09:00', // Default time
+                'appointment_date' => $appointmentDate,
+                'appointment_time' => $appointmentTime,
                 'status' => 'pending'
             ]);
 
