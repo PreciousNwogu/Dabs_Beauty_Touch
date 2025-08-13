@@ -16,14 +16,21 @@ class ForceHttps
      */
     public function handle(Request $request, Closure $next)
     {
-        // Force HTTPS in production
-        if (config('app.env') === 'production' && !$request->secure()) {
-            return redirect()->secure($request->getRequestUri(), 301);
+        // Force HTTPS in production, but handle proxy scenarios
+        if (config('app.env') === 'production') {
+            $isSecure = $request->secure() || 
+                       $request->header('X-Forwarded-Proto') === 'https' ||
+                       $request->header('X-Forwarded-Ssl') === 'on';
+            
+            // Only redirect if we're definitely not secure and not already handling HTTPS
+            if (!$isSecure && !$request->header('X-Forwarded-Proto')) {
+                return redirect()->secure($request->getRequestUri(), 301);
+            }
         }
 
         $response = $next($request);
 
-        // Add security headers
+        // Add security headers in production
         if (config('app.env') === 'production') {
             $response->headers->set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
             $response->headers->set('X-Content-Type-Options', 'nosniff');

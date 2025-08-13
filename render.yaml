@@ -17,7 +17,7 @@ services:
       - key: APP_URL
         value: https://dabs-beauty-touch.onrender.com
       - key: APP_KEY
-        value: App_Key
+        sync: false
       - key: LOG_LEVEL
         value: error
       - key: SESSION_DRIVER
@@ -26,6 +26,8 @@ services:
         value: true
       - key: SESSION_SAME_SITE
         value: lax
+      - key: TRUSTED_PROXIES
+        value: "*"
       - key: CACHE_STORE
         value: database
       - key: QUEUE_CONNECTION
@@ -41,7 +43,7 @@ services:
       - key: MAIL_USERNAME
         value: info@dabsbeautytouch.com
       - key: MAIL_PASSWORD
-        value: sPv3ckZS5xSk
+        sync: false
       - key: MAIL_ENCRYPTION
         value: ssl
       - key: MAIL_FROM_ADDRESS

@@ -11,12 +11,13 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // HTTPS is handled by Render proxy - no need for custom redirect middleware
         // Force HTTPS only in production
-        if (env('APP_ENV') === 'production') {
-            $middleware->web(append: [
-                \App\Http\Middleware\ForceHttps::class,
-            ]);
-        }
+        // if (env('APP_ENV') === 'production') {
+        //     $middleware->web(append: [
+        //         \App\Http\Middleware\ForceHttps::class,
+        //     ]);
+        // }
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //
