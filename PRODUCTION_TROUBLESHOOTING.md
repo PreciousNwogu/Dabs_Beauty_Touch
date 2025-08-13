@@ -20,9 +20,9 @@ The main issue was that the production server was missing the proper `APP_KEY` c
 - Look for successful build and deployment
 
 ### 2. Test the Application
-- Visit: https://dabs-beauty-touch.onrender.com
+- Visit: https://www.dabsbeautytouch.com
 - Should load without 500 errors
-- Test the debug route: https://dabs-beauty-touch.onrender.com/debug/security
+- Test the debug route: https://www.dabsbeautytouch.com/debug/security
 
 ### 3. Expected Debug Output
 The debug route should show:

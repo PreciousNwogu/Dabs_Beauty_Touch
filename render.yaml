@@ -15,7 +15,7 @@ services:
       - key: APP_DEBUG
         value: false
       - key: APP_URL
-        value: https://dabs-beauty-touch.onrender.com
+        value: https://www.dabsbeautytouch.com
       - key: APP_KEY
         sync: false
       - key: LOG_LEVEL
