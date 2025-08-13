@@ -26,7 +26,7 @@ Your `.env` file now has a new `APP_KEY`. No action needed locally.
 Add these environment variables in your Render dashboard:
 
 ```bash
-APP_KEY=base64:WfGr1b95qvy90XxIn/q9UqiPlDPpHc/awFdE4gFj0Io=
+APP_KEY=[YOUR_APP_KEY_FROM_LOCAL_ENV]
 MAIL_PASSWORD=YOUR_NEW_EMAIL_PASSWORD
 ```
 

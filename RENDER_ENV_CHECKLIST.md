@@ -7,7 +7,7 @@
 APP_NAME="Dab's Beauty Touch"
 APP_ENV=production
 APP_DEBUG=false
-APP_KEY=base64:WfGr1b95qvy90XxIn/q9UqiPlDPpHc/awFdE4gFj0Io=
+APP_KEY=[YOUR_APP_KEY_FROM_LOCAL_ENV]
 APP_URL=https://dabs-beauty-touch.onrender.com
 ```
 
@@ -33,7 +33,7 @@ MAIL_MAILER=smtp
 MAIL_HOST=smtp.zohocloud.ca
 MAIL_PORT=465
 MAIL_USERNAME=info@dabsbeautytouch.com
-MAIL_PASSWORD=m3db0fL9LSJ9
+MAIL_PASSWORD=[YOUR_EMAIL_PASSWORD]
 MAIL_ENCRYPTION=ssl
 MAIL_FROM_ADDRESS=info@dabsbeautytouch.com
 MAIL_FROM_NAME="Dab's Beauty Touch"
@@ -61,7 +61,7 @@ BOOKING_NOTIFICATION_EMAIL=info@dabsbeautytouch.com
 
 ### "No application encryption key has been specified"
 - Missing APP_KEY environment variable
-- Add: `APP_KEY=base64:WfGr1b95qvy90XxIn/q9UqiPlDPpHc/awFdE4gFj0Io=`
+- Add: `APP_KEY=[YOUR_APP_KEY_FROM_LOCAL_ENV]`
 
 ### Database Connection Errors
 - Use SQLite for simple setup: `DB_CONNECTION=sqlite`
