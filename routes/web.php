@@ -13,6 +13,30 @@ Route::get('/', function () {
     return view('home');
 })->name('home');
 
+// Debug route to test HTTPS and security
+Route::get('/debug/security', function (Request $request) {
+    return response()->json([
+        'timestamp' => now(),
+        'environment' => config('app.env'),
+        'app_url' => config('app.url'),
+        'request_url' => $request->url(),
+        'is_secure' => $request->secure(),
+        'scheme' => $request->getScheme(),
+        'host' => $request->getHost(),
+        'headers' => [
+            'x-forwarded-proto' => $request->header('X-Forwarded-Proto'),
+            'x-forwarded-for' => $request->header('X-Forwarded-For'),
+            'user-agent' => $request->userAgent(),
+        ],
+        'session' => [
+            'driver' => config('session.driver'),
+            'secure' => config('session.secure'),
+            'same_site' => config('session.same_site'),
+        ],
+        'csrf_token' => csrf_token(),
+    ]);
+})->name('debug.security');
+
 // Booking success page
 Route::get('/booking/success', function () {
     // Check if we have booking details in session

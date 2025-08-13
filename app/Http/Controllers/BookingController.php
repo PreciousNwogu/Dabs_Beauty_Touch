@@ -19,8 +19,19 @@ class BookingController extends Controller
         Log::info('Booking request received', [
             'method' => $request->method(),
             'url' => $request->url(),
-            'headers' => $request->headers->all(),
-            'data' => $request->all()
+            'scheme' => $request->getScheme(),
+            'is_secure' => $request->secure(),
+            'host' => $request->getHost(),
+            'user_agent' => $request->userAgent(),
+            'headers' => [
+                'x-forwarded-proto' => $request->header('X-Forwarded-Proto'),
+                'x-forwarded-for' => $request->header('X-Forwarded-For'),
+                'x-requested-with' => $request->header('X-Requested-With'),
+                'accept' => $request->header('Accept'),
+                'content-type' => $request->header('Content-Type'),
+                'csrf-token' => $request->header('X-CSRF-TOKEN'),
+            ],
+            'data' => $request->except(['sample_picture', '_token'])
         ]);
 
         $validator = Validator::make($request->all(), [
