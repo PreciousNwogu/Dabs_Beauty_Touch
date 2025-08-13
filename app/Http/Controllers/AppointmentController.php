@@ -109,10 +109,22 @@ class AppointmentController extends Controller
             Log::warning('Appointment booking validation failed', [
                 'errors' => $validator->errors()->toArray()
             ]);
-            return response()->json([
-                'success' => false,
-                'errors' => $validator->errors()
-            ], 422);
+            
+            // Check if this is an API request or a web request
+            $isApiRequest = $request->expectsJson() || $request->is('api/*') || $request->header('X-Requested-With') === 'XMLHttpRequest';
+            
+            if ($isApiRequest) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Please check your information and try again.',
+                    'errors' => $validator->errors()
+                ], 422);
+            } else {
+                return redirect()->route('home')
+                    ->withErrors($validator)
+                    ->withInput()
+                    ->with('booking_error', true);
+            }
         }
 
         try {
@@ -122,10 +134,21 @@ class AppointmentController extends Controller
                 ->first();
             
             if ($existingBooking) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'This date is already booked with another appointment. Please select a different date.'
-                ], 422);
+                // Check if this is an API request or a web request
+                $isApiRequest = $request->expectsJson() || $request->is('api/*') || $request->header('X-Requested-With') === 'XMLHttpRequest';
+                
+                if ($isApiRequest) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'This date is already booked with another appointment. Please select a different date.'
+                    ], 422);
+                } else {
+                    return redirect()->route('home')
+                        ->with([
+                            'booking_error' => true,
+                            'error_message' => 'This date is already booked. Please select a different date.'
+                        ]);
+                }
             }
 
             // Handle sample picture upload if provided
@@ -209,32 +232,63 @@ class AppointmentController extends Controller
                 ob_clean();
             }
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Appointment booked successfully!',
-                'appointment' => [
-                    'booking_id' => $bookingId,
-                    'confirmation_code' => $confirmationCode,
-                    'appointment_date' => date('l, F j, Y', strtotime($request->appointment_date)),
-                    'appointment_time' => date('g:i A', strtotime($request->appointment_time)),
-                    'service' => $request->service ?: 'General Service',
-                    'email_provided' => !empty($request->email)
-                ]
-            ]);
+            // Check if this is an API request or a web request
+            $isApiRequest = $request->expectsJson() || $request->is('api/*') || $request->header('X-Requested-With') === 'XMLHttpRequest';
+
+            if ($isApiRequest) {
+                // Return JSON for AJAX/API requests
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Appointment booked successfully!',
+                    'appointment' => [
+                        'booking_id' => $bookingId,
+                        'confirmation_code' => $confirmationCode,
+                        'appointment_date' => date('l, F j, Y', strtotime($request->appointment_date)),
+                        'appointment_time' => date('g:i A', strtotime($request->appointment_time)),
+                        'service' => $request->service ?: 'General Service',
+                        'email_provided' => !empty($request->email)
+                    ]
+                ]);
+            } else {
+                // Return redirect with flash message for regular form submissions
+                return redirect()->route('home')->with([
+                    'booking_success' => true,
+                    'booking_details' => [
+                        'booking_id' => $bookingId,
+                        'confirmation_code' => $confirmationCode,
+                        'appointment_date' => date('l, F j, Y', strtotime($request->appointment_date)),
+                        'appointment_time' => date('g:i A', strtotime($request->appointment_time)),
+                        'service' => $request->service ?: 'General Service'
+                    ]
+                ]);
+            }
 
         } catch (\Exception $e) {
             Log::error('Error booking appointment: ' . $e->getMessage());
             Log::error('Error details: ' . $e->getTraceAsString());
             
-            // Ensure clean JSON response
+            // Ensure clean response
             if (ob_get_level()) {
                 ob_clean();
             }
             
-            return response()->json([
-                'success' => false,
-                'message' => 'Error booking appointment. Please try again. Error: ' . $e->getMessage()
-            ], 500);
+            // Check if this is an API request or a web request
+            $isApiRequest = $request->expectsJson() || $request->is('api/*') || $request->header('X-Requested-With') === 'XMLHttpRequest';
+            
+            if ($isApiRequest) {
+                // Return JSON error for AJAX/API requests
+                return response()->json([
+                    'success' => false,
+                    'message' => 'We apologize, but there was an error processing your appointment. Please try again or contact us directly.',
+                    'error_details' => 'Technical error occurred. Please try again.'
+                ], 500);
+            } else {
+                // Return redirect with error message for regular form submissions
+                return redirect()->route('home')->with([
+                    'booking_error' => true,
+                    'error_message' => 'We apologize, but there was an error processing your appointment. Please try again or contact us directly.'
+                ]);
+            }
         }
     }
 
@@ -440,13 +494,14 @@ class AppointmentController extends Controller
     public function getStats()
     {
         try {
+            // Use Booking model since that's where form data is saved
             $stats = [
-                'total' => Appointment::count(),
-                'today' => Appointment::whereDate('appointment_date', today())->count(),
-                'pending' => Appointment::where('status', 'pending')->count(),
-                'confirmed' => Appointment::where('status', 'confirmed')->count(),
-                'completed' => Appointment::where('status', 'completed')->count(),
-                'cancelled' => Appointment::where('status', 'cancelled')->count()
+                'total' => \App\Models\Booking::count(),
+                'today' => \App\Models\Booking::whereDate('appointment_date', today())->count(),
+                'pending' => \App\Models\Booking::where('status', 'pending')->count(),
+                'confirmed' => \App\Models\Booking::where('status', 'confirmed')->count(),
+                'completed' => \App\Models\Booking::where('status', 'completed')->count(),
+                'cancelled' => \App\Models\Booking::where('status', 'cancelled')->count()
             ];
 
             return response()->json([

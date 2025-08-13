@@ -13,6 +13,13 @@ Route::get('/', function () {
     return view('home');
 })->name('home');
 
+// Booking success page
+Route::get('/booking/success', function () {
+    // Check if we have booking details in session
+    $bookingDetails = session('booking_details');
+    return view('booking.success', compact('bookingDetails'));
+})->name('booking.success');
+
 // Calendar booking page
 Route::get('/calendar', function () {
     return view('calendar');

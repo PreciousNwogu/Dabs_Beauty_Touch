@@ -14,6 +14,8 @@ services:
         value: production
       - key: APP_DEBUG
         value: false
+      - key: APP_URL
+        value: https://dabs-beauty-touch.onrender.com
       - key: APP_KEY
         value: [SET_IN_RENDER_DASHBOARD]
       - key: LOG_LEVEL
@@ -47,6 +49,13 @@ services:
       - key: BOOKING_NOTIFICATION_EMAIL
         value: info@dabsbeautytouch.com
     # Database connection will be auto-populated when you connect PostgreSQL
+
+databases:
+  - name: dabs-beauty-touch-db
+    databaseName: dabs_beauty_touch
+    user: dabs_user
+    region: oregon
+    plan: free
     
 databases:
   - name: dabs-beauty-touch-db

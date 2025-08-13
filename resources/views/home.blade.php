@@ -1188,6 +1188,70 @@
     </style>
 </head>
 <body>
+    <!-- Success/Error Messages -->
+    @if(session('booking_success'))
+    <div class="alert alert-success alert-dismissible fade show m-0" role="alert" style="border-radius: 0; border: none; background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white; box-shadow: 0 2px 8px rgba(40, 167, 69, 0.3); z-index: 1050; position: relative;">
+        <div class="container text-center py-3">
+            <h4 class="alert-heading mb-3">
+                <i class="fas fa-check-circle me-2"></i>
+                🎉 Appointment Booked Successfully!
+            </h4>
+            <div class="row justify-content-center">
+                <div class="col-md-8">
+                    @if(session('booking_details'))
+                    <div class="bg-white bg-opacity-20 rounded p-3 mb-3">
+                        <div class="row text-start">
+                            <div class="col-sm-6 mb-2">
+                                <strong>Booking ID:</strong><br>
+                                <span class="fs-5 fw-bold">{{ session('booking_details.booking_id') }}</span>
+                            </div>
+                            <div class="col-sm-6 mb-2">
+                                <strong>Confirmation Code:</strong><br>
+                                <span class="fs-5 fw-bold">{{ session('booking_details.confirmation_code') }}</span>
+                            </div>
+                            <div class="col-sm-6 mb-2">
+                                <strong>Service:</strong><br>
+                                {{ session('booking_details.service') }}
+                            </div>
+                            <div class="col-sm-6 mb-2">
+                                <strong>Date & Time:</strong><br>
+                                {{ session('booking_details.appointment_date') }} at {{ session('booking_details.appointment_time') }}
+                            </div>
+                        </div>
+                    </div>
+                    @endif
+                    <p class="mb-2">
+                        <i class="fas fa-envelope me-2"></i>
+                        We'll contact you soon to confirm your appointment details.
+                    </p>
+                    <p class="mb-0">
+                        <i class="fas fa-phone me-2"></i>
+                        Questions? Call us at <strong>(647) 834-8549</strong>
+                    </p>
+                </div>
+            </div>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert" aria-label="Close" style="position: absolute; top: 15px; right: 15px;"></button>
+        </div>
+    </div>
+    @endif
+
+    @if(session('booking_error'))
+    <div class="alert alert-danger alert-dismissible fade show m-0" role="alert" style="border-radius: 0; border: none; background: linear-gradient(135deg, #dc3545 0%, #e74c3c 100%); color: white; box-shadow: 0 2px 8px rgba(220, 53, 69, 0.3); z-index: 1050; position: relative;">
+        <div class="container text-center py-3">
+            <h4 class="alert-heading mb-2">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                Booking Error
+            </h4>
+            <p class="mb-2">{{ session('error_message', 'There was an issue processing your booking.') }}</p>
+            <p class="mb-0">
+                <i class="fas fa-phone me-2"></i>
+                Please try again or call us at <strong>(647) 834-8549</strong>
+            </p>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert" aria-label="Close" style="position: absolute; top: 15px; right: 15px;"></button>
+        </div>
+    </div>
+    @endif
+
     <!-- Navigation -->
     <nav class="navbar navbar-expand-lg navbar-light bg-white" style="margin-bottom: 0; box-shadow: 0 2px 8px rgba(0,0,0,0.04); min-height: 80px;">
         <div class="container-fluid py-3">
@@ -1899,7 +1963,7 @@
 
 
                     <!-- Single Booking Form -->
-                    <form id="bookingForm" action="{{ route('appointments.book') }}" method="POST" enctype="multipart/form-data" autocomplete="off">
+                    <form id="bookingForm" action="{{ route('appointments.book') }}" method="POST" enctype="multipart/form-data" autocomplete="on" novalidate>
                         @csrf
                         <input type="hidden" id="appointment_date" name="appointment_date">
                         <input type="hidden" id="appointment_time_hidden" name="appointment_time">
@@ -3140,18 +3204,25 @@
             console.log('No specific service selected, will use default');
         }
 
-        // Submit via AJAX
+        // Submit via AJAX with improved error handling
         const csrfToken = getCSRFToken();
+
+        // Add a timeout to the fetch request
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
 
         fetch(this.action, {
             method: 'POST',
             body: formData,
             headers: {
                 'X-Requested-With': 'XMLHttpRequest',
-                'X-CSRF-TOKEN': csrfToken
-            }
+                'X-CSRF-TOKEN': csrfToken,
+                'Accept': 'application/json'
+            },
+            signal: controller.signal
         })
         .then(response => {
+            clearTimeout(timeoutId); // Clear the timeout
             console.log('Response status:', response.status);
             console.log('Response headers:', response.headers);
             
@@ -3277,10 +3348,19 @@
             }
         })
         .catch(error => {
+            clearTimeout(timeoutId); // Clear the timeout
             console.error('Network or parsing error:', error);
+            
             let errorMessage = 'An error occurred while submitting your appointment:';
             
-            if (error.message) {
+            if (error.name === 'AbortError') {
+                errorMessage += '\n\nRequest timed out. This may be due to a slow connection.';
+            } else if (error.message && error.message.includes('Failed to fetch')) {
+                errorMessage += '\n\nUnable to connect to the server. This may be due to:';
+                errorMessage += '\n• Network connectivity issues';
+                errorMessage += '\n• Server maintenance';
+                errorMessage += '\n• Firewall or security software blocking the request';
+            } else if (error.message) {
                 errorMessage += '\n\n' + error.message;
             } else {
                 errorMessage += '\n\nPlease check your internet connection and try again.';
@@ -3288,6 +3368,7 @@
             
             // Add helpful suggestions
             errorMessage += '\n\nTips:\n• Make sure all required fields are filled\n• Check that your email format is valid\n• Ensure your phone number is complete\n• Try refreshing the page if the issue persists';
+            errorMessage += '\n\nIf the problem continues, please call us at (647) 834-8549';
             
             alert(errorMessage);
         })
