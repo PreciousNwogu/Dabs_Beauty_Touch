@@ -17,11 +17,15 @@ services:
       - key: APP_URL
         value: https://dabs-beauty-touch.onrender.com
       - key: APP_KEY
-        value: [SET_IN_RENDER_DASHBOARD]
+        value: App_Key
       - key: LOG_LEVEL
         value: error
       - key: SESSION_DRIVER
         value: database
+      - key: SESSION_SECURE_COOKIE
+        value: true
+      - key: SESSION_SAME_SITE
+        value: lax
       - key: CACHE_STORE
         value: database
       - key: QUEUE_CONNECTION
@@ -37,7 +41,7 @@ services:
       - key: MAIL_USERNAME
         value: info@dabsbeautytouch.com
       - key: MAIL_PASSWORD
-        value: [SET_IN_RENDER_DASHBOARD]
+        value: sPv3ckZS5xSk
       - key: MAIL_ENCRYPTION
         value: ssl
       - key: MAIL_FROM_ADDRESS
@@ -48,7 +52,26 @@ services:
         value: info@dabsbeautytouch.com
       - key: BOOKING_NOTIFICATION_EMAIL
         value: info@dabsbeautytouch.com
-    # Database connection will be auto-populated when you connect PostgreSQL
+      - key: DB_HOST
+        fromDatabase:
+          name: dabs-beauty-touch-db
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: dabs-beauty-touch-db
+          property: port
+      - key: DB_DATABASE
+        fromDatabase:
+          name: dabs-beauty-touch-db
+          property: database
+      - key: DB_USERNAME
+        fromDatabase:
+          name: dabs-beauty-touch-db
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: dabs-beauty-touch-db
+          property: password
 
 databases:
   - name: dabs-beauty-touch-db
@@ -56,8 +79,6 @@ databases:
     user: dabs_user
     region: oregon
     plan: free
-    
-databases:
   - name: dabs-beauty-touch-db
     databaseName: dabs_beauty_touch
     plan: free
