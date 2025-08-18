@@ -229,7 +229,7 @@
                 padding: 10px;
                 font-size: 0.9rem;
             }
-            
+
             .calendar-grid {
                 padding: 15px;
             }
@@ -420,8 +420,8 @@
         function renderCalendar() {
             const year = currentDate.getFullYear();
             const month = currentDate.getMonth();
-            
-            document.getElementById('currentMonth').textContent = 
+
+            document.getElementById('currentMonth').textContent =
                 new Date(year, month).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
 
             const firstDay = new Date(year, month, 1);
@@ -468,7 +468,7 @@
                 })
                 .catch(error => {
                     console.error('Error fetching booked dates:', error);
-                    
+
                     // Fallback: render calendar without booking checks
                     for (let i = 0; i < 42; i++) {
                         const date = new Date(startDate);
@@ -494,7 +494,7 @@
 
         function selectDate(date) {
             selectedDate = date;
-            
+
             // Update calendar display
             document.querySelectorAll('.calendar-day').forEach(day => {
                 day.classList.remove('selected');
@@ -514,11 +514,11 @@
             loading.style.display = 'block';
             timeSlotsContainer.style.display = 'none';
 
-            selectedDateText.textContent = date.toLocaleDateString('en-US', { 
-                weekday: 'long', 
-                year: 'numeric', 
-                month: 'long', 
-                day: 'numeric' 
+            selectedDateText.textContent = date.toLocaleDateString('en-US', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
             });
 
             fetch(`/appointments/slots?date=${date.toISOString().split('T')[0]}`)
@@ -566,7 +566,7 @@
 
         function selectTimeSlot(slot) {
             selectedTime = slot;
-            
+
             document.querySelectorAll('.time-slot').forEach(timeSlot => {
                 timeSlot.classList.remove('selected');
             });
@@ -579,11 +579,11 @@
             const bookingFormContainer = document.getElementById('bookingFormContainer');
             const bookingSummary = document.getElementById('bookingSummary');
 
-            bookingSummary.textContent = `${selectedDate.toLocaleDateString('en-US', { 
-                weekday: 'long', 
-                year: 'numeric', 
-                month: 'long', 
-                day: 'numeric' 
+            bookingSummary.textContent = `${selectedDate.toLocaleDateString('en-US', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
             })} at ${selectedTime.formatted_time}`;
 
             bookingFormContainer.style.display = 'block';
@@ -666,7 +666,7 @@
 
         function loadCalendarData() {
             console.log('📅 Loading calendar data for separate calendar page');
-            
+
             // Use the working API endpoint instead of the broken one
             fetch('/api/booked-dates')
                 .then(response => response.json())
@@ -686,10 +686,10 @@
 
         function updateCalendarDisplay(bookedDates) {
             console.log('🎨 Updating calendar display with booked dates:', bookedDates);
-            
+
             // Find all calendar day elements and mark booked ones as red
             const calendarDays = document.querySelectorAll('.calendar-day');
-            
+
             calendarDays.forEach(dayElement => {
                 const dayText = dayElement.textContent.trim();
                 if (dayText && !isNaN(dayText)) {
@@ -698,7 +698,7 @@
                     const month = currentDate.getMonth();
                     const day = parseInt(dayText);
                     const dateString = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-                    
+
                     // Check if this date is booked
                     if (bookedDates.includes(dateString)) {
                         // Mark as booked with red styling
@@ -724,4 +724,4 @@
         }
     </script>
 </body>
-</html> 
+</html>

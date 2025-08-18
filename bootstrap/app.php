@@ -15,7 +15,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'admin' => \App\Http\Middleware\AdminMiddleware::class,
         ]);
-        
+
         // HTTPS is handled by Render proxy - no need for custom redirect middleware
         // Force HTTPS only in production
         // if (env('APP_ENV') === 'production') {

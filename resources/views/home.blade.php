@@ -15,7 +15,6 @@
 
     <!-- CSS Files -->
     <link rel="stylesheet" href="{{ asset('css/bootstrap.css') }}">
-    <link rel="stylesheet" href="{{ asset('css/fonts.css') }}">
     <link rel="stylesheet" href="{{ asset('css/style.css') }}">
 
 
@@ -834,6 +833,41 @@
             margin-bottom: 20px;
         }
 
+        /* File input styling */
+        .booking-form input[type="file"] {
+            border: 2px dashed #dee2e6;
+            border-radius: 8px;
+            padding: 12px;
+            background-color: #f8f9fa;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .booking-form input[type="file"]:hover {
+            border-color: #ff6600;
+            background-color: #fff5f0;
+        }
+
+        .booking-form input[type="file"]:focus {
+            border-color: #ff6600;
+            box-shadow: 0 0 0 0.2rem rgba(255, 102, 0, 0.25);
+            outline: none;
+            background-color: #fff;
+        }
+
+        /* Image preview styling */
+        #imagePreview {
+            margin-top: 12px;
+            padding: 12px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            border: 1px solid #dee2e6;
+        }
+
+        #imagePreview img {
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
         /* FAQ Styling */
         .faq-question {
             transition: all 0.3s ease;
@@ -1311,38 +1345,34 @@
         let selectedCalendarDate = null;
         let selectedCalendarTime = null;
         let bookedDatesCache = []; // Cache for booked dates
-        
+
         // Hardcoded test dates for August 2025 (for immediate testing)
         const testBookedDates = [
-            '2025-08-18', '2025-08-24', '2025-08-25', '2025-08-26', 
+            '2025-08-18', '2025-08-24', '2025-08-25', '2025-08-26',
             '2025-08-28', '2025-08-29', '2025-08-30', '2025-08-31'
         ];
-        
+
         console.log('Test booked dates loaded:', testBookedDates);
 
         // Calendar Modal Functions
         window.openCalendarModal = function() {
             console.log('🚀 openCalendarModal() called');
-            
+
             const calendarModal = new bootstrap.Modal(document.getElementById('calendarModal'));
             calendarModal.show();
+
+            // Set calendar to current month
+            calendarCurrentDate = new Date(); // Current date
             
-            // Force calendar to August 2025 to see test dates
-            calendarCurrentDate = new Date(2025, 7, 1); // August 2025 (month is 0-indexed)
-            
-            // Use ONLY test dates for now (disable API call)
-            bookedDatesCache = [...testBookedDates]; // Create a copy
-            console.log('🎯 Test dates loaded into cache:', bookedDatesCache);
-            console.log('📅 Calendar forced to August 2025:', calendarCurrentDate);
-            
-            // Wait a moment then render
+            // Always fetch fresh data when calendar opens
+            console.log('🔄 Fetching fresh booked dates...');
+            fetchRealBookedDates();
+
+            // Render calendar with loading state first
             setTimeout(() => {
                 console.log('🎨 Starting renderCalendarModal()');
                 renderCalendarModal();
             }, 100);
-            
-            // Disable API call for now - no external requests
-            console.log('⚠️ API calls disabled for debugging');
         };
 
         // Fetch real booked dates from API
@@ -1354,7 +1384,7 @@
                     if (data.success) {
                         const realBookedDates = data.booked_dates.filter(booking => booking.disabled).map(booking => booking.date);
                         console.log('Real booked dates from API:', realBookedDates);
-                        
+
                         // Update cache with real data
                         bookedDatesCache = realBookedDates;
                         // Re-render calendar with real data
@@ -1371,7 +1401,7 @@
             console.log('🎨 renderCalendarModal() started');
             console.log('📊 Current bookedDatesCache:', bookedDatesCache);
             console.log('📅 Current calendarCurrentDate:', calendarCurrentDate);
-            
+
             const year = calendarCurrentDate.getFullYear();
             const month = calendarCurrentDate.getMonth();
             console.log(`📅 Rendering calendar for: ${year}-${month + 1} (${year} ${new Date(year, month).toLocaleDateString('en-US', { month: 'long' })})`);
@@ -1410,7 +1440,7 @@
                     // Date is fully booked - FORCE RED STYLING
                     dayDiv.classList.add('booked');
                     dayDiv.title = 'This date is fully booked - pending or confirmed appointment exists';
-                    
+
                     // Force inline styles to override any other styling
                     dayDiv.style.backgroundColor = '#ff0000 !important';
                     dayDiv.style.borderColor = '#cc0000 !important';
@@ -1419,7 +1449,7 @@
                     dayDiv.style.opacity = '1';
                     dayDiv.style.position = 'relative';
                     dayDiv.style.pointerEvents = 'none';
-                    
+
                     dayDiv.innerHTML = date.getDate() + '<span style="position:absolute;top:2px;right:4px;color:#ffffff;font-weight:bold;font-size:12px;">×</span>';
                     console.log(`🔴 FORCED RED STYLING for date ${dateString}`);
                     // Don't add click event for booked dates
@@ -1661,12 +1691,12 @@
     <div class="alert alert-danger alert-dismissible fade show m-0" role="alert" style="border-radius: 0; border: none; background: linear-gradient(135deg, #dc3545 0%, #e74c3c 100%); color: white; box-shadow: 0 2px 8px rgba(220, 53, 69, 0.3); z-index: 1050; position: relative;">
         <div class="container text-center py-3">
             <h4 class="alert-heading mb-2">
-                <i class="fas fa-exclamation-triangle me-2"></i>
+                <i class="bi bi-exclamation-triangle-fill me-2"></i>
                 Booking Error
             </h4>
             <p class="mb-2">{{ session('error_message', 'There was an issue processing your booking.') }}</p>
             <p class="mb-0">
-                <i class="fas fa-phone me-2"></i>
+                <i class="bi bi-telephone-fill me-2"></i>
                 Please try again or call us at <strong>(647) 834-8549</strong>
             </p>
             <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert" aria-label="Close" style="position: absolute; top: 15px; right: 15px;"></button>
@@ -2385,7 +2415,7 @@
 
 
                     <!-- Single Booking Form -->
-                    <form id="bookingForm" action="{{ route('bookings.store') }}" method="POST" autocomplete="on" novalidate>
+                    <form id="bookingForm" action="{{ route('bookings.store') }}" method="POST" autocomplete="on" novalidate enctype="multipart/form-data">
                         @csrf
                         <input type="hidden" id="appointment_date" name="appointment_date">
                         <input type="hidden" id="appointment_time_hidden" name="appointment_time">
@@ -2474,6 +2504,29 @@
                                 <div class="form-group">
                                     <label for="message" class="form-label">Special Requests or Notes</label>
                                     <textarea class="form-control" id="message" name="message" placeholder="Any special requests or additional information..." rows="3" autocomplete="off"></textarea>
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <div class="form-group">
+                                    <label for="sample_picture" class="form-label">
+                                        <i class="bi bi-image me-2"></i>Upload Reference Image (Optional)
+                                    </label>
+                                    <input type="file" class="form-control" id="sample_picture" name="sample_picture" accept="image/*" autocomplete="off">
+                                    <small class="form-text text-muted mt-2">
+                                        <i class="bi bi-info-circle me-1"></i>
+                                        Upload a reference image of the hairstyle you want. Accepted formats: JPG, PNG, GIF (Max: 5MB)
+                                    </small>
+                                    <div class="mt-2" id="imagePreview" style="display: none;">
+                                        <div class="d-flex align-items-center">
+                                            <img id="previewImg" src="" alt="Preview" style="max-width: 100px; max-height: 100px; border-radius: 8px; border: 2px solid #dee2e6;">
+                                            <div class="ms-3">
+                                                <small class="text-muted d-block" id="fileName"></small>
+                                                <button type="button" class="btn btn-sm btn-outline-danger mt-1" onclick="clearImagePreview()">
+                                                    <i class="bi bi-trash me-1"></i>Remove
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -3480,6 +3533,9 @@ console.log('=== LOADING BOOKING FUNCTIONS ===');
                 serviceDisplayInput.value = 'No service selected';
             }
 
+            // Clear image preview
+            clearImagePreview();
+
             // Force browser to clear any cached values
             form.setAttribute('autocomplete', 'off');
 
@@ -3694,6 +3750,8 @@ console.log('=== LOADING BOOKING FUNCTIONS ===');
         console.log('Appointment Time:', formData.get('appointment_time'));
         console.log('Notes:', formData.get('notes'));
         console.log('CSRF Token:', formData.get('_token'));
+        console.log('Sample Picture File:', formData.get('sample_picture'));
+        console.log('Sample Picture File Name:', formData.get('sample_picture') ? formData.get('sample_picture').name : 'No file');
 
         // Validate critical fields before sending
         if (!formData.get('appointment_date')) {
@@ -3874,6 +3932,12 @@ console.log('=== LOADING BOOKING FUNCTIONS ===');
                     console.log('Bootstrap modal created:', !!successModal);
                     successModal.show();
                     console.log('Modal show() called');
+                    
+                    // Refresh the calendar data since a new booking was added
+                    console.log('🔄 Refreshing calendar data after successful booking');
+                    setTimeout(() => {
+                        fetchRealBookedDates();
+                    }, 500); // Small delay to ensure booking is saved
                 } else {
                     console.error('Success modal element not found!');
                 }
@@ -4475,14 +4539,14 @@ function closeSuccessModal() {
     if (successModal) {
         console.log('Success modal found, hiding it'); // Debug log
         successModal.style.display = 'none';
-        
+
         // Remove modal from DOM after animation
         setTimeout(function() {
             if (successModal.parentNode) {
                 successModal.parentNode.removeChild(successModal);
             }
         }, 300);
-        
+
         // Clear session data
         fetch('/clear-session', {
             method: 'GET',
@@ -4517,7 +4581,60 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         }
     }, 100);
+
+    // Image preview functionality
+    const samplePictureInput = document.getElementById('sample_picture');
+    if (samplePictureInput) {
+        samplePictureInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            const imagePreview = document.getElementById('imagePreview');
+            const previewImg = document.getElementById('previewImg');
+            const fileName = document.getElementById('fileName');
+
+            if (file) {
+                // Validate file type
+                const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
+                if (!allowedTypes.includes(file.type)) {
+                    alert('Please select a valid image file (JPG, PNG, or GIF)');
+                    e.target.value = '';
+                    return;
+                }
+
+                // Validate file size (5MB)
+                const maxSize = 5 * 1024 * 1024; // 5MB in bytes
+                if (file.size > maxSize) {
+                    alert('File size must be less than 5MB');
+                    e.target.value = '';
+                    return;
+                }
+
+                // Create preview
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    previewImg.src = e.target.result;
+                    fileName.textContent = file.name + ' (' + (file.size / 1024 / 1024).toFixed(2) + ' MB)';
+                    imagePreview.style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            } else {
+                clearImagePreview();
+            }
+        });
+    }
 });
+
+// Function to clear image preview
+function clearImagePreview() {
+    const samplePictureInput = document.getElementById('sample_picture');
+    const imagePreview = document.getElementById('imagePreview');
+    const previewImg = document.getElementById('previewImg');
+    const fileName = document.getElementById('fileName');
+
+    if (samplePictureInput) samplePictureInput.value = '';
+    if (imagePreview) imagePreview.style.display = 'none';
+    if (previewImg) previewImg.src = '';
+    if (fileName) fileName.textContent = '';
+}
 </script>
 
 </body>

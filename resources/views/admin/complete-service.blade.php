@@ -96,7 +96,7 @@
             <!-- Completion Form (hidden until appointment is found) -->
             <form id="completionForm" style="display: none;">
                 <input type="hidden" id="appointmentId">
-                
+
                 <div class="row mb-3">
                     <div class="col-md-6">
                         <label for="staffMember" class="form-label">Completed By (Staff Member)</label>
@@ -161,7 +161,7 @@
 
         function searchAppointment() {
             const searchTerm = document.getElementById('bookingSearch').value.trim();
-            
+
             if (!searchTerm) {
                 alert('Please enter a booking ID, phone number, or customer name');
                 return;

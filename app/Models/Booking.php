@@ -27,6 +27,7 @@ class Booking extends Model
         'message',
         'status',
         'notes',
+        'sample_picture',
         'confirmed_at',
         'completed_at',
         'cancelled_at',
@@ -196,7 +197,7 @@ class Booking extends Model
      */
     public function canBeCompleted()
     {
-        return in_array($this->status, ['confirmed', 'pending']) && 
+        return in_array($this->status, ['confirmed', 'pending']) &&
                $this->appointment_date <= today();
     }
 
@@ -215,7 +216,7 @@ class Booking extends Model
         if ($hours > 0) {
             return $hours . 'h ' . ($minutes > 0 ? $minutes . 'm' : '');
         }
-        
+
         return $minutes . 'm';
     }
 }

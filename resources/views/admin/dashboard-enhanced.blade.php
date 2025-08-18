@@ -292,17 +292,17 @@
             .stats-grid {
                 grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             }
-            
+
             .booking-header {
                 flex-direction: column;
                 align-items: start;
                 gap: 10px;
             }
-            
+
             .booking-status {
                 align-items: start;
             }
-            
+
             .booking-details {
                 grid-template-columns: 1fr;
             }

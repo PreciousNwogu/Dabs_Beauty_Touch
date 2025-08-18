@@ -21,19 +21,19 @@ Route::get('/csrf-token', function (Request $request) {
 // Clear session route (temporary fix for persistent success messages)
 Route::get('/clear-session', function (Request $request) {
     session()->forget(['booking_success', 'booking_details', 'booking_error', 'error_message']);
-    
+
     // Handle AJAX requests
     if ($request->ajax() || $request->wantsJson()) {
         return response()->json(['success' => true, 'message' => 'Session cleared']);
     }
-    
+
     return redirect()->route('home');
 })->name('clear.session');
 
 // Get booked dates for calendar
 Route::get('/api/booked-dates', function (Request $request) {
     try {
-        // Get dates with pending or confirmed bookings (exclude cancelled and completed)
+        // Only get dates with pending or confirmed bookings (exclude cancelled and completed)
         $bookedDates = \App\Models\Booking::whereIn('status', ['pending', 'confirmed'])
             ->selectRaw('appointment_date, COUNT(*) as booking_count')
             ->groupBy('appointment_date')
@@ -49,7 +49,15 @@ Route::get('/api/booked-dates', function (Request $request) {
                 ];
             });
 
-        \Illuminate\Support\Facades\Log::info('Booked dates API response:', $bookedDates->toArray());
+        \Illuminate\Support\Facades\Log::info('Booked dates API response:', [
+            'total_bookings_in_db' => \App\Models\Booking::count(),
+            'pending_bookings' => \App\Models\Booking::where('status', 'pending')->count(),
+            'confirmed_bookings' => \App\Models\Booking::where('status', 'confirmed')->count(),
+            'completed_bookings' => \App\Models\Booking::where('status', 'completed')->count(),
+            'cancelled_bookings' => \App\Models\Booking::where('status', 'cancelled')->count(),
+            'dates_to_disable' => $bookedDates->count(),
+            'booked_dates' => $bookedDates->toArray()
+        ]);
 
         return response()->json([
             'success' => true,
@@ -98,11 +106,11 @@ Route::post('/test-upload', function (Request $request) {
     if (!file_exists($tempDir)) {
         mkdir($tempDir, 0777, true);
     }
-    
+
     if (function_exists('ini_set')) {
         ini_set('upload_tmp_dir', $tempDir);
     }
-    
+
     $result = [
         'temp_dir' => $tempDir,
         'temp_dir_exists' => file_exists($tempDir),
@@ -111,14 +119,14 @@ Route::post('/test-upload', function (Request $request) {
         'php_upload_tmp_dir' => ini_get('upload_tmp_dir'),
         'sys_temp_dir' => sys_get_temp_dir(),
     ];
-    
+
     if ($request->hasFile('sample_picture')) {
         $file = $request->file('sample_picture');
         $result['file_valid'] = $file->isValid();
         $result['file_error'] = $file->getError();
         $result['file_size'] = $file->getSize();
         $result['file_name'] = $file->getClientOriginalName();
-        
+
         if ($file->isValid()) {
             try {
                 $filename = time() . '_' . $file->getClientOriginalName();
@@ -131,7 +139,7 @@ Route::post('/test-upload', function (Request $request) {
             }
         }
     }
-    
+
     return response()->json($result);
 });
 
@@ -176,15 +184,41 @@ Route::get('/admin/login', function () {
     return view('admin.login');
 })->name('admin.login');
 
+// TEMPORARY ROUTE: Create admin user (remove after first use)
+Route::get('/create-admin-user', function () {
+    $adminEmail = 'admin@dabsbeautytouch.com';
+    
+    $admin = \App\Models\User::where('email', $adminEmail)->first();
+    
+    if (!$admin) {
+        \App\Models\User::create([
+            'name' => 'System Administrator',
+            'email' => $adminEmail,
+            'password' => \Illuminate\Support\Facades\Hash::make('admin123!@#'),
+            'is_admin' => true,
+        ]);
+        
+        return 'Admin user created! Email: ' . $adminEmail . ' | Password: admin123!@# | <a href="/admin/login">Go to login</a>';
+    } else {
+        // Ensure existing user has admin privileges
+        if (!$admin->is_admin) {
+            $admin->update(['is_admin' => true]);
+            return 'Admin privileges granted to existing user: ' . $adminEmail . ' | <a href="/admin/login">Go to login</a>';
+        } else {
+            return 'Admin user already exists: ' . $adminEmail . ' | <a href="/admin/login">Go to login</a>';
+        }
+    }
+});
+
 Route::post('/admin/login', function (Request $request) {
     $credentials = $request->only('email', 'password');
-    
+
     if (Auth::attempt($credentials)) {
         $user = Auth::user();
         $request->session()->regenerate();
         return redirect()->route('admin.dashboard')->with('success', 'Welcome back!');
     }
-    
+
     return back()->withErrors(['email' => 'Invalid credentials.'])->withInput();
 })->name('admin.login.submit');
 
@@ -205,25 +239,25 @@ Route::prefix('admin')->name('admin.')->group(function () {
     // Admin dashboard (accessible after login)
     Route::get('/dashboard', function () {
         $query = \App\Models\Booking::with([]);
-        
+
         // Apply filters if provided
         if (request('status') && request('status') !== 'all') {
             $query->where('status', request('status'));
         }
-        
+
         if (request('date')) {
             $query->whereDate('appointment_date', request('date'));
         }
-        
+
         if (request('service')) {
             $query->where('service', 'LIKE', '%' . request('service') . '%');
         }
-        
+
         // Paginate bookings (10 per page)
         $bookings = $query->orderBy('appointment_date', 'desc')
             ->orderBy('appointment_time', 'desc')
             ->paginate(10);
-        
+
         $stats = [
             'total_bookings' => \App\Models\Booking::count(),
             'pending_bookings' => \App\Models\Booking::where('status', 'pending')->count(),
@@ -231,7 +265,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
             'completed_bookings' => \App\Models\Booking::where('status', 'completed')->count(),
             'today_bookings' => \App\Models\Booking::whereDate('appointment_date', today())->count(),
             'this_week_bookings' => \App\Models\Booking::whereBetween('appointment_date', [
-                now()->startOfWeek(), 
+                now()->startOfWeek(),
                 now()->endOfWeek()
             ])->count(),
             // Revenue calculations for completed bookings only
@@ -243,21 +277,21 @@ Route::prefix('admin')->name('admin.')->group(function () {
                 ->whereMonth('completed_at', now()->month)
                 ->sum('final_price') ?? 0,
         ];
-        
+
         return view('admin.dashboard', compact('bookings', 'stats'));
     })->name('dashboard');
 
     // Get booking details for modal
     Route::get('/booking-details/{id}', function ($id) {
         $booking = \App\Models\Booking::find($id);
-        
+
         if (!$booking) {
             return response()->json([
                 'success' => false,
                 'message' => 'Booking not found'
             ]);
         }
-        
+
         return response()->json([
             'success' => true,
             'booking' => $booking
@@ -287,18 +321,18 @@ Route::prefix('admin')->name('admin.')->group(function () {
             $bookingId = $request->booking_id ?? $request->appointment_id;
             $booking = \App\Models\Booking::findOrFail($bookingId);
             $booking->status = $request->status;
-            
+
             // Add completion notes if provided
             if ($request->completion_notes) {
                 $booking->completion_notes = $request->completion_notes;
             }
-            
+
             // Update timestamps and completion data based on status
             if ($request->status === 'confirmed') {
                 $booking->confirmed_at = now();
             } elseif ($request->status === 'completed') {
                 $booking->completed_at = now();
-                
+
                 // Add completion details if provided
                 if ($request->completed_by) {
                     $booking->completed_by = $request->completed_by;
@@ -315,9 +349,9 @@ Route::prefix('admin')->name('admin.')->group(function () {
             } elseif ($request->status === 'cancelled') {
                 $booking->cancelled_at = now();
             }
-            
+
             $booking->save();
-            
+
             return response()->json([
                 'success' => true,
                 'message' => 'Booking status updated successfully'
@@ -329,7 +363,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
             ], 500);
         }
     })->name('bookings.update-status');
-    
+
     Route::post('/bookings/search', function(Request $request) {
         $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
             'search' => 'required|string|min:2'
@@ -344,7 +378,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
         try {
             $searchTerm = $request->search;
-            
+
             $booking = \App\Models\Booking::where(function($query) use ($searchTerm) {
                 $query->where('id', $searchTerm)
                       ->orWhere('phone', 'like', '%' . $searchTerm . '%')
@@ -361,14 +395,14 @@ Route::prefix('admin')->name('admin.')->group(function () {
                 $formattedDate = $booking->appointment_date;
                 if ($formattedDate) {
                     try {
-                        $formattedDate = is_string($booking->appointment_date) 
+                        $formattedDate = is_string($booking->appointment_date)
                             ? date('M j, Y', strtotime($booking->appointment_date))
                             : $booking->appointment_date->format('M j, Y');
                     } catch (\Exception $e) {
                         $formattedDate = $booking->appointment_date;
                     }
                 }
-                
+
                 return response()->json([
                     'success' => true,
                     'booking' => [
@@ -435,17 +469,28 @@ Route::post('/test-form', function (Request $request) {
 
 // Booking routes - simplified closure implementation
 Route::post('/bookings', function(Request $request) {
-    
-    // Validate the booking form
-    $request->validate([
+
+    // Handle sample_picture validation separately to avoid empty file issues
+    $validationRules = [
         'name' => 'required|string|max:255',
-        'email' => 'required|email|max:255',
+        'email' => 'nullable|email|max:255',
         'phone' => 'required|string|max:20',
-        'service' => 'required|string|max:255',
-        'appointment_date' => 'required|date|after:today',
+        'service' => 'nullable|string|max:255',
+        'appointment_date' => 'required|date|after_or_equal:today',
         'appointment_time' => 'required|string',
         'message' => 'nullable|string|max:1000',
-    ]);
+    ];
+
+    // Only validate sample_picture if a file was actually uploaded
+    if ($request->hasFile('sample_picture')) {
+        $file = $request->file('sample_picture');
+        if ($file->isValid() && $file->getError() === UPLOAD_ERR_OK) {
+            $validationRules['sample_picture'] = 'file|image|mimes:jpeg,png,jpg,gif|max:5120'; // 5MB max
+        }
+    }
+
+    // Validate the booking form
+    $request->validate($validationRules);
 
     // Create the booking
     try {
@@ -453,19 +498,60 @@ Route::post('/bookings', function(Request $request) {
             'method' => $request->method(),
             'is_ajax' => $request->wantsJson(),
             'headers' => $request->headers->all(),
-            'request_data' => $request->all()
+            'request_data' => $request->except(['sample_picture']), // Exclude file from logs
+            'has_sample_picture' => $request->hasFile('sample_picture')
         ]);
-        
+
+        // Handle sample picture upload if provided
+        $samplePicturePath = null;
+        if ($request->hasFile('sample_picture')) {
+            $file = $request->file('sample_picture');
+
+            if ($file->isValid() && $file->getError() === UPLOAD_ERR_OK) {
+                Log::info('Processing file upload', [
+                    'file_name' => $file->getClientOriginalName(),
+                    'file_size' => $file->getSize(),
+                    'mime_type' => $file->getMimeType(),
+                ]);
+
+                try {
+                    // Ensure storage directory exists
+                    $storageDir = storage_path('app/public/sample_pictures');
+                    if (!file_exists($storageDir)) {
+                        mkdir($storageDir, 0755, true);
+                    }
+
+                    // Use custom file name to avoid conflicts
+                    $fileName = time() . '_' . uniqid() . '_' . $file->getClientOriginalName();
+                    $samplePicturePath = $file->storeAs('sample_pictures', $fileName, 'public');
+
+                    Log::info('File stored successfully', ['path' => $samplePicturePath]);
+                } catch (\Exception $e) {
+                    Log::error('File storage failed', ['error' => $e->getMessage()]);
+                    // Don't return error - continue without file upload
+                    $samplePicturePath = null;
+                }
+            } else {
+                Log::warning('File upload error', [
+                    'error_code' => $file->getError(),
+                    'error_message' => $file->getErrorMessage()
+                ]);
+            }
+        } else {
+            Log::info('No file uploaded');
+        }
+
         $bookingData = [
             'name' => $request->name,
-            'email' => $request->email,
+            'email' => $request->email ?: 'no-email@example.com',
             'phone' => $request->phone,
             'address' => $request->address,
-            'service' => $request->service,
+            'service' => $request->service ?: 'General Service',
             'appointment_date' => $request->appointment_date,
             'appointment_time' => $request->appointment_time,
             'message' => $request->message, // Store in message field
             'notes' => $request->message,   // Also store in notes field for compatibility
+            'sample_picture' => $samplePicturePath,
             'status' => 'pending',
         ];
 
@@ -475,7 +561,7 @@ Route::post('/bookings', function(Request $request) {
         Log::info('=== CREATING BOOKING ===', ['data' => $bookingData]);
         $booking = \App\Models\Booking::create($bookingData);
         Log::info('=== BOOKING CREATED SUCCESSFULLY ===', ['booking_id' => $booking->id]);
-        
+
         // Generate booking ID in BK format and confirmation code
         $bookingId = 'BK' . str_pad($booking->id, 6, '0', STR_PAD_LEFT);
         $confirmationCode = 'CONF' . strtoupper(substr(md5($booking->id . time()), 0, 8));
@@ -526,13 +612,13 @@ Route::post('/bookings', function(Request $request) {
                 'message' => $booking->message,
             ]
         ]);
-        
+
     } catch (\Exception $e) {
         Log::error('Booking creation failed: ' . $e->getMessage(), [
             'request_data' => $request->all(),
             'exception' => $e->getTraceAsString()
         ]);
-        
+
         // Check if this is an AJAX request
         if ($request->wantsJson() || $request->header('X-Requested-With') === 'XMLHttpRequest') {
             // Return JSON error response for AJAX requests
@@ -542,7 +628,7 @@ Route::post('/bookings', function(Request $request) {
                 'error' => $e->getMessage()
             ], 500);
         }
-        
+
         // Return redirect with flash error data (automatically cleared after display)
         return redirect()->route('home')->withErrors(['error' => 'Something went wrong. Please try again.'])->withInput()->with([
             'booking_error' => true,
@@ -594,23 +680,23 @@ Route::prefix('api')->group(function () {
     Route::get('/services', function() {
         return response()->json(['services' => []]);
     });
-    
+
     Route::get('/testimonials', function() {
         return response()->json(['testimonials' => []]);
     });
-    
+
     Route::get('/faqs', function() {
         return response()->json(['faqs' => []]);
     });
-    
+
     Route::get('/contact-info', function() {
         return response()->json(['contact' => []]);
     });
-    
+
     Route::get('/time-slots', function() {
         return response()->json(['time_slots' => []]);
     });
-    
+
     Route::get('/bookings/unavailable', function() {
         return response()->json(['unavailable' => []]);
     });

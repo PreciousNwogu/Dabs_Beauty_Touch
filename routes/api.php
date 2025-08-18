@@ -24,7 +24,7 @@ Route::prefix('v1')->group(function () {
     Route::post('/bookings', function(Request $request) {
         return response()->json(['message' => 'API booking submission received']);
     });
-    
+
     Route::post('/contact', function(Request $request) {
         return response()->json(['message' => 'API contact form submission received']);
     });
@@ -33,19 +33,19 @@ Route::prefix('v1')->group(function () {
     Route::get('/services', function() {
         return response()->json(['services' => []]);
     });
-    
+
     Route::get('/testimonials', function() {
         return response()->json(['testimonials' => []]);
     });
-    
+
     Route::get('/faq', function() {
         return response()->json(['faq' => []]);
     });
-    
+
     Route::get('/contact-info', function() {
         return response()->json(['contact' => []]);
     });
-    
+
     Route::get('/available-slots', function() {
         return response()->json(['available_slots' => []]);
     });
@@ -56,7 +56,7 @@ Route::middleware(['auth:sanctum'])->prefix('admin')->group(function () {
     Route::get('/bookings', function() {
         return response()->json(['bookings' => []]);
     });
-    
+
     Route::patch('/bookings/{booking}/status', function($booking, Request $request) {
         return response()->json(['message' => 'API booking status updated']);
     });

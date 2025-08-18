@@ -466,8 +466,8 @@
                                         </td>
                                         <td>
                                             @if($booking->sample_picture)
-                                                <img src="{{ asset('storage/' . $booking->sample_picture) }}" 
-                                                     alt="Sample" 
+                                                <img src="{{ asset('storage/' . $booking->sample_picture) }}"
+                                                     alt="Sample"
                                                      class="sample-image"
                                                      onclick="viewImageModal('{{ asset('storage/' . $booking->sample_picture) }}', '{{ $booking->name }}')"
                                                      title="Click to view full size">
@@ -514,7 +514,7 @@
                         </tbody>
                     </table>
                 </div>
-                
+
                 <!-- Pagination -->
                 @if($bookings->hasPages())
                 <div class="d-flex justify-content-between align-items-center mt-4">
@@ -593,24 +593,24 @@
                                 <option value="cancelled">Cancelled</option>
                             </select>
                         </div>
-                        
+
                         <!-- Completion fields - only show when status is 'completed' -->
                         <div id="completionFields" style="display: none;">
                             <div class="mb-3">
                                 <label for="completedBy" class="form-label">Completed By (Staff Member)</label>
                                 <input type="text" class="form-control" id="completedBy" placeholder="Enter staff member name">
                             </div>
-                            
+
                             <div class="mb-3">
                                 <label for="serviceDuration" class="form-label">Service Duration (minutes)</label>
                                 <input type="number" class="form-control" id="serviceDuration" placeholder="e.g., 180" min="1">
                             </div>
-                            
+
                             <div class="mb-3">
                                 <label for="finalPrice" class="form-label">Final Price (₵)</label>
                                 <input type="number" class="form-control" id="finalPrice" placeholder="e.g., 150.00" min="0" step="0.01">
                             </div>
-                            
+
                             <div class="mb-3">
                                 <label for="paymentStatus" class="form-label">Payment Status</label>
                                 <select class="form-select" id="paymentStatus">
@@ -620,7 +620,7 @@
                                 </select>
                             </div>
                         </div>
-                        
+
                         <div class="mb-3">
                             <label for="statusNotes" class="form-label">Notes (Optional)</label>
                             <textarea class="form-control" id="statusNotes" rows="3" placeholder="Add any additional notes..."></textarea>
@@ -762,8 +762,8 @@
                                     <h6 class="mb-0"><i class="bi bi-image me-2"></i>Sample Image</h6>
                                 </div>
                                 <div class="card-body text-center">
-                                    <img src="${booking.sample_picture.startsWith('http') ? booking.sample_picture : '/storage/' + booking.sample_picture}" 
-                                         alt="Sample Image" 
+                                    <img src="${booking.sample_picture.startsWith('http') ? booking.sample_picture : '/storage/' + booking.sample_picture}"
+                                         alt="Sample Image"
                                          style="max-width: 100%; height: auto; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);"
                                          onclick="viewImageModal('${booking.sample_picture.startsWith('http') ? booking.sample_picture : '/storage/' + booking.sample_picture}', '${booking.name}')"
                                          class="cursor-pointer">
@@ -891,7 +891,7 @@
                     const modal = bootstrap.Modal.getInstance(document.getElementById('statusModal'));
                     modal.hide();
                     window.location.reload();
-                    
+
                     // Show success message
                     alert('Appointment status updated successfully!');
                 } else {
@@ -912,7 +912,7 @@
         function toggleCompletionFields() {
             const status = document.getElementById('newStatus').value;
             const completionFields = document.getElementById('completionFields');
-            
+
             if (status === 'completed') {
                 completionFields.style.display = 'block';
                 // Make completion fields required when status is completed
@@ -932,7 +932,7 @@
             document.getElementById('imageModalTitle').textContent = `Sample Image - ${customerName}`;
             document.getElementById('imageModalImg').src = imageSrc;
             document.getElementById('imageDownloadLink').href = imageSrc;
-            
+
             const modal = new bootstrap.Modal(document.getElementById('imageModal'));
             modal.show();
         }
@@ -940,10 +940,10 @@
         // Simple status update function
         function updateStatus(bookingId, newStatus) {
             console.log('updateStatus called with:', bookingId, newStatus);
-            
+
             const confirmMessage = `Are you sure you want to mark booking #${bookingId} as ${newStatus}?`;
             console.log('Showing confirm dialog:', confirmMessage);
-            
+
             if (!confirm(confirmMessage)) {
                 console.log('User cancelled the action');
                 return;
@@ -984,4 +984,4 @@
         }
     </script>
 </body>
-</html> 
+</html>
