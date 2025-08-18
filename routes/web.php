@@ -184,32 +184,6 @@ Route::get('/admin/login', function () {
     return view('admin.login');
 })->name('admin.login');
 
-// TEMPORARY ROUTE: Create admin user (remove after first use)
-Route::get('/create-admin-user', function () {
-    $adminEmail = 'admin@dabsbeautytouch.com';
-    
-    $admin = \App\Models\User::where('email', $adminEmail)->first();
-    
-    if (!$admin) {
-        \App\Models\User::create([
-            'name' => 'System Administrator',
-            'email' => $adminEmail,
-            'password' => \Illuminate\Support\Facades\Hash::make('admin123!@#'),
-            'is_admin' => true,
-        ]);
-        
-        return 'Admin user created! Email: ' . $adminEmail . ' | Password: admin123!@# | <a href="/admin/login">Go to login</a>';
-    } else {
-        // Ensure existing user has admin privileges
-        if (!$admin->is_admin) {
-            $admin->update(['is_admin' => true]);
-            return 'Admin privileges granted to existing user: ' . $adminEmail . ' | <a href="/admin/login">Go to login</a>';
-        } else {
-            return 'Admin user already exists: ' . $adminEmail . ' | <a href="/admin/login">Go to login</a>';
-        }
-    }
-});
-
 Route::post('/admin/login', function (Request $request) {
     $credentials = $request->only('email', 'password');
 
