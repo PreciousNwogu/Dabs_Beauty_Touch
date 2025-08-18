@@ -184,6 +184,31 @@ Route::get('/admin/login', function () {
     return view('admin.login');
 })->name('admin.login');
 
+// TEMPORARY: Check database status
+Route::get('/check-db', function () {
+    $connection = config('database.default');
+    $dbName = config("database.connections.{$connection}.database");
+    
+    try {
+        $userCount = \App\Models\User::count();
+        $adminCount = \App\Models\User::where('is_admin', true)->count();
+        
+        return [
+            'database_connection' => $connection,
+            'database_name' => $dbName,
+            'total_users' => $userCount,
+            'admin_users' => $adminCount,
+            'admin_exists' => \App\Models\User::where('email', 'admin@dabsbeautytouch.com')->exists(),
+        ];
+    } catch (\Exception $e) {
+        return [
+            'database_connection' => $connection,
+            'database_name' => $dbName,
+            'error' => $e->getMessage()
+        ];
+    }
+});
+
 Route::post('/admin/login', function (Request $request) {
     $credentials = $request->only('email', 'password');
 
