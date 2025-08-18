@@ -1186,51 +1186,473 @@
             color: #030f68;
         }
     </style>
+
+    <!-- CRITICAL: INLINE JAVASCRIPT TO ENSURE FUNCTIONS LOAD FIRST -->
+    <script>
+        console.log('Booking functions loading...');
+
+        // CSRF Token Management
+        window.refreshCSRFToken = function() {
+            return fetch('/csrf-token', {
+                method: 'GET',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.token) {
+                    // Update meta tag
+                    document.querySelector('meta[name="csrf-token"]').setAttribute('content', data.token);
+                    // Update form token
+                    const tokenInput = document.querySelector('input[name="_token"]');
+                    if (tokenInput) {
+                        tokenInput.value = data.token;
+                    }
+                    console.log('CSRF token refreshed');
+                    return data.token;
+                } else {
+                    throw new Error('No token received');
+                }
+            })
+            .catch(error => {
+                console.error('Error refreshing CSRF token:', error);
+                return null;
+            });
+        };
+
+        // Auto-refresh CSRF token every 30 minutes
+        setInterval(function() {
+            window.refreshCSRFToken();
+        }, 30 * 60 * 1000); // 30 minutes
+
+        // Clear form function
+        window.clearBookingForm = function() {
+            var form = document.getElementById('bookingForm');
+            if (form) {
+                form.reset();
+                // Clear all inputs except CSRF token
+                var inputs = form.querySelectorAll('input, textarea, select');
+                inputs.forEach(function(input) {
+                    if (input.name !== '_token') {
+                        input.value = '';
+                    }
+                });
+                console.log('Booking form cleared');
+            }
+        };
+
+        // Main booking modal function
+        window.openBookingModal = function(serviceName, serviceType) {
+            console.log('Opening booking modal for:', serviceName);
+
+            // Clear form first
+            if (window.clearBookingForm) {
+                window.clearBookingForm();
+            }
+
+            // Wait for DOM to be ready if called early
+            function showModal() {
+                var modal = document.getElementById('bookingModal');
+                if (!modal) {
+                    console.error('Booking modal not found');
+                    return;
+                }
+
+                // Set service information
+                var serviceInput = document.getElementById('selectedService');
+                if (serviceInput) {
+                    serviceInput.value = serviceName;
+                }
+
+                var serviceDisplay = document.getElementById('serviceDisplay');
+                if (serviceDisplay) {
+                    serviceDisplay.value = serviceName;
+                }
+
+                var modalTitle = document.getElementById('bookingModalLabel');
+                if (modalTitle) {
+                    modalTitle.textContent = 'Book ' + serviceName;
+                }
+
+                // Show modal using Bootstrap if available, otherwise fallback
+                if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+                    try {
+                        var modalInstance = new bootstrap.Modal(modal);
+                        modalInstance.show();
+                        console.log('Modal shown with Bootstrap');
+                    } catch (error) {
+                        console.error('Bootstrap modal error:', error);
+                        showModalFallback();
+                    }
+                } else {
+                    showModalFallback();
+                }
+
+                function showModalFallback() {
+                    modal.style.display = 'block';
+                    modal.classList.add('show');
+                    modal.setAttribute('aria-hidden', 'false');
+                    document.body.classList.add('modal-open');
+                    console.log('Modal shown with fallback');
+                }
+            }
+
+            // If DOM is ready, show immediately, otherwise wait
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', showModal);
+            } else {
+                showModal();
+            }
+        };
+
+        // Calendar Integration Variables
+        let calendarCurrentDate = new Date();
+        let selectedCalendarDate = null;
+        let selectedCalendarTime = null;
+        let bookedDatesCache = []; // Cache for booked dates
+        
+        // Hardcoded test dates for August 2025 (for immediate testing)
+        const testBookedDates = [
+            '2025-08-18', '2025-08-24', '2025-08-25', '2025-08-26', 
+            '2025-08-28', '2025-08-29', '2025-08-30', '2025-08-31'
+        ];
+        
+        console.log('Test booked dates loaded:', testBookedDates);
+
+        // Calendar Modal Functions
+        window.openCalendarModal = function() {
+            console.log('🚀 openCalendarModal() called');
+            
+            const calendarModal = new bootstrap.Modal(document.getElementById('calendarModal'));
+            calendarModal.show();
+            
+            // Force calendar to August 2025 to see test dates
+            calendarCurrentDate = new Date(2025, 7, 1); // August 2025 (month is 0-indexed)
+            
+            // Use ONLY test dates for now (disable API call)
+            bookedDatesCache = [...testBookedDates]; // Create a copy
+            console.log('🎯 Test dates loaded into cache:', bookedDatesCache);
+            console.log('📅 Calendar forced to August 2025:', calendarCurrentDate);
+            
+            // Wait a moment then render
+            setTimeout(() => {
+                console.log('🎨 Starting renderCalendarModal()');
+                renderCalendarModal();
+            }, 100);
+            
+            // Disable API call for now - no external requests
+            console.log('⚠️ API calls disabled for debugging');
+        };
+
+        // Fetch real booked dates from API
+        function fetchRealBookedDates() {
+            fetch('/api/booked-dates')
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Real API Response:', data);
+                    if (data.success) {
+                        const realBookedDates = data.booked_dates.filter(booking => booking.disabled).map(booking => booking.date);
+                        console.log('Real booked dates from API:', realBookedDates);
+                        
+                        // Update cache with real data
+                        bookedDatesCache = realBookedDates;
+                        // Re-render calendar with real data
+                        renderCalendarModal();
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading real booked dates:', error);
+                    // Keep using test dates if API fails
+                });
+        }
+
+        function renderCalendarModal() {
+            console.log('🎨 renderCalendarModal() started');
+            console.log('📊 Current bookedDatesCache:', bookedDatesCache);
+            console.log('📅 Current calendarCurrentDate:', calendarCurrentDate);
+            
+            const year = calendarCurrentDate.getFullYear();
+            const month = calendarCurrentDate.getMonth();
+            console.log(`📅 Rendering calendar for: ${year}-${month + 1} (${year} ${new Date(year, month).toLocaleDateString('en-US', { month: 'long' })})`);
+
+            document.getElementById('calendarMonth').textContent =
+                new Date(year, month).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+
+            const firstDay = new Date(year, month, 1);
+            const lastDay = new Date(year, month + 1, 0);
+            const startDate = new Date(firstDay);
+            startDate.setDate(startDate.getDate() - firstDay.getDay());
+
+            const calendarDays = document.getElementById('calendarDays');
+            calendarDays.innerHTML = '';
+
+            // Render calendar days
+            for (let i = 0; i < 42; i++) {
+                const date = new Date(startDate);
+                date.setDate(startDate.getDate() + i);
+                const dateString = date.toISOString().split('T')[0];
+
+                const dayDiv = document.createElement('div');
+                dayDiv.className = 'col calendar-day';
+                dayDiv.textContent = date.getDate();
+
+                // Debug logging for first few dates
+                if (i < 10) {
+                    console.log(`Checking date: ${dateString}, in bookedDatesCache: ${bookedDatesCache.includes(dateString)}, bookedDatesCache:`, bookedDatesCache);
+                }
+
+                if (date.getMonth() !== month) {
+                    dayDiv.classList.add('other-month');
+                } else if (date < new Date().setHours(0, 0, 0, 0)) {
+                    dayDiv.classList.add('past');
+                } else if (bookedDatesCache.includes(dateString)) {
+                    // Date is fully booked - FORCE RED STYLING
+                    dayDiv.classList.add('booked');
+                    dayDiv.title = 'This date is fully booked - pending or confirmed appointment exists';
+                    
+                    // Force inline styles to override any other styling
+                    dayDiv.style.backgroundColor = '#ff0000 !important';
+                    dayDiv.style.borderColor = '#cc0000 !important';
+                    dayDiv.style.color = '#ffffff !important';
+                    dayDiv.style.cursor = 'not-allowed';
+                    dayDiv.style.opacity = '1';
+                    dayDiv.style.position = 'relative';
+                    dayDiv.style.pointerEvents = 'none';
+                    
+                    dayDiv.innerHTML = date.getDate() + '<span style="position:absolute;top:2px;right:4px;color:#ffffff;font-weight:bold;font-size:12px;">×</span>';
+                    console.log(`🔴 FORCED RED STYLING for date ${dateString}`);
+                    // Don't add click event for booked dates
+                } else {
+                    dayDiv.classList.add('available');
+                    dayDiv.style.backgroundColor = '#d4edda';
+                    dayDiv.style.borderColor = '#c3e6cb';
+                    dayDiv.onclick = () => selectCalendarDate(date);
+                    console.log(`🟢 Date ${dateString} marked as AVAILABLE (green)`);
+                }
+
+                calendarDays.appendChild(dayDiv);
+            }
+        }
+
+        function selectCalendarDate(date) {
+            // Check if the clicked day is booked
+            if (event.target.classList.contains('booked')) {
+                alert('This date is already booked with a pending or confirmed appointment. Please select another date.');
+                return;
+            }
+
+            selectedCalendarDate = date;
+
+            // Update calendar display
+            document.querySelectorAll('#calendarModal .calendar-day').forEach(day => {
+                day.classList.remove('selected');
+            });
+            event.target.classList.add('selected');
+
+            // Load time slots for selected date
+            loadTimeSlotsForDate(date);
+        }
+
+        function loadTimeSlotsForDate(date) {
+            const loading = document.getElementById('calendarLoading');
+            const timeSlotsContainer = document.getElementById('timeSlotsContainer');
+            const timeSlots = document.getElementById('timeSlots');
+            const selectedDateText = document.getElementById('selectedDateText');
+
+            loading.style.display = 'block';
+            timeSlotsContainer.style.display = 'none';
+
+            selectedDateText.textContent = date.toLocaleDateString('en-US', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+
+            // Generate default time slots (9 AM to 6 PM, excluding 12-1 PM break)
+            const defaultSlots = [
+                { time: '09:00', available: true, formatted_time: '9:00 AM' },
+                { time: '10:00', available: true, formatted_time: '10:00 AM' },
+                { time: '11:00', available: true, formatted_time: '11:00 AM' },
+                { time: '13:00', available: true, formatted_time: '1:00 PM' },
+                { time: '14:00', available: true, formatted_time: '2:00 PM' },
+                { time: '15:00', available: true, formatted_time: '3:00 PM' },
+                { time: '16:00', available: true, formatted_time: '4:00 PM' },
+                { time: '17:00', available: true, formatted_time: '5:00 PM' },
+                { time: '18:00', available: true, formatted_time: '6:00 PM' }
+            ];
+
+            // Try to fetch from API first, but fallback to default slots
+            fetch(`/bookings/slots?date=${date.toISOString().split('T')[0]}`)
+                .then(response => response.json())
+                .then(data => {
+                    loading.style.display = 'none';
+                    timeSlotsContainer.style.display = 'block';
+
+                    if (data.success) {
+                        if (data.message) {
+                            // Date is booked, show message
+                            timeSlots.innerHTML = `<div class="alert alert-warning"><i class="bi bi-exclamation-triangle me-2"></i>${data.message}</div>`;
+                            document.getElementById('confirmDateTimeBtn').disabled = true;
+                        } else if (data.slots && data.slots.length > 0) {
+                            renderTimeSlotsInModal(data.slots);
+                        } else {
+                            // Use default slots if no slots returned
+                            renderTimeSlotsInModal(defaultSlots);
+                        }
+                    } else {
+                        // Use default slots if API returns error
+                        renderTimeSlotsInModal(defaultSlots);
+                    }
+                })
+                .catch(error => {
+                    console.log('API error, using default slots:', error);
+                    loading.style.display = 'none';
+                    timeSlotsContainer.style.display = 'block';
+                    // Use default slots if API fails
+                    renderTimeSlotsInModal(defaultSlots);
+                });
+        }
+
+        function renderTimeSlotsInModal(slots) {
+            const timeSlots = document.getElementById('timeSlots');
+            timeSlots.innerHTML = '';
+
+            if (slots.length === 0) {
+                timeSlots.innerHTML = '<div class="alert alert-info">No available slots for this date</div>';
+                return;
+            }
+
+            // Add helpful message at the top
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'alert alert-info mb-3';
+            messageDiv.innerHTML = '<i class="bi bi-info-circle me-2"></i>Click on a time slot below to select it, then click "CONFIRM SELECTION" to book your appointment.';
+            timeSlots.appendChild(messageDiv);
+
+            slots.forEach(slot => {
+                const slotDiv = document.createElement('div');
+                slotDiv.className = `col-md-4 mb-2`;
+                slotDiv.innerHTML = `
+                    <button class="btn btn-outline-primary w-100 time-slot-btn ${slot.available ? 'available' : 'booked'}"
+                            ${slot.available ? `onclick="selectCalendarTime('${slot.time}', '${slot.formatted_time}')"` : 'disabled'}>
+                        ${slot.formatted_time}
+                        <br><small>${slot.available ? 'Available' : 'Booked'}</small>
+                    </button>
+                `;
+                timeSlots.appendChild(slotDiv);
+            });
+
+            // Reset confirm button state
+            document.getElementById('confirmDateTimeBtn').disabled = true;
+            selectedCalendarTime = null;
+        }
+
+        window.selectCalendarTime = function(time, formattedTime) {
+            selectedCalendarTime = { time, formattedTime };
+
+            // Update time slot buttons
+            document.querySelectorAll('.time-slot-btn').forEach(btn => {
+                btn.classList.remove('btn-primary');
+                btn.classList.add('btn-outline-primary');
+            });
+            event.target.classList.remove('btn-outline-primary');
+            event.target.classList.add('btn-primary');
+
+            // Enable confirm button
+            document.getElementById('confirmDateTimeBtn').disabled = false;
+        };
+
+        window.confirmDateTime = function() {
+            if (selectedCalendarDate && selectedCalendarTime) {
+                // Format date for display (readable format)
+                const formattedDate = selectedCalendarDate.toLocaleDateString('en-US', {
+                    weekday: 'long',
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                });
+
+                // Set the values in the booking form
+                document.getElementById('bookingDate').value = formattedDate;
+                document.getElementById('appointment_date').value = selectedCalendarDate.toISOString().split('T')[0];
+                document.getElementById('appointment_time_hidden').value = selectedCalendarTime.time;
+
+                // Set the time input with the formatted time from modal
+                document.getElementById('timeInput').value = selectedCalendarTime.formattedTime;
+
+                // Close calendar modal
+                const calendarModal = bootstrap.Modal.getInstance(document.getElementById('calendarModal'));
+                calendarModal.hide();
+            }
+        };
+
+        window.previousMonth = function() {
+            calendarCurrentDate.setMonth(calendarCurrentDate.getMonth() - 1);
+            renderCalendarModal();
+        };
+
+        window.nextMonth = function() {
+            calendarCurrentDate.setMonth(calendarCurrentDate.getMonth() + 1);
+            renderCalendarModal();
+        };
+
+        console.log('Booking and calendar functions loaded successfully');
+    </script>
 </head>
 <body>
-    <!-- Success/Error Messages -->
+    <!-- Success Modal -->
     @if(session('booking_success'))
-    <div class="alert alert-success alert-dismissible fade show m-0" role="alert" style="border-radius: 0; border: none; background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white; box-shadow: 0 2px 8px rgba(40, 167, 69, 0.3); z-index: 1050; position: relative;">
-        <div class="container text-center py-3">
-            <h4 class="alert-heading mb-3">
-                <i class="fas fa-check-circle me-2"></i>
-                🎉 Appointment Booked Successfully!
-            </h4>
-            <div class="row justify-content-center">
-                <div class="col-md-8">
-                    @if(session('booking_details'))
-                    <div class="bg-white bg-opacity-20 rounded p-3 mb-3">
-                        <div class="row text-start">
-                            <div class="col-sm-6 mb-2">
-                                <strong>Booking ID:</strong><br>
-                                <span class="fs-5 fw-bold">{{ session('booking_details.booking_id') }}</span>
+    <div class="modal fade show d-block" id="successModal" tabindex="-1" style="background-color: rgba(0,0,0,0.5); z-index: 1050;">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content" style="border-radius: 10px; border: none;">
+                <div class="modal-header text-center border-0 pb-0">
+                    <div class="w-100">
+                        <div class="text-success mb-2" style="font-size: 4rem;">
+                            ✅
+                        </div>
+                        <h4 class="modal-title text-success mb-0">Appointment booked successfully!</h4>
+                    </div>
+                </div>
+                <div class="modal-body text-center px-4">
+                    <div class="mb-3">
+                        <div class="row">
+                            <div class="col-6">
+                                <small class="text-muted d-block">📋 Booking ID:</small>
+                                <strong>{{ session('booking_details.booking_id') }}</strong>
                             </div>
-                            <div class="col-sm-6 mb-2">
-                                <strong>Confirmation Code:</strong><br>
-                                <span class="fs-5 fw-bold">{{ session('booking_details.confirmation_code') }}</span>
-                            </div>
-                            <div class="col-sm-6 mb-2">
-                                <strong>Service:</strong><br>
-                                {{ session('booking_details.service') }}
-                            </div>
-                            <div class="col-sm-6 mb-2">
-                                <strong>Date & Time:</strong><br>
-                                {{ session('booking_details.appointment_date') }} at {{ session('booking_details.appointment_time') }}
+                            <div class="col-6">
+                                <small class="text-muted d-block">🔐 Confirmation Code:</small>
+                                <strong>{{ session('booking_details.confirmation_code') }}</strong>
                             </div>
                         </div>
                     </div>
-                    @endif
-                    <p class="mb-2">
-                        <i class="fas fa-envelope me-2"></i>
-                        We'll contact you soon to confirm your appointment details.
-                    </p>
-                    <p class="mb-0">
-                        <i class="fas fa-phone me-2"></i>
-                        Questions? Call us at <strong>(647) 834-8549</strong>
-                    </p>
+
+                    <div class="alert alert-warning border-0 mb-3" style="background-color: #fff3cd;">
+                        <div class="d-flex align-items-center justify-content-center">
+                            <span style="font-size: 1.2rem; margin-right: 8px;">⚠️</span>
+                            <span>Please contact us to arrange the ($20 deposit payment.</span>
+                        </div>
+                    </div>
+
+                    <div class="contact-info mb-3">
+                        <p class="mb-1"><span style="margin-right: 8px;">📞</span>Phone: (343) 254-8848</p>
+                        <p class="mb-0"><span style="margin-right: 8px;">📧</span>Email: info@dabsbeautytouch.com</p>
+                    </div>
+
+                    <p class="text-muted mb-3">We'll confirm your appointment once payment is received!</p>
+
+                    {{-- <div class="form-check d-flex align-items-center justify-content-center">
+                        <input class="form-check-input me-2" type="checkbox" id="dontShowAgain">
+                        <label class="form-check-label text-muted" for="dontShowAgain" style="font-size: 0.9rem;">
+                            Don't allow 127.0.0.1:8000 to prompt you again
+                        </label>
+                    </div> --}}
+                </div>
+                <div class="modal-footer border-0 justify-content-center">
+                    <button type="button" class="btn btn-info px-4 py-2" onclick="closeSuccessModal()" style="background-color: #17a2b8; border-color: #17a2b8; cursor: pointer; z-index: 1051;">OK</button>
                 </div>
             </div>
-            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert" aria-label="Close" style="position: absolute; top: 15px; right: 15px;"></button>
         </div>
     </div>
     @endif
@@ -1963,7 +2385,7 @@
 
 
                     <!-- Single Booking Form -->
-                    <form id="bookingForm" action="{{ route('appointments.book') }}" method="POST" enctype="multipart/form-data" autocomplete="on" novalidate>
+                    <form id="bookingForm" action="{{ route('bookings.store') }}" method="POST" autocomplete="on" novalidate>
                         @csrf
                         <input type="hidden" id="appointment_date" name="appointment_date">
                         <input type="hidden" id="appointment_time_hidden" name="appointment_time">
@@ -2048,13 +2470,6 @@
                                 </div>
                             </div>
                             -->
-                            <div class="col-12">
-                                <div class="form-group">
-                                    <label for="samplePicture" class="form-label">Upload Sample Picture (optional)</label>
-                                    <input class="form-control" type="file" id="samplePicture" name="sample_picture" accept="image/*" autocomplete="off">
-                                    <small class="form-text">Accepted formats: JPG, PNG, JPEG. Max size: 2MB.</small>
-                                </div>
-                            </div>
                             <div class="col-12">
                                 <div class="form-group">
                                     <label for="message" class="form-label">Special Requests or Notes</label>
@@ -2776,17 +3191,93 @@
         }, 300); // Small delay to ensure modal closes first
     }
 
-
 </script>
 <script src="{{ asset('js/core.min.js') }}"></script>
 <script src="{{ asset('js/script.js') }}"></script>
 
 <!-- Bootstrap JS (if not included in core.min.js) -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
 <!-- Additional JavaScript -->
 <script>
-    // IMMEDIATE BUTTON TEST - runs as soon as script loads
+// MINIMAL WORKING SOLUTION - FORCE OVERRIDE ALL CONFLICTS
+console.log('=== LOADING BOOKING FUNCTIONS ===');
+
+// Force define functions immediately when this script loads
+(function() {
+    'use strict';
+
+    // Test function
+    window.testFunction = function() {
+        alert('Test function works!');
+        console.log('Test function called');
+    };
+
+    // Main booking modal function
+    window.openBookingModal = function(serviceName, serviceType) {
+        console.log('openBookingModal called:', serviceName);
+
+        try {
+            // Find the modal element
+            var modalEl = document.getElementById('bookingModal');
+            if (!modalEl) {
+                alert('Booking modal not found on page');
+                return;
+            }
+
+            // Set service name in form
+            var serviceInput = document.getElementById('selectedService');
+            if (serviceInput) {
+                serviceInput.value = serviceName;
+            }
+
+            var serviceDisplay = document.getElementById('serviceDisplay');
+            if (serviceDisplay) {
+                serviceDisplay.value = serviceName;
+            }
+
+            // Set modal title
+            var modalTitle = document.getElementById('bookingModalLabel');
+            if (modalTitle) {
+                modalTitle.textContent = 'Book ' + serviceName;
+            }
+
+            // Show modal using Bootstrap
+            if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+                var modal = new bootstrap.Modal(modalEl);
+                modal.show();
+                console.log('Modal shown successfully');
+            } else {
+                // Fallback - show modal manually
+                modalEl.style.display = 'block';
+                modalEl.classList.add('show');
+                modalEl.setAttribute('aria-hidden', 'false');
+                document.body.classList.add('modal-open');
+                console.log('Modal shown with fallback method');
+            }
+
+        } catch (error) {
+            console.error('Error in openBookingModal:', error);
+            alert('Error opening booking modal: ' + error.message);
+        }
+    };
+
+    // Clear form function
+    window.clearBookingForm = function() {
+        var form = document.getElementById('bookingForm');
+        if (form) {
+            form.reset();
+            console.log('Form cleared');
+        }
+    };
+
+    console.log('=== BOOKING FUNCTIONS LOADED ===');
+    console.log('testFunction:', typeof window.testFunction);
+    console.log('openBookingModal:', typeof window.openBookingModal);
+
+})();
+
+// IMMEDIATE BUTTON TEST - runs as soon as script loads
     console.log('=== BUTTON DEBUG TEST ===');
     console.log('Script loading...');
 
@@ -2826,18 +3317,17 @@
             console.log('Adding simple click handler...');
             btn.onclick = function(e) {
                 console.log('=== BUTTON CLICKED! ===');
-                e.preventDefault();
 
-                // Try to submit form manually
-                try {
-                    console.log('Attempting manual form submission...');
-                    form.dispatchEvent(new Event('submit'));
-                    console.log('Form submit event dispatched');
-                } catch (error) {
-                    console.error('Form submission error:', error);
+                // Validate form before submission
+                if (!form.checkValidity()) {
+                    e.preventDefault();
+                    form.reportValidity();
+                    return false;
                 }
 
-                return false;
+                // Allow normal form submission to proceed
+                console.log('Form validation passed - submitting normally');
+                return true;
             };
             console.log('Simple click handler added successfully');
         }
@@ -2888,41 +3378,6 @@
             }
         }
         return '';
-    }
-
-    // Booking Modal Functions
-    function openBookingModal(serviceName, serviceType) {
-        // Clear the form first
-        clearBookingForm();
-
-        // Set the service in the hidden input and display field
-        const selectedServiceInput = document.getElementById('selectedService');
-        const serviceDisplayInput = document.getElementById('serviceDisplay');
-
-        if (selectedServiceInput && serviceName) {
-            selectedServiceInput.value = serviceName;
-            console.log('Service selected:', serviceName);
-        }
-
-        if (serviceDisplayInput) {
-            serviceDisplayInput.value = serviceName || 'No service selected';
-        }
-
-        document.getElementById('bookingModalLabel').textContent = `Book ${serviceName || 'Appointment'}`;
-
-        // Show the modal
-        const modalEl = document.getElementById('bookingModal');
-        const modal = new bootstrap.Modal(modalEl);
-        modal.show();
-
-        // Force reflow of selects and date input
-        setTimeout(() => {
-            modalEl.querySelectorAll('select, input[type="date"]').forEach(el => {
-                el.style.display = 'block';
-                el.style.visibility = 'visible';
-                el.style.opacity = '1';
-            });
-        }, 300);
     }
 
     // Function to open service selection modal
@@ -3009,9 +3464,6 @@
 
                 // Clear based on input type
                 switch(input.type) {
-                    case 'file':
-                        input.value = '';
-                        break;
                     case 'checkbox':
                     case 'radio':
                         input.checked = false;
@@ -3046,7 +3498,6 @@
         console.log('Time input is read-only - users must use calendar modal');
     });
 
-    /* TEMPORARILY COMMENTED OUT - COMPLEX FORM HANDLER
     // Handle booking form submission
     document.addEventListener('DOMContentLoaded', function() {
         console.log('DOM loaded - Setting up form submission handler');
@@ -3058,78 +3509,146 @@
         }
 
         bookingForm.addEventListener('submit', function(e) {
+            console.log('=== SUBMIT EVENT HANDLER TRIGGERED ===');
+            console.log('Event object:', e);
+            console.log('Calling preventDefault()...');
             e.preventDefault();
+            console.log('Calling stopPropagation()...');
             e.stopPropagation();
+            console.log('Event prevention complete - form should NOT submit normally');
 
-            console.log('Form submission started');
+            console.log('=== FORM SUBMISSION STARTED ===');
             console.log('Form action:', this.action);
             console.log('Form method:', this.method);
 
+            // Log all form field values for debugging
+            const formData = new FormData(this);
+            console.log('=== FORM DATA ===');
+            for (let [key, value] of formData.entries()) {
+                console.log(`${key}: ${value}`);
+            }
+
+            // Log all field values specifically
+            console.log('=== FIELD VALUES ===');
+            console.log('name:', document.getElementById('name')?.value);
+            console.log('phone:', document.getElementById('phone')?.value);
+            console.log('email:', document.getElementById('email')?.value);
+            console.log('bookingDate:', document.getElementById('bookingDate')?.value);
+            console.log('timeInput:', document.getElementById('timeInput')?.value);
+            console.log('appointment_date (hidden):', document.getElementById('appointment_date')?.value);
+            console.log('appointment_time (hidden):', document.getElementById('appointment_time_hidden')?.value);
+            console.log('selectedService:', document.getElementById('selectedService')?.value);
+
         // Basic form validation
+        console.log('=== STARTING VALIDATION ===');
         const requiredFields = ['name', 'phone', 'bookingDate', 'timeInput'];
         const missingFields = [];
 
         requiredFields.forEach(fieldId => {
             const field = document.getElementById(fieldId);
-            if (!field || !field.value.trim()) {
+            const fieldValue = field ? field.value.trim() : '';
+            console.log(`Checking field ${fieldId}: "${fieldValue}"`);
+            if (!field || !fieldValue) {
                 missingFields.push(fieldId);
+                console.log(`❌ Field ${fieldId} is missing or empty`);
+            } else {
+                console.log(`✅ Field ${fieldId} is valid`);
             }
         });
 
         if (missingFields.length > 0) {
+            console.log('❌ Validation failed - missing fields:', missingFields);
             alert('Please fill in all required fields: ' + missingFields.join(', '));
             return;
         }
+        console.log('✅ Required fields validation passed');
 
         // Validate email format if provided
+        console.log('=== EMAIL VALIDATION ===');
         const emailField = document.getElementById('email');
         if (emailField && emailField.value.trim()) {
+            const emailValue = emailField.value.trim();
+            console.log('Email value:', emailValue);
             const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            if (!emailRegex.test(emailField.value.trim())) {
+            if (!emailRegex.test(emailValue)) {
+                console.log('❌ Email validation failed');
                 alert('Please enter a valid email address');
                 return;
             }
+            console.log('✅ Email validation passed');
+        } else {
+            console.log('✅ Email field empty or not found - skipping validation');
         }
 
         // Validate phone format
+        console.log('=== PHONE VALIDATION ===');
         const phoneField = document.getElementById('phone');
         if (phoneField && phoneField.value.trim()) {
+            const phoneValue = phoneField.value.trim();
+            console.log('Phone value:', phoneValue);
             const phoneRegex = /^[\d\s\-\(\)\+]{10,}$/;
-            if (!phoneRegex.test(phoneField.value.trim())) {
+            if (!phoneRegex.test(phoneValue)) {
+                console.log('❌ Phone validation failed');
                 alert('Please enter a valid phone number (at least 10 digits)');
                 return;
             }
+            console.log('✅ Phone validation passed');
+        } else {
+            console.log('❌ Phone field is required but empty');
+            alert('Phone number is required');
+            return;
         }
 
         // Check if date is not in the past
+        console.log('=== DATE VALIDATION ===');
         const bookingDate = document.getElementById('bookingDate');
         const appointmentDate = document.getElementById('appointment_date');
         const selectedDate = appointmentDate ? appointmentDate.value : null;
+        console.log('bookingDate field value:', bookingDate?.value);
+        console.log('appointment_date hidden field value:', selectedDate);
 
         if (selectedDate) {
             const selected = new Date(selectedDate);
             const today = new Date();
             today.setHours(0, 0, 0, 0);
+            console.log('Selected date:', selected);
+            console.log('Today:', today);
 
             if (selected < today) {
+                console.log('❌ Date validation failed - date is in the past');
                 alert('Please select a future date for your appointment');
                 return;
             }
+            console.log('✅ Date validation passed');
+        } else {
+            console.log('❌ Date validation failed - no date selected');
+            alert('Please select an appointment date');
+            return;
         }
 
         // Validate time format
+        console.log('=== TIME VALIDATION ===');
         const timeHidden = document.getElementById('appointment_time_hidden');
-        if (timeHidden && timeHidden.value) {
+        const timeValue = timeHidden ? timeHidden.value : null;
+        console.log('appointment_time_hidden value:', timeValue);
+
+        if (timeValue) {
             const timeRegex = /^([01]?[0-9]|2[0-3]):[0-5][0-9]$/;
-            if (!timeRegex.test(timeHidden.value)) {
+            if (!timeRegex.test(timeValue)) {
+                console.log('❌ Time validation failed - invalid format');
                 alert('Invalid time format. Please select a time from the calendar modal.');
                 return;
             }
+            console.log('✅ Time validation passed');
+        } else {
+            console.log('❌ Time validation failed - no time selected');
+            alert('Please select an appointment time');
+            return;
         }
 
         // Check if time and date were selected via modal
         const timeInput = document.getElementById('timeInput');
-        const timeHidden = document.getElementById('appointment_time_hidden');
+        // timeHidden already declared above
         const bookingDate = document.getElementById('bookingDate');
         const appointmentDate = document.getElementById('appointment_date');
 
@@ -3182,11 +3701,11 @@
             const tomorrow = new Date();
             tomorrow.setDate(tomorrow.getDate() + 1);
             const defaultDate = tomorrow.toISOString().split('T')[0];
-            
+
             // Update the hidden field
             document.getElementById('appointment_date').value = defaultDate;
             formData.set('appointment_date', defaultDate);
-            
+
             console.warn('No appointment date selected, using default:', defaultDate);
         }
 
@@ -3195,7 +3714,7 @@
             const defaultTime = '09:00';
             document.getElementById('appointment_time_hidden').value = defaultTime;
             formData.set('appointment_time', defaultTime);
-            
+
             console.warn('No appointment time selected, using default:', defaultTime);
         }
 
@@ -3217,17 +3736,26 @@
         }
 
         // Submit via AJAX with improved error handling
+        console.log('=== PREPARING AJAX SUBMISSION ===');
         const csrfToken = getCSRFToken();
+        console.log('CSRF Token:', csrfToken);
 
         // Ensure the form action uses HTTPS in production
         let actionUrl = this.action;
         if (window.location.protocol === 'https:' && actionUrl.startsWith('http:')) {
             actionUrl = actionUrl.replace('http:', 'https:');
         }
+        console.log('Action URL:', actionUrl);
 
         // Add a timeout to the fetch request
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+
+        console.log('=== STARTING FETCH REQUEST ===');
+        console.log('Method: POST');
+        console.log('URL:', actionUrl);
+        console.log('Has FormData:', formData instanceof FormData);
+        console.log('About to call fetch()...');
 
         fetch(actionUrl, {
             method: 'POST',
@@ -3243,7 +3771,9 @@
         })
         .then(response => {
             clearTimeout(timeoutId); // Clear the timeout
+            console.log('=== FETCH RESPONSE RECEIVED ===');
             console.log('Response status:', response.status);
+            console.log('Response ok:', response.ok);
             console.log('Response headers:', response.headers);
 
             // For debugging - log the raw response text
@@ -3279,7 +3809,8 @@
                     }
                     throw new Error(errorMessage);
                 } else if (status === 419) {
-                    throw new Error('Security token expired. Please refresh the page and try again.');
+                    // Token expired - try to refresh and retry
+                    throw new Error('CSRF_TOKEN_EXPIRED');
                 } else if (status === 500) {
                     throw new Error(data.message || 'Server error occurred. Please try again later.');
                 } else {
@@ -3290,8 +3821,13 @@
             return data;
         })
         .then(data => {
+            console.log('=== RESPONSE RECEIVED ===');
             console.log('Response data:', data);
+            console.log('data.success value:', data.success);
+            console.log('typeof data.success:', typeof data.success);
+
             if (data.success) {
+                console.log('=== SUCCESS CONDITION MET ===');
                 // Show styled success modal
                 const bookingId = data.appointment ? data.appointment.booking_id : 'N/A';
                 const confirmationCode = data.appointment ? data.appointment.confirmation_code : 'N/A';
@@ -3300,24 +3836,50 @@
                 const appointmentTime = data.appointment ? data.appointment.appointment_time : 'N/A';
 
                 // Update modal content with actual booking data
-                document.getElementById('successBookingId').textContent = bookingId;
-                document.getElementById('successConfirmationCode').textContent = confirmationCode;
-                document.getElementById('successService').textContent = service;
-                document.getElementById('successAppointmentDate').textContent = appointmentDate;
-                document.getElementById('successAppointmentTime').textContent = appointmentTime;
+                console.log('=== UPDATING SUCCESS MODAL ===');
+                console.log('Booking ID:', bookingId);
+                console.log('Confirmation Code:', confirmationCode);
+                console.log('Service:', service);
+                console.log('Date:', appointmentDate);
+                console.log('Time:', appointmentTime);
+
+                // Check if elements exist before updating
+                const bookingIdElement = document.getElementById('successBookingId');
+                const confirmationCodeElement = document.getElementById('successConfirmationCode');
+                const serviceElement = document.getElementByIdPP('successService');
+                const dateElement = document.getElementById('successAppointmentDate');
+                const timeElement = document.getElementById('successAppointmentTime');
+
+                console.log('Elements found:', {
+                    bookingId: !!bookingIdElement,
+                    confirmationCode: !!confirmationCodeElement,
+                    service: !!serviceElement,
+                    date: !!dateElement,
+                    time: !!timeElement
+                });
+
+                if (bookingIdElement) bookingIdElement.textContent = bookingId;
+                if (confirmationCodeElement) confirmationCodeElement.textContent = confirmationCode;
+                if (serviceElement) serviceElement.textContent = service;
+                if (dateElement) dateElement.textContent = appointmentDate;
+                if (timeElement) timeElement.textContent = appointmentTime;
 
                 // Show the success modal
-                const successModal = new bootstrap.Modal(document.getElementById('successModal'));
-                successModal.show();
+                console.log('=== SHOWING SUCCESS MODAL ===');
+                const successModalElement = document.getElementById('successModal');
+                console.log('Success modal element found:', !!successModalElement);
+
+                if (successModalElement) {
+                    const successModal = new bootstrap.Modal(successModalElement);
+                    console.log('Bootstrap modal created:', !!successModal);
+                    successModal.show();
+                    console.log('Modal show() called');
+                } else {
+                    console.error('Success modal element not found!');
+                }
 
                 // Clear the form completely
                 this.reset();
-
-                // Clear any file inputs
-                const fileInputs = this.querySelectorAll('input[type="file"]');
-                fileInputs.forEach(input => {
-                    input.value = '';
-                });
 
                 // Clear any hidden fields except CSRF token
                 const hiddenInputs = this.querySelectorAll('input[type="hidden"]:not([name="_token"])');
@@ -3369,7 +3931,39 @@
         })
         .catch(error => {
             clearTimeout(timeoutId); // Clear the timeout
+            console.log('=== FETCH ERROR OCCURRED ===');
             console.error('Network or parsing error:', error);
+            console.log('Error type:', error.constructor.name);
+            console.log('Error message:', error.message);
+            console.log('Error stack:', error.stack);
+
+            // Handle CSRF token expiration
+            if (error.message === 'CSRF_TOKEN_EXPIRED') {
+                console.log('CSRF token expired, attempting to refresh and retry...');
+
+                // Reset button state temporarily
+                submitBtn.innerHTML = '<i class="bi bi-arrow-clockwise"></i> Refreshing...';
+
+                // Refresh CSRF token and retry
+                window.refreshCSRFToken()
+                    .then(newToken => {
+                        if (newToken) {
+                            console.log('Token refreshed, retrying submission...');
+                            submitBtn.innerHTML = originalText;
+                            // Retry the form submission
+                            e.target.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+                        } else {
+                            throw new Error('Failed to refresh CSRF token');
+                        }
+                    })
+                    .catch(refreshError => {
+                        console.error('Token refresh failed:', refreshError);
+                        alert('Session expired. Please refresh the page and try again.');
+                        submitBtn.innerHTML = originalText;
+                        submitBtn.disabled = false;
+                    });
+                return; // Exit early for token refresh
+            }
 
             let errorMessage = 'An error occurred while submitting your appointment:';
 
@@ -3391,6 +3985,10 @@
             errorMessage += '\n\nIf the problem continues, please call us at (647) 834-8549';
 
             alert(errorMessage);
+
+            // Reset button state
+            submitBtn.innerHTML = originalText;
+            submitBtn.disabled = false;
         })
         .finally(() => {
             // Reset button state
@@ -3399,10 +3997,9 @@
         });
         }); // End of form.addEventListener('submit')
     }); // End of DOMContentLoaded for form submission
-    END COMMENTED OUT SECTION */
 
-    // SIMPLE FORM HANDLER FOR TESTING
-    document.addEventListener('DOMContentLoaded', function() {
+    // SIMPLE FORM HANDLER FOR TESTING - DISABLED
+    /* document.addEventListener('DOMContentLoaded', function() {
         console.log('=== SIMPLE FORM HANDLER SETUP ===');
 
         const form = document.getElementById('bookingForm');
@@ -3412,167 +4009,48 @@
         console.log('Button found:', !!button);
 
         if (form && button) {
+            // Simple form validation only - let browser handle submission
             form.addEventListener('submit', function(e) {
-                e.preventDefault();
                 console.log('=== FORM SUBMIT EVENT CAPTURED ===');
 
-                // Get form data and handle file input properly
-                const formData = new FormData();
+                // Basic validation check
+                if (!this.checkValidity()) {
+                    e.preventDefault();
+                    console.log('Form validation failed');
+                    this.reportValidity();
+                    return false;
+                }
 
-                // Manually add each form field INCLUDING textareas and selects
-                const inputs = this.querySelectorAll('input:not([type="file"]), textarea, select');
-                inputs.forEach(input => {
-                    if (input.name && (input.value || input.type === 'hidden')) {
-                        formData.append(input.name, input.value);
-                        console.log(`Added field ${input.name}:`, input.value);
-                    }
-                });
+                console.log('Form validation passed - allowing normal submission');
+                // Let the form submit normally - don't prevent default
+            });
 
-                // Handle file input separately (if it exists)
-                const fileInput = document.getElementById('samplePicture');
-                console.log('=== FILE INPUT DEBUG ===');
-                console.log('File input element:', fileInput);
-                console.log('File input exists:', !!fileInput);
+            // Additional file input debugging (outside of submit handler)
+            const fileInput = document.getElementById('samplePicture');
+            console.log('=== FILE INPUT DEBUG ===');
+            console.log('File input element:', fileInput);
+            console.log('File input exists:', !!fileInput);
 
-                if (fileInput) {
-                    console.log('File input files property:', fileInput.files);
-                    console.log('Files length:', fileInput.files.length);
-                    console.log('Files array:', Array.from(fileInput.files));
+            if (fileInput) {
+                fileInput.addEventListener('change', function() {
+                    console.log('File input changed');
+                    console.log('File input files property:', this.files);
+                    console.log('Files length:', this.files.length);
+                    console.log('Files array:', Array.from(this.files));
 
-                    if (fileInput.files && fileInput.files.length > 0 && fileInput.files[0]) {
-                        const file = fileInput.files[0];
+                    if (this.files && this.files.length > 0 && this.files[0]) {
+                        const file = this.files[0];
                         console.log('File selected - Name:', file.name);
                         console.log('File selected - Size:', file.size);
                         console.log('File selected - Type:', file.type);
-                        formData.append('sample_picture', file);
-                        console.log('✅ File added to FormData');
+                        console.log('✅ File ready for upload');
                     } else {
                         console.log('❌ No file selected');
                     }
-                } else {
-                    console.log('❌ File input element not found');
-                }
-
-                console.log('Form data being sent:');
-                for (let [key, value] of formData.entries()) {
-                    console.log(key + ':', value);
-                }
-
-                // Simple fetch request
-                fetch(this.action, {
-                    method: 'POST',
-                    body: formData,
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
-                    }
-                })
-                .then(response => {
-                    console.log('Response status:', response.status);
-                    console.log('Response headers:', response.headers);
-
-                    // Get the raw response text first
-                    return response.text().then(text => {
-                        console.log('Raw response text:', text);
-
-                        // Try to parse as JSON
-                        try {
-                            const data = JSON.parse(text);
-                            return { ok: response.ok, status: response.status, data: data };
-                        } catch (e) {
-                            console.error('Failed to parse JSON response:', e);
-                            console.error('Response was:', text.substring(0, 500));
-                            throw new Error(`Server returned invalid JSON. Status: ${response.status}, Response: ${text.substring(0, 200)}...`);
-                        }
-                    });
-                })
-                .then(({ ok, status, data }) => {
-                    console.log('Parsed response data:', data);
-
-                    if (!ok) {
-                        // Handle different HTTP status codes
-                        if (status === 422) {
-                            // Validation errors
-                            let errorMessage = 'Validation failed:\n\n';
-                            if (data.errors) {
-                                Object.keys(data.errors).forEach(field => {
-                                    const fieldErrors = data.errors[field];
-                                    errorMessage += `• ${field}: ${fieldErrors.join(', ')}\n`;
-                                });
-                            } else if (data.message) {
-                                errorMessage += data.message;
-                            } else {
-                                errorMessage += 'Please check your form data and try again.';
-                            }
-                            throw new Error(errorMessage);
-                        } else if (status === 419) {
-                            throw new Error('Security token expired. Please refresh the page and try again.');
-                        } else if (status === 500) {
-                            throw new Error(data.message || 'Server error occurred. Please try again later.');
-                        } else {
-                            throw new Error(data.message || `HTTP error! status: ${status}`);
-                        }
-                    }
-
-                    return data;
-                })
-                .then(data => {
-                    console.log('Final response data:', data);
-                    if (data.success) {
-                        // Show styled success modal
-                        const bookingId = data.appointment ? data.appointment.booking_id : 'N/A';
-                        const confirmationCode = data.appointment ? data.appointment.confirmation_code : 'N/A';
-                        const service = data.appointment ? data.appointment.service : 'General Service';
-                        const appointmentDate = data.appointment ? data.appointment.appointment_date : 'N/A';
-                        const appointmentTime = data.appointment ? data.appointment.appointment_time : 'N/A';
-
-                        // Update modal content with actual booking data
-                        document.getElementById('successBookingId').textContent = bookingId;
-                        document.getElementById('successConfirmationCode').textContent = confirmationCode;
-                        document.getElementById('successService').textContent = service;
-                        document.getElementById('successAppointmentDate').textContent = appointmentDate;
-                        document.getElementById('successAppointmentTime').textContent = appointmentTime;
-
-                        // Show the success modal
-                        const successModal = new bootstrap.Modal(document.getElementById('successModal'));
-                        successModal.show();
-
-                        // Clear the form completely
-                        this.reset();
-                        clearBookingForm();
-
-                        // Close the booking modal
-                        const bookingModal = bootstrap.Modal.getInstance(document.getElementById('bookingModal'));
-                        if (bookingModal) {
-                            bookingModal.hide();
-                        }
-                    } else {
-                        // Show error message
-                        let errorMessage = 'Something went wrong. Please try again.';
-                        if (data.message) {
-                            errorMessage = data.message;
-                        } else if (data.errors) {
-                            errorMessage = Object.values(data.errors).flat().join(', ');
-                        }
-                        alert('Error: ' + errorMessage);
-                    }
-                })
-                .catch(error => {
-                    console.error('Network or parsing error:', error);
-                    let errorMessage = 'An error occurred while submitting your appointment:';
-
-                    if (error.message) {
-                        errorMessage += '\n\n' + error.message;
-                    } else {
-                        errorMessage += '\n\nPlease check your internet connection and try again.';
-                    }
-
-                    // Add helpful suggestions
-                    errorMessage += '\n\nTips:\n• Make sure all required fields are filled\n• Check that your email format is valid\n• Ensure your phone number is complete\n• Try refreshing the page if the issue persists';
-
-                    alert(errorMessage);
                 });
-            });
+            } else {
+                console.log('❌ File input element not found');
+            }
 
             button.addEventListener('click', function(e) {
                 console.log('=== BUTTON CLICK EVENT CAPTURED ===');
@@ -3584,7 +4062,7 @@
         } else {
             console.error('Missing form or button for simple handler');
         }
-    });
+    }); */
 
     // Add click event listener to test button functionality - SEPARATE DOM READY HANDLER
     document.addEventListener('DOMContentLoaded', function() {
@@ -3645,255 +4123,6 @@
             // You can add client-side validation here if needed
             console.log('Contact form submitted');
         });
-    }
-
-    // Calendar Integration Variables
-    let calendarCurrentDate = new Date();
-    let selectedCalendarDate = null;
-    let selectedCalendarTime = null;
-
-    // Calendar Modal Functions
-    function openCalendarModal() {
-        const calendarModal = new bootstrap.Modal(document.getElementById('calendarModal'));
-        calendarModal.show();
-        renderCalendarModal();
-    }
-
-    function renderCalendarModal() {
-        const year = calendarCurrentDate.getFullYear();
-        const month = calendarCurrentDate.getMonth();
-
-        document.getElementById('calendarMonth').textContent =
-            new Date(year, month).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
-
-        const firstDay = new Date(year, month, 1);
-        const lastDay = new Date(year, month + 1, 0);
-        const startDate = new Date(firstDay);
-        startDate.setDate(startDate.getDate() - firstDay.getDay());
-
-        const calendarDays = document.getElementById('calendarDays');
-        calendarDays.innerHTML = '';
-
-        // Fetch booked dates for this month
-        fetch(`/appointments/booked-dates?year=${year}&month=${month + 1}`)
-            .then(response => response.json())
-            .then(data => {
-                const bookedDates = data.success ? data.booked_dates : [];
-                console.log('Booked dates for month:', bookedDates);
-
-                // Render calendar days
-                for (let i = 0; i < 42; i++) {
-                    const date = new Date(startDate);
-                    date.setDate(startDate.getDate() + i);
-                    const dateString = date.toISOString().split('T')[0];
-
-                    const dayDiv = document.createElement('div');
-                    dayDiv.className = 'col calendar-day';
-                    dayDiv.textContent = date.getDate();
-
-                    if (date.getMonth() !== month) {
-                        dayDiv.classList.add('other-month');
-                    } else if (date < new Date().setHours(0, 0, 0, 0)) {
-                        dayDiv.classList.add('past');
-                    } else if (bookedDates.includes(dateString)) {
-                        // Date is booked with non-completed appointment
-                        dayDiv.classList.add('booked');
-                        dayDiv.title = 'This date is already booked';
-                        // Don't add click event for booked dates
-                    } else {
-                        dayDiv.classList.add('available');
-                        dayDiv.onclick = () => selectCalendarDate(date);
-                    }
-
-                    calendarDays.appendChild(dayDiv);
-                }
-            })
-            .catch(error => {
-                console.error('Error fetching booked dates:', error);
-
-                // Fallback: render calendar without booking checks
-                for (let i = 0; i < 42; i++) {
-                    const date = new Date(startDate);
-                    date.setDate(startDate.getDate() + i);
-
-                    const dayDiv = document.createElement('div');
-                    dayDiv.className = 'col calendar-day';
-                    dayDiv.textContent = date.getDate();
-
-                    if (date.getMonth() !== month) {
-                        dayDiv.classList.add('other-month');
-                    } else if (date < new Date().setHours(0, 0, 0, 0)) {
-                        dayDiv.classList.add('past');
-                    } else {
-                        dayDiv.classList.add('available');
-                        dayDiv.onclick = () => selectCalendarDate(date);
-                    }
-
-                    calendarDays.appendChild(dayDiv);
-                }
-            });
-    }
-
-    function selectCalendarDate(date) {
-        // Check if the clicked day is booked
-        if (event.target.classList.contains('booked')) {
-            alert('This date is already booked with a pending or confirmed appointment. Please select another date.');
-            return;
-        }
-
-        selectedCalendarDate = date;
-
-        // Update calendar display
-        document.querySelectorAll('#calendarModal .calendar-day').forEach(day => {
-            day.classList.remove('selected');
-        });
-        event.target.classList.add('selected');
-
-        // Load time slots for selected date
-        loadTimeSlotsForDate(date);
-    }
-
-    function loadTimeSlotsForDate(date) {
-        const loading = document.getElementById('calendarLoading');
-        const timeSlotsContainer = document.getElementById('timeSlotsContainer');
-        const timeSlots = document.getElementById('timeSlots');
-        const selectedDateText = document.getElementById('selectedDateText');
-
-        loading.style.display = 'block';
-        timeSlotsContainer.style.display = 'none';
-
-        selectedDateText.textContent = date.toLocaleDateString('en-US', {
-            weekday: 'long',
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric'
-        });
-
-        // Generate default time slots (9 AM to 6 PM, excluding 12-1 PM break)
-        const defaultSlots = [
-            { time: '09:00', available: true, formatted_time: '9:00 AM' },
-            { time: '10:00', available: true, formatted_time: '10:00 AM' },
-            { time: '11:00', available: true, formatted_time: '11:00 AM' },
-            { time: '13:00', available: true, formatted_time: '1:00 PM' },
-            { time: '14:00', available: true, formatted_time: '2:00 PM' },
-            { time: '15:00', available: true, formatted_time: '3:00 PM' },
-            { time: '16:00', available: true, formatted_time: '4:00 PM' },
-            { time: '17:00', available: true, formatted_time: '5:00 PM' },
-            { time: '18:00', available: true, formatted_time: '6:00 PM' }
-        ];
-
-        // Try to fetch from API first, but fallback to default slots
-        fetch(`/appointments/slots?date=${date.toISOString().split('T')[0]}`)
-            .then(response => response.json())
-            .then(data => {
-                loading.style.display = 'none';
-                timeSlotsContainer.style.display = 'block';
-
-                if (data.success) {
-                    if (data.message) {
-                        // Date is booked, show message
-                        timeSlots.innerHTML = `<div class="alert alert-warning"><i class="bi bi-exclamation-triangle me-2"></i>${data.message}</div>`;
-                        document.getElementById('confirmDateTimeBtn').disabled = true;
-                    } else if (data.slots && data.slots.length > 0) {
-                        renderTimeSlotsInModal(data.slots);
-                    } else {
-                        // Use default slots if no slots returned
-                        renderTimeSlotsInModal(defaultSlots);
-                    }
-                } else {
-                    // Use default slots if API returns error
-                    renderTimeSlotsInModal(defaultSlots);
-                }
-            })
-            .catch(error => {
-                console.log('API error, using default slots:', error);
-                loading.style.display = 'none';
-                timeSlotsContainer.style.display = 'block';
-                // Use default slots if API fails
-                renderTimeSlotsInModal(defaultSlots);
-            });
-    }
-
-    function renderTimeSlotsInModal(slots) {
-        const timeSlots = document.getElementById('timeSlots');
-        timeSlots.innerHTML = '';
-
-        if (slots.length === 0) {
-            timeSlots.innerHTML = '<div class="alert alert-info">No available slots for this date</div>';
-            return;
-        }
-
-        // Add helpful message at the top
-        const messageDiv = document.createElement('div');
-        messageDiv.className = 'alert alert-info mb-3';
-        messageDiv.innerHTML = '<i class="bi bi-info-circle me-2"></i>Click on a time slot below to select it, then click "CONFIRM SELECTION" to book your appointment.';
-        timeSlots.appendChild(messageDiv);
-
-        slots.forEach(slot => {
-            const slotDiv = document.createElement('div');
-            slotDiv.className = `col-md-4 mb-2`;
-            slotDiv.innerHTML = `
-                <button class="btn btn-outline-primary w-100 time-slot-btn ${slot.available ? 'available' : 'booked'}"
-                        ${slot.available ? `onclick="selectCalendarTime('${slot.time}', '${slot.formatted_time}')"` : 'disabled'}>
-                    ${slot.formatted_time}
-                    <br><small>${slot.available ? 'Available' : 'Booked'}</small>
-                </button>
-            `;
-            timeSlots.appendChild(slotDiv);
-        });
-
-        // Reset confirm button state
-        document.getElementById('confirmDateTimeBtn').disabled = true;
-        selectedCalendarTime = null;
-    }
-
-    function selectCalendarTime(time, formattedTime) {
-        selectedCalendarTime = { time, formattedTime };
-
-        // Update time slot buttons
-        document.querySelectorAll('.time-slot-btn').forEach(btn => {
-            btn.classList.remove('btn-primary');
-            btn.classList.add('btn-outline-primary');
-        });
-        event.target.classList.remove('btn-outline-primary');
-        event.target.classList.add('btn-primary');
-
-        // Enable confirm button
-        document.getElementById('confirmDateTimeBtn').disabled = false;
-    }
-
-    function confirmDateTime() {
-        if (selectedCalendarDate && selectedCalendarTime) {
-            // Format date for display (readable format)
-            const formattedDate = selectedCalendarDate.toLocaleDateString('en-US', {
-                weekday: 'long',
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric'
-            });
-
-            // Set the values in the booking form
-            document.getElementById('bookingDate').value = formattedDate;
-            document.getElementById('appointment_date').value = selectedCalendarDate.toISOString().split('T')[0];
-            document.getElementById('appointment_time_hidden').value = selectedCalendarTime.time;
-
-            // Set the time input with the formatted time from modal
-            document.getElementById('timeInput').value = selectedCalendarTime.formattedTime;
-
-            // Close calendar modal
-            const calendarModal = bootstrap.Modal.getInstance(document.getElementById('calendarModal'));
-            calendarModal.hide();
-        }
-    }
-
-    function previousMonth() {
-        calendarCurrentDate.setMonth(calendarCurrentDate.getMonth() - 1);
-        renderCalendarModal();
-    }
-
-    function nextMonth() {
-        calendarCurrentDate.setMonth(calendarCurrentDate.getMonth() + 1);
-        renderCalendarModal();
     }
 
     // Test function for file input debugging
@@ -3971,7 +4200,7 @@
                         <div class="deposit-amount mb-4">
                             <h5 style="color: #030f68; font-weight: 600; margin-bottom: 15px;">Deposit Amount:</h5>
                             <div class="amount-display" style="background: linear-gradient(135deg, #ff6600 0%, #ff8533 100%); color: white; padding: 20px; border-radius: 15px; text-align: center;">
-                                <h3 style="font-weight: 700; margin: 0; font-size: 2rem;">₵50.00</h3>
+                                <h3 style="font-weight: 700; margin: 0; font-size: 2rem;">$20.00</h3>
                                 <p style="margin: 5px 0 0 0; opacity: 0.9;">(Standard deposit for all services)</p>
                             </div>
                         </div>
@@ -4068,6 +4297,24 @@
                         <span style="color: #cbd5e0; font-size: 14px;">Confirmation Code: </span>
                         <strong id="successConfirmationCode" style="color: white; margin-left: 5px;">CONFEAB923BD</strong>
                     </div>
+
+                    <div style="display: flex; align-items: center; margin-bottom: 8px;">
+                        <i class="bi bi-scissors" style="color: #f87171; margin-right: 10px; font-size: 14px;"></i>
+                        <span style="color: #cbd5e0; font-size: 14px;">Service: </span>
+                        <strong id="successService" style="color: white; margin-left: 5px;">Hair Styling</strong>
+                    </div>
+
+                    <div style="display: flex; align-items: center; margin-bottom: 8px;">
+                        <i class="bi bi-calendar-event" style="color: #a78bfa; margin-right: 10px; font-size: 14px;"></i>
+                        <span style="color: #cbd5e0; font-size: 14px;">Date: </span>
+                        <strong id="successAppointmentDate" style="color: white; margin-left: 5px;">August 18, 2025</strong>
+                    </div>
+
+                    <div style="display: flex; align-items: center; margin-bottom: 8px;">
+                        <i class="bi bi-clock" style="color: #fbbf24; margin-right: 10px; font-size: 14px;"></i>
+                        <span style="color: #cbd5e0; font-size: 14px;">Time: </span>
+                        <strong id="successAppointmentTime" style="color: white; margin-left: 5px;">2:00 PM</strong>
+                    </div>
                 </div>
 
                 <!-- Deposit Warning -->
@@ -4114,6 +4361,164 @@
         </div>
     </div>
 </div>
+
+<!-- JavaScript to enhance booking success message visibility -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Check if there's a booking success message
+    const successAlert = document.querySelector('.alert-success');
+
+    if (successAlert) {
+        // Scroll to top to ensure message is visible
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+
+        // Add a subtle animation to draw attention
+        successAlert.style.animation = 'slideDown 0.5s ease-out';
+
+        // Prevent auto-dismiss for a longer time
+        successAlert.style.zIndex = '9999';
+
+        // Add a gentle pulse effect to make it more noticeable
+        setTimeout(() => {
+            successAlert.style.animation = 'pulse 2s infinite';
+        }, 1000);
+
+        // Optional: Auto-scroll to booking section after user reads the message
+        const closeButton = successAlert.querySelector('.btn-close');
+        if (closeButton) {
+            closeButton.addEventListener('click', function() {
+                // Scroll to booking section when message is dismissed
+                const bookingSection = document.getElementById('booking');
+                if (bookingSection) {
+                    setTimeout(() => {
+                        bookingSection.scrollIntoView({ behavior: 'smooth' });
+                    }, 300);
+                }
+            });
+        }
+    }
+});
+</script>
+
+<style>
+@keyframes slideDown {
+    from {
+        transform: translateY(-100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+@keyframes pulse {
+    0% {
+        box-shadow: 0 2px 8px rgba(40, 167, 69, 0.3);
+    }
+    50% {
+        box-shadow: 0 4px 16px rgba(40, 167, 69, 0.5);
+    }
+    100% {
+        box-shadow: 0 2px 8px rgba(40, 167, 69, 0.3);
+    }
+}
+
+/* Make the success alert more prominent */
+.alert-success {
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 9999 !important;
+}
+</style>
+
+<script>
+// Handle booking success modal
+document.addEventListener('DOMContentLoaded', function() {
+    const successModal = document.getElementById('successModal');
+
+    if (successModal) {
+        // Show modal with animation
+        successModal.style.display = 'block';
+        setTimeout(() => {
+            successModal.classList.add('show');
+        }, 100);
+
+        // Function to clear session data
+        function clearSessionData() {
+            fetch('/clear-session', {
+                method: 'GET',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            }).then(function() {
+                // Update URL to remove any flash data indicators
+                if (window.history && window.history.replaceState) {
+                    window.history.replaceState({}, document.title, window.location.pathname);
+                }
+            }).catch(function(error) {
+                console.log('Session clear request failed:', error);
+            });
+        }
+
+        // Auto close modal after 5 seconds
+        setTimeout(function() {
+            closeSuccessModal();
+        }, 5000);
+    }
+});
+
+// Function to close success modal
+function closeSuccessModal() {
+    console.log('closeSuccessModal called'); // Debug log
+    const successModal = document.getElementById('successModal');
+    if (successModal) {
+        console.log('Success modal found, hiding it'); // Debug log
+        successModal.style.display = 'none';
+        
+        // Remove modal from DOM after animation
+        setTimeout(function() {
+            if (successModal.parentNode) {
+                successModal.parentNode.removeChild(successModal);
+            }
+        }, 300);
+        
+        // Clear session data
+        fetch('/clear-session', {
+            method: 'GET',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        }).then(function() {
+            console.log('Session cleared successfully'); // Debug log
+            if (window.history && window.history.replaceState) {
+                window.history.replaceState({}, document.title, window.location.pathname);
+            }
+        }).catch(function(error) {
+            console.log('Session clear request failed:', error);
+        });
+    } else {
+        console.log('Success modal not found'); // Debug log
+    }
+}
+
+// Additional event listener for the OK button (backup in case onclick doesn't work)
+document.addEventListener('DOMContentLoaded', function() {
+    // Wait for modal to be rendered
+    setTimeout(function() {
+        const okButton = document.querySelector('#successModal .btn-info');
+        if (okButton) {
+            console.log('OK button found, adding event listener');
+            okButton.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('OK button clicked via event listener');
+                closeSuccessModal();
+            });
+        }
+    }, 100);
+});
+</script>
 
 </body>
 </html>

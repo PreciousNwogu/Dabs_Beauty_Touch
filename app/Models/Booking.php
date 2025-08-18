@@ -27,7 +27,6 @@ class Booking extends Model
         'message',
         'status',
         'notes',
-        'sample_picture',
         'confirmed_at',
         'completed_at',
         'cancelled_at',

@@ -223,6 +223,46 @@
                 max-width: 95%;
             }
         }
+
+        /* Pagination Styles */
+        .pagination {
+            margin: 0;
+        }
+
+        .pagination .page-link {
+            color: #030f68;
+            border: 1px solid #dee2e6;
+            padding: 0.375rem 0.75rem;
+            margin: 0 2px;
+            border-radius: 5px;
+            transition: all 0.3s ease;
+        }
+
+        .pagination .page-link:hover {
+            color: #fff;
+            background-color: #030f68;
+            border-color: #030f68;
+            transform: translateY(-1px);
+        }
+
+        .pagination .page-item.active .page-link {
+            background-color: #030f68;
+            border-color: #030f68;
+            color: #fff;
+        }
+
+        .pagination .page-item.disabled .page-link {
+            color: #6c757d;
+            pointer-events: none;
+            background-color: #fff;
+            border-color: #dee2e6;
+        }
+
+        .pagination-info {
+            display: flex;
+            align-items: center;
+            height: 38px;
+        }
     </style>
 </head>
 <body>
@@ -247,6 +287,14 @@
                     <li class="nav-item">
                         <a class="nav-link active" href="{{ route('admin.dashboard') }}">Admin</a>
                     </li>
+                    <li class="nav-item">
+                        <form method="POST" action="{{ route('admin.logout') }}" class="d-inline">
+                            @csrf
+                            <button type="submit" class="nav-link btn btn-link" style="background: none; border: none; color: #dc3545; font-weight: 600;">
+                                <i class="bi bi-box-arrow-right me-1"></i>Logout
+                            </button>
+                        </form>
+                    </li>
                 </ul>
             </div>
         </div>
@@ -264,25 +312,25 @@
             <div class="row p-4">
                 <div class="col-md-3">
                     <div class="stats-card">
-                        <div class="stats-number" id="totalAppointments">0</div>
+                        <div class="stats-number">{{ $stats['total_bookings'] }}</div>
                         <div class="stats-label">Total Appointments</div>
                     </div>
                 </div>
                 <div class="col-md-3">
                     <div class="stats-card">
-                        <div class="stats-number" id="todayAppointments">0</div>
+                        <div class="stats-number">{{ $stats['today_bookings'] }}</div>
                         <div class="stats-label">Today's Appointments</div>
                     </div>
                 </div>
                 <div class="col-md-3">
                     <div class="stats-card">
-                        <div class="stats-number" id="pendingAppointments">0</div>
+                        <div class="stats-number">{{ $stats['pending_bookings'] }}</div>
                         <div class="stats-label">Pending</div>
                     </div>
                 </div>
                 <div class="col-md-3">
                     <div class="stats-card">
-                        <div class="stats-number" id="confirmedAppointments">0</div>
+                        <div class="stats-number">{{ $stats['confirmed_bookings'] }}</div>
                         <div class="stats-label">Confirmed</div>
                     </div>
                 </div>
@@ -292,19 +340,19 @@
             <div class="row mb-4">
                 <div class="col-md-4">
                     <div class="stats-card bg-success text-white">
-                        <div class="stats-number">₵<span id="revenueToday">0.00</span></div>
+                        <div class="stats-number">₵<span>{{ number_format($stats['today_revenue'], 2) }}</span></div>
                         <div class="stats-label">Today's Revenue</div>
                     </div>
                 </div>
                 <div class="col-md-4">
                     <div class="stats-card bg-primary text-white">
-                        <div class="stats-number">₵<span id="revenueMonth">0.00</span></div>
+                        <div class="stats-number">₵<span>{{ number_format($stats['monthly_revenue'], 2) }}</span></div>
                         <div class="stats-label">This Month</div>
                     </div>
                 </div>
                 <div class="col-md-4">
                     <div class="stats-card bg-info text-white">
-                        <div class="stats-number" id="completedAppointments">0</div>
+                        <div class="stats-number">{{ $stats['completed_bookings'] }}</div>
                         <div class="stats-label">Completed</div>
                     </div>
                 </div>
@@ -345,7 +393,7 @@
                 </div>
                 <div class="col-md-3">
                     <label class="form-label">&nbsp;</label>
-                    <button class="btn btn-primary w-100" onclick="loadAppointments()">
+                    <button class="btn btn-primary w-100" type="button" onclick="applyFilters()">
                         <i class="bi bi-search me-2"></i>Filter
                     </button>
                 </div>
@@ -355,7 +403,14 @@
         <!-- Appointments Table -->
         <div class="dashboard-container">
             <div class="dashboard-header d-flex justify-content-between align-items-center">
-                <h3 class="mb-0">Appointments</h3>
+                <div>
+                    <h3 class="mb-0">Appointments</h3>
+                    @if($bookings->hasPages())
+                        <small class="text-white-50">
+                            Page {{ $bookings->currentPage() }} of {{ $bookings->lastPage() }} ({{ $bookings->total() }} total)
+                        </small>
+                    @endif
+                </div>
                 <a href="{{ route('admin.complete-service') }}" class="btn btn-success">
                     <i class="bi bi-check-circle me-2"></i>Complete Service
                 </a>
@@ -376,11 +431,144 @@
                             </tr>
                         </thead>
                         <tbody id="appointmentsTable">
-                            <tr>
-                                <td colspan="8" class="text-center">Loading appointments...</td>
-                            </tr>
+                            @if($bookings->count() > 0)
+                                @foreach($bookings as $booking)
+                                    <tr>
+                                        <td>
+                                            <strong>{{ $booking->id }}</strong>
+                                            @if($booking->confirmation_code)
+                                                <br><small class="text-muted">Conf: {{ $booking->confirmation_code }}</small>
+                                            @endif
+                                        </td>
+                                        <td>
+                                            <div><strong>{{ $booking->name }}</strong></div>
+                                            @if($booking->email)
+                                                <small class="text-muted">{{ $booking->email }}</small>
+                                            @else
+                                                <small class="text-muted">No email</small>
+                                            @endif
+                                        </td>
+                                        <td>
+                                            <div>{{ $booking->phone }}</div>
+                                            @if($booking->address)
+                                                <small class="text-muted">{{ $booking->address }}</small>
+                                            @endif
+                                        </td>
+                                        <td>
+                                            <div>{{ $booking->service ?: 'General Service' }}</div>
+                                            @if($booking->length)
+                                                <small class="text-muted">Length: {{ $booking->length }}</small>
+                                            @endif
+                                        </td>
+                                        <td>
+                                            <div>{{ $booking->appointment_date?->format('M d, Y') }}</div>
+                                            <small class="text-muted">{{ $booking->appointment_time }}</small>
+                                        </td>
+                                        <td>
+                                            @if($booking->sample_picture)
+                                                <img src="{{ asset('storage/' . $booking->sample_picture) }}" 
+                                                     alt="Sample" 
+                                                     class="sample-image"
+                                                     onclick="viewImageModal('{{ asset('storage/' . $booking->sample_picture) }}', '{{ $booking->name }}')"
+                                                     title="Click to view full size">
+                                            @else
+                                                <span class="text-muted">No image</span>
+                                            @endif
+                                        </td>
+                                        <td>
+                                            <span class="status-badge status-{{ $booking->status }}">
+                                                {{ ucfirst($booking->status) }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <div class="btn-group-vertical" role="group">
+                                                <button class="btn btn-outline-info btn-sm mb-1" onclick="viewBookingDetails({{ $booking->id }})" title="View Details">
+                                                    <i class="bi bi-eye"></i> View Details
+                                                </button>
+                                                @if($booking->status === 'pending')
+                                                    <button class="btn btn-success btn-sm mb-1" onclick="updateStatus({{ $booking->id }}, 'confirmed')">
+                                                        <i class="bi bi-check"></i> Confirm
+                                                    </button>
+                                                    <button class="btn btn-danger btn-sm" onclick="updateStatus({{ $booking->id }}, 'cancelled')">
+                                                        <i class="bi bi-x"></i> Cancel
+                                                    </button>
+                                                @elseif($booking->status === 'confirmed')
+                                                    <button class="btn btn-info btn-sm mb-1" onclick="updateStatus({{ $booking->id }}, 'completed')">
+                                                        <i class="bi bi-award"></i> Complete
+                                                    </button>
+                                                    <button class="btn btn-danger btn-sm" onclick="updateStatus({{ $booking->id }}, 'cancelled')">
+                                                        <i class="bi bi-x"></i> Cancel
+                                                    </button>
+                                                @else
+                                                    <small class="text-muted">{{ ucfirst($booking->status) }}</small>
+                                                @endif
+                                            </div>
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            @else
+                                <tr>
+                                    <td colspan="8" class="text-center">No appointments found.</td>
+                                </tr>
+                            @endif
                         </tbody>
                     </table>
+                </div>
+                
+                <!-- Pagination -->
+                @if($bookings->hasPages())
+                <div class="d-flex justify-content-between align-items-center mt-4">
+                    <div class="pagination-info">
+                        <small class="text-muted">
+                            Showing {{ $bookings->firstItem() }} to {{ $bookings->lastItem() }} of {{ $bookings->total() }} bookings
+                        </small>
+                    </div>
+                    <nav aria-label="Bookings pagination">
+                        <ul class="pagination pagination-sm mb-0">
+                            {{-- Previous Page Link --}}
+                            @if ($bookings->onFirstPage())
+                                <li class="page-item disabled"><span class="page-link">Previous</span></li>
+                            @else
+                                <li class="page-item">
+                                    <a class="page-link" href="{{ $bookings->appends(request()->except('page'))->previousPageUrl() }}">Previous</a>
+                                </li>
+                            @endif
+
+                            {{-- Pagination Elements --}}
+                            @foreach ($bookings->appends(request()->except('page'))->getUrlRange(1, $bookings->lastPage()) as $page => $url)
+                                @if ($page == $bookings->currentPage())
+                                    <li class="page-item active"><span class="page-link">{{ $page }}</span></li>
+                                @else
+                                    <li class="page-item"><a class="page-link" href="{{ $url }}">{{ $page }}</a></li>
+                                @endif
+                            @endforeach
+
+                            {{-- Next Page Link --}}
+                            @if ($bookings->hasMorePages())
+                                <li class="page-item">
+                                    <a class="page-link" href="{{ $bookings->appends(request()->except('page'))->nextPageUrl() }}">Next</a>
+                                </li>
+                            @else
+                                <li class="page-item disabled"><span class="page-link">Next</span></li>
+                            @endif
+                        </ul>
+                    </nav>
+                </div>
+                @endif
+            </div>
+        </div>
+    </div>
+
+    <!-- Booking Details Modal -->
+    <div class="modal fade" id="detailsModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Booking Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="bookingDetailsContent">
+                    <!-- Content will be populated by JavaScript -->
                 </div>
             </div>
         </div>
@@ -492,48 +680,15 @@
 
         // Load dashboard data on page load
         document.addEventListener('DOMContentLoaded', function() {
-            loadDashboardStats();
-            loadAppointments();
+            // Dashboard data is already loaded server-side, no need to fetch
+            console.log('Dashboard loaded');
         });
 
-        function loadDashboardStats() {
-            // Fetch appointment statistics
-            fetch('/appointments/stats')
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        document.getElementById('totalAppointments').textContent = data.stats.total || 0;
-                        document.getElementById('todayAppointments').textContent = data.stats.today || 0;
-                        document.getElementById('pendingAppointments').textContent = data.stats.pending || 0;
-                        document.getElementById('confirmedAppointments').textContent = data.stats.confirmed || 0;
-                        document.getElementById('completedAppointments').textContent = data.stats.completed || 0;
-                        
-                        // Update revenue stats
-                        document.getElementById('revenueToday').textContent = (data.stats.revenue_today || 0).toFixed(2);
-                        document.getElementById('revenueMonth').textContent = (data.stats.revenue_month || 0).toFixed(2);
-                    }
-                })
-                .catch(error => {
-                    console.error('Error loading stats:', error);
-                    // Set default values if API fails
-                    document.getElementById('totalAppointments').textContent = '0';
-                    document.getElementById('todayAppointments').textContent = '0';
-                    document.getElementById('pendingAppointments').textContent = '0';
-                    document.getElementById('confirmedAppointments').textContent = '0';
-                    document.getElementById('completedAppointments').textContent = '0';
-                    document.getElementById('revenueToday').textContent = '0.00';
-                    document.getElementById('revenueMonth').textContent = '0.00';
-                });
-        }
-
-        function loadAppointments() {
+        // Simple filter function that reloads the page with query parameters
+        function applyFilters() {
             const statusFilter = document.getElementById('statusFilter').value;
             const dateFilter = document.getElementById('dateFilter').value;
             const serviceFilter = document.getElementById('serviceFilter').value;
-
-            // Show loading
-            document.getElementById('appointmentsTable').innerHTML = 
-                '<tr><td colspan="7" class="text-center">Loading appointments...</td></tr>';
 
             // Build query parameters
             const params = new URLSearchParams();
@@ -541,95 +696,143 @@
             if (dateFilter) params.append('date', dateFilter);
             if (serviceFilter) params.append('service', serviceFilter);
 
-            // Fetch appointments from API
-            fetch('/appointments/list?' + params.toString())
+            // Reload page with filters
+            const baseUrl = window.location.pathname;
+            const newUrl = params.toString() ? `${baseUrl}?${params.toString()}` : baseUrl;
+            window.location.href = newUrl;
+        }
+
+        function viewBookingDetails(bookingId) {
+            // Fetch booking details
+            fetch(`/admin/booking-details/${bookingId}`)
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
-                        renderAppointments(data.appointments);
+                        showBookingDetails(data.booking);
                     } else {
-                        document.getElementById('appointmentsTable').innerHTML = 
-                            '<tr><td colspan="7" class="text-center text-danger">Error loading appointments: ' + (data.message || 'Unknown error') + '</td></tr>';
+                        alert('Error loading booking details: ' + (data.message || 'Unknown error'));
                     }
                 })
                 .catch(error => {
-                    console.error('Error loading appointments:', error);
-                    document.getElementById('appointmentsTable').innerHTML = 
-                        '<tr><td colspan="7" class="text-center text-danger">Error loading appointments. Please try again.</td></tr>';
+                    console.error('Error loading booking details:', error);
+                    alert('Error loading booking details. Please try again.');
                 });
         }
 
-        function renderAppointments(appointments) {
-            const tbody = document.getElementById('appointmentsTable');
-            
-            if (!appointments || appointments.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="8" class="text-center">No appointments found.</td></tr>';
-                return;
-            }
-
-            tbody.innerHTML = appointments.map(appointment => `
-                <tr>
-                    <td>
-                        <strong>${appointment.booking_id || appointment.id}</strong>
-                        ${appointment.confirmation_code ? `<br><small class="text-muted">Conf: ${appointment.confirmation_code}</small>` : ''}
-                    </td>
-                    <td>
-                        <div><strong>${appointment.name}</strong></div>
-                        ${appointment.email ? `<small class="text-muted">${appointment.email}</small>` : '<small class="text-muted">No email</small>'}
-                    </td>
-                    <td>
-                        <div>${appointment.phone}</div>
-                        ${appointment.address ? `<small class="text-muted">${appointment.address}</small>` : ''}
-                    </td>
-                    <td>
-                        <div>${appointment.service}</div>
-                        ${appointment.length ? `<small class="text-muted">Length: ${appointment.length}</small>` : ''}
-                    </td>
-                    <td>
-                        <div>${formatDate(appointment.appointment_date)}</div>
-                        <small class="text-muted">${formatTime(appointment.appointment_time)}</small>
-                    </td>
-                    <td>
-                        ${appointment.sample_picture ? 
-                            `<img src="/storage/${appointment.sample_picture}" 
-                                 alt="Sample" 
-                                 style="width: 50px; height: 50px; object-fit: cover; border-radius: 8px; cursor: pointer;" 
-                                 onclick="viewImageModal('/storage/${appointment.sample_picture}', '${appointment.name}')"
-                                 title="Click to view full size">` 
-                            : '<span class="text-muted">No image</span>'
-                        }
-                    </td>
-                    <td>${getStatusBadge(appointment.status)}</td>
-                    <td>
-                        <div class="btn-group-vertical btn-group-sm">
-                            <button class="btn btn-outline-primary btn-sm mb-1" onclick="updateAppointmentStatus('${appointment.id}')" title="Update Status">
-                                <i class="bi bi-pencil"></i> Update
-                            </button>
-                            <button class="btn btn-outline-info btn-sm" onclick="viewAppointmentDetails('${appointment.id}')" title="View Details">
-                                <i class="bi bi-eye"></i> View
-                            </button>
+        function showBookingDetails(booking) {
+            const detailsHtml = `
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card mb-3">
+                            <div class="card-header bg-primary text-white">
+                                <h6 class="mb-0"><i class="bi bi-person me-2"></i>Customer Information</h6>
+                            </div>
+                            <div class="card-body">
+                                <table class="table table-borderless mb-0">
+                                    <tr><td><strong>Name:</strong></td><td>${booking.name}</td></tr>
+                                    <tr><td><strong>Phone:</strong></td><td>${booking.phone}</td></tr>
+                                    <tr><td><strong>Email:</strong></td><td>${booking.email || 'Not provided'}</td></tr>
+                                    <tr><td><strong>Address:</strong></td><td>${booking.address || 'Not provided'}</td></tr>
+                                </table>
+                            </div>
                         </div>
-                    </td>
-                </tr>
-            `).join('');
-        }
 
-        function formatDate(dateString) {
-            const date = new Date(dateString);
-            return date.toLocaleDateString('en-US', { 
-                weekday: 'short', 
-                year: 'numeric', 
-                month: 'short', 
-                day: 'numeric' 
-            });
-        }
+                        <div class="card mb-3">
+                            <div class="card-header bg-success text-white">
+                                <h6 class="mb-0"><i class="bi bi-calendar me-2"></i>Appointment Information</h6>
+                            </div>
+                            <div class="card-body">
+                                <table class="table table-borderless mb-0">
+                                    <tr><td><strong>Booking ID:</strong></td><td>${booking.booking_id || booking.id}</td></tr>
+                                    <tr><td><strong>Confirmation Code:</strong></td><td>${booking.confirmation_code || 'N/A'}</td></tr>
+                                    <tr><td><strong>Service:</strong></td><td>${booking.service}</td></tr>
+                                    <tr><td><strong>Length:</strong></td><td>${booking.length || 'Not specified'}</td></tr>
+                                    <tr><td><strong>Date:</strong></td><td>${new Date(booking.appointment_date).toLocaleDateString()}</td></tr>
+                                    <tr><td><strong>Time:</strong></td><td>${booking.appointment_time}</td></tr>
+                                    <tr><td><strong>Status:</strong></td><td><span class="status-badge status-${booking.status}">${booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}</span></td></tr>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
 
-        function formatTime(timeString) {
-            const [hours, minutes] = timeString.split(':');
-            const hour = parseInt(hours);
-            const ampm = hour >= 12 ? 'PM' : 'AM';
-            const hour12 = hour % 12 || 12;
-            return `${hour12}:${minutes} ${ampm}`;
+                    <div class="col-md-6">
+                        ${booking.sample_picture ? `
+                            <div class="card mb-3">
+                                <div class="card-header bg-info text-white">
+                                    <h6 class="mb-0"><i class="bi bi-image me-2"></i>Sample Image</h6>
+                                </div>
+                                <div class="card-body text-center">
+                                    <img src="${booking.sample_picture.startsWith('http') ? booking.sample_picture : '/storage/' + booking.sample_picture}" 
+                                         alt="Sample Image" 
+                                         style="max-width: 100%; height: auto; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);"
+                                         onclick="viewImageModal('${booking.sample_picture.startsWith('http') ? booking.sample_picture : '/storage/' + booking.sample_picture}', '${booking.name}')"
+                                         class="cursor-pointer">
+                                    <div class="mt-2">
+                                        <a href="${booking.sample_picture.startsWith('http') ? booking.sample_picture : '/storage/' + booking.sample_picture}" download class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-download me-1"></i>Download
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        ` : `
+                            <div class="card mb-3">
+                                <div class="card-header bg-secondary text-white">
+                                    <h6 class="mb-0"><i class="bi bi-image me-2"></i>Sample Image</h6>
+                                </div>
+                                <div class="card-body text-center text-muted">
+                                    <i class="bi bi-image" style="font-size: 3rem;"></i>
+                                    <p>No sample image uploaded</p>
+                                </div>
+                            </div>
+                        `}
+
+                        ${booking.message ? `
+                            <div class="card mb-3">
+                                <div class="card-header bg-warning text-dark">
+                                    <h6 class="mb-0"><i class="bi bi-chat-text me-2"></i>Customer Message</h6>
+                                </div>
+                                <div class="card-body">
+                                    <p class="mb-0">"${booking.message}"</p>
+                                </div>
+                            </div>
+                        ` : ''}
+
+                        ${booking.status === 'completed' && booking.completed_at ? `
+                            <div class="card border-success">
+                                <div class="card-header bg-success text-white">
+                                    <h6 class="mb-0"><i class="bi bi-check-circle me-2"></i>Service Completion Details</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-12 mb-2">
+                                            <strong>Completed By:</strong><br>
+                                            ${booking.completed_by || 'N/A'}
+                                        </div>
+                                        <div class="col-6">
+                                            <strong>Duration:</strong><br>
+                                            ${booking.service_duration_minutes ? booking.service_duration_minutes + ' minutes' : 'N/A'}
+                                        </div>
+                                        <div class="col-6">
+                                            <strong>Final Price:</strong><br>
+                                            ${booking.final_price ? '₵' + parseFloat(booking.final_price).toFixed(2) : 'N/A'}
+                                        </div>
+                                    </div>
+                                    ${booking.completion_notes ? `
+                                        <div class="mt-3">
+                                            <strong>Completion Notes:</strong><br>
+                                            <em>"${booking.completion_notes}"</em>
+                                        </div>
+                                    ` : ''}
+                                </div>
+                            </div>
+                        ` : ''}
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('bookingDetailsContent').innerHTML = detailsHtml;
+            const modal = new bootstrap.Modal(document.getElementById('detailsModal'));
+            modal.show();
         }
 
         function updateAppointmentStatus(appointmentId) {
@@ -673,7 +876,7 @@
             }
 
             // Send update to API
-            fetch('/appointments/update-status', {
+            fetch('/admin/bookings/update-status', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -684,11 +887,10 @@
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    // Close modal and reload
+                    // Close modal and reload page
                     const modal = bootstrap.Modal.getInstance(document.getElementById('statusModal'));
                     modal.hide();
-                    loadAppointments();
-                    loadDashboardStats();
+                    window.location.reload();
                     
                     // Show success message
                     alert('Appointment status updated successfully!');
@@ -735,251 +937,51 @@
             modal.show();
         }
 
-        function viewAppointmentDetails(appointmentId) {
-            // Fetch appointment details
-            fetch('/appointments/details?id=' + appointmentId)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        showEnhancedAppointmentDetails(data.appointment);
-                    } else {
-                        alert('Error loading appointment details: ' + (data.message || 'Unknown error'));
-                    }
-                })
-                .catch(error => {
-                    console.error('Error loading appointment details:', error);
-                    alert('Error loading appointment details. Please try again.');
-                });
-        }
-
-        function showEnhancedAppointmentDetails(appointment) {
-            const detailsHtml = `
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="card mb-3">
-                            <div class="card-header bg-primary text-white">
-                                <h6 class="mb-0"><i class="bi bi-person me-2"></i>Customer Information</h6>
-                            </div>
-                            <div class="card-body">
-                                <table class="table table-borderless mb-0">
-                                    <tr><td><strong>Name:</strong></td><td>${appointment.name}</td></tr>
-                                    <tr><td><strong>Phone:</strong></td><td>${appointment.phone}</td></tr>
-                                    <tr><td><strong>Email:</strong></td><td>${appointment.email || 'Not provided'}</td></tr>
-                                    <tr><td><strong>Address:</strong></td><td>${appointment.address || 'Not provided'}</td></tr>
-                                </table>
-                            </div>
-                        </div>
-
-                        <div class="card mb-3">
-                            <div class="card-header bg-success text-white">
-                                <h6 class="mb-0"><i class="bi bi-calendar me-2"></i>Appointment Information</h6>
-                            </div>
-                            <div class="card-body">
-                                <table class="table table-borderless mb-0">
-                                    <tr><td><strong>Booking ID:</strong></td><td>${appointment.booking_id || appointment.id}</td></tr>
-                                    <tr><td><strong>Confirmation Code:</strong></td><td>${appointment.confirmation_code || 'N/A'}</td></tr>
-                                    <tr><td><strong>Service:</strong></td><td>${appointment.service}</td></tr>
-                                    <tr><td><strong>Length:</strong></td><td>${appointment.length || 'Not specified'}</td></tr>
-                                    <tr><td><strong>Date:</strong></td><td>${formatDate(appointment.appointment_date)}</td></tr>
-                                    <tr><td><strong>Time:</strong></td><td>${formatTime(appointment.appointment_time)}</td></tr>
-                                    <tr><td><strong>Status:</strong></td><td>${getStatusBadge(appointment.status)}</td></tr>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="col-md-6">
-                        ${appointment.sample_picture ? `
-                            <div class="card mb-3">
-                                <div class="card-header bg-info text-white">
-                                    <h6 class="mb-0"><i class="bi bi-image me-2"></i>Sample Image</h6>
-                                </div>
-                                <div class="card-body text-center">
-                                    <img src="/storage/${appointment.sample_picture}" 
-                                         alt="Sample Image" 
-                                         style="max-width: 100%; height: auto; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);"
-                                         onclick="viewImageModal('/storage/${appointment.sample_picture}', '${appointment.name}')"
-                                         class="cursor-pointer">
-                                    <div class="mt-2">
-                                        <a href="/storage/${appointment.sample_picture}" download class="btn btn-sm btn-outline-primary">
-                                            <i class="bi bi-download me-1"></i>Download
-                                        </a>
-                                    </div>
-                                </div>
-                            </div>
-                        ` : `
-                            <div class="card mb-3">
-                                <div class="card-header bg-secondary text-white">
-                                    <h6 class="mb-0"><i class="bi bi-image me-2"></i>Sample Image</h6>
-                                </div>
-                                <div class="card-body text-center text-muted">
-                                    <i class="bi bi-image" style="font-size: 3rem;"></i>
-                                    <p>No sample image uploaded</p>
-                                </div>
-                            </div>
-                        `}
-
-                        ${appointment.message ? `
-                            <div class="card mb-3">
-                                <div class="card-header bg-warning text-dark">
-                                    <h6 class="mb-0"><i class="bi bi-chat-text me-2"></i>Customer Message</h6>
-                                </div>
-                                <div class="card-body">
-                                    <p class="mb-0">"${appointment.message}"</p>
-                                </div>
-                            </div>
-                        ` : ''}
-
-                        ${appointment.status_history ? `
-                            <div class="card">
-                                <div class="card-header bg-dark text-white">
-                                    <h6 class="mb-0"><i class="bi bi-clock-history me-2"></i>Status History</h6>
-                                </div>
-                                <div class="card-body">
-                                    <div class="timeline">
-                                        ${appointment.status_history.map(entry => `
-                                            <div class="timeline-item mb-2">
-                                                <small class="text-muted">${new Date(entry.timestamp).toLocaleString()}</small><br>
-                                                <strong>${entry.from} → ${entry.to}</strong><br>
-                                                <span class="text-muted">By: ${entry.updated_by}</span>
-                                                ${entry.notes ? `<br><em>"${entry.notes}"</em>` : ''}
-                                            </div>
-                                        `).join('')}
-                                    </div>
-                                </div>
-                            </div>
-                        ` : ''}
-                    </div>
-                </div>
-
-                ${appointment.completed_at ? `
-                    <div class="row mt-3">
-                        <div class="col-12">
-                            <div class="card border-success">
-                                <div class="card-header bg-success text-white">
-                                    <h6 class="mb-0"><i class="bi bi-check-circle me-2"></i>Service Completion Details</h6>
-                                </div>
-                                <div class="card-body">
-                                    <div class="row">
-                                        <div class="col-md-3">
-                                            <strong>Completed By:</strong><br>
-                                            ${appointment.completed_by || 'N/A'}
-                                        </div>
-                                        <div class="col-md-3">
-                                            <strong>Duration:</strong><br>
-                                            ${appointment.service_duration_minutes ? appointment.service_duration_minutes + ' minutes' : 'N/A'}
-                                        </div>
-                                        <div class="col-md-3">
-                                            <strong>Final Price:</strong><br>
-                                            ${appointment.final_price ? '₵' + parseFloat(appointment.final_price).toFixed(2) : 'N/A'}
-                                        </div>
-                                        <div class="col-md-3">
-                                            <strong>Payment Status:</strong><br>
-                                            ${appointment.payment_status ? appointment.payment_status.replace('_', ' ').toUpperCase() : 'N/A'}
-                                        </div>
-                                    </div>
-                                    ${appointment.completion_notes ? `
-                                        <div class="mt-3">
-                                            <strong>Completion Notes:</strong><br>
-                                            <em>"${appointment.completion_notes}"</em>
-                                        </div>
-                                    ` : ''}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                ` : ''}
-            `;
-
-            document.getElementById('appointmentDetailsContent').innerHTML = detailsHtml;
-            const modal = new bootstrap.Modal(document.getElementById('detailsModal'));
-            modal.show();
-        }
-
-        function viewAppointmentDetails(appointmentId) {
-            // Fetch appointment details
-            fetch('/appointments/details?id=' + appointmentId)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        showAppointmentDetails(data.appointment);
-                    } else {
-                        alert('Error loading appointment details: ' + (data.message || 'Unknown error'));
-                    }
-                })
-                .catch(error => {
-                    console.error('Error loading appointment details:', error);
-                    alert('Error loading appointment details. Please try again.');
-                });
-        }
-
-        function showAppointmentDetails(appointment) {
-            const detailsHtml = `
-                <div class="modal fade" id="detailsModal" tabindex="-1">
-                    <div class="modal-dialog modal-lg">
-                        <div class="modal-content">
-                            <div class="modal-header">
-                                <h5 class="modal-title">Appointment Details</h5>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                            </div>
-                            <div class="modal-body">
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <h6>Client Information</h6>
-                                        <p><strong>Name:</strong> ${appointment.name}</p>
-                                        <p><strong>Phone:</strong> ${appointment.phone}</p>
-                                        <p><strong>Email:</strong> ${appointment.email || 'Not provided'}</p>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <h6>Appointment Information</h6>
-                                        <p><strong>Booking ID:</strong> ${appointment.booking_id}</p>
-                                        <p><strong>Service:</strong> ${appointment.service}</p>
-                                        <p><strong>Date:</strong> ${formatDate(appointment.appointment_date)}</p>
-                                        <p><strong>Time:</strong> ${formatTime(appointment.appointment_time)}</p>
-                                        <p><strong>Status:</strong> ${getStatusBadge(appointment.status)}</p>
-                                    </div>
-                                </div>
-                                ${appointment.notes ? `<div class="mt-3"><h6>Notes</h6><p>${appointment.notes}</p></div>` : ''}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
+        // Simple status update function
+        function updateStatus(bookingId, newStatus) {
+            console.log('updateStatus called with:', bookingId, newStatus);
             
-            // Remove existing modal if any
-            const existingModal = document.getElementById('detailsModal');
-            if (existingModal) {
-                existingModal.remove();
+            const confirmMessage = `Are you sure you want to mark booking #${bookingId} as ${newStatus}?`;
+            console.log('Showing confirm dialog:', confirmMessage);
+            
+            if (!confirm(confirmMessage)) {
+                console.log('User cancelled the action');
+                return;
             }
-            
-            // Add new modal to body
-            document.body.insertAdjacentHTML('beforeend', detailsHtml);
-            
-            // Show modal
-            const modal = new bootstrap.Modal(document.getElementById('detailsModal'));
-            modal.show();
-            
-            // Remove modal from DOM after hiding
-            document.getElementById('detailsModal').addEventListener('hidden.bs.modal', function() {
-                this.remove();
+
+            console.log('User confirmed, proceeding with update...');
+            const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+            console.log('CSRF Token:', csrfToken);
+
+            fetch('{{ route("admin.bookings.update-status") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken
+                },
+                body: JSON.stringify({
+                    booking_id: bookingId,
+                    status: newStatus
+                })
+            })
+            .then(response => {
+                console.log('Response status:', response.status);
+                return response.json();
+            })
+            .then(data => {
+                console.log('Response data:', data);
+                if (data.success) {
+                    // Reload the page to show updated status
+                    window.location.reload();
+                } else {
+                    alert('Error updating booking status: ' + (data.message || 'Unknown error'));
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error updating booking status. Please try again.');
             });
         }
-
-        function getStatusBadge(status) {
-            const statusClasses = {
-                'pending': 'status-pending',
-                'confirmed': 'status-confirmed',
-                'completed': 'status-completed',
-                'cancelled': 'status-cancelled'
-            };
-
-            return `<span class="status-badge ${statusClasses[status] || 'status-pending'}">${status}</span>`;
-        }
-
-        // Auto-refresh every 30 seconds
-        setInterval(() => {
-            loadDashboardStats();
-        }, 30000);
     </script>
 </body>
 </html> 

@@ -433,7 +433,7 @@
             calendarDays.innerHTML = '';
 
             // Fetch booked dates for this month
-            fetch(`/appointments/booked-dates?year=${year}&month=${month + 1}`)
+            fetch(`/bookings/booked-dates?year=${year}&month=${month + 1}`)
                 .then(response => response.json())
                 .then(data => {
                     const bookedDates = data.success ? data.booked_dates : [];
@@ -665,24 +665,62 @@
         }
 
         function loadCalendarData() {
-            const year = currentDate.getFullYear();
-            const month = currentDate.getMonth() + 1;
-
-            fetch(`/appointments/calendar?year=${year}&month=${month}`)
+            console.log('📅 Loading calendar data for separate calendar page');
+            
+            // Use the working API endpoint instead of the broken one
+            fetch('/api/booked-dates')
                 .then(response => response.json())
                 .then(data => {
+                    console.log('📊 Calendar API Response:', data);
                     if (data.success) {
-                        updateCalendarDisplay(data.calendar_data);
+                        // Extract booked dates from the API response
+                        const bookedDates = data.booked_dates.filter(booking => booking.disabled).map(booking => booking.date);
+                        console.log('🔴 Booked dates found:', bookedDates);
+                        updateCalendarDisplay(bookedDates);
                     }
                 })
                 .catch(error => {
-                    console.error('Error loading calendar data:', error);
+                    console.error('❌ Error loading calendar data:', error);
                 });
         }
 
-        function updateCalendarDisplay(calendarData) {
-            // This function would update the calendar to show booked dates
-            // Implementation can be added later for visual indicators
+        function updateCalendarDisplay(bookedDates) {
+            console.log('🎨 Updating calendar display with booked dates:', bookedDates);
+            
+            // Find all calendar day elements and mark booked ones as red
+            const calendarDays = document.querySelectorAll('.calendar-day');
+            
+            calendarDays.forEach(dayElement => {
+                const dayText = dayElement.textContent.trim();
+                if (dayText && !isNaN(dayText)) {
+                    // Build the date string for this day
+                    const year = currentDate.getFullYear();
+                    const month = currentDate.getMonth();
+                    const day = parseInt(dayText);
+                    const dateString = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                    
+                    // Check if this date is booked
+                    if (bookedDates.includes(dateString)) {
+                        // Mark as booked with red styling
+                        dayElement.style.backgroundColor = '#ff0000';
+                        dayElement.style.color = '#ffffff';
+                        dayElement.style.cursor = 'not-allowed';
+                        dayElement.style.opacity = '0.8';
+                        dayElement.title = 'This date is fully booked';
+                        dayElement.innerHTML = dayText + '<span style="position:absolute;top:2px;right:4px;color:#ffffff;font-size:12px;">×</span>';
+                        console.log(`🔴 Marked ${dateString} as BOOKED`);
+                    } else {
+                        // Reset to available styling
+                        dayElement.style.backgroundColor = '';
+                        dayElement.style.color = '';
+                        dayElement.style.cursor = '';
+                        dayElement.style.opacity = '';
+                        dayElement.title = '';
+                        dayElement.innerHTML = dayText;
+                        console.log(`🟢 Marked ${dateString} as AVAILABLE`);
+                    }
+                }
+            });
         }
     </script>
 </body>

@@ -170,7 +170,7 @@
             showLoading(true);
 
             // Search for appointment
-            fetch('/appointments/search', {
+            fetch('/admin/bookings/search', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -246,7 +246,7 @@
 
             showLoading(true);
 
-            fetch('/appointments/update-status', {
+            fetch('/admin/bookings/update-status', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
