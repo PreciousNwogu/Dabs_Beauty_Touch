@@ -3705,8 +3705,8 @@ console.log('=== LOADING BOOKING FUNCTIONS ===');
         // Check if time and date were selected via modal
         const timeInput = document.getElementById('timeInput');
         // timeHidden already declared above
-        const bookingDate = document.getElementById('bookingDate');
-        const appointmentDate = document.getElementById('appointment_date');
+        // bookingDate already declared above
+        // appointmentDate already declared above
 
         if (!timeInput || !timeInput.value) {
             alert('Please select appointment time using the calendar modal');
