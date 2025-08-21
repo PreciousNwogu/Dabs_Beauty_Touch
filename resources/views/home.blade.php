@@ -3964,23 +3964,6 @@ console.log('=== LOADING BOOKING FUNCTIONS ===');
 
                 // Force browser to clear form cache
                 this.setAttribute('autocomplete', 'off');
-                const hiddenInputs = this.querySelectorAll('input[type="hidden"]:not([name="_token"])');
-                hiddenInputs.forEach(input => {
-                    input.value = '';
-                });
-
-                // Clear textarea
-                const textareas = this.querySelectorAll('textarea');
-                textareas.forEach(textarea => {
-                    textarea.value = '';
-                });
-
-                // Close the booking modal
-                const bookingModal = bootstrap.Modal.getInstance(document.getElementById('bookingModal'));
-                bookingModal.hide();
-
-                // Force browser to clear form cache
-                this.setAttribute('autocomplete', 'off');
             } else {
                 // Show error message
                 let errorMessage = 'Something went wrong. Please try again.';
