@@ -1363,7 +1363,7 @@
 
             // Set calendar to current month
             calendarCurrentDate = new Date(); // Current date
-            
+
             // Always fetch fresh data when calendar opens
             console.log('🔄 Fetching fresh booked dates...');
             fetchRealBookedDates();
@@ -3547,7 +3547,6 @@ console.log('=== LOADING BOOKING FUNCTIONS ===');
             });
         }
     }
-
     // Add event listener for time input
     document.addEventListener('DOMContentLoaded', function() {
         // Time input is now read-only and uses modal for selection
@@ -3578,9 +3577,9 @@ console.log('=== LOADING BOOKING FUNCTIONS ===');
             console.log('Form method:', this.method);
 
             // Log all form field values for debugging
-            const formData = new FormData(this);
+            const debugFormData = new FormData(this);
             console.log('=== FORM DATA ===');
-            for (let [key, value] of formData.entries()) {
+            for (let [key, value] of debugFormData.entries()) {
                 console.log(`${key}: ${value}`);
             }
 
@@ -3932,7 +3931,7 @@ console.log('=== LOADING BOOKING FUNCTIONS ===');
                     console.log('Bootstrap modal created:', !!successModal);
                     successModal.show();
                     console.log('Modal show() called');
-                    
+
                     // Refresh the calendar data since a new booking was added
                     console.log('🔄 Refreshing calendar data after successful booking');
                     setTimeout(() => {
