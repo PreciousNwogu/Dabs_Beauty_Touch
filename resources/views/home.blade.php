@@ -1185,10 +1185,23 @@
         .service-quick-btn {
             transition: all 0.3s ease;
             border-radius: 8px;
-            padding: 10px 15px;
+            padding: 12px 15px;
             font-size: 0.9rem;
             font-weight: 500;
             margin-bottom: 8px;
+            text-align: center;
+            min-height: 65px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .service-quick-btn .small {
+            font-size: 0.75rem;
+            margin-top: 4px;
+            opacity: 0.8;
+            font-weight: 400;
         }
 
         .service-quick-btn:hover {
@@ -2635,31 +2648,37 @@
                                 <div class="col-md-6 col-lg-4">
                                     <button type="button" class="btn btn-outline-primary w-100 service-quick-btn" onclick="selectQuickService('Weaving Crotchet')">
                                        Weaving Crotchet
+                                       <div class="small text-muted">Starting at $80</div>
                                     </button>
                                 </div>
                                 <div class="col-md-6 col-lg-4">
                                     <button type="button" class="btn btn-outline-primary w-100 service-quick-btn" onclick="selectQuickService('Single Crotchet')">
                                         Single Crotchet
+                                        <div class="small text-muted">Starting at $100</div>
                                     </button>
                                 </div>
                                 <div class="col-md-6 col-lg-4">
                                     <button type="button" class="btn btn-outline-primary w-100 service-quick-btn" onclick="selectQuickService('Natural Hair Twist')">
                                         Natural Hair Twist
+                                        <div class="small text-muted">Starting at $50</div>
                                     </button>
                                 </div>
                                 <div class="col-md-6 col-lg-4">
                                     <button type="button" class="btn btn-outline-primary w-100 service-quick-btn" onclick="selectQuickService('Weaving No-Extension')">
                                         Weaving No-Extension
+                                        <div class="small text-muted">Starting at $30</div>
                                     </button>
                                 </div>
                                 <div class="col-md-6 col-lg-4">
                                     <button type="button" class="btn btn-outline-primary w-100 service-quick-btn" onclick="selectQuickService('Kinky Twist')">
                                         Kinky Twist
+                                        <div class="small text-muted">Starting at $90</div>
                                     </button>
                                 </div>
                                 <div class="col-md-6 col-lg-4">
-                                    <button type="button" class="btn btn-outline-primary w-100 service-quick-btn" onclick="selectQuickService('wist Braids')">
+                                    <button type="button" class="btn btn-outline-primary w-100 service-quick-btn" onclick="selectQuickService('Twist Braids')">
                                         Twist Braids
+                                        <div class="small text-muted">Starting at $100</div>
                                     </button>
                                 </div>
                             </div>
@@ -2668,12 +2687,21 @@
                         <!-- Custom Service Input -->
                         <div class="col-12 mt-4">
                             <h6 class="fw-bold mb-3">Custom Service</h6>
+                            <div class="alert alert-info mb-3" style="border-left: 4px solid #17a2b8;">
+                                <h6 class="fw-bold mb-2">
+                                    <i class="bi bi-info-circle me-2"></i>Custom Service Pricing
+                                </h6>
+                                <p class="mb-1">
+                                    <i class="bi bi-info-circle me-2"></i>Prices for custom services may vary based on hair length, thickness, and design complexity.
+                                </p>
+
+                            </div>
                             <div class="form-group">
                                 <label for="customServiceInput" class="form-label">Enter your desired service</label>
                                 <input type="text" class="form-control" id="customServiceInput" placeholder="e.g., Goddess Braids, Box Braids, Passion Twists, etc." maxlength="255">
                                 <small class="form-text text-muted">
                                     <i class="bi bi-info-circle me-1"></i>
-                                    Describe the service you want if it's not listed above
+                                    Describe the service you want if it's not listed above. Final pricing will be confirmed during consultation.
                                 </small>
                             </div>
                             <button type="button" class="btn btn-success mt-2" onclick="selectCustomService()">
