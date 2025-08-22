@@ -54,6 +54,8 @@ services:
         value: info@dabsbeautytouch.com
       - key: BOOKING_NOTIFICATION_EMAIL
         value: info@dabsbeautytouch.com
+      - key: DB_CONNECTION
+        value: pgsql
       - key: DB_HOST
         fromDatabase:
           name: dabs-beauty-touch-db
