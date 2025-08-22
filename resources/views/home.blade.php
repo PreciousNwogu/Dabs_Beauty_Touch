@@ -3928,37 +3928,126 @@ console.log('=== LOADING BOOKING FUNCTIONS ===');
                 console.log('Date:', appointmentDate);
                 console.log('Time:', appointmentTime);
 
-                // Check if elements exist before updating
-                const bookingIdElement = document.getElementById('successBookingId');
-                const confirmationCodeElement = document.getElementById('successConfirmationCode');
-                const serviceElement = document.getElementById('successService');
-                const dateElement = document.getElementById('successAppointmentDate');
-                const timeElement = document.getElementById('successAppointmentTime');
+                // Show the success modal first
+                // Show the AJAX success modal using Bootstrap's JS API
+const successModalElement = document.getElementById('ajaxSuccessModal');
+if (successModalElement) {
+    // Update modal content with booking details
+    document.getElementById('successBookingId').textContent = bookingId;
+    document.getElementById('successConfirmationCode').textContent = confirmationCode;
+    if (document.getElementById('successService')) {
+        document.getElementById('successService').textContent = service;
+    }
+    if (document.getElementById('successDate')) {
+        document.getElementById('successDate').textContent = appointmentDate;
+    }
+    if (document.getElementById('successTime')) {
+        document.getElementById('successTime').textContent = appointmentTime;
+    }
+    // Show modal using Bootstrap 5
+    let modalInstance = bootstrap.Modal.getOrCreateInstance(successModalElement);
+    modalInstance.show();
+    console.log('AJAX Success modal shown!');
+} else {
+    console.error('CRITICAL: ajaxSuccessModal not found!');
+}
+                // Debug: Check all elements with modal in ID
+                console.log('All elements with "modal" in ID:',
+                    Array.from(document.querySelectorAll('[id*="modal"]')).map(el => ({
+                        id: el.id,
+                        tagName: el.tagName,
+                        classList: el.className
+                    })));
 
-                console.log('Elements found:', {
-                    bookingId: !!bookingIdElement,
-                    confirmationCode: !!confirmationCodeElement,
-                    service: !!serviceElement,
-                    date: !!dateElement,
-                    time: !!timeElement
+                // Debug: Check all elements with "Success" in ID
+                console.log('All elements with "Success" in ID:',
+                    Array.from(document.querySelectorAll('[id*="Success"]')).map(el => ({
+                        id: el.id,
+                        tagName: el.tagName,
+                        classList: el.className
+                    })));
+
+                // Try multiple ways to find the modal
+                const successModalElement = document.getElementById('ajaxSuccessModal');
+                const successModalQuery = document.querySelector('#ajaxSuccessModal');
+                const successModalByClass = document.querySelector('.modal#ajaxSuccessModal');
+
+                console.log('Modal search results:');
+                console.log('- getElementById:', !!successModalElement);
+                console.log('- querySelector:', !!successModalQuery);
+                console.log('- querySelector with class:', !!successModalByClass);
+
+                if (!successModalElement) {
+                    console.error('CRITICAL: ajaxSuccessModal not found!');
+                    console.log('Searching for ANY modal elements...');
+                    const allModals = document.querySelectorAll('.modal');
+                    console.log('Found modals:', Array.from(allModals).map(modal => ({
+                        id: modal.id,
+                        classes: modal.className
+                    })));
+                    return; // Exit early to debug
+                }
+
+                console.log('Success modal element found:', !!successModalElement);
+                console.log('Modal element details:', {
+                    id: successModalElement.id,
+                    tagName: successModalElement.tagName,
+                    classList: successModalElement.className,
+                    style: successModalElement.style.cssText,
+                    parentElement: successModalElement.parentElement?.tagName
                 });
 
-                if (bookingIdElement) bookingIdElement.textContent = bookingId;
-                if (confirmationCodeElement) confirmationCodeElement.textContent = confirmationCode;
-                if (serviceElement) serviceElement.textContent = service;
-                if (dateElement) dateElement.textContent = appointmentDate;
-                if (timeElement) timeElement.textContent = appointmentTime;
-
-                // Show the success modal
-                console.log('=== SHOWING SUCCESS MODAL ===');
-                const successModalElement = document.getElementById('successModal');
-                console.log('Success modal element found:', !!successModalElement);
-
                 if (successModalElement) {
+                    console.log('Creating Bootstrap modal...');
                     const successModal = new bootstrap.Modal(successModalElement);
                     console.log('Bootstrap modal created:', !!successModal);
+
+                    // Update content before showing modal
+                    console.log('Updating modal content before show...');
+                    const bookingIdElement = document.getElementById('successBookingId');
+                    const confirmationCodeElement = document.getElementById('successConfirmationCode');
+                    const serviceElement = document.getElementById('successService');
+                    const dateElement = document.getElementById('successAppointmentDate');
+                    const timeElement = document.getElementById('successAppointmentTime');
+
+                    console.log('Elements found before modal show:', {
+                        bookingId: !!bookingIdElement,
+                        confirmationCode: !!confirmationCodeElement,
+                        service: !!serviceElement,
+                        date: !!dateElement,
+                        time: !!timeElement
+                    });
+
+                    // Update modal content with actual booking data
+                    if (bookingIdElement) {
+                        bookingIdElement.textContent = bookingId;
+                        console.log('Updated booking ID to:', bookingId);
+                    }
+                    if (confirmationCodeElement) {
+                        confirmationCodeElement.textContent = confirmationCode;
+                        console.log('Updated confirmation code to:', confirmationCode);
+                    }
+                    if (serviceElement) {
+                        serviceElement.textContent = service;
+                        console.log('Updated service to:', service);
+                    }
+                    if (dateElement) {
+                        dateElement.textContent = appointmentDate;
+                        console.log('Updated date to:', appointmentDate);
+                    }
+                    if (timeElement) {
+                        timeElement.textContent = appointmentTime;
+                        console.log('Updated time to:', appointmentTime);
+                    }
+
+                    console.log('Calling modal.show()...');
                     successModal.show();
                     console.log('Modal show() called');
+
+                    // Add event listener to ensure modal is shown
+                    successModalElement.addEventListener('shown.bs.modal', function () {
+                        console.log('Modal is now fully visible!');
+                    });
 
                     // Refresh the calendar data since a new booking was added
                     console.log('🔄 Refreshing calendar data after successful booking');
@@ -3967,6 +4056,8 @@ console.log('=== LOADING BOOKING FUNCTIONS ===');
                     }, 500); // Small delay to ensure booking is saved
                 } else {
                     console.error('Success modal element not found!');
+                    console.error('Available elements with ID containing "modal":',
+                        Array.from(document.querySelectorAll('[id*="modal"]')).map(el => el.id));
                 }
 
                 // Clear the form completely
@@ -4336,7 +4427,7 @@ console.log('=== LOADING BOOKING FUNCTIONS ===');
     </div>
 
 <!-- Success Modal -->
-<div class="modal fade" id="successModal" tabindex="-1" aria-labelledby="successModalLabel" aria-hidden="true">
+<div class="modal fade" id="ajaxSuccessModal" tabindex="-1" aria-labelledby="ajaxSuccessModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered" style="max-width: 500px;">
         <div class="modal-content" style="border-radius: 12px; border: none; background: #4a5568; color: white; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);">
             <!-- Header with Site Icon -->
@@ -4416,6 +4507,11 @@ console.log('=== LOADING BOOKING FUNCTIONS ===');
                 <p style="color: #cbd5e0; font-size: 14px; margin-bottom: 20px; line-height: 1.5;">
                     We'll confirm your appointment once payment is received!
                 </p>
+
+                <!-- OK Button to close modal -->
+                <div class="text-center mb-2">
+                    <button type="button" class="btn btn-info px-4 py-2" data-bs-dismiss="modal" style="background-color: #17a2b8; border-color: #17a2b8; font-weight: 600;">OK</button>
+                </div>
 
                 <!-- Don't Show Again Checkbox -->
                 <div style="margin-bottom: 20px;">

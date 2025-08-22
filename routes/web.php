@@ -188,11 +188,11 @@ Route::get('/admin/login', function () {
 Route::get('/check-db', function () {
     $connection = config('database.default');
     $dbName = config("database.connections.{$connection}.database");
-    
+
     try {
         $userCount = \App\Models\User::count();
         $adminCount = \App\Models\User::where('is_admin', true)->count();
-        
+
         return [
             'database_connection' => $connection,
             'database_name' => $dbName,
