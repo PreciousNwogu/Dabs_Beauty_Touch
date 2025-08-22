@@ -3903,7 +3903,7 @@ console.log('=== LOADING BOOKING FUNCTIONS ===');
                 // Check if elements exist before updating
                 const bookingIdElement = document.getElementById('successBookingId');
                 const confirmationCodeElement = document.getElementById('successConfirmationCode');
-                const serviceElement = document.getElementByIdPP('successService');
+                const serviceElement = document.getElementById('successService');
                 const dateElement = document.getElementById('successAppointmentDate');
                 const timeElement = document.getElementById('successAppointmentTime');
 
