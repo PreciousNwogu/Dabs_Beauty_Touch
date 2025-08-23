@@ -1,3 +1,52 @@
+<script>
+function selectQuickService(serviceName) {
+    const selectedServiceInput = document.getElementById('selectedService');
+    const serviceDisplayInput = document.getElementById('serviceDisplay');
+    if (selectedServiceInput) {
+        selectedServiceInput.value = serviceName;
+    }
+    if (serviceDisplayInput) {
+        serviceDisplayInput.value = serviceName;
+    }
+    document.querySelectorAll('.service-quick-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    const buttons = Array.from(document.querySelectorAll('.service-quick-btn'));
+    const selectedBtn = buttons.find(btn => btn.textContent.trim().startsWith(serviceName));
+    if (selectedBtn) {
+        selectedBtn.classList.add('active');
+    }
+    document.getElementById('bookingModalLabel').textContent = `Book ${serviceName}`;
+    const serviceModal = bootstrap.Modal.getInstance(document.getElementById('serviceSelectionModal'));
+    if (serviceModal) serviceModal.hide();
+    console.log('Quick service selected:', serviceName);
+}
+
+function selectCustomService() {
+    const customInput = document.getElementById('customServiceInput');
+    const customService = customInput.value.trim();
+    if (!customService) {
+        alert('Please enter a service name');
+        return;
+    }
+    const selectedServiceInput = document.getElementById('selectedService');
+    const serviceDisplayInput = document.getElementById('serviceDisplay');
+    if (selectedServiceInput) {
+        selectedServiceInput.value = customService;
+    }
+    if (serviceDisplayInput) {
+        serviceDisplayInput.value = customService;
+    }
+    document.querySelectorAll('.service-quick-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    document.getElementById('bookingModalLabel').textContent = `Book ${customService}`;
+    const serviceModal = bootstrap.Modal.getInstance(document.getElementById('serviceSelectionModal'));
+    if (serviceModal) serviceModal.hide();
+    customInput.value = '';
+    console.log('Custom service selected:', customService);
+}
+</script>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -4742,7 +4791,13 @@ function clearImagePreview() {
     if (fileName) fileName.textContent = '';
 }
 </script>
-
+<script>
+// Make openServiceSelectionModal globally available
+function openServiceSelectionModal() {
+    const serviceModal = new bootstrap.Modal(document.getElementById('serviceSelectionModal'));
+    serviceModal.show();
+}
+</script>
 </body>
 </html>
 
