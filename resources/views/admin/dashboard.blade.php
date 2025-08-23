@@ -144,6 +144,22 @@
             color: white;
             border: none;
             padding: 15px;
+            position: relative;
+        }
+        
+        .table thead th.cursor-pointer::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: transparent;
+            transition: background-color 0.3s ease;
+        }
+        
+        .table thead th.cursor-pointer:hover::after {
+            background: #ff6600;
         }
 
         .table tbody td {
@@ -157,6 +173,26 @@
 
         .cursor-pointer {
             cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .cursor-pointer:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+            transform: translateY(-1px);
+        }
+        
+        .table th.cursor-pointer {
+            position: relative;
+            user-select: none;
+        }
+        
+        .table th.cursor-pointer i {
+            margin-left: 5px;
+            font-size: 0.8rem;
+        }
+        
+        .table th.cursor-pointer:hover i {
+            color: #ff6600 !important;
         }
 
         .timeline-item {
@@ -391,10 +427,16 @@
                         <option value="Smedium Boho Braids">Smedium Boho Braids</option>
                     </select>
                 </div>
-                <div class="col-md-3">
+                <div class="col-md-2">
                     <label class="form-label">&nbsp;</label>
                     <button class="btn btn-primary w-100" type="button" onclick="applyFilters()">
                         <i class="bi bi-search me-2"></i>Filter
+                    </button>
+                </div>
+                <div class="col-md-1">
+                    <label class="form-label">&nbsp;</label>
+                    <button class="btn btn-outline-secondary w-100" type="button" onclick="clearFilters()" title="Clear all filters">
+                        <i class="bi bi-x-circle"></i>
                     </button>
                 </div>
             </div>
@@ -405,11 +447,20 @@
             <div class="dashboard-header d-flex justify-content-between align-items-center">
                 <div>
                     <h3 class="mb-0">Appointments</h3>
-                    @if($bookings->hasPages())
-                        <small class="text-white-50">
-                            Page {{ $bookings->currentPage() }} of {{ $bookings->lastPage() }} ({{ $bookings->total() }} total)
-                        </small>
-                    @endif
+                    <div class="d-flex align-items-center gap-3">
+                        @if($bookings->hasPages())
+                            <small class="text-white-50">
+                                Page {{ $bookings->currentPage() }} of {{ $bookings->lastPage() }} ({{ $bookings->total() }} total)
+                            </small>
+                        @endif
+                        @if(request('sort_by'))
+                            <small class="text-white-50">
+                                <i class="bi bi-sort-{{ request('sort_order') == 'asc' ? 'up' : 'down' }} me-1"></i>
+                                Sorted by {{ ucfirst(str_replace('_', ' ', request('sort_by'))) }} 
+                                ({{ request('sort_order') == 'asc' ? 'A-Z' : 'Z-A' }})
+                            </small>
+                        @endif
+                    </div>
                 </div>
                 <a href="{{ route('admin.complete-service') }}" class="btn btn-success">
                     <i class="bi bi-check-circle me-2"></i>Complete Service
@@ -420,13 +471,56 @@
                     <table class="table table-hover">
                         <thead>
                             <tr>
-                                <th>Booking ID</th>
-                                <th>Customer</th>
+                                <th class="cursor-pointer" onclick="sortTable('id')">
+                                    Booking ID
+                                    @if(request('sort_by') == 'id')
+                                        <i class="bi bi-arrow-{{ request('sort_order') == 'asc' ? 'up' : 'down' }}"></i>
+                                    @else
+                                        <i class="bi bi-arrow-down-up text-muted"></i>
+                                    @endif
+                                </th>
+                                <th class="cursor-pointer" onclick="sortTable('name')">
+                                    Customer Name
+                                    @if(request('sort_by') == 'name')
+                                        <i class="bi bi-arrow-{{ request('sort_order') == 'asc' ? 'up' : 'down' }}"></i>
+                                    @else
+                                        <i class="bi bi-arrow-down-up text-muted"></i>
+                                    @endif
+                                </th>
                                 <th>Contact</th>
-                                <th>Service</th>
-                                <th>Date & Time</th>
+                                <th class="cursor-pointer" onclick="sortTable('service')">
+                                    Service
+                                    @if(request('sort_by') == 'service')
+                                        <i class="bi bi-arrow-{{ request('sort_order') == 'asc' ? 'up' : 'down' }}"></i>
+                                    @else
+                                        <i class="bi bi-arrow-down-up text-muted"></i>
+                                    @endif
+                                </th>
+                                <th class="cursor-pointer" onclick="sortTable('appointment_date')">
+                                    Appointment Date
+                                    @if(request('sort_by') == 'appointment_date')
+                                        <i class="bi bi-arrow-{{ request('sort_order') == 'asc' ? 'up' : 'down' }}"></i>
+                                    @else
+                                        <i class="bi bi-arrow-down-up text-muted"></i>
+                                    @endif
+                                </th>
+                                <th class="cursor-pointer" onclick="sortTable('appointment_time')">
+                                    Appointment Time
+                                    @if(request('sort_by') == 'appointment_time')
+                                        <i class="bi bi-arrow-{{ request('sort_order') == 'asc' ? 'up' : 'down' }}"></i>
+                                    @else
+                                        <i class="bi bi-arrow-down-up text-muted"></i>
+                                    @endif
+                                </th>
                                 <th>Sample Image</th>
-                                <th>Status</th>
+                                <th class="cursor-pointer" onclick="sortTable('status')">
+                                    Status
+                                    @if(request('sort_by') == 'status')
+                                        <i class="bi bi-arrow-{{ request('sort_order') == 'asc' ? 'up' : 'down' }}"></i>
+                                    @else
+                                        <i class="bi bi-arrow-down-up text-muted"></i>
+                                    @endif
+                                </th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
@@ -461,8 +555,26 @@
                                             @endif
                                         </td>
                                         <td>
-                                            <div>{{ $booking->appointment_date?->format('M d, Y') }}</div>
-                                            <small class="text-muted">{{ $booking->appointment_time }}</small>
+                                            <div>
+                                                @if($booking->appointment_date)
+                                                    {{ $booking->appointment_date->format('M d, Y') }}
+                                                @else
+                                                    <span class="text-muted">No date</span>
+                                                @endif
+                                            </div>
+                                            <small class="text-muted">
+                                                @if($booking->appointment_date)
+                                                    {{ $booking->appointment_date->format('l') }}
+                                                @endif
+                                            </small>
+                                        </td>
+                                        <td>
+                                            <div>{{ $booking->appointment_time }}</div>
+                                            <small class="text-muted">
+                                                @if($booking->appointment_date)
+                                                    {{ $booking->appointment_date->format('l') }}
+                                                @endif
+                                            </small>
                                         </td>
                                         <td>
                                             @if($booking->sample_picture)
@@ -508,7 +620,7 @@
                                 @endforeach
                             @else
                                 <tr>
-                                    <td colspan="8" class="text-center">No appointments found.</td>
+                                    <td colspan="9" class="text-center">No appointments found.</td>
                                 </tr>
                             @endif
                         </tbody>
@@ -684,22 +796,189 @@
             console.log('Dashboard loaded');
         });
 
-        // Simple filter function that reloads the page with query parameters
+        // Function to sort table columns
+        function sortTable(column) {
+            const currentSortBy = '{{ request('sort_by', 'appointment_date') }}';
+            const currentSortOrder = '{{ request('sort_order', 'desc') }}';
+            
+            // Determine new sort order
+            let newSortOrder = 'asc';
+            if (currentSortBy === column && currentSortOrder === 'asc') {
+                newSortOrder = 'desc';
+            }
+            
+            // Show loading state
+            const tableBody = document.getElementById('appointmentsTable');
+            tableBody.innerHTML = '<tr><td colspan="9" class="text-center"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div></td></tr>';
+            
+            // Build query parameters
+            const params = new URLSearchParams(window.location.search);
+            params.set('sort_by', column);
+            params.set('sort_order', newSortOrder);
+            
+            // Update URL without reloading
+            const baseUrl = window.location.pathname;
+            const newUrl = `${baseUrl}?${params.toString()}`;
+            window.history.pushState({}, '', newUrl);
+            
+            // Fetch sorted data via AJAX
+            fetch(newUrl)
+                .then(response => response.text())
+                .then(html => {
+                    // Create a temporary div to parse the HTML
+                    const tempDiv = document.createElement('div');
+                    tempDiv.innerHTML = html;
+                    
+                    // Extract the table body content
+                    const newTableBody = tempDiv.querySelector('#appointmentsTable');
+                    if (newTableBody) {
+                        tableBody.innerHTML = newTableBody.innerHTML;
+                    }
+                    
+                    // Update sorting indicators in headers
+                    updateSortingIndicators(column, newSortOrder);
+                    
+                    // Update pagination info if it exists
+                    const paginationInfo = tempDiv.querySelector('.pagination-info');
+                    if (paginationInfo) {
+                        const currentPaginationInfo = document.querySelector('.pagination-info');
+                        if (currentPaginationInfo) {
+                            currentPaginationInfo.innerHTML = paginationInfo.innerHTML;
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('Error sorting table:', error);
+                    // Fallback to page reload if AJAX fails
+                    window.location.href = newUrl;
+                });
+        }
+        
+        // Function to update sorting indicators
+        function updateSortingIndicators(column, order) {
+            // Remove all sorting indicators
+            document.querySelectorAll('.table th.cursor-pointer i').forEach(icon => {
+                icon.className = 'bi bi-arrow-down-up text-muted';
+            });
+            
+            // Add sorting indicator to the clicked column
+            const headerCell = document.querySelector(`th[onclick="sortTable('${column}')"]`);
+            if (headerCell) {
+                const icon = headerCell.querySelector('i');
+                if (icon) {
+                    icon.className = `bi bi-arrow-${order === 'asc' ? 'up' : 'down'}`;
+                }
+            }
+        }
+
+        // Simple filter function that updates the table without page reload
         function applyFilters() {
             const statusFilter = document.getElementById('statusFilter').value;
             const dateFilter = document.getElementById('dateFilter').value;
             const serviceFilter = document.getElementById('serviceFilter').value;
+
+            // Show loading state
+            const tableBody = document.getElementById('appointmentsTable');
+            tableBody.innerHTML = '<tr><td colspan="9" class="text-center"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div></td></tr>';
 
             // Build query parameters
             const params = new URLSearchParams();
             if (statusFilter) params.append('status', statusFilter);
             if (dateFilter) params.append('date', dateFilter);
             if (serviceFilter) params.append('service', serviceFilter);
+            
+            // Preserve current sorting
+            const currentSortBy = '{{ request('sort_by', 'appointment_date') }}';
+            const currentSortOrder = '{{ request('sort_order', 'desc') }}';
+            params.set('sort_by', currentSortBy);
+            params.set('sort_order', currentSortOrder);
 
-            // Reload page with filters
+            // Update URL without reloading
             const baseUrl = window.location.pathname;
-            const newUrl = params.toString() ? `${baseUrl}?${params.toString()}` : baseUrl;
-            window.location.href = newUrl;
+            const newUrl = `${baseUrl}?${params.toString()}`;
+            window.history.pushState({}, '', newUrl);
+
+            // Fetch filtered data via AJAX
+            fetch(newUrl)
+                .then(response => response.text())
+                .then(html => {
+                    // Create a temporary div to parse the HTML
+                    const tempDiv = document.createElement('div');
+                    tempDiv.innerHTML = html;
+                    
+                    // Extract the table body content
+                    const newTableBody = tempDiv.querySelector('#appointmentsTable');
+                    if (newTableBody) {
+                        tableBody.innerHTML = newTableBody.innerHTML;
+                    }
+                    
+                    // Update pagination info if it exists
+                    const paginationInfo = tempDiv.querySelector('.pagination-info');
+                    if (paginationInfo) {
+                        const currentPaginationInfo = document.querySelector('.pagination-info');
+                        if (currentPaginationInfo) {
+                            currentPaginationInfo.innerHTML = paginationInfo.innerHTML;
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('Error applying filters:', error);
+                    // Fallback to page reload if AJAX fails
+                    window.location.href = newUrl;
+                });
+        }
+
+        // Function to clear all filters
+        function clearFilters() {
+            // Clear filter inputs
+            document.getElementById('statusFilter').value = '';
+            document.getElementById('dateFilter').value = '';
+            document.getElementById('serviceFilter').value = '';
+            
+            // Show loading state
+            const tableBody = document.getElementById('appointmentsTable');
+            tableBody.innerHTML = '<tr><td colspan="9" class="text-center"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div></td></tr>';
+            
+            // Build query parameters with only sorting
+            const params = new URLSearchParams();
+            const currentSortBy = '{{ request('sort_by', 'appointment_date') }}';
+            const currentSortOrder = '{{ request('sort_order', 'desc') }}';
+            params.set('sort_by', currentSortBy);
+            params.set('sort_order', currentSortOrder);
+            
+            // Update URL without reloading
+            const baseUrl = window.location.pathname;
+            const newUrl = `${baseUrl}?${params.toString()}`;
+            window.history.pushState({}, '', newUrl);
+
+            // Fetch unfiltered data via AJAX
+            fetch(newUrl)
+                .then(response => response.text())
+                .then(html => {
+                    // Create a temporary div to parse the HTML
+                    const tempDiv = document.createElement('div');
+                    tempDiv.innerHTML = html;
+                    
+                    // Extract the table body content
+                    const newTableBody = tempDiv.querySelector('#appointmentsTable');
+                    if (newTableBody) {
+                        tableBody.innerHTML = newTableBody.innerHTML;
+                    }
+                    
+                    // Update pagination info if it exists
+                    const paginationInfo = tempDiv.querySelector('.pagination-info');
+                    if (paginationInfo) {
+                        const currentPaginationInfo = document.querySelector('.pagination-info');
+                        if (currentPaginationInfo) {
+                            currentPaginationInfo.innerHTML = paginationInfo.innerHTML;
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('Error clearing filters:', error);
+                    // Fallback to page reload if AJAX fails
+                    window.location.href = newUrl;
+                });
         }
 
         function viewBookingDetails(bookingId) {
