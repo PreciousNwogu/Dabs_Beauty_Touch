@@ -2358,12 +2358,12 @@
                         <div class="col-auto text-start">
                             <span style="font-size: 1.2rem; margin-right: 4px;">&#128222;</span>
                             <span style="font-weight: bold; color: #001f3f;">Phone:</span>
-                            <a href="tel:3432548848" style="color: #007bff; text-decoration: underline;">(343) 254-8848</a>
+                            <a href="tel:+13432458848" style="color: #007bff; text-decoration: underline;">(+1)343-245-8848</a>
                         </div>
                         <div class="col-auto text-start">
                             <span style="font-size: 1.2rem; margin-right: 4px;">&#128231;</span>
                             <span style="font-weight: bold; color: #001f3f;">Email:</span>
-                            <a href="mailto:info@dabsbeautytouch.com" style="color: #007bff; text-decoration: underline;">info@dabsbeautytouch.com</a>
+                            <a href="mailto:infor@dabsbeautytouch" style="color: #007bff; text-decoration: underline;">infor@dabsbeautytouch</a>
                         </div>
                     </div>
                     <p class="text-muted mb-3" style="font-size: 1rem;">We'll confirm your appointment once payment is received!</p>
@@ -2838,8 +2838,8 @@
                                                         <i class="bi bi-envelope-fill" style="color: #ff6600; font-size: 1.2rem; margin-right: 8px;"></i>
                                                         <strong style="color: #030f68;">Email:</strong>
                                                     </div>
-                                                    <a href="mailto:info@dabsbeautytouch.com" style="color: #ff6600; text-decoration: none; font-weight: 600; font-size: 1.1rem;">
-                                                        info@dabsbeautytouch.com
+                                                    <a href="mailto:infor@dabsbeautytouch" style="color: #ff6600; text-decoration: none; font-weight: 600; font-size: 1.1rem;">
+                                                        infor@dabsbeautytouch
                                                     </a>
                                                 </div>
                                             </div>
@@ -2981,12 +2981,12 @@
                                         <div class="mb-3">
                                             <i class="bi bi-telephone-fill text-warning me-2"></i>
                                             <strong>Phone:</strong>
-                                            <a href="tel:+1234567890" style="color: #ff6600; text-decoration: none;">(123) 456-7890</a>
+                                            <a href="tel:+13432458848" style="color: #ff6600; text-decoration: none;">(+1)343-245-8848</a>
                                         </div>
                                         <div class="mb-3">
                                             <i class="bi bi-envelope-fill text-warning me-2"></i>
                                             <strong>Email:</strong>
-                                            <a href="mailto:info@dabsbeautytouch.com" style="color: #ff6600; text-decoration: none;">info@dabsbeautytouch.com</a>
+                                            <a href="mailto:infor@dabsbeautytouch" style="color: #ff6600; text-decoration: none;">infor@dabsbeautytouch</a>
                                         </div>
                                         <div class="mb-3">
                                             <i class="bi bi-clock-fill text-warning me-2"></i>
@@ -3130,8 +3130,8 @@
                         <div class="col-md-6 p-5 d-flex flex-column justify-content-center" style="border-right:1px solid #e3eafc;">
                             <h2 class="section-title mb-3" style="font-size:2.2rem; font-weight:700;">Contact Information</h2>
                             <ul class="list-unstyled mb-4" style="font-size:1.08rem;">
-                                <li class="mb-3"><i class="bi bi-arrow-right-circle-fill text-primary me-2"></i><strong>Phone:</strong> <a href="tel:+1234567890" style="color:#030f68; text-decoration:none;">(123) 456-7890</a></li>
-                                <li class="mb-3"><i class="bi bi-arrow-right-circle-fill text-warning me-2"></i><strong>Email:</strong> <a href="mailto:info@dabsbeautytouch.com" style="color:#ff6600; text-decoration:none;">info@dabsbeautytouch.com</a></li>
+                                <li class="mb-3"><i class="bi bi-arrow-right-circle-fill text-primary me-2"></i><strong>Phone:</strong> <a href="tel:+13432458848" style="color:#030f68; text-decoration:none;">(+1)343-245-8848</a></li>
+                                <li class="mb-3"><i class="bi bi-arrow-right-circle-fill text-warning me-2"></i><strong>Email:</strong> <a href="mailto:infor@dabsbeautytouch" style="color:#ff6600; text-decoration:none;">infor@dabsbeautytouch</a></li>
                                 <li class="mb-3"><i class="bi bi-arrow-right-circle-fill text-danger me-2"></i><strong>Address:</strong> 123 Beauty Street, Hair City, HC 12345</li>
                                 <li class="mb-3"><i class="bi bi-arrow-right-circle-fill text-success me-2"></i><strong>Hours:</strong>
                                     <ul class="ps-4 mb-0" style="font-size:0.98rem;">
@@ -3284,7 +3284,7 @@
         depositModal.hide();
 
         // Show contact information
-        alert('Please contact us at:\n\nPhone: (123) 456-7890\nEmail: info@dabsbeautytouch.com\nWhatsApp: Available\n\nWe will provide you with payment details and confirm your appointment once payment is received.');
+    alert('Please contact us at:\n\nPhone: (+1)343-245-8848\nEmail: infor@dabsbeautytouch\nWhatsApp: Available\n\nWe will provide you with payment details and confirm your appointment once payment is received.');
     }
 
     // Function to scroll to services section
@@ -3813,6 +3813,22 @@ console.log('=== LOADING BOOKING FUNCTIONS ===');
         submitBtn.disabled = true;
 
         // Get form data
+        // Ensure a hidden 'length' field mirrors selected hair_length radios for server-side compatibility
+        let selectedLengthInput = this.querySelector('input[name="length"]');
+        const selectedHairLength = (function(){
+            const r = document.getElementsByName('hair_length');
+            for (let i=0;i<r.length;i++) if (r[i].checked) return r[i].value;
+            return null;
+        })();
+        if (!selectedLengthInput) {
+            selectedLengthInput = document.createElement('input');
+            selectedLengthInput.type = 'hidden';
+            selectedLengthInput.name = 'length';
+            selectedLengthInput.id = 'length_hidden_field';
+            this.appendChild(selectedLengthInput);
+        }
+        if (selectedHairLength) selectedLengthInput.value = selectedHairLength;
+
         const formData = new FormData(this);
 
         // Log form data for debugging
@@ -3909,15 +3925,93 @@ console.log('=== LOADING BOOKING FUNCTIONS ===');
             console.log('Response ok:', response.ok);
             console.log('Response headers:', response.headers);
 
-            // For debugging - log the raw response text
+            // For debugging - log the raw response text and parse robustly even if PHP warnings/HTML are present
             return response.text().then(text => {
                 console.log('Raw response:', text);
+
+                // Try normal JSON parse first
                 try {
                     const data = JSON.parse(text);
                     return { ok: response.ok, status: response.status, data: data };
                 } catch (e) {
-                    console.error('Failed to parse JSON response:', e);
-                    throw new Error(`Server returned invalid JSON. Status: ${response.status}, Response: ${text.substring(0, 200)}...`);
+                    console.warn('Initial JSON.parse failed, attempting to extract JSON from mixed response');
+
+                    // Attempt 1: extract substring between first '{' and last '}'
+                    const firstBrace = text.indexOf('{');
+                    const lastBrace = text.lastIndexOf('}');
+                    if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+                        const maybeJson = text.substring(firstBrace, lastBrace + 1);
+                        try {
+                            const data = JSON.parse(maybeJson);
+                            console.info('Recovered JSON by slicing raw response');
+                            return { ok: response.ok, status: response.status, data: data };
+                        } catch (e2) {
+                            console.warn('Parsing sliced substring failed:', e2);
+                        }
+                    }
+
+                    // Attempt 2: strip HTML tags then search again
+                    try {
+                        const stripped = text.replace(/<[^>]+>/g, '');
+                        const sFirst = stripped.indexOf('{');
+                        const sLast = stripped.lastIndexOf('}');
+                        if (sFirst !== -1 && sLast !== -1 && sLast > sFirst) {
+                            const maybe2 = stripped.substring(sFirst, sLast + 1);
+                            const data = JSON.parse(maybe2);
+                            console.info('Recovered JSON by stripping HTML tags');
+                            return { ok: response.ok, status: response.status, data: data };
+                        }
+                    } catch (e3) {
+                        console.warn('Stripping HTML and parsing failed:', e3);
+                    }
+
+                    // Attempt 3: parse returned HTML and look for booking elements (server-rendered success modal)
+                    try {
+                        const parser = new DOMParser();
+                        const doc = parser.parseFromString(text, 'text/html');
+
+                        // First try AJAX success modal IDs
+                        const bidEl = doc.getElementById('successBookingId');
+                        const confEl = doc.getElementById('successConfirmationCode');
+                        const dateEl = doc.getElementById('successAppointmentDate');
+                        const timeEl = doc.getElementById('successAppointmentTime');
+
+                        if (bidEl || confEl) {
+                            const recovered = {
+                                success: true,
+                                appointment: {
+                                    booking_id: bidEl ? bidEl.textContent.trim() : null,
+                                    confirmation_code: confEl ? confEl.textContent.trim() : null,
+                                    appointment_date: dateEl ? dateEl.textContent.trim() : null,
+                                    appointment_time: timeEl ? timeEl.textContent.trim() : null
+                                }
+                            };
+                            console.info('Recovered booking details from HTML modal');
+                            return { ok: response.ok, status: response.status, data: recovered };
+                        }
+
+                        // Second: fallback to regex extraction from raw HTML (e.g., server-rendered flash modal without IDs)
+                        const bkMatch = text.match(/\b(BK\d{3,})\b/); // match BK followed by digits
+                        const confMatch = text.match(/\b(CONF[a-zA-Z0-9]{4,})\b/); // match CONF + chars
+                        if (bkMatch || confMatch) {
+                            const recovered2 = {
+                                success: true,
+                                appointment: {
+                                    booking_id: bkMatch ? bkMatch[1] : null,
+                                    confirmation_code: confMatch ? confMatch[1] : null,
+                                    appointment_date: null,
+                                    appointment_time: null
+                                }
+                            };
+                            console.info('Recovered booking details via regex from HTML response');
+                            return { ok: response.ok, status: response.status, data: recovered2 };
+                        }
+                    } catch (e4) {
+                        console.warn('DOM parsing fallback failed:', e4);
+                    }
+
+                    // Give a helpful error including the start of the raw response
+                    throw new Error(`Server returned invalid JSON. Status: ${response.status}, Response Start: ${text.substring(0, 300)}...`);
                 }
             });
         })
@@ -4117,7 +4211,7 @@ console.log('=== LOADING BOOKING FUNCTIONS ===');
                         toastEl.innerHTML = `
                             <div class="d-flex">
                                 <div class="toast-body">
-                                    Booking confirmed!${finalPrice ? ' Price: ₵' + parseFloat(finalPrice).toFixed(2) : ''}
+                                    Booking confirmed!${finalPrice ? ' Price: $' + parseFloat(finalPrice).toFixed(2) : ''}
                                 </div>
                                 <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
                             </div>
@@ -4218,7 +4312,7 @@ console.log('=== LOADING BOOKING FUNCTIONS ===');
 
             // Add helpful suggestions
             errorMessage += '\n\nTips:\n• Make sure all required fields are filled\n• Check that your email format is valid\n• Ensure your phone number is complete\n• Try refreshing the page if the issue persists';
-            errorMessage += '\n\nIf the problem continues, please call us at (647) 834-8549';
+            errorMessage += '\n\nIf the problem continues, please call us at (343) 254-8848';
 
             alert(errorMessage);
 
@@ -4468,7 +4562,7 @@ console.log('=== LOADING BOOKING FUNCTIONS ===');
                                 <div class="mb-3">
                                     <i class="bi bi-envelope-fill text-success me-2"></i>
                                     <strong>Email:</strong><br>
-                                    <a href="mailto:info@dabsbeautytouch.com" style="color: #ff6600; text-decoration: none; font-weight: 600;">info@dabsbeautytouch.com</a>
+                                    <a href="mailto:infor@dabsbeautytouch" style="color: #ff6600; text-decoration: none; font-weight: 600;">infor@dabsbeautytouch</a>
                                 </div>
                                 <div class="mb-3">
                                     <i class="bi bi-whatsapp text-success me-2"></i>
@@ -4499,99 +4593,54 @@ console.log('=== LOADING BOOKING FUNCTIONS ===');
 
 <!-- Success Modal -->
 <div class="modal fade" id="ajaxSuccessModal" tabindex="-1" aria-labelledby="ajaxSuccessModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered" style="max-width: 500px;">
-        <div class="modal-content" style="border-radius: 12px; border: none; background: #4a5568; color: white; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);">
-            <!-- Header with Site Icon -->
-            <div style="position: absolute; top: 15px; left: 20px; background: white; width: 24px; height: 24px; border-radius: 4px; display: flex; align-items: center; justify-content: center;">
-                <i class="bi bi-globe" style="color: #4a5568; font-size: 12px;"></i>
+    <div class="modal-dialog modal-dialog-centered" style="max-width:540px;">
+        <div class="modal-content" style="border-radius:14px; overflow:hidden;">
+            <!-- Top Check -->
+            <div style="background:#fff; padding-top:18px; display:flex; justify-content:center;">
+                <div style="width:78px; height:78px; border-radius:16px; background:linear-gradient(180deg,#16a34a,#059669); display:flex; align-items:center; justify-content:center; box-shadow:0 10px 20px rgba(5,104,44,0.12); margin-top:6px;">
+                    <span style="font-size:38px; color:#fff;">&#10004;</span>
+                </div>
             </div>
-            <div style="position: absolute; top: 15px; left: 50px; color: white; font-size: 14px; font-weight: 500;">
-                127.0.0.1:8000
-            </div>
-            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close" style="position: absolute; top: 15px; right: 20px; opacity: 0.8;"></button>
 
-            <!-- Body -->
-            <div class="modal-body" style="padding: 60px 30px 30px; text-align: left;">
-                <!-- Success Icon and Message -->
-                <div class="text-center mb-4">
-                    <div style="display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; background: #10b981; border-radius: 50%; margin-bottom: 15px;">
-                        <i class="bi bi-check" style="color: white; font-size: 16px; font-weight: bold;"></i>
+            <div class="modal-body" style="background:#fff; padding:22px 24px 18px; text-align:center; color:#05204a;">
+                <h2 style="color:#0f5132; font-weight:800; margin-bottom:14px; font-size:1.6rem;">Appointment Booked<br>Successfully!</h2>
+
+                <!-- Two-column Booking ID and Confirmation Code -->
+                <div class="row align-items-center" style="margin-bottom:14px;">
+                    <div class="col-6 text-center" style="border-right:1px solid #f1f5f9; padding:0 12px;">
+                        <div style="color:#6b7280; font-size:14px; margin-bottom:6px;">📋 Booking ID:</div>
+                        <a href="#" id="successBookingId" style="font-weight:800; color:#007bff; text-decoration:underline; font-size:18px;">BK000000</a>
                     </div>
-                    <h5 class="mb-0" style="color: rgb(9, 121, 58)55, 255, 255)55, 255, 255)55, 255, 255); font-weight: 500;">Appointment booked successfully!</h5>
-                </div>
-
-                <!-- Booking Details -->
-                <div class="mb-3">
-                    <div style="display: flex; align-items: center; margin-bottom: 8px;">
-                        <i class="bi bi-bookmark-fill" style="color: #60a5fa; margin-right: 10px; font-size: 14px;"></i>
-                        <span style="color: #cbd5e0; font-size: 14px;">Booking ID: </span>
-                        <strong id="successBookingId" style="color: white; margin-left: 5px;">BK000024</strong>
-                    </div>
-
-                    <div style="display: flex; align-items: center; margin-bottom: 8px;">
-                        <i class="bi bi-shield-check" style="color: #34d399; margin-right: 10px; font-size: 14px;"></i>
-                        <span style="color: #cbd5e0; font-size: 14px;">Confirmation Code: </span>
-                        <strong id="successConfirmationCode" style="color: white; margin-left: 5px;">CONFEAB923BD</strong>
-                    </div>
-
-                    <div style="display: flex; align-items: center; margin-bottom: 8px;">
-                        <i class="bi bi-scissors" style="color: #f87171; margin-right: 10px; font-size: 14px;"></i>
-                        <span style="color: #cbd5e0; font-size: 14px;">Service: </span>
-                        <strong id="successService" style="color: white; margin-left: 5px;">Hair Styling</strong>
-                    </div>
-
-                    <div style="display: flex; align-items: center; margin-bottom: 8px;">
-                        <i class="bi bi-calendar-event" style="color: #a78bfa; margin-right: 10px; font-size: 14px;"></i>
-                        <span style="color: #cbd5e0; font-size: 14px;">Date: </span>
-                        <strong id="successAppointmentDate" style="color: white; margin-left: 5px;">August 18, 2025</strong>
-                    </div>
-
-                    <div style="display: flex; align-items: center; margin-bottom: 8px;">
-                        <i class="bi bi-clock" style="color: #fbbf24; margin-right: 10px; font-size: 14px;"></i>
-                        <span style="color: #cbd5e0; font-size: 14px;">Time: </span>
-                        <strong id="successAppointmentTime" style="color: white; margin-left: 5px;">2:00 PM</strong>
+                    <div class="col-6 text-center" style="padding:0 12px;">
+                        <div style="color:#6b7280; font-size:14px; margin-bottom:6px;">🔐 Confirmation Code:</div>
+                        <a href="#" id="successConfirmationCode" style="font-weight:800; color:#007bff; text-decoration:underline; font-size:18px;">CONFXXXXXXXX</a>
                     </div>
                 </div>
 
-                <!-- Deposit Warning -->
-                <div style="display: flex; align-items: flex-start; margin-bottom: 15px; background: rgba(251, 146, 60, 0.1); padding: 12px; border-radius: 8px; border-left: 3px solid #f59e0b;">
-                    <i class="bi bi-exclamation-triangle-fill" style="color: #f59e0b; margin-right: 8px; font-size: 14px; margin-top: 2px;"></i>
-                    <span style="color: #fed7aa; font-size: 14px; line-height: 1.4;">Please contact us to arrange the $50 deposit payment.</span>
-                </div>
-
-                <!-- Contact Information -->
-                <div class="mb-4">
-                    <div style="display: flex; align-items: center; margin-bottom: 8px;">
-                        <i class="bi bi-telephone-fill" style="color: #f87171; margin-right: 10px; font-size: 14px;"></i>
-                        <span style="color: #cbd5e0; font-size: 14px;">Phone: </span>
-                        <a href="tel:(647)834-8549" style="color: white; text-decoration: none; margin-left: 5px;">(647) 834-8549</a>
-                    </div>
-
-                    <div style="display: flex; align-items: center; margin-bottom: 15px;">
-                        <i class="bi bi-envelope-fill" style="color: #60a5fa; margin-right: 10px; font-size: 14px;"></i>
-                        <span style="color: #cbd5e0; font-size: 14px;">Email: </span>
-                        <a href="mailto:info@dabsbeautytouch.com" style="color: white; text-decoration: none; margin-left: 5px;">info@dabsbeautytouch.com</a>
+                <!-- Deposit Notice (full width) -->
+                <div class="mb-3" style="margin:12px -12px 18px -12px;">
+                    <div style="background:#fff3cd; border-radius:12px; padding:14px 16px; display:flex; align-items:center; justify-content:center; gap:12px; border-left:6px solid #f59e0b;">
+                        <span style="font-size:1.4rem; color:#b45309;">&#9888;</span>
+                        <div style="font-weight:700; color:#7c4a0a; font-size:1rem;">Please contact us to arrange the $20 deposit payment.</div>
                     </div>
                 </div>
 
-                <!-- Confirmation Message -->
-                <p style="color: #cbd5e0; font-size: 14px; margin-bottom: 20px; line-height: 1.5;">
-                    We'll confirm your appointment once payment is received!
-                </p>
-
-                <!-- Don't Show Again Checkbox -->
-                <div style="margin-bottom: 20px;">
-                    <label class="form-check-label" style="display: flex; align-items: center; color: #9ca3af; font-size: 13px; cursor: pointer;">
-                        <input type="checkbox" class="form-check-input me-2" id="dontShowAgain" style="margin-right: 8px; background-color: transparent; border-color: #6b7280;">
-                        <span>Don't allow 127.0.0.1:8000 to prompt you again</span>
-                    </label>
+                <!-- Contact Info Row -->
+                <div class="row" style="margin-bottom:14px;">
+                    <div class="col-6 text-center" style="padding:0 12px;">
+                        <div style="font-weight:700; color:#05204a; margin-bottom:6px;"><i class="bi bi-telephone-fill me-2" style="color:#111827;"></i>Phone:</div>
+                        <a href="tel:+13432458848" style="color:#007bff; text-decoration:underline; font-size:16px;">(+1)343-245-8848</a>
+                    </div>
+                    <div class="col-6 text-center" style="padding:0 12px;">
+                        <div style="font-weight:700; color:#05204a; margin-bottom:6px;"><i class="bi bi-envelope-fill me-2" style="color:#111827;"></i>Email:</div>
+                        <a href="mailto:infor@dabsbeautytouch" style="color:#007bff; text-decoration:underline; font-size:16px;">infor@dabsbeautytouch</a>
+                    </div>
                 </div>
 
-                <!-- OK Button -->
-                <div class="text-center">
-                    <button type="button" class="btn" data-bs-dismiss="modal" style="background: #0891b2; color: white; border: none; padding: 8px 30px; border-radius: 6px; font-weight: 500; font-size: 14px;">
-                        OK
-                    </button>
+                <p class="text-muted" style="font-size:0.98rem; margin-bottom:18px;">We'll confirm your appointment once payment is received!</p>
+
+                <div class="text-center" style="margin-bottom:8px;">
+                    <button type="button" class="btn" data-bs-dismiss="modal" style="background: linear-gradient(90deg,#06b6d4 0%,#10b981 100%); border:none; color:#05204a; color:#fff; padding:12px 60px; border-radius:999px; font-weight:800; font-size:16px;">OK</button>
                 </div>
             </div>
         </div>
@@ -4697,10 +4746,25 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         }
 
-        // Auto close modal after 5 seconds
+        // Auto close modal after 5 seconds and clear session data
         setTimeout(function() {
             closeSuccessModal();
+            // Clear session data after closing modal
+            try {
+                clearSessionData();
+            } catch (e) {
+                console.warn('Failed to call clearSessionData:', e);
+            }
         }, 5000);
+
+        // Also clear session data when modal becomes visible to avoid stale flash keys
+        setTimeout(function() {
+            try {
+                clearSessionData();
+            } catch (e) {
+                console.warn('Failed to call clearSessionData on show:', e);
+            }
+        }, 200);
     }
 });
 
@@ -4828,11 +4892,19 @@ function clearImagePreview() {
     };
 
     function lengthAdjustment(lengthValue) {
-        const longer = ['waist','hip','tailbone','classic'];
-        const shorter = ['shoulder','neck','armpit'];
-        if (longer.includes(lengthValue)) return 30;
-        if (shorter.includes(lengthValue)) return -30;
-        return 0;
+        // Explicit per-length adjustments (in USD)
+        // tailbone & classic get an additional +$20 (total +$40)
+        // shoulder & neck get an additional -$20 (total -$40)
+        const adjustments = {
+            'waist': 20,
+            'hip': 20,
+            'tailbone': 40,
+            'classic': 40,
+            'shoulder': -40,
+            'neck': -40,
+            'armpit': -20
+        };
+        return adjustments[lengthValue] ?? 0;
     }
 
     function getSelectedLength() {
@@ -4880,6 +4952,17 @@ function clearImagePreview() {
         const serviceType = document.getElementById('selectedServiceType')?.value || 'custom';
         const base = priceMap[serviceType] || priceMap['custom'];
         updatePriceDisplay(base);
+        // Fetch booked dates on initial page load so calendar is up-to-date
+        try {
+            if (typeof fetchRealBookedDates === 'function') {
+                console.log('Fetching booked dates on page load');
+                fetchRealBookedDates();
+            } else {
+                console.warn('fetchRealBookedDates not defined on page load');
+            }
+        } catch (e) {
+            console.warn('Error calling fetchRealBookedDates on load:', e);
+        }
     });
 
 })();

@@ -521,7 +521,7 @@
                 day: 'numeric'
             });
 
-            fetch(`/appointments/slots?date=${date.toISOString().split('T')[0]}`)
+            fetch(`/bookings/slots?date=${date.toISOString().split('T')[0]}`)
                 .then(response => response.json())
                 .then(data => {
                     loading.style.display = 'none';

@@ -339,8 +339,9 @@ Route::prefix('admin')->name('admin.')->group(function () {
                 if ($request->service_duration_minutes) {
                     $booking->service_duration_minutes = $request->service_duration_minutes;
                 }
-                if ($request->final_price) {
-                    $booking->final_price = $request->final_price;
+                // Accept final_price even when 0; use has() to allow zero values
+                if ($request->has('final_price')) {
+                    $booking->final_price = is_numeric($request->final_price) ? $request->final_price : null;
                 }
                 if ($request->payment_status) {
                     $booking->payment_status = $request->payment_status;
@@ -376,44 +377,64 @@ Route::prefix('admin')->name('admin.')->group(function () {
         }
 
         try {
-            $searchTerm = $request->search;
+            $searchTerm = trim($request->search);
 
-            $booking = \App\Models\Booking::where(function($query) use ($searchTerm) {
-                $query->where('id', $searchTerm)
-                      ->orWhere('phone', 'like', '%' . $searchTerm . '%')
-                      ->orWhere('name', 'like', '%' . $searchTerm . '%')
-                      ->orWhere('email', 'like', '%' . $searchTerm . '%');
-            })
-            ->where('status', '!=', 'cancelled')
-            ->where('status', '!=', 'completed')
-            ->orderBy('appointment_date', 'desc')
-            ->first();
+            // Split into words for multi-word name matching (AND-match for all words)
+            $words = preg_split('/\s+/', $searchTerm, -1, PREG_SPLIT_NO_EMPTY);
 
-            if ($booking) {
-                // Format date safely
-                $formattedDate = $booking->appointment_date;
-                if ($formattedDate) {
-                    try {
-                        $formattedDate = is_string($booking->appointment_date)
-                            ? date('M j, Y', strtotime($booking->appointment_date))
-                            : $booking->appointment_date->format('M j, Y');
-                    } catch (\Exception $e) {
-                        $formattedDate = $booking->appointment_date;
-                    }
+            $query = \App\Models\Booking::query();
+
+            $query->where(function($q) use ($searchTerm, $words) {
+                // exact id match or phone/email partial
+                $q->where('id', $searchTerm)
+                  ->orWhere('phone', 'like', '%' . $searchTerm . '%')
+                  ->orWhere('email', 'like', '%' . $searchTerm . '%');
+
+                // If search contains words, require all words to be present in name (AND)
+                if (!empty($words)) {
+                    $q->orWhere(function($q2) use ($words) {
+                        foreach ($words as $w) {
+                            $q2->where('name', 'like', '%' . $w . '%');
+                        }
+                    });
                 }
+            });
+
+            // Exclude cancelled/completed and return multiple results (up to 15)
+            $bookings = $query->where('status', '!=', 'cancelled')
+                ->where('status', '!=', 'completed')
+                ->orderBy('appointment_date', 'desc')
+                ->limit(15)
+                ->get();
+
+            if ($bookings && $bookings->count() > 0) {
+                // Format date safely
+                $results = $bookings->map(function($b) {
+                    $formattedDate = $b->appointment_date;
+                    try {
+                        $formattedDate = is_string($b->appointment_date)
+                            ? date('M j, Y', strtotime($b->appointment_date))
+                            : $b->appointment_date->format('M j, Y');
+                    } catch (\Exception $e) {
+                        $formattedDate = $b->appointment_date;
+                    }
+
+                    return [
+                        'id' => $b->id,
+                        'name' => $b->name,
+                        'email' => $b->email,
+                        'phone' => $b->phone,
+                        'service' => $b->service,
+                        'appointment_date' => $formattedDate,
+                        'appointment_time' => $b->appointment_time,
+                        'status' => $b->status,
+                        'final_price' => $b->final_price ?? null
+                    ];
+                })->values();
 
                 return response()->json([
                     'success' => true,
-                    'booking' => [
-                        'id' => $booking->id,
-                        'name' => $booking->name,
-                        'email' => $booking->email,
-                        'phone' => $booking->phone,
-                        'service' => $booking->service,
-                        'appointment_date' => $formattedDate,
-                        'appointment_time' => $booking->appointment_time,
-                        'status' => $booking->status
-                    ]
+                    'bookings' => $results
                 ]);
             }
 
@@ -468,6 +489,39 @@ Route::post('/test-form', function (Request $request) {
 
 // Booking routes - simplified closure implementation
 Route::post('/bookings', function(Request $request) {
+    // Prevent PHP warnings/notices from being printed into the HTTP response
+    // (these can corrupt JSON responses when e.g. PHP cannot create a tmp upload file).
+    if (function_exists('ini_set')) {
+        ini_set('display_errors', '0');
+        ini_set('display_startup_errors', '0');
+    }
+
+    // Start output buffering to capture any stray output (warnings) so we can
+    // discard it before sending our JSON response.
+    if (function_exists('ob_start')) {
+        @ob_start();
+    }
+
+    // Ensure an application-writable temporary directory exists and is writable.
+    // This helps on systems where PHP's default upload tmp dir is not writable.
+    try {
+        $appTemp = storage_path('app/tmp');
+        if (!file_exists($appTemp)) {
+            mkdir($appTemp, 0755, true);
+        }
+        if (function_exists('ini_set')) {
+            ini_set('upload_tmp_dir', $appTemp);
+        }
+        Log::info('Booking upload temp config', [
+            'app_temp' => $appTemp,
+            'app_temp_exists' => file_exists($appTemp),
+            'app_temp_writable' => is_writable($appTemp),
+            'php_upload_tmp_dir' => ini_get('upload_tmp_dir'),
+            'sys_temp_dir' => sys_get_temp_dir(),
+        ]);
+    } catch (\Exception $e) {
+        Log::warning('Failed to ensure app temp dir for uploads: ' . $e->getMessage());
+    }
 
     // Handle sample_picture validation separately to avoid empty file issues
     $validationRules = [
@@ -546,8 +600,10 @@ Route::post('/bookings', function(Request $request) {
             'phone' => $request->phone,
             'address' => $request->address,
             'service' => $request->service ?: 'General Service',
+            'length' => $request->hair_length ?? $request->length ?? null,
             'appointment_date' => $request->appointment_date,
             'appointment_time' => $request->appointment_time,
+            'final_price' => $request->final_price ?? $request->price ?? null,
             'message' => $request->message, // Store in message field
             'notes' => $request->message,   // Also store in notes field for compatibility
             'sample_picture' => $samplePicturePath,
@@ -560,6 +616,18 @@ Route::post('/bookings', function(Request $request) {
         Log::info('=== CREATING BOOKING ===', ['data' => $bookingData]);
         $booking = \App\Models\Booking::create($bookingData);
         Log::info('=== BOOKING CREATED SUCCESSFULLY ===', ['booking_id' => $booking->id]);
+
+        // Ensure length persisted (sometimes clients send hair_length)
+        try {
+            $submittedLength = $request->hair_length ?? $request->length ?? null;
+            if ($submittedLength && ($booking->length !== $submittedLength)) {
+                $booking->length = $submittedLength;
+                $booking->save();
+                Log::info('Booking length saved/updated', ['booking_id' => $booking->id, 'length' => $submittedLength]);
+            }
+        } catch (\Exception $e) {
+            Log::warning('Failed to save booking length: ' . $e->getMessage(), ['booking_id' => $booking->id ?? null]);
+        }
 
         // Generate booking ID in BK format and confirmation code
         $bookingId = 'BK' . str_pad($booking->id, 6, '0', STR_PAD_LEFT);
@@ -577,6 +645,13 @@ Route::post('/bookings', function(Request $request) {
 
         // Check if this is an AJAX request
         if ($request->wantsJson() || $request->header('X-Requested-With') === 'XMLHttpRequest') {
+            // Clear any buffered stray output (warnings) before returning JSON
+            if (function_exists('ob_get_level')) {
+                while (ob_get_level() > 0) {
+                    @ob_end_clean();
+                }
+            }
+
             // Return JSON response for AJAX requests
             return response()->json([
                 'success' => true,
@@ -591,6 +666,8 @@ Route::post('/bookings', function(Request $request) {
                     'email' => $booking->email,
                     'phone' => $booking->phone,
                     'message' => $booking->message,
+                    'length' => $booking->length ?? null,
+                    'final_price' => $booking->final_price ?? null,
                 ]
             ]);
         }
@@ -609,6 +686,8 @@ Route::post('/bookings', function(Request $request) {
                 'email' => $booking->email,
                 'phone' => $booking->phone,
                 'message' => $booking->message,
+                'length' => $booking->length ?? null,
+                'final_price' => $booking->final_price ?? null,
             ]
         ]);
 
@@ -620,6 +699,13 @@ Route::post('/bookings', function(Request $request) {
 
         // Check if this is an AJAX request
         if ($request->wantsJson() || $request->header('X-Requested-With') === 'XMLHttpRequest') {
+            // Clear any buffered stray output (warnings) before returning JSON error
+            if (function_exists('ob_get_level')) {
+                while (ob_get_level() > 0) {
+                    @ob_end_clean();
+                }
+            }
+
             // Return JSON error response for AJAX requests
             return response()->json([
                 'success' => false,

@@ -198,14 +198,14 @@
                 <div class="contact-item">
                     <span class="contact-icon">📱</span>
                     <div>
-                        <strong>Phone:</strong> <a href="tel:3432548848">(343) 254-8848</a>
+                        <strong>Phone:</strong> <a href="tel:+13432458848">(+1)343-245-8848</a>
                     </div>
                 </div>
 
                 <div class="contact-item">
                     <span class="contact-icon">✉️</span>
                     <div>
-                        <strong>Email:</strong> <a href="mailto:info@dabsbeautytouch.com">info@dabsbeautytouch.com</a>
+                        <strong>Email:</strong> <a href="mailto:infor@dabsbeautytouch">infor@dabsbeautytouch</a>
                     </div>
                 </div>
             </div>

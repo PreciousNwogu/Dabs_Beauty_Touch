@@ -26,8 +26,8 @@ Dab's Beauty Touch is a modern web application for booking hair braiding appoint
 
 ## Contact
 
-**Phone**: (647) 834-8549  
-**Email**: info@dabsbeautytouch.com
+**Phone**: (+1)343-245-8848  
+**Email**: infor@dabsbeautytouch
 
 ## Technology
 

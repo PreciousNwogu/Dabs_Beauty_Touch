@@ -44,7 +44,7 @@ class ServiceCompletedNotification extends Notification
                     ->line('Service: ' . $this->booking->service)
                     ->line('Completed on: ' . $this->booking->completed_at->format('F j, Y g:i A'))
                     ->line('Duration: ' . $this->booking->getFormattedDuration())
-                    ->line('Final Price: ₵' . number_format($this->booking->final_price, 2))
+                        ->line('Final Price: $' . number_format($this->booking->final_price, 2))
                     ->line('Thank you for choosing Dab\'s Beauty Touch!')
                     ->line('We hope you love your new look!')
                     ->action('Book Another Appointment', url('/'))

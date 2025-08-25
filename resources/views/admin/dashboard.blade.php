@@ -146,7 +146,6 @@
             padding: 15px;
             position: relative;
         }
-
         .table thead th.cursor-pointer::after {
             content: '';
             position: absolute;
@@ -376,13 +375,13 @@
             <div class="row mb-4">
                 <div class="col-md-4">
                     <div class="stats-card bg-success text-white">
-                        <div class="stats-number">₵<span>{{ number_format($stats['today_revenue'], 2) }}</span></div>
+                        <div class="stats-number">$<span>{{ number_format($stats['today_revenue'], 2) }}</span></div>
                         <div class="stats-label">Today's Revenue</div>
                     </div>
                 </div>
                 <div class="col-md-4">
                     <div class="stats-card bg-primary text-white">
-                        <div class="stats-number">₵<span>{{ number_format($stats['monthly_revenue'], 2) }}</span></div>
+                        <div class="stats-number">$<span>{{ number_format($stats['monthly_revenue'], 2) }}</span></div>
                         <div class="stats-label">This Month</div>
                     </div>
                 </div>
@@ -598,17 +597,17 @@
                                                     <i class="bi bi-eye"></i> View Details
                                                 </button>
                                                 @if($booking->status === 'pending')
-                                                    <button class="btn btn-success btn-sm mb-1" onclick="updateStatus({{ $booking->id }}, 'confirmed')">
+                                                    <button class="btn btn-success btn-sm mb-1" onclick="updateStatusQuick({{ $booking->id }}, 'confirmed')">
                                                         <i class="bi bi-check"></i> Confirm
                                                     </button>
-                                                    <button class="btn btn-danger btn-sm" onclick="updateStatus({{ $booking->id }}, 'cancelled')">
+                                                    <button class="btn btn-danger btn-sm" onclick="updateStatusQuick({{ $booking->id }}, 'cancelled')">
                                                         <i class="bi bi-x"></i> Cancel
                                                     </button>
                                                 @elseif($booking->status === 'confirmed')
-                                                    <button class="btn btn-info btn-sm mb-1" onclick="updateStatus({{ $booking->id }}, 'completed')">
+                                                    <button class="btn btn-info btn-sm mb-1" onclick="updateStatusQuick({{ $booking->id }}, 'completed')">
                                                         <i class="bi bi-award"></i> Complete
                                                     </button>
-                                                    <button class="btn btn-danger btn-sm" onclick="updateStatus({{ $booking->id }}, 'cancelled')">
+                                                    <button class="btn btn-danger btn-sm" onclick="updateStatusQuick({{ $booking->id }}, 'cancelled')">
                                                         <i class="bi bi-x"></i> Cancel
                                                     </button>
                                                 @else
@@ -719,7 +718,7 @@
                             </div>
 
                             <div class="mb-3">
-                                <label for="finalPrice" class="form-label">Final Price (₵)</label>
+                                <label for="finalPrice" class="form-label">Final Price ($)</label>
                                 <input type="number" class="form-control" id="finalPrice" placeholder="e.g., 150.00" min="0" step="0.01">
                             </div>
 
@@ -741,7 +740,7 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn btn-primary" onclick="updateStatus()">Update Status</button>
+                    <button type="button" class="btn btn-primary" onclick="updateStatusModal()">Update Status</button>
                 </div>
             </div>
         </div>
@@ -768,23 +767,7 @@
         </div>
     </div>
 
-    <!-- Enhanced Details Modal -->
-    <div class="modal fade" id="detailsModal" tabindex="-1">
-        <div class="modal-dialog modal-xl">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Appointment Details</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body" id="appointmentDetailsContent">
-                    <!-- Content will be populated by JavaScript -->
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                </div>
-            </div>
-        </div>
-    </div>
+    <!-- Note: removed duplicate Enhanced Details Modal to avoid duplicate IDs -->
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
@@ -1093,7 +1076,7 @@
                                         </div>
                                         <div class="col-6">
                                             <strong>Final Price:</strong><br>
-                                            ${booking.final_price ? '₵' + parseFloat(booking.final_price).toFixed(2) : 'N/A'}
+                                            ${booking.final_price ? '$' + parseFloat(booking.final_price).toFixed(2) : 'N/A'}
                                         </div>
                                     </div>
                                     ${booking.completion_notes ? `
@@ -1120,7 +1103,7 @@
             modal.show();
         }
 
-        function updateStatus() {
+    function updateStatusModal() {
             const newStatus = document.getElementById('newStatus').value;
             const notes = document.getElementById('statusNotes').value;
             const completedBy = document.getElementById('completedBy').value;
@@ -1186,7 +1169,7 @@
                 updateBtn.innerHTML = originalText;
                 updateBtn.disabled = false;
             });
-        }
+    }
 
         function toggleCompletionFields() {
             const status = document.getElementById('newStatus').value;
@@ -1216,21 +1199,16 @@
             modal.show();
         }
 
-        // Simple status update function
-        function updateStatus(bookingId, newStatus) {
-            console.log('updateStatus called with:', bookingId, newStatus);
+        // Quick status update function used by inline buttons
+        function updateStatusQuick(bookingId, newStatus) {
+            console.log('updateStatusQuick called with:', bookingId, newStatus);
 
             const confirmMessage = `Are you sure you want to mark booking #${bookingId} as ${newStatus}?`;
-            console.log('Showing confirm dialog:', confirmMessage);
-
             if (!confirm(confirmMessage)) {
-                console.log('User cancelled the action');
                 return;
             }
 
-            console.log('User confirmed, proceeding with update...');
             const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-            console.log('CSRF Token:', csrfToken);
 
             fetch('{{ route("admin.bookings.update-status") }}', {
                 method: 'POST',
@@ -1243,14 +1221,9 @@
                     status: newStatus
                 })
             })
-            .then(response => {
-                console.log('Response status:', response.status);
-                return response.json();
-            })
+            .then(response => response.json())
             .then(data => {
-                console.log('Response data:', data);
                 if (data.success) {
-                    // Reload the page to show updated status
                     window.location.reload();
                 } else {
                     alert('Error updating booking status: ' + (data.message || 'Unknown error'));

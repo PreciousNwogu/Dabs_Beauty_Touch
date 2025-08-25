@@ -76,6 +76,7 @@
                         <i class="bi bi-search"></i> Search
                     </button>
                 </div>
+                <div id="searchResults" class="list-group mt-2" style="display:none;"></div>
             </div>
 
             <!-- Appointment Info (hidden until appointment is found) -->
@@ -115,7 +116,7 @@
                     <div class="col-md-6">
                         <label for="finalPrice" class="form-label">Final Price Charged</label>
                         <div class="input-group">
-                            <span class="input-group-text">₵</span>
+                                <span class="input-group-text">$</span>
                             <input type="number" class="form-control" id="finalPrice" required placeholder="150.00" min="0" step="0.01">
                         </div>
                     </div>
@@ -180,8 +181,16 @@
             })
             .then(response => response.json())
             .then(data => {
-                if (data.success && data.appointment) {
-                    showAppointmentDetails(data.appointment);
+                if (data.success) {
+                    // server may return single booking (legacy) or array of bookings
+                    if (data.booking) {
+                        showAppointmentDetails(data.booking);
+                    } else if (data.bookings && data.bookings.length > 0) {
+                        // show a list for admin to choose from
+                        renderSearchResults(data.bookings);
+                    } else {
+                        alert('No matching appointments found.');
+                    }
                 } else {
                     alert('Appointment not found. Please check the booking details and try again.');
                 }
@@ -211,6 +220,31 @@
 
             // Scroll to form
             document.getElementById('appointmentInfo').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function renderSearchResults(bookings) {
+            const container = document.getElementById('searchResults');
+            container.innerHTML = '';
+            if (!bookings || bookings.length === 0) {
+                container.style.display = 'none';
+                return;
+            }
+
+            bookings.forEach(b => {
+                const item = document.createElement('button');
+                item.type = 'button';
+                item.className = 'list-group-item list-group-item-action';
+                item.textContent = `${b.name} — ${b.service} — ${b.appointment_date} ${b.appointment_time} (ID: ${b.id})`;
+                item.addEventListener('click', function() {
+                    // When an item is clicked, populate the appointment details
+                    showAppointmentDetails(b);
+                    // Hide results
+                    container.style.display = 'none';
+                });
+                container.appendChild(item);
+            });
+
+            container.style.display = 'block';
         }
 
         function resetForm() {
