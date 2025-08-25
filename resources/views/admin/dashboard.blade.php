@@ -146,7 +146,7 @@
             padding: 15px;
             position: relative;
         }
-        
+
         .table thead th.cursor-pointer::after {
             content: '';
             position: absolute;
@@ -157,7 +157,7 @@
             background: transparent;
             transition: background-color 0.3s ease;
         }
-        
+
         .table thead th.cursor-pointer:hover::after {
             background: #ff6600;
         }
@@ -175,22 +175,22 @@
             cursor: pointer;
             transition: all 0.3s ease;
         }
-        
+
         .cursor-pointer:hover {
             background-color: rgba(255, 255, 255, 0.1);
             transform: translateY(-1px);
         }
-        
+
         .table th.cursor-pointer {
             position: relative;
             user-select: none;
         }
-        
+
         .table th.cursor-pointer i {
             margin-left: 5px;
             font-size: 0.8rem;
         }
-        
+
         .table th.cursor-pointer:hover i {
             color: #ff6600 !important;
         }
@@ -456,7 +456,7 @@
                         @if(request('sort_by'))
                             <small class="text-white-50">
                                 <i class="bi bi-sort-{{ request('sort_order') == 'asc' ? 'up' : 'down' }} me-1"></i>
-                                Sorted by {{ ucfirst(str_replace('_', ' ', request('sort_by'))) }} 
+                                Sorted by {{ ucfirst(str_replace('_', ' ', request('sort_by'))) }}
                                 ({{ request('sort_order') == 'asc' ? 'A-Z' : 'Z-A' }})
                             </small>
                         @endif
@@ -800,27 +800,27 @@
         function sortTable(column) {
             const currentSortBy = '{{ request('sort_by', 'appointment_date') }}';
             const currentSortOrder = '{{ request('sort_order', 'desc') }}';
-            
+
             // Determine new sort order
             let newSortOrder = 'asc';
             if (currentSortBy === column && currentSortOrder === 'asc') {
                 newSortOrder = 'desc';
             }
-            
+
             // Show loading state
             const tableBody = document.getElementById('appointmentsTable');
             tableBody.innerHTML = '<tr><td colspan="9" class="text-center"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div></td></tr>';
-            
+
             // Build query parameters
             const params = new URLSearchParams(window.location.search);
             params.set('sort_by', column);
             params.set('sort_order', newSortOrder);
-            
+
             // Update URL without reloading
             const baseUrl = window.location.pathname;
             const newUrl = `${baseUrl}?${params.toString()}`;
             window.history.pushState({}, '', newUrl);
-            
+
             // Fetch sorted data via AJAX
             fetch(newUrl)
                 .then(response => response.text())
@@ -828,16 +828,16 @@
                     // Create a temporary div to parse the HTML
                     const tempDiv = document.createElement('div');
                     tempDiv.innerHTML = html;
-                    
+
                     // Extract the table body content
                     const newTableBody = tempDiv.querySelector('#appointmentsTable');
                     if (newTableBody) {
                         tableBody.innerHTML = newTableBody.innerHTML;
                     }
-                    
+
                     // Update sorting indicators in headers
                     updateSortingIndicators(column, newSortOrder);
-                    
+
                     // Update pagination info if it exists
                     const paginationInfo = tempDiv.querySelector('.pagination-info');
                     if (paginationInfo) {
@@ -853,14 +853,14 @@
                     window.location.href = newUrl;
                 });
         }
-        
+
         // Function to update sorting indicators
         function updateSortingIndicators(column, order) {
             // Remove all sorting indicators
             document.querySelectorAll('.table th.cursor-pointer i').forEach(icon => {
                 icon.className = 'bi bi-arrow-down-up text-muted';
             });
-            
+
             // Add sorting indicator to the clicked column
             const headerCell = document.querySelector(`th[onclick="sortTable('${column}')"]`);
             if (headerCell) {
@@ -872,63 +872,46 @@
         }
 
         // Simple filter function that updates the table without page reload
-    window.sortTable = function(column) {
-            // Only allow sorting by id, name, appointment_date, status
-            const allowedSorts = ['id', 'name', 'appointment_date', 'status'];
-            if (!allowedSorts.includes(column)) return;
+        function applyFilters() {
+            const statusFilter = document.getElementById('statusFilter').value;
+            const dateFilter = document.getElementById('dateFilter').value;
+            const serviceFilter = document.getElementById('serviceFilter').value;
 
-            // Default sort: id desc
-            let currentSortBy = localStorage.getItem('adminSortBy') || 'id';
-            let currentSortOrder = localStorage.getItem('adminSortOrder') || 'desc';
+            // Show loading state
+            const tableBody = document.getElementById('appointmentsTable');
+            tableBody.innerHTML = '<tr><td colspan="9" class="text-center"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div></td></tr>';
 
-            let newSortOrder = 'asc';
-            if (column === 'id') {
-                newSortOrder = 'desc'; // Always sort ID descending by default
-            } else if (currentSortBy === column && currentSortOrder === 'asc') {
-                newSortOrder = 'desc';
-            }
-            // Show loading overlay
-            let overlay = document.getElementById('tableLoadingOverlay');
-            if (!overlay) {
-                overlay = document.createElement('div');
-                overlay.id = 'tableLoadingOverlay';
-                overlay.style.position = 'fixed';
-                overlay.style.top = '0';
-                overlay.style.left = '0';
-                overlay.style.width = '100vw';
-                overlay.style.height = '100vh';
-                overlay.style.background = 'rgba(255,255,255,0.7)';
-                overlay.style.zIndex = '9999';
-                overlay.innerHTML = '<div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);"><div class="spinner-border text-primary" style="width: 3rem; height: 3rem;" role="status"><span class="visually-hidden">Loading...</span></div></div>';
-                document.body.appendChild(overlay);
-            } else {
-                overlay.style.display = 'block';
-            }
             // Build query parameters
-            const params = new URLSearchParams(window.location.search);
-            params.set('sort_by', column);
-            params.set('sort_order', newSortOrder);
+            const params = new URLSearchParams();
+            if (statusFilter) params.append('status', statusFilter);
+            if (dateFilter) params.append('date', dateFilter);
+            if (serviceFilter) params.append('service', serviceFilter);
+
+            // Preserve current sorting
+            const currentSortBy = '{{ request('sort_by', 'appointment_date') }}';
+            const currentSortOrder = '{{ request('sort_order', 'desc') }}';
+            params.set('sort_by', currentSortBy);
+            params.set('sort_order', currentSortOrder);
+
             // Update URL without reloading
             const baseUrl = window.location.pathname;
             const newUrl = `${baseUrl}?${params.toString()}`;
             window.history.pushState({}, '', newUrl);
-            // Persist sort state
-            localStorage.setItem('adminSortBy', column);
-            localStorage.setItem('adminSortOrder', newSortOrder);
-            // Fetch sorted data via AJAX
+
+            // Fetch filtered data via AJAX
             fetch(newUrl)
                 .then(response => response.text())
                 .then(html => {
                     // Create a temporary div to parse the HTML
                     const tempDiv = document.createElement('div');
                     tempDiv.innerHTML = html;
+
                     // Extract the table body content
                     const newTableBody = tempDiv.querySelector('#appointmentsTable');
                     if (newTableBody) {
-                        document.getElementById('appointmentsTable').innerHTML = newTableBody.innerHTML;
+                        tableBody.innerHTML = newTableBody.innerHTML;
                     }
-                    // Update sorting indicators in headers
-                    updateSortingIndicators(column, newSortOrder);
+
                     // Update pagination info if it exists
                     const paginationInfo = tempDiv.querySelector('.pagination-info');
                     if (paginationInfo) {
@@ -937,12 +920,10 @@
                             currentPaginationInfo.innerHTML = paginationInfo.innerHTML;
                         }
                     }
-                    // Hide loading overlay
-                    overlay.style.display = 'none';
                 })
                 .catch(error => {
-                    console.error('Error sorting table:', error);
-                    overlay.style.display = 'none';
+                    console.error('Error applying filters:', error);
+                    // Fallback to page reload if AJAX fails
                     window.location.href = newUrl;
                 });
         }
@@ -953,18 +934,18 @@
             document.getElementById('statusFilter').value = '';
             document.getElementById('dateFilter').value = '';
             document.getElementById('serviceFilter').value = '';
-            
+
             // Show loading state
             const tableBody = document.getElementById('appointmentsTable');
             tableBody.innerHTML = '<tr><td colspan="9" class="text-center"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div></td></tr>';
-            
+
             // Build query parameters with only sorting
             const params = new URLSearchParams();
             const currentSortBy = '{{ request('sort_by', 'appointment_date') }}';
             const currentSortOrder = '{{ request('sort_order', 'desc') }}';
             params.set('sort_by', currentSortBy);
             params.set('sort_order', currentSortOrder);
-            
+
             // Update URL without reloading
             const baseUrl = window.location.pathname;
             const newUrl = `${baseUrl}?${params.toString()}`;
@@ -977,13 +958,13 @@
                     // Create a temporary div to parse the HTML
                     const tempDiv = document.createElement('div');
                     tempDiv.innerHTML = html;
-                    
+
                     // Extract the table body content
                     const newTableBody = tempDiv.querySelector('#appointmentsTable');
                     if (newTableBody) {
                         tableBody.innerHTML = newTableBody.innerHTML;
                     }
-                    
+
                     // Update pagination info if it exists
                     const paginationInfo = tempDiv.querySelector('.pagination-info');
                     if (paginationInfo) {

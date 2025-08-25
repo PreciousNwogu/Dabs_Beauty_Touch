@@ -144,19 +144,19 @@
             <!-- Booking Details -->
             <div class="booking-details">
                 <h3 style="margin: 0 0 20px 0; color: #1f2937; font-size: 18px;">📅 Booking Information</h3>
-                
+
                 <div class="detail-item">
                     <span class="detail-icon">🔖</span>
                     <span class="detail-label">Booking ID:</span>
                     <span class="detail-value">{{ $booking_id ?? 'BK000024' }}</span>
                 </div>
-                
+
                 <div class="detail-item">
                     <span class="detail-icon">🛡️</span>
                     <span class="detail-label">Confirmation Code:</span>
                     <span class="detail-value">{{ $confirmation_code ?? 'CONFEAB923BD' }}</span>
                 </div>
-                
+
                 @if(isset($appointment_date))
                 <div class="detail-item">
                     <span class="detail-icon">📅</span>
@@ -164,7 +164,7 @@
                     <span class="detail-value">{{ $appointment_date }}</span>
                 </div>
                 @endif
-                
+
                 @if(isset($appointment_time))
                 <div class="detail-item">
                     <span class="detail-icon">⏰</span>
@@ -172,7 +172,7 @@
                     <span class="detail-value">{{ $appointment_time }}</span>
                 </div>
                 @endif
-                
+
                 @if(isset($service))
                 <div class="detail-item">
                     <span class="detail-icon">✂️</span>
@@ -187,21 +187,21 @@
                 <span class="warning-icon">⚠️</span>
                 <div>
                     <strong>Important: Deposit Required</strong>
-                    <p style="margin: 5px 0 0 0; color: #92400e;">Please contact us to arrange the $50 deposit payment. Your appointment will be confirmed once payment is received!</p>
+                    <p style="margin: 5px 0 0 0; color: #92400e;">Please contact us to arrange the $20 deposit payment. Your appointment will be confirmed once payment is received!</p>
                 </div>
             </div>
 
             <!-- Contact Information -->
             <div class="contact-info">
                 <h4 style="margin: 0 0 15px 0; color: #1f2937;">📞 Contact Us</h4>
-                
+
                 <div class="contact-item">
                     <span class="contact-icon">📱</span>
                     <div>
-                        <strong>Phone:</strong> <a href="tel:6478348549">(647) 834-8549</a>
+                        <strong>Phone:</strong> <a href="tel:3432548848">(343) 254-8848</a>
                     </div>
                 </div>
-                
+
                 <div class="contact-item">
                     <span class="contact-icon">✉️</span>
                     <div>

@@ -1,52 +1,3 @@
-<script>
-function selectQuickService(serviceName) {
-    const selectedServiceInput = document.getElementById('selectedService');
-    const serviceDisplayInput = document.getElementById('serviceDisplay');
-    if (selectedServiceInput) {
-        selectedServiceInput.value = serviceName;
-    }
-    if (serviceDisplayInput) {
-        serviceDisplayInput.value = serviceName;
-    }
-    document.querySelectorAll('.service-quick-btn').forEach(btn => {
-        btn.classList.remove('active');
-    });
-    const buttons = Array.from(document.querySelectorAll('.service-quick-btn'));
-    const selectedBtn = buttons.find(btn => btn.textContent.trim().startsWith(serviceName));
-    if (selectedBtn) {
-        selectedBtn.classList.add('active');
-    }
-    document.getElementById('bookingModalLabel').textContent = `Book ${serviceName}`;
-    const serviceModal = bootstrap.Modal.getInstance(document.getElementById('serviceSelectionModal'));
-    if (serviceModal) serviceModal.hide();
-    console.log('Quick service selected:', serviceName);
-}
-
-function selectCustomService() {
-    const customInput = document.getElementById('customServiceInput');
-    const customService = customInput.value.trim();
-    if (!customService) {
-        alert('Please enter a service name');
-        return;
-    }
-    const selectedServiceInput = document.getElementById('selectedService');
-    const serviceDisplayInput = document.getElementById('serviceDisplay');
-    if (selectedServiceInput) {
-        selectedServiceInput.value = customService;
-    }
-    if (serviceDisplayInput) {
-        serviceDisplayInput.value = customService;
-    }
-    document.querySelectorAll('.service-quick-btn').forEach(btn => {
-        btn.classList.remove('active');
-    });
-    document.getElementById('bookingModalLabel').textContent = `Book ${customService}`;
-    const serviceModal = bootstrap.Modal.getInstance(document.getElementById('serviceSelectionModal'));
-    if (serviceModal) serviceModal.hide();
-    customInput.value = '';
-    console.log('Custom service selected:', customService);
-}
-</script>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -1693,97 +1644,7 @@ function selectCustomService() {
     </script>
 </head>
 <body>
-    <!-- Success Modal -->
-    @if(session('booking_success'))
-    <div class="modal fade show d-block" id="successModal" tabindex="-1" style="background-color: rgba(0,0,0,0.5); z-index: 1050; position: fixed; top: 0; left: 0; width: 100%; height: 100%;">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content" style="border-radius: 15px; border: none; box-shadow: 0 20px 60px rgba(0,0,0,0.3);">
-                <div class="modal-header text-center border-0 pb-0">
-                    <div class="w-100">
-                        <div class="text-success mb-3" style="font-size: 4rem; animation: bounce 0.6s ease-in-out;">
-                            ✅
-                        </div>
-                        <h4 class="modal-title text-success mb-0" style="font-weight: 700; font-size: 1.5rem;">Appointment Booked Successfully!</h4>
-                    </div>
-                </div>
-                <div class="modal-body text-center px-4 py-4">
-                    <div class="mb-4">
-                        <div class="row g-3">
-                            <div class="col-6">
-                                <div class="bg-light p-3 rounded">
-                                    <small class="text-muted d-block mb-1">📋 Booking ID:</small>
-                                    <strong class="text-primary">{{ session('booking_details.booking_id') }}</strong>
-                                </div>
-                            </div>
-                            <div class="col-6">
-                                <div class="bg-light p-3 rounded">
-                                    <small class="text-muted d-block mb-1">🔐 Confirmation Code:</small>
-                                    <strong class="text-primary">{{ session('booking_details.confirmation_code') }}</strong>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
 
-                    <div class="alert alert-warning border-0 mb-4" style="background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%); border-left: 4px solid #ffc107;">
-                        <div class="d-flex align-items-center justify-content-center">
-                            <span style="font-size: 1.2rem; margin-right: 8px;">⚠️</span>
-                            <span style="font-weight: 600;">Please contact us to arrange the $20 deposit payment.</span>
-                        </div>
-                    </div>
-
-                    <div class="contact-info mb-4">
-                        <div class="row g-2">
-                            <div class="col-6">
-                                <div class="bg-light p-3 rounded">
-                                    <p class="mb-0"><span style="margin-right: 8px;">📞</span><strong>Phone:</strong><br>(343) 254-8848</p>
-                                </div>
-                            </div>
-                            <div class="col-6">
-                                <div class="bg-light p-3 rounded">
-                                    <p class="mb-0"><span style="margin-right: 8px;">📧</span><strong>Email:</strong><br>info@dabsbeautytouch.com</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <p class="text-muted mb-0" style="font-size: 0.95rem;">We'll confirm your appointment once payment is received!</p>
-                </div>
-                <div class="modal-footer border-0 justify-content-center pb-4">
-                    <button type="button" class="btn btn-info px-5 py-2" onclick="closeSuccessModal()" style="background: linear-gradient(135deg, #17a2b8 0%, #20c997 100%); border: none; border-radius: 25px; font-weight: 600; font-size: 1.1rem; cursor: pointer; z-index: 1051; transition: all 0.3s ease;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">OK</button>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <style>
-        @keyframes bounce {
-            0%, 20%, 50%, 80%, 100% {
-                transform: translateY(0);
-            }
-            40% {
-                transform: translateY(-10px);
-            }
-            60% {
-                transform: translateY(-5px);
-            }
-        }
-        
-        #successModal .modal-content {
-            animation: slideInDown 0.5s ease-out;
-        }
-        
-        @keyframes slideInDown {
-            from {
-                opacity: 0;
-                transform: translateY(-50px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-    </style>
-    @endif
 
     @if(session('booking_error'))
     <div class="alert alert-danger alert-dismissible fade show m-0" role="alert" style="border-radius: 0; border: none; background: linear-gradient(135deg, #dc3545 0%, #e74c3c 100%); color: white; box-shadow: 0 2px 8px rgba(220, 53, 69, 0.3); z-index: 1050; position: relative;">
@@ -2349,7 +2210,9 @@ function selectCustomService() {
                 <h2>Our Services</h2>
                 <p class="lead">Professional hair braiding and styling services</p>
             </div>
-            <div class="row g-4">
+                        <!-- length guide removed from services section (moved into booking form) -->
+
+                        <div class="row g-4">
                 <div class="col-lg-4 col-md-6">
                     <div class="service-card h-100" onclick="openBookingModal('Small Knotless Braids', 'small-knotless')">
                         <img src="{{ asset('images/small braid.jpg') }}" alt="Small Knotless Braids">
@@ -2461,63 +2324,165 @@ function selectCustomService() {
     </section>
 
     <!-- Booking Modal -->
-    <div class="modal fade" id="bookingModal" tabindex="-1" aria-labelledby="bookingModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content" style="border-radius: 20px; border: none;">
-                <div class="modal-header" style="background: linear-gradient(135deg, #ff6600 0%, #ff8533 100%); color: white; border-radius: 20px 20px 0 0;">
-                    <h5 class="modal-title" id="bookingModalLabel">Book Your Appointment</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close" onclick="clearBookingForm()"></button>
+    <!-- Success Modal -->
+    @if(session('booking_success'))
+    <div class="modal fade show d-block" id="successModal" tabindex="-1" style="background-color: rgba(0,0,0,0.5); z-index: 1050;">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content" style="border-radius: 16px; border: none;">
+                <div class="modal-header text-center border-0 pb-0" style="display: flex; flex-direction: column; align-items: center;">
+                    <div style="background: #28a745; border-radius: 8px; width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; margin-bottom: 10px;">
+                        <span style="font-size: 2.5rem; color: #fff;">&#10004;</span>
+                    </div>
+                    <h4 class="modal-title text-success mb-0" style="font-weight: bold; color: #218838; margin-top: 8px;">Appointment Booked<br>Successfully!</h4>
                 </div>
-                <div class="modal-body" style="padding: 30px;">
-                    <!-- Pricing Notice -->
-                    <div class="alert alert-warning mb-4" style="font-size: 0.95rem; border-left: 4px solid #ff6600;">
-                        <div class="d-flex align-items-start">
-                            <i class="bi bi-currency-dollar me-3" style="color: #ff6600; font-size: 1.2rem; margin-top: 2px;"></i>
-                            <div>
-                                <h6 style="color: #030f68; font-weight: 700; margin-bottom: 10px;">
-                                    <i class="bi bi-info-circle me-2" style="color: #ff6600;"></i>
-                                    Pricing Information
-                                </h6>
-                                <div style="color: #333; line-height: 1.6;">
-                                    <p style="margin-bottom: 15px; font-size: 1rem;">
-                                        <strong>💰 Default Pricing:</strong> All service prices shown are for <strong>bra/mid back length</strong>.
-                                    </p>
-
-                                    <div style="background: rgba(255, 102, 0, 0.1); padding: 15px; border-radius: 10px; margin: 15px 0; border-left: 4px solid #ff6600;">
-                                        <p style="margin-bottom: 8px; font-weight: 600; color: #030f68; font-size: 1rem;">
-                                            📏 <strong>Length Adjustments:</strong>
-                                        </p>
-                                        <p style="margin: 0; font-size: 0.95rem;">
-                                            • <strong>+$30</strong> for longer length (waist length and beyond)<br>
-                                            • <strong>-$30</strong> for shorter length (shoulder length and above)
-                                        </p>
-                                    </div>
-
-
-                                    <div style="background: rgba(3, 15, 104, 0.1); padding: 12px; border-radius: 8px; margin-top: 15px;">
-                                        <p style="margin: 0; font-size: 0.9rem; color: #030f68;">
-                                            💡 <strong>Example:</strong> Small Knotless Braids ($180) + Waist Length (+$30) = <strong>$210 total</strong>
-                                        </p>
-                                    </div>
-
-                                    <div style="background: rgba(255, 0, 0, 0.1); padding: 12px; border-radius: 8px; margin-top: 15px; border-left: 4px solid #dc3545;">
-                                        <p style="margin: 0; font-size: 0.9rem; color: #dc3545;">
-                                            ⚠️ <strong>Stitch Braids Special:</strong> +$20 for more than 10 rows. Additional length charges apply based on your hair length.
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
+                <div class="modal-body text-center px-4">
+                    <div class="row mb-3 justify-content-center" style="gap: 0.5rem;">
+                        <div class="col-auto text-start">
+                            <span style="font-size: 1.2rem; margin-right: 4px;">&#128203;</span>
+                            <span style="font-size: 1rem; color: #6c757d;">Booking ID:</span>
+                            <a href="#" style="font-weight: bold; color: #007bff; text-decoration: underline;">{{ session('booking_details.booking_id') }}</a>
+                        </div>
+                        <div class="col-auto text-start">
+                            <span style="font-size: 1.2rem; margin-right: 4px;">&#128274;</span>
+                            <span style="font-size: 1rem; color: #6c757d;">Confirmation Code:</span>
+                            <a href="#" style="font-weight: bold; color: #007bff; text-decoration: underline;">{{ session('booking_details.confirmation_code') }}</a>
                         </div>
                     </div>
-
-
-
+                    <div class="alert alert-warning border-0 mb-3" style="background-color: #fff3cd; border-radius: 8px;">
+                        <div class="d-flex align-items-center justify-content-center">
+                            <span style="font-size: 1.3rem; margin-right: 8px;">&#9888;</span>
+                            <span style="font-size: 1.1rem;">Please contact us to arrange the $20 deposit payment.</span>
+                        </div>
+                    </div>
+                    <div class="row mb-3 justify-content-center" style="gap: 0.5rem;">
+                        <div class="col-auto text-start">
+                            <span style="font-size: 1.2rem; margin-right: 4px;">&#128222;</span>
+                            <span style="font-weight: bold; color: #001f3f;">Phone:</span>
+                            <a href="tel:3432548848" style="color: #007bff; text-decoration: underline;">(343) 254-8848</a>
+                        </div>
+                        <div class="col-auto text-start">
+                            <span style="font-size: 1.2rem; margin-right: 4px;">&#128231;</span>
+                            <span style="font-weight: bold; color: #001f3f;">Email:</span>
+                            <a href="mailto:info@dabsbeautytouch.com" style="color: #007bff; text-decoration: underline;">info@dabsbeautytouch.com</a>
+                        </div>
+                    </div>
+                    <p class="text-muted mb-3" style="font-size: 1rem;">We'll confirm your appointment once payment is received!</p>
+                </div>
+                <div class="modal-footer border-0 justify-content-center">
+                    <button type="button" class="btn btn-info px-4 py-2" onclick="closeSuccessModal()" style="background: linear-gradient(90deg, #17a2b8 0%, #20c997 100%); border: none; color: #fff; font-weight: bold; border-radius: 24px; width: 120px;">OK</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    @endif
+                    <!-- Booking Modal (contains Single Booking Form) -->
+                    <div class="modal fade" id="bookingModal" tabindex="-1" aria-labelledby="bookingModalLabel" aria-hidden="true">
+                        <div class="modal-dialog modal-lg modal-dialog-centered">
+                            <div class="modal-content" style="border-radius: 12px;">
+                                <div class="modal-header" style="background: linear-gradient(135deg, #17a2b8 0%, #20c997 100%); color: white; border-radius: 12px 12px 0 0;">
+                                    <h5 class="modal-title" id="bookingModalLabel">Book Service</h5>
+                                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body p-4">
                     <!-- Single Booking Form -->
                     <form id="bookingForm" action="{{ route('bookings.store') }}" method="POST" autocomplete="on" novalidate enctype="multipart/form-data">
                         @csrf
                         <input type="hidden" id="appointment_date" name="appointment_date">
                         <input type="hidden" id="appointment_time_hidden" name="appointment_time">
                         <input type="hidden" id="selectedService" name="service">
+                        <input type="hidden" id="selectedServiceType" name="service_type">
+
+                        <!-- Pricing Information (detailed boxes like screenshot) -->
+                        <div class="mb-3">
+                            <div style="background:#fff7e0;border-radius:12px;padding:18px;border-left:6px solid #ff6600;">
+                                <h5 style="color:#0b3a66;font-weight:700;margin-bottom:8px;">Pricing Information</h5>
+                                <p style="margin:0 0 12px 0;color:#0b3a66;font-weight:600;">💰 <span style="font-weight:700;">Default Pricing:</span> All service prices shown are for <strong>mid-back length</strong>.</p>
+
+                                <div style="background:#ffeacc;border-radius:10px;padding:12px;border:1px solid rgba(0,0,0,0.03);margin-bottom:12px;">
+                                    <h6 style="margin:0 0 8px 0;color:#0b3a66;font-weight:700;">📏 Length Adjustments:</h6>
+                                    <ul style="margin:0;padding-left:18px;color:#0b3a66;">
+                                        <li><strong>+ $20</strong> for longer length (waist length and beyond)</li>
+                                        <li><strong>- $20</strong> for shorter length (shoulder length and above)</li>
+                                    </ul>
+                                </div>
+
+                                <div style="background:#f0efe9;border-radius:10px;padding:14px;margin-bottom:12px;">
+                                    <p style="margin:0;color:#0b3a66;"><strong>💡 Example:</strong> Small Knotless Braids (<strong>$150</strong>) + Waist Length (+<strong>$20</strong>) = <strong style="color:#0b3a66;">$170 total</strong></p>
+                                </div>
+
+                                <div style="background:#ffe6e0;border-radius:10px;padding:14px;border-left:6px solid #e35a4a;">
+                                    <p style="margin:0;color:#b93a36;font-weight:700;">⚠️ Stitch Braids Special: <span style="font-weight:700;color:#b93a36;">+ $20</span> for more than 10 rows. Additional length charges apply based on your hair length.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Visible Price Display + hidden price input -->
+                        <div class="mb-3">
+                            <div style="display:flex; align-items:center; justify-content:space-between; background:#fff; border-radius:10px; padding:12px; border-left:6px solid #ff6600;">
+                                <div>
+                                    <div style="font-weight:700; color:#0b3a66;">Estimated Price</div>
+                                    <div id="priceDisplay" style="font-size:1.4rem; font-weight:800; color:#030f68;">--</div>
+                                </div>
+                                <div style="text-align:right;">
+                                    <small style="color:#6c757d; display:block;">Default is mid-back pricing. Final price computed on submit.</small>
+                                </div>
+
+                            </div>
+                            <!-- Braid Length Guide + Selection (inside booking form so it is submitted) -->
+                            <div class="col-12">
+                                <div class="mb-3">
+                                    <div class="row align-items-center">
+                                        <div class="col-12 col-md-5 text-center mb-3 mb-md-0">
+                                            <img src="{{ asset('images/braids-length-guide.jpg') }}" alt="Braid length guide" class="img-fluid" style="max-width: 100%; border-radius: 8px; border: 1px solid #e9ecef;">
+                                        </div>
+                                        <div class="col-12 col-md-7">
+                                            <label class="form-label">Select Braid Length *</label>
+                                            <div class="d-flex flex-column" role="radiogroup" aria-label="Braid length options">
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="radio" name="hair_length" id="length_neck" value="neck">
+                                                    <label class="form-check-label" for="length_neck">Neck length</label>
+                                                </div>
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="radio" name="hair_length" id="length_shoulder" value="shoulder">
+                                                    <label class="form-check-label" for="length_shoulder">Shoulder length</label>
+                                                </div>
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="radio" name="hair_length" id="length_armpit" value="armpit">
+                                                    <label class="form-check-label" for="length_armpit">Armpit length</label>
+                                                </div>
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="radio" name="hair_length" id="length_bracstrap" value="bra-strap">
+                                                    <label class="form-check-label" for="length_bracstrap">Bra-Strap length</label>
+                                                </div>
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="radio" name="hair_length" id="length_midback" value="mid-back" checked>
+                                                    <label class="form-check-label" for="length_midback">Mid-back length (default)</label>
+                                                </div>
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="radio" name="hair_length" id="length_waist" value="waist">
+                                                    <label class="form-check-label" for="length_waist">Waist length</label>
+                                                </div>
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="radio" name="hair_length" id="length_hip" value="hip">
+                                                    <label class="form-check-label" for="length_hip">Hip length</label>
+                                                </div>
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="radio" name="hair_length" id="length_tailbone" value="tailbone">
+                                                    <label class="form-check-label" for="length_tailbone">Tailbone length</label>
+                                                </div>
+                                                <div class="form-check mb-0">
+                                                    <input class="form-check-input" type="radio" name="hair_length" id="length_classic" value="classic">
+                                                    <label class="form-check-label" for="length_classic">Classic length</label>
+                                                </div>
+                                            </div>
+                                            <small class="form-text text-muted d-block mt-2">Default: Mid-back. Length adjustment affects pricing(+$20 long / -$20 short).</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <input type="hidden" id="selectedPrice" name="price" value="">
+                        </div>
 
                         <div class="row g-4">
                             <!-- Service Selection -->
@@ -2564,11 +2529,9 @@ function selectCustomService() {
                                     <i class="bi bi-calendar me-1"></i>
                                     Click the calendar button to select your preferred date and time
                                 </small>
-                                <small class="form-text text-muted d-block">
-                                    <i class="bi bi-info-circle me-1"></i>
-                                    We will contact you if the date or/and time is not available.
-                                </small>
                             </div>
+
+
 
                             <!-- Personal Details -->
                             <div class="col-md-6">
@@ -2642,10 +2605,10 @@ function selectCustomService() {
                             </div>
                         </div>
                     </form>
-                </div>
-            </div>
-        </div>
-    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
 
     <!-- Calendar Modal -->
     <div class="modal fade" id="calendarModal" tabindex="-1">
@@ -3367,33 +3330,70 @@ function selectCustomService() {
 <!-- Additional JavaScript -->
 <script>
 // MINIMAL WORKING SOLUTION - FORCE OVERRIDE ALL CONFLICTS
-                // Show custom floating card success message
-                if (!document.getElementById('floatingSuccessCard')) {
-                    const card = document.createElement('div');
-                    card.id = 'floatingSuccessCard';
-                    card.innerHTML = `
-                        <div style="position: fixed; top: 40px; right: 40px; z-index: 9999; background: linear-gradient(135deg, #10b981 0%, #20c997 100%); color: white; box-shadow: 0 8px 32px rgba(16,185,129,0.25); border-radius: 18px; padding: 32px 36px 28px 36px; min-width: 320px; max-width: 90vw; display: flex; flex-direction: column; align-items: center; animation: fadeInDown 0.7s;">
-                            <div style="background: white; border-radius: 50%; width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; margin-bottom: 18px; box-shadow: 0 2px 8px rgba(16,185,129,0.15);">
-                                <i class='bi bi-check2-circle' style='color: #10b981; font-size: 2rem;'></i>
-                            </div>
-                            <h4 style="margin-bottom: 10px; font-weight: 700; letter-spacing: 0.5px;">Appointment Booked!</h4>
-                            <div style="font-size: 1.1rem; margin-bottom: 8px;">Thank you for booking with Dab's Beauty Touch.</div>
-                            <div style="font-size: 0.98rem; color: #e0f7ef; margin-bottom: 10px;">We'll confirm your appointment once payment is received.</div>
-                            <button id="closeSuccessCardBtn" style="margin-top: 10px; background: #fff; color: #10b981; border: none; border-radius: 8px; padding: 8px 22px; font-weight: 600; font-size: 1rem; cursor: pointer; box-shadow: 0 2px 8px rgba(16,185,129,0.10); transition: background 0.2s;">OK</button>
-                        </div>
-                        <style>
-                        @keyframes fadeInDown {
-                            from { opacity: 0; transform: translateY(-40px); }
-                            to { opacity: 1; transform: translateY(0); }
-                        }
-                        </style>
-                    `;
-                    document.body.appendChild(card);
-                    document.getElementById('closeSuccessCardBtn').onclick = function() {
-                        card.remove();
-                    };
-                    setTimeout(() => { if (document.getElementById('floatingSuccessCard')) card.remove(); }, 7000);
-                }
+console.log('=== LOADING BOOKING FUNCTIONS ===');
+
+// Force define functions immediately when this script loads
+(function() {
+    'use strict';
+
+    // Test function
+    window.testFunction = function() {
+        alert('Test function works!');
+        console.log('Test function called');
+    };
+
+    // Main booking modal function
+    window.openBookingModal = function(serviceName, serviceType) {
+        console.log('openBookingModal called:', serviceName);
+
+        try {
+            // Find the modal element
+            var modalEl = document.getElementById('bookingModal');
+            if (!modalEl) {
+                alert('Booking modal not found on page');
+                return;
+            }
+
+            // Set service name in form
+            var serviceInput = document.getElementById('selectedService');
+            if (serviceInput) {
+                serviceInput.value = serviceName;
+            }
+
+            var serviceDisplay = document.getElementById('serviceDisplay');
+            if (serviceDisplay) {
+                serviceDisplay.value = serviceName;
+            }
+
+            // Set modal title
+            var modalTitle = document.getElementById('bookingModalLabel');
+            if (modalTitle) {
+                modalTitle.textContent = 'Book ' + serviceName;
+            }
+
+            // Show modal using Bootstrap
+            if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+                var modal = new bootstrap.Modal(modalEl);
+                modal.show();
+                console.log('Modal shown successfully');
+            } else {
+                // Fallback - show modal manually
+                modalEl.style.display = 'block';
+                modalEl.classList.add('show');
+                modalEl.setAttribute('aria-hidden', 'false');
+                document.body.classList.add('modal-open');
+                console.log('Modal shown with fallback method');
+            }
+
+        } catch (error) {
+            console.error('Error in openBookingModal:', error);
+            alert('Error opening booking modal: ' + error.message);
+        }
+    };
+
+    // Clear form function
+    window.clearBookingForm = function() {
+        var form = document.getElementById('bookingForm');
         if (form) {
             form.reset();
             console.log('Form cleared');
@@ -3961,9 +3961,6 @@ function selectCustomService() {
 
             if (data.success) {
                 console.log('=== SUCCESS CONDITION MET ===');
-                console.log('Full data object:', data);
-                console.log('Data.appointment:', data.appointment);
-                
                 // Show styled success modal
                 const bookingId = data.appointment ? data.appointment.booking_id : 'N/A';
                 const confirmationCode = data.appointment ? data.appointment.confirmation_code : 'N/A';
@@ -3979,19 +3976,73 @@ function selectCustomService() {
                 console.log('Date:', appointmentDate);
                 console.log('Time:', appointmentTime);
 
-                // Show the AJAX success modal using Bootstrap's JS API
-                let successModalElement = document.getElementById('ajaxSuccessModal');
+                // Show the success modal first
+                console.log('=== SHOWING SUCCESS MODAL ===');
+                console.log('Checking for ajaxSuccessModal...');
+                console.log('Document ready state:', document.readyState);
+                console.log('Document body:', !!document.body);
+
+                // Debug: Check all elements with modal in ID
+                console.log('All elements with "modal" in ID:',
+                    Array.from(document.querySelectorAll('[id*="modal"]')).map(el => ({
+                        id: el.id,
+                        tagName: el.tagName,
+                        classList: el.className
+                    })));
+
+                // Debug: Check all elements with "Success" in ID
+                console.log('All elements with "Success" in ID:',
+                    Array.from(document.querySelectorAll('[id*="Success"]')).map(el => ({
+                        id: el.id,
+                        tagName: el.tagName,
+                        classList: el.className
+                    })));
+
+                // Try multiple ways to find the modal
+                const successModalElement = document.getElementById('ajaxSuccessModal');
+                const successModalQuery = document.querySelector('#ajaxSuccessModal');
+                const successModalByClass = document.querySelector('.modal#ajaxSuccessModal');
+
+                console.log('Modal search results:');
+                console.log('- getElementById:', !!successModalElement);
+                console.log('- querySelector:', !!successModalQuery);
+                console.log('- querySelector with class:', !!successModalByClass);
+
+                if (!successModalElement) {
+                    console.warn('ajaxSuccessModal not found, falling back to toast notification');
+                }
+
+                console.log('Success modal element found:', !!successModalElement);
+                console.log('Modal element details:', {
+                    id: successModalElement.id,
+                    tagName: successModalElement.tagName,
+                    classList: successModalElement.className,
+                    style: successModalElement.style.cssText,
+                    parentElement: successModalElement.parentElement?.tagName
+                });
+
                 if (successModalElement) {
-                    console.log('Found ajaxSuccessModal, updating content...');
-                    
-                    // Update modal content with booking details
+                    console.log('Creating Bootstrap modal...');
+                    const successModal = new bootstrap.Modal(successModalElement);
+                    console.log('Bootstrap modal created:', !!successModal);
+
+                    // Update content before showing modal
+                    console.log('Updating modal content before show...');
                     const bookingIdElement = document.getElementById('successBookingId');
                     const confirmationCodeElement = document.getElementById('successConfirmationCode');
                     const serviceElement = document.getElementById('successService');
                     const dateElement = document.getElementById('successAppointmentDate');
                     const timeElement = document.getElementById('successAppointmentTime');
-                    
-                    // Update content immediately
+
+                    console.log('Elements found before modal show:', {
+                        bookingId: !!bookingIdElement,
+                        confirmationCode: !!confirmationCodeElement,
+                        service: !!serviceElement,
+                        date: !!dateElement,
+                        time: !!timeElement
+                    });
+
+                    // Update modal content with actual booking data
                     if (bookingIdElement) {
                         bookingIdElement.textContent = bookingId;
                         console.log('Updated booking ID to:', bookingId);
@@ -4012,61 +4063,73 @@ function selectCustomService() {
                         timeElement.textContent = appointmentTime;
                         console.log('Updated time to:', appointmentTime);
                     }
-                    
-                    // Show modal using Bootstrap 5
-                    let modalInstance = bootstrap.Modal.getOrCreateInstance(successModalElement);
-                    modalInstance.show();
-                    // Force modal to be visible for debugging
-                    successModalElement.style.display = 'block';
-                    successModalElement.classList.add('show');
-                    successModalElement.style.opacity = '1';
-                    successModalElement.style.zIndex = '9999';
-                    // Add a temporary debug message
-                    let debugMsg = document.createElement('div');
-                    debugMsg.innerHTML = '<div style="background: #ff0; color: #000; padding: 12px; font-size: 18px; text-align: center; border: 2px solid #f00; margin-bottom: 10px;">DEBUG: Success Modal is now forced visible!</div>';
-                    debugMsg.id = 'modalDebugMsg';
-                    let modalBody = successModalElement.querySelector('.modal-body');
-                    if (modalBody && !document.getElementById('modalDebugMsg')) {
-                        modalBody.prepend(debugMsg);
-                    }
-                    
-                    // Add event listener to ensure content is updated after modal is shown
-                    const modalShownHandler = function() {
-                        console.log('Modal shown, ensuring content is updated...');
-                        // Double-check content is set
-                        if (bookingIdElement) bookingIdElement.textContent = bookingId;
-                        if (confirmationCodeElement) confirmationCodeElement.textContent = confirmationCode;
-                        if (serviceElement) serviceElement.textContent = service;
-                        if (dateElement) dateElement.textContent = appointmentDate;
-                        if (timeElement) timeElement.textContent = appointmentTime;
-                        
-                        // Remove the event listener to prevent multiple calls
-                        successModalElement.removeEventListener('shown.bs.modal', modalShownHandler);
-                    };
-                    
-                    successModalElement.addEventListener('shown.bs.modal', modalShownHandler);
-                    
-                    // Add a fallback timeout to ensure content is set
+
+                    console.log('Calling modal.show()...');
+                    successModal.show();
+                    console.log('Modal show() called');
+
+                    // Add event listener to ensure modal is shown
+                    successModalElement.addEventListener('shown.bs.modal', function () {
+                        console.log('Modal is now fully visible!');
+                    });
+
+                    // Refresh the calendar data since a new booking was added
+                    console.log('🔄 Refreshing calendar data after successful booking');
                     setTimeout(() => {
-                        if (bookingIdElement) bookingIdElement.textContent = bookingId;
-                        if (confirmationCodeElement) confirmationCodeElement.textContent = confirmationCode;
-                        if (serviceElement) serviceElement.textContent = service;
-                        if (dateElement) dateElement.textContent = appointmentDate;
-                        if (timeElement) timeElement.textContent = appointmentTime;
-                        console.log('Fallback content update completed');
-                    }, 300);
-                    
-                    console.log('AJAX Success modal shown!');
+                        fetchRealBookedDates();
+                    }, 500); // Small delay to ensure booking is saved
                 } else {
-                    console.error('CRITICAL: ajaxSuccessModal not found!');
-                    // Fallback: show a simple success message
-                    alert('Appointment booked successfully! Booking ID: ' + bookingId);
+                    console.error('Success modal element not found!');
+                    console.error('Available elements with ID containing "modal":',
+                        Array.from(document.querySelectorAll('[id*="modal"]')).map(el => el.id));
                 }
-                // Refresh the calendar data since a new booking was added
-                console.log('🔄 Refreshing calendar data after successful booking');
-                setTimeout(() => {
-                    fetchRealBookedDates();
-                }, 500); // Small delay to ensure booking is saved
+
+                // Additionally, show a small toast confirmation with price (server authoritative)
+                (function showBookingToast() {
+                    try {
+                        const finalPrice = data.appointment && data.appointment.final_price ? data.appointment.final_price : (data.final_price || null);
+                        const toastId = 'bookingSuccessToast';
+
+                        // Create toast container if missing
+                        let toastContainer = document.getElementById('toastContainer');
+                        if (!toastContainer) {
+                            toastContainer = document.createElement('div');
+                            toastContainer.id = 'toastContainer';
+                            toastContainer.style.position = 'fixed';
+                            toastContainer.style.top = '20px';
+                            toastContainer.style.right = '20px';
+                            toastContainer.style.zIndex = 1080;
+                            document.body.appendChild(toastContainer);
+                        }
+
+                        // Remove existing toast with same id
+                        const existing = document.getElementById(toastId);
+                        if (existing) existing.remove();
+
+                        const toastEl = document.createElement('div');
+                        toastEl.id = toastId;
+                        toastEl.className = 'toast align-items-center text-bg-success border-0';
+                        toastEl.role = 'alert';
+                        toastEl.ariaLive = 'assertive';
+                        toastEl.ariaAtomic = 'true';
+                        toastEl.style.minWidth = '280px';
+
+                        toastEl.innerHTML = `
+                            <div class="d-flex">
+                                <div class="toast-body">
+                                    Booking confirmed!${finalPrice ? ' Price: ₵' + parseFloat(finalPrice).toFixed(2) : ''}
+                                </div>
+                                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                            </div>
+                        `;
+
+                        toastContainer.appendChild(toastEl);
+                        const bsToast = new bootstrap.Toast(toastEl, { delay: 6000 });
+                        bsToast.show();
+                    } catch (e) {
+                        console.error('Failed to show booking toast:', e);
+                    }
+                })();
 
                 // Clear the form completely
                 this.reset();
@@ -4088,31 +4151,18 @@ function selectCustomService() {
                 if (bookingModal) {
                     bookingModal.hide();
                 }
-                
-                // Also close any other open modals
-                const serviceSelectionModal = bootstrap.Modal.getInstance(document.getElementById('serviceSelectionModal'));
-                if (serviceSelectionModal) {
-                    serviceSelectionModal.hide();
-                }
-                
-                const calendarModal = bootstrap.Modal.getInstance(document.getElementById('calendarModal'));
-                if (calendarModal) {
-                    calendarModal.hide();
-                }
 
                 // Force browser to clear form cache
                 this.setAttribute('autocomplete', 'off');
             } else {
-                // Show error message without page reload
+                // Show error message
                 let errorMessage = 'Something went wrong. Please try again.';
                 if (data.message) {
                     errorMessage = data.message;
                 } else if (data.errors) {
                     errorMessage = Object.values(data.errors).flat().join(', ');
                 }
-                
-                // Show error in a more user-friendly way
-                showErrorMessage(errorMessage);
+                alert('Error: ' + errorMessage);
             }
         })
         .catch(error => {
@@ -4447,89 +4497,102 @@ function selectCustomService() {
         </div>
     </div>
 
-<!-- AJAX Success Modal -->
+<!-- Success Modal -->
 <div class="modal fade" id="ajaxSuccessModal" tabindex="-1" aria-labelledby="ajaxSuccessModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered" style="max-width: 550px;">
-        <div class="modal-content" style="border-radius: 15px; border: none; background: linear-gradient(135deg, #4a5568 0%, #2d3748 100%); color: white; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);">
-            <!-- Header -->
-            <div class="modal-header border-0 text-center pb-0" style="background: transparent;">
-                <div class="w-100">
-                    <div class="text-success mb-3" style="font-size: 4rem; animation: bounce 0.6s ease-in-out;">
-                        ✅
-                    </div>
-                    <h4 class="modal-title text-success mb-0" style="font-weight: 700; font-size: 1.5rem;">Appointment Booked Successfully!</h4>
-                </div>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close" style="position: absolute; top: 15px; right: 20px; opacity: 0.8;"></button>
+    <div class="modal-dialog modal-dialog-centered" style="max-width: 500px;">
+        <div class="modal-content" style="border-radius: 12px; border: none; background: #4a5568; color: white; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);">
+            <!-- Header with Site Icon -->
+            <div style="position: absolute; top: 15px; left: 20px; background: white; width: 24px; height: 24px; border-radius: 4px; display: flex; align-items: center; justify-content: center;">
+                <i class="bi bi-globe" style="color: #4a5568; font-size: 12px;"></i>
             </div>
+            <div style="position: absolute; top: 15px; left: 50px; color: white; font-size: 14px; font-weight: 500;">
+                127.0.0.1:8000
+            </div>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close" style="position: absolute; top: 15px; right: 20px; opacity: 0.8;"></button>
 
             <!-- Body -->
-            <div class="modal-body text-center px-4 py-4">
+            <div class="modal-body" style="padding: 60px 30px 30px; text-align: left;">
+                <!-- Success Icon and Message -->
+                <div class="text-center mb-4">
+                    <div style="display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; background: #10b981; border-radius: 50%; margin-bottom: 15px;">
+                        <i class="bi bi-check" style="color: white; font-size: 16px; font-weight: bold;"></i>
+                    </div>
+                    <h5 class="mb-0" style="color: rgb(9, 121, 58)55, 255, 255)55, 255, 255)55, 255, 255); font-weight: 500;">Appointment booked successfully!</h5>
+                </div>
 
                 <!-- Booking Details -->
-                <div class="mb-4">
-                    <div class="row g-3">
-                        <div class="col-6">
-                            <div class="bg-light p-3 rounded" style="background: rgba(255, 255, 255, 0.1) !important;">
-                                <small class="text-muted d-block mb-1" style="color: #cbd5e0 !important;">📋 Booking ID:</small>
-                                <strong class="text-primary" id="successBookingId" style="color: #60a5fa !important;">BK000024</strong>
-                            </div>
-                        </div>
-                        <div class="col-6">
-                            <div class="bg-light p-3 rounded" style="background: rgba(255, 255, 255, 0.1) !important;">
-                                <small class="text-muted d-block mb-1" style="color: #cbd5e0 !important;">🔐 Confirmation Code:</small>
-                                <strong class="text-primary" id="successConfirmationCode" style="color: #34d399 !important;">CONFEAB923BD</strong>
-                            </div>
-                        </div>
-                        <div class="col-12">
-                            <div class="bg-light p-3 rounded" style="background: rgba(255, 255, 255, 0.1) !important;">
-                                <small class="text-muted d-block mb-1" style="color: #cbd5e0 !important;">✂️ Service:</small>
-                                <strong class="text-primary" id="successService" style="color: #f87171 !important;">Hair Styling</strong>
-                            </div>
-                        </div>
-                        <div class="col-6">
-                            <div class="bg-light p-3 rounded" style="background: rgba(255, 255, 255, 0.1) !important;">
-                                <small class="text-muted d-block mb-1" style="color: #cbd5e0 !important;">📅 Date:</small>
-                                <strong class="text-primary" id="successAppointmentDate" style="color: #a78bfa !important;">August 18, 2025</strong>
-                            </div>
-                        </div>
-                        <div class="col-6">
-                            <div class="bg-light p-3 rounded" style="background: rgba(255, 255, 255, 0.1) !important;">
-                                <small class="text-muted d-block mb-1" style="color: #cbd5e0 !important;">🕐 Time:</small>
-                                <strong class="text-primary" id="successAppointmentTime" style="color: #fbbf24 !important;">2:00 PM</strong>
-                            </div>
-                        </div>
+                <div class="mb-3">
+                    <div style="display: flex; align-items: center; margin-bottom: 8px;">
+                        <i class="bi bi-bookmark-fill" style="color: #60a5fa; margin-right: 10px; font-size: 14px;"></i>
+                        <span style="color: #cbd5e0; font-size: 14px;">Booking ID: </span>
+                        <strong id="successBookingId" style="color: white; margin-left: 5px;">BK000024</strong>
+                    </div>
+
+                    <div style="display: flex; align-items: center; margin-bottom: 8px;">
+                        <i class="bi bi-shield-check" style="color: #34d399; margin-right: 10px; font-size: 14px;"></i>
+                        <span style="color: #cbd5e0; font-size: 14px;">Confirmation Code: </span>
+                        <strong id="successConfirmationCode" style="color: white; margin-left: 5px;">CONFEAB923BD</strong>
+                    </div>
+
+                    <div style="display: flex; align-items: center; margin-bottom: 8px;">
+                        <i class="bi bi-scissors" style="color: #f87171; margin-right: 10px; font-size: 14px;"></i>
+                        <span style="color: #cbd5e0; font-size: 14px;">Service: </span>
+                        <strong id="successService" style="color: white; margin-left: 5px;">Hair Styling</strong>
+                    </div>
+
+                    <div style="display: flex; align-items: center; margin-bottom: 8px;">
+                        <i class="bi bi-calendar-event" style="color: #a78bfa; margin-right: 10px; font-size: 14px;"></i>
+                        <span style="color: #cbd5e0; font-size: 14px;">Date: </span>
+                        <strong id="successAppointmentDate" style="color: white; margin-left: 5px;">August 18, 2025</strong>
+                    </div>
+
+                    <div style="display: flex; align-items: center; margin-bottom: 8px;">
+                        <i class="bi bi-clock" style="color: #fbbf24; margin-right: 10px; font-size: 14px;"></i>
+                        <span style="color: #cbd5e0; font-size: 14px;">Time: </span>
+                        <strong id="successAppointmentTime" style="color: white; margin-left: 5px;">2:00 PM</strong>
                     </div>
                 </div>
 
                 <!-- Deposit Warning -->
-                <div class="alert alert-warning border-0 mb-4" style="background: linear-gradient(135deg, rgba(251, 146, 60, 0.2) 0%, rgba(245, 158, 11, 0.2) 100%); border-left: 4px solid #f59e0b;">
-                    <div class="d-flex align-items-center justify-content-center">
-                        <span style="font-size: 1.2rem; margin-right: 8px;">⚠️</span>
-                        <span style="font-weight: 600; color: #fed7aa;">Please contact us to arrange the $20 deposit payment.</span>
-                    </div>
+                <div style="display: flex; align-items: flex-start; margin-bottom: 15px; background: rgba(251, 146, 60, 0.1); padding: 12px; border-radius: 8px; border-left: 3px solid #f59e0b;">
+                    <i class="bi bi-exclamation-triangle-fill" style="color: #f59e0b; margin-right: 8px; font-size: 14px; margin-top: 2px;"></i>
+                    <span style="color: #fed7aa; font-size: 14px; line-height: 1.4;">Please contact us to arrange the $50 deposit payment.</span>
                 </div>
 
                 <!-- Contact Information -->
-                <div class="contact-info mb-4">
-                    <div class="row g-2">
-                        <div class="col-6">
-                            <div class="bg-light p-3 rounded" style="background: rgba(255, 255, 255, 0.1) !important;">
-                                <p class="mb-0"><span style="margin-right: 8px;">📞</span><strong>Phone:</strong><br>(343) 254-8848</p>
-                            </div>
-                        </div>
-                        <div class="col-6">
-                            <div class="bg-light p-3 rounded" style="background: rgba(255, 255, 255, 0.1) !important;">
-                                <p class="mb-0"><span style="margin-right: 8px;">📧</span><strong>Email:</strong><br>info@dabsbeautytouch.com</p>
-                            </div>
-                        </div>
+                <div class="mb-4">
+                    <div style="display: flex; align-items: center; margin-bottom: 8px;">
+                        <i class="bi bi-telephone-fill" style="color: #f87171; margin-right: 10px; font-size: 14px;"></i>
+                        <span style="color: #cbd5e0; font-size: 14px;">Phone: </span>
+                        <a href="tel:(647)834-8549" style="color: white; text-decoration: none; margin-left: 5px;">(647) 834-8549</a>
+                    </div>
+
+                    <div style="display: flex; align-items: center; margin-bottom: 15px;">
+                        <i class="bi bi-envelope-fill" style="color: #60a5fa; margin-right: 10px; font-size: 14px;"></i>
+                        <span style="color: #cbd5e0; font-size: 14px;">Email: </span>
+                        <a href="mailto:info@dabsbeautytouch.com" style="color: white; text-decoration: none; margin-left: 5px;">info@dabsbeautytouch.com</a>
                     </div>
                 </div>
 
-                <p class="text-muted mb-0" style="font-size: 0.95rem; color: #cbd5e0;">We'll confirm your appointment once payment is received!</p>
+                <!-- Confirmation Message -->
+                <p style="color: #cbd5e0; font-size: 14px; margin-bottom: 20px; line-height: 1.5;">
+                    We'll confirm your appointment once payment is received!
+                </p>
 
-            </div>
-            <div class="modal-footer border-0 justify-content-center pb-4">
-                <button type="button" class="btn btn-info px-5 py-2" data-bs-dismiss="modal" onclick="handleSuccessModalClose()" style="background: linear-gradient(135deg, #17a2b8 0%, #20c997 100%); border: none; border-radius: 25px; font-weight: 600; font-size: 1.1rem; cursor: pointer; transition: all 0.3s ease;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">OK</button>
+                <!-- Don't Show Again Checkbox -->
+                <div style="margin-bottom: 20px;">
+                    <label class="form-check-label" style="display: flex; align-items: center; color: #9ca3af; font-size: 13px; cursor: pointer;">
+                        <input type="checkbox" class="form-check-input me-2" id="dontShowAgain" style="margin-right: 8px; background-color: transparent; border-color: #6b7280;">
+                        <span>Don't allow 127.0.0.1:8000 to prompt you again</span>
+                    </label>
+                </div>
+
+                <!-- OK Button -->
+                <div class="text-center">
+                    <button type="button" class="btn" data-bs-dismiss="modal" style="background: #0891b2; color: white; border: none; padding: 8px 30px; border-radius: 6px; font-weight: 500; font-size: 14px;">
+                        OK
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -4537,78 +4600,6 @@ function selectCustomService() {
 
 <!-- JavaScript to enhance booking success message visibility -->
 <script>
-        // Function to show error messages in a user-friendly way
-        function showErrorMessage(message) {
-            // Create a temporary error alert
-            const errorAlert = document.createElement('div');
-            errorAlert.className = 'alert alert-danger alert-dismissible fade show position-fixed';
-            errorAlert.style.cssText = 'top: 20px; right: 20px; z-index: 9999; max-width: 400px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);';
-            errorAlert.innerHTML = `
-                <strong>Booking Error</strong><br>
-                ${message}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            `;
-            
-            document.body.appendChild(errorAlert);
-            
-            // Auto-remove after 8 seconds
-            setTimeout(() => {
-                if (errorAlert.parentNode) {
-                    errorAlert.remove();
-                }
-            }, 8000);
-        }
-
-        // Function to handle success modal close
-        function handleSuccessModalClose() {
-            const successModal = document.getElementById('ajaxSuccessModal');
-            if (successModal) {
-                const modalInstance = bootstrap.Modal.getInstance(successModal);
-                if (modalInstance) {
-                    modalInstance.hide();
-                }
-            }
-            
-            // Optionally, you can add logic here to reset the form or show the booking modal again
-            // For example, to allow users to make another booking:
-            // setTimeout(() => {
-            //     const bookingModal = document.getElementById('bookingModal');
-            //     if (bookingModal) {
-            //         const modalInstance = bootstrap.Modal.getOrCreateInstance(bookingModal);
-            //         modalInstance.show();
-            //     }
-            // }, 500);
-        }
-
-        // Test function to manually trigger the success modal
-        window.testSuccessModal = function() {
-    console.log('Testing success modal...');
-    const successModalElement = document.getElementById('ajaxSuccessModal');
-    if (successModalElement) {
-        console.log('Modal found, updating with test data...');
-        
-        // Update with test data
-        const bookingIdElement = document.getElementById('successBookingId');
-        const confirmationCodeElement = document.getElementById('successConfirmationCode');
-        const serviceElement = document.getElementById('successService');
-        const dateElement = document.getElementById('successAppointmentDate');
-        const timeElement = document.getElementById('successAppointmentTime');
-        
-        if (bookingIdElement) bookingIdElement.textContent = 'TEST-BK-001';
-        if (confirmationCodeElement) confirmationCodeElement.textContent = 'TEST-CONF-123';
-        if (serviceElement) serviceElement.textContent = 'Test Service';
-        if (dateElement) dateElement.textContent = 'Test Date';
-        if (timeElement) timeElement.textContent = 'Test Time';
-        
-        // Show modal
-        const modalInstance = bootstrap.Modal.getOrCreateInstance(successModalElement);
-        modalInstance.show();
-        console.log('Test modal should be visible now');
-    } else {
-        console.error('Modal not found!');
-    }
-};
-
 document.addEventListener('DOMContentLoaded', function() {
     // Check if there's a booking success message
     const successAlert = document.querySelector('.alert-success');
@@ -4708,9 +4699,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // Auto close modal after 5 seconds
         setTimeout(function() {
-            console.log('Auto-closing success modal after timeout');
             closeSuccessModal();
-        }, 10000); // 10 seconds
+        }, 5000);
     }
 });
 
@@ -4720,41 +4710,29 @@ function closeSuccessModal() {
     const successModal = document.getElementById('successModal');
     if (successModal) {
         console.log('Success modal found, hiding it'); // Debug log
-        
-        // Add fade-out effect
-        successModal.style.opacity = '0';
-        successModal.style.transition = 'opacity 0.3s ease';
-        
-        // Hide modal after fade animation
+        successModal.style.display = 'none';
+
+        // Remove modal from DOM after animation
         setTimeout(function() {
-            successModal.style.display = 'none';
-            
-            // Remove modal from DOM
             if (successModal.parentNode) {
                 successModal.parentNode.removeChild(successModal);
             }
-            
-            // Clear session data
-            fetch('/clear-session', {
-                method: 'GET',
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                }
-            }).then(function(response) {
-                if (response.ok) {
-                    console.log('Session cleared successfully'); // Debug log
-                    // Update URL to remove any query parameters
-                    if (window.history && window.history.replaceState) {
-                        window.history.replaceState({}, document.title, window.location.pathname);
-                    }
-                } else {
-                    console.log('Session clear request failed with status:', response.status);
-                }
-            }).catch(function(error) {
-                console.log('Session clear request failed:', error);
-            });
         }, 300);
+
+        // Clear session data
+        fetch('/clear-session', {
+            method: 'GET',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        }).then(function() {
+            console.log('Session cleared successfully'); // Debug log
+            if (window.history && window.history.replaceState) {
+                window.history.replaceState({}, document.title, window.location.pathname);
+            }
+        }).catch(function(error) {
+            console.log('Session clear request failed:', error);
+        });
     } else {
         console.log('Success modal not found'); // Debug log
     }
@@ -4774,25 +4752,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 closeSuccessModal();
             });
         }
-        
-        // Add click outside modal to close functionality
-        const successModal = document.getElementById('successModal');
-        if (successModal) {
-            successModal.addEventListener('click', function(e) {
-                if (e.target === successModal) {
-                    console.log('Modal background clicked, closing modal');
-                    closeSuccessModal();
-                }
-            });
-        }
-        
-        // Add escape key functionality
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape' && successModal && successModal.style.display !== 'none') {
-                console.log('Escape key pressed, closing modal');
-                closeSuccessModal();
-            }
-        });
     }, 100);
 
     // Image preview functionality
@@ -4849,13 +4808,83 @@ function clearImagePreview() {
     if (fileName) fileName.textContent = '';
 }
 </script>
+</body>
+</html>
+
 <script>
-// Make openServiceSelectionModal globally available
-function openServiceSelectionModal() {
-    const serviceModal = new bootstrap.Modal(document.getElementById('serviceSelectionModal'));
-    serviceModal.show();
-}
+// Dynamic price preview and form wiring
+(function() {
+    const priceMap = {
+        'small-knotless': 150,
+        'smedium-knotless': 130,
+        'wig-installation': 150,
+        'large-knotless': 110,
+        'jumbo-knotless': 80,
+        'kids-braids': 80,
+        'stitch-braids': 120,
+        'hair-mask': 50,
+        'boho-braids': 150,
+        'custom': 100
+    };
+
+    function lengthAdjustment(lengthValue) {
+        const longer = ['waist','hip','tailbone','classic'];
+        const shorter = ['shoulder','neck','armpit'];
+        if (longer.includes(lengthValue)) return 30;
+        if (shorter.includes(lengthValue)) return -30;
+        return 0;
+    }
+
+    function getSelectedLength() {
+        const radios = document.getElementsByName('hair_length');
+        for (let i=0;i<radios.length;i++) if (radios[i].checked) return radios[i].value;
+        return 'mid-back';
+    }
+
+    function updatePriceDisplay(basePrice) {
+        const length = getSelectedLength();
+        const adj = lengthAdjustment(length);
+        const finalPrice = (typeof basePrice === 'number' ? basePrice : 0) + adj;
+        const disp = document.getElementById('priceDisplay');
+        const hidden = document.getElementById('selectedPrice');
+        if (disp) disp.textContent = finalPrice ? ('$' + finalPrice) : '--';
+        if (hidden) hidden.value = finalPrice || '';
+    }
+
+    // Wrap existing openBookingModal
+    const prevOpen = window.openBookingModal;
+    window.openBookingModal = function(serviceName, serviceType) {
+        // set service type hidden input
+        const st = document.getElementById('selectedServiceType');
+        if (st) st.value = serviceType || '';
+
+        const base = (serviceType && priceMap[serviceType]) ? priceMap[serviceType] : priceMap['custom'];
+        updatePriceDisplay(base);
+
+        if (typeof prevOpen === 'function') {
+            try { prevOpen(serviceName, serviceType); } catch(e){ console.error('openBookingModal inner error', e); }
+        }
+    };
+
+    // Update price when length changes
+    document.addEventListener('change', function(e){
+        if (e.target && e.target.name === 'hair_length') {
+            const serviceType = document.getElementById('selectedServiceType')?.value || 'custom';
+            const base = priceMap[serviceType] || priceMap['custom'];
+            updatePriceDisplay(base);
+        }
+    });
+
+    // Init on load
+    document.addEventListener('DOMContentLoaded', function(){
+        const serviceType = document.getElementById('selectedServiceType')?.value || 'custom';
+        const base = priceMap[serviceType] || priceMap['custom'];
+        updatePriceDisplay(base);
+    });
+
+})();
 </script>
+
 </body>
 </html>
 
