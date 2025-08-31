@@ -13,6 +13,11 @@
     <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('images/icon.ico.jpg') }}">
     <meta name="msapplication-TileImage" content="{{ asset('images/icon.ico.jpg') }}">
 
+    <script>
+        // Inject server-side service prices so client uses authoritative values without extra fetch
+        window.servicePrices = {!! json_encode($servicePrices ?? []) !!};
+    </script>
+
     <!-- CSS Files -->
     <link rel="stylesheet" href="{{ asset('css/bootstrap.css') }}">
     <link rel="stylesheet" href="{{ asset('css/style.css') }}">
@@ -192,17 +197,9 @@
         // initialize
         updateEstimatedPriceUI();
 
-        // fetch service prices from server and store globally for computeEstimatedPrice
-        fetch('/api/services/prices')
-            .then(r => r.json())
-            .then(data => {
-                window.servicePrices = data || {};
-                // update estimate now that prices are loaded
-                updateEstimatedPriceUI();
-            })
-            .catch(err => {
-                console.warn('Could not load service prices:', err);
-            });
+    // service prices are injected server-side into window.servicePrices
+    // ensure estimate reflects injected prices
+    updateEstimatedPriceUI();
     });
 
         @media (max-width: 576px) {

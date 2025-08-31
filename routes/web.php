@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\ServiceController as AdminServiceController;
+use App\Models\Service;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -9,11 +10,12 @@ use Illuminate\Http\Request;
 
 // Main route - show the home page
 Route::get('/', function () {
-    return view('home');
+    $servicePrices = Service::pluck('base_price', 'slug')->toArray();
+    return view('home', compact('servicePrices'));
 })->name('home');
 
 // Basic admin routes for services (protect with middleware in production)
-Route::prefix('admin')->name('admin.')->group(function() {
+Route::prefix('admin')->name('admin.')->middleware('auth')->group(function() {
     Route::get('services', [AdminServiceController::class, 'index'])->name('services.index');
     Route::get('services/{service}/edit', [AdminServiceController::class, 'edit'])->name('services.edit');
     Route::post('services/{service}', [AdminServiceController::class, 'update'])->name('services.update');
@@ -561,6 +563,42 @@ Route::post('/bookings', function(Request $request) {
             'sample_picture' => $samplePicturePath,
             'status' => 'pending',
         ];
+
+        // Determine final price using Service model + length adjustments
+        try {
+            $serviceInput = $request->service;
+            $serviceModel = null;
+            if ($serviceInput) {
+                // Try slug first
+                $serviceModel = Service::where('slug', $serviceInput)->first();
+                if (!$serviceModel) {
+                    // Try by name
+                    $serviceModel = Service::where('name', $serviceInput)->first();
+                }
+            }
+
+            $base = $serviceModel ? (float) $serviceModel->base_price : 150.00;
+            $adjustments = [
+                'neck' => -20.00,
+                'shoulder' => -20.00,
+                'armpit' => -20.00,
+                'bra_strap' => -20.00,
+                'mid_back' => 0.00,
+                'waist' => 20.00,
+                'hip' => 20.00,
+                'tailbone' => 40.00,
+                'thigh' => 40.00,
+                'classic' => 40.00,
+            ];
+
+            $length = $request->length ?: 'mid_back';
+            $adjust = $adjustments[$length] ?? 0.00;
+            $finalPrice = round($base + $adjust, 2);
+            $bookingData['final_price'] = $finalPrice;
+        } catch (\Exception $e) {
+            Log::warning('Failed to compute final price: ' . $e->getMessage());
+            $bookingData['final_price'] = 150.00;
+        }
 
         Log::info('=== BOOKING DATA PREPARED ===', $bookingData);
 
