@@ -24,13 +24,13 @@ services:
       - MAIL_MAILER=smtp
       - MAIL_HOST=smtp.zohocloud.ca
       - MAIL_PORT=465
-  - MAIL_USERNAME=infor@dabsbeautytouch
+      - MAIL_USERNAME=info@dabsbeautytouch.com
       - MAIL_PASSWORD=YOUR_MAIL_PASSWORD
       - MAIL_ENCRYPTION=ssl
-  - MAIL_FROM_ADDRESS=infor@dabsbeautytouch
+      - MAIL_FROM_ADDRESS=info@dabsbeautytouch.com
       - MAIL_FROM_NAME=Dab's Beauty Touch
-  - ADMIN_EMAIL=infor@dabsbeautytouch
-  - BOOKING_NOTIFICATION_EMAIL=infor@dabsbeautytouch
+      - ADMIN_EMAIL=info@dabsbeautytouch.com
+      - BOOKING_NOTIFICATION_EMAIL=info@dabsbeautytouch.com
     volumes:
       - ./storage/app/public:/var/www/html/storage/app/public
     depends_on:

@@ -89,6 +89,7 @@ class AppointmentController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'nullable|email|max:255',
             'phone' => 'required|string|max:20',
+            'length' => 'required|string|in:shoulder,mid_back,waist,hip,thigh',
             'service' => 'nullable|string|max:255',
             'appointment_date' => 'required|date|after_or_equal:today',
             'appointment_time' => 'required|date_format:H:i',
@@ -199,16 +200,44 @@ class AppointmentController extends Controller
                 Log::info('No file uploaded');
             }
 
-            // Create the booking
+            // Compute final price based on selected length.
+            // Base mid-back price is treated as default. Adjustments:
+            // - shorter lengths (neck/shoulder/armpit/bra_strap) => -$20
+            // - waist, hip => +$20
+            // - tailbone, thigh, classic => +$40
+            $length = $request->input('length', 'mid_back');
+
+            // Default mid-back price. If later you have per-service base prices, replace this with service lookup.
+            $midBackPrice = 150.00;
+
+            $lengthAdjustments = [
+                'neck' => -20.00,
+                'shoulder' => -20.00,
+                'armpit' => -20.00,
+                'bra_strap' => -20.00,
+                'mid_back' => 0.00,
+                'waist' => 20.00,
+                'hip' => 20.00,
+                'tailbone' => 40.00,
+                'thigh' => 40.00,
+                'classic' => 40.00,
+            ];
+
+            $adjust = $lengthAdjustments[$length] ?? 0.00;
+            $finalPrice = round($midBackPrice + $adjust, 2);
+
+            // Create the booking and persist length and final_price
             $booking = \App\Models\Booking::create([
                 'name' => $request->name,
                 'email' => $request->email ?: 'no-email@example.com',
                 'phone' => $request->phone,
                 'service' => $request->service ?: 'General Service',
+                'length' => $length,
                 'appointment_date' => $request->appointment_date,
                 'appointment_time' => $request->appointment_time,
                 'message' => $request->message,
                 'sample_picture' => $samplePicturePath,
+                'final_price' => $finalPrice,
                 'status' => 'pending'
             ]);
 
