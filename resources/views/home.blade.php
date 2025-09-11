@@ -2347,6 +2347,11 @@
                             <span style="font-size: 1rem; color: #6c757d;">Confirmation Code:</span>
                             <a href="#" style="font-weight: bold; color: #007bff; text-decoration: underline;">{{ session('booking_details.confirmation_code') }}</a>
                         </div>
+                        <div class="col-auto text-start">
+                            <span style="font-size: 1.2rem; margin-right: 4px;">&#128176;</span>
+                            <span style="font-size: 1rem; color: #6c757d;">Price:</span>
+                            <span style="font-weight: bold; color: #001f3f;">{{ isset(session('booking_details')['final_price']) ? '$' . number_format(session('booking_details.final_price'),2) : '' }}</span>
+                        </div>
                     </div>
                     <div class="alert alert-warning border-0 mb-3" style="background-color: #fff3cd; border-radius: 8px;">
                         <div class="d-flex align-items-center justify-content-center">
@@ -2552,15 +2557,12 @@
                                     <input type="email" class="form-control" id="email" name="email" placeholder="Enter your email address" autocomplete="off">
                                 </div>
                             </div>
-                            <!-- Address field temporarily hidden until migration is run -->
-                            <!--
                             <div class="col-md-6">
                                 <div class="form-group">
                                     <label for="address" class="form-label">Home Address</label>
                                     <input type="text" class="form-control" id="address" name="address" placeholder="Enter your address" autocomplete="off">
                                 </div>
                             </div>
-                            -->
                             <div class="col-12">
                                 <div class="form-group">
                                     <label for="message" class="form-label">Special Requests or Notes</label>
@@ -3520,6 +3522,22 @@ console.log('=== LOADING BOOKING FUNCTIONS ===');
         const selectedServiceInput = document.getElementById('selectedService');
         const serviceDisplayInput = document.getElementById('serviceDisplay');
 
+        // Map common services to their base prices (USD)
+        const priceMap = {
+            'Weaving Crotchet': '80',
+            'Single Crotchet': '100',
+            'Natural Hair Twist': '50',
+            'Weaving No-Extension': '30',
+            'Kinky Twist': '90',
+            'Twist Braids': '100'
+        };
+
+        // Set the hidden price input if we know the base price
+        const selectedPriceInput = document.getElementById('selectedPrice');
+        if (selectedPriceInput) {
+            selectedPriceInput.value = priceMap[serviceName] || '';
+        }
+
         if (selectedServiceInput) {
             selectedServiceInput.value = serviceName;
         }
@@ -3559,6 +3577,12 @@ console.log('=== LOADING BOOKING FUNCTIONS ===');
 
         if (serviceDisplayInput) {
             serviceDisplayInput.value = customService;
+        }
+
+        // Clear price for custom services so owner can confirm pricing later
+        const selectedPriceInput = document.getElementById('selectedPrice');
+        if (selectedPriceInput) {
+            selectedPriceInput.value = '';
         }
 
         // Close the service selection modal
@@ -3820,14 +3844,14 @@ console.log('=== LOADING BOOKING FUNCTIONS ===');
             for (let i=0;i<r.length;i++) if (r[i].checked) return r[i].value;
             return null;
         })();
-        if (!selectedLengthInput) {
+    if (!selectedLengthInput) {
             selectedLengthInput = document.createElement('input');
             selectedLengthInput.type = 'hidden';
             selectedLengthInput.name = 'length';
             selectedLengthInput.id = 'length_hidden_field';
             this.appendChild(selectedLengthInput);
         }
-        if (selectedHairLength) selectedLengthInput.value = selectedHairLength;
+    if (selectedHairLength) selectedLengthInput.value = selectedHairLength.replace(/-/g, '_');
 
         const formData = new FormData(this);
 
@@ -4059,6 +4083,7 @@ console.log('=== LOADING BOOKING FUNCTIONS ===');
                 const bookingId = data.appointment ? data.appointment.booking_id : 'N/A';
                 const confirmationCode = data.appointment ? data.appointment.confirmation_code : 'N/A';
                 const service = data.appointment ? data.appointment.service : 'General Service';
+                const priceDisplay = data.appointment ? (data.appointment.price || ('$' + (data.appointment.final_price ? Number(data.appointment.final_price).toFixed(2) : '0.00'))) : 'N/A';
                 const appointmentDate = data.appointment ? data.appointment.appointment_date : 'N/A';
                 const appointmentTime = data.appointment ? data.appointment.appointment_time : 'N/A';
 
@@ -4127,6 +4152,7 @@ console.log('=== LOADING BOOKING FUNCTIONS ===');
                     const serviceElement = document.getElementById('successService');
                     const dateElement = document.getElementById('successAppointmentDate');
                     const timeElement = document.getElementById('successAppointmentTime');
+                    const priceElement = document.getElementById('successPrice');
 
                     console.log('Elements found before modal show:', {
                         bookingId: !!bookingIdElement,
@@ -4156,6 +4182,10 @@ console.log('=== LOADING BOOKING FUNCTIONS ===');
                     if (timeElement) {
                         timeElement.textContent = appointmentTime;
                         console.log('Updated time to:', appointmentTime);
+                    }
+                    if (priceElement) {
+                        priceElement.textContent = priceDisplay;
+                        console.log('Updated price to:', priceDisplay);
                     }
 
                     console.log('Calling modal.show()...');
@@ -4611,6 +4641,14 @@ console.log('=== LOADING BOOKING FUNCTIONS ===');
                         <div style="color:#6b7280; font-size:14px; margin-bottom:6px;">📋 Booking ID:</div>
                         <a href="#" id="successBookingId" style="font-weight:800; color:#007bff; text-decoration:underline; font-size:18px;">BK000000</a>
                     </div>
+
+                <!-- Price row -->
+                <div class="row" style="margin-bottom:10px;">
+                    <div class="col-12 text-center">
+                        <div style="color:#6b7280; font-size:14px; margin-bottom:6px;">💲 Price:</div>
+                        <div id="successPrice" style="font-weight:800; color:#007bff; font-size:18px;">$0.00</div>
+                    </div>
+                </div>
                     <div class="col-6 text-center" style="padding:0 12px;">
                         <div style="color:#6b7280; font-size:14px; margin-bottom:6px;">🔐 Confirmation Code:</div>
                         <a href="#" id="successConfirmationCode" style="font-weight:800; color:#007bff; text-decoration:underline; font-size:18px;">CONFXXXXXXXX</a>
@@ -4879,32 +4917,37 @@ function clearImagePreview() {
 // Dynamic price preview and form wiring
 (function() {
     const priceMap = {
-        'small-knotless': 150,
-        'smedium-knotless': 130,
-        'wig-installation': 150,
-        'large-knotless': 110,
-        'jumbo-knotless': 80,
-        'kids-braids': 80,
-        'stitch-braids': 120,
-        'hair-mask': 50,
-        'boho-braids': 150,
-        'custom': 100
+    'small-knotless': 150,
+    'smedium-knotless': 130,
+    'wig-installation': 150,
+    'large-knotless': 110,
+    // Updated to match server-side data (seed & DB)
+    'jumbo-knotless': 60,
+    'kids-braids': 80,
+    'stitch-braids': 120,
+    'hair-mask': 50,
+    'boho-braids': 150,
+    'custom': 100
     };
 
     function lengthAdjustment(lengthValue) {
-        // Explicit per-length adjustments (in USD)
-        // tailbone & classic get an additional +$20 (total +$40)
-        // shoulder & neck get an additional -$20 (total -$40)
+        // Normalize incoming value (accept hyphen or underscore) and apply server-aligned adjustments
+        const key = (lengthValue || '').toString().replace(/-/g, '_');
+        // Match server-side adjustment map (USD)
         const adjustments = {
+            'neck': -20,
+            'shoulder': -20,
+            'armpit': -20,
+            'bra_strap': -20,
+            'mid_back': 0,
             'waist': 20,
             'hip': 20,
             'tailbone': 40,
-            'classic': 40,
-            'shoulder': -40,
-            'neck': -40,
-            'armpit': -20
+            'thigh': 40,
+            'classic': 40
         };
-        return adjustments[lengthValue] ?? 0;
+
+        return adjustments[key] ?? 0;
     }
 
     function getSelectedLength() {
@@ -4919,7 +4962,7 @@ function clearImagePreview() {
         const finalPrice = (typeof basePrice === 'number' ? basePrice : 0) + adj;
         const disp = document.getElementById('priceDisplay');
         const hidden = document.getElementById('selectedPrice');
-        if (disp) disp.textContent = finalPrice ? ('$' + finalPrice) : '--';
+    if (disp) disp.textContent = finalPrice ? ('$' + finalPrice) : '--';
         if (hidden) hidden.value = finalPrice || '';
     }
 

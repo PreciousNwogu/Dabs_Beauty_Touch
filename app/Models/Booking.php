@@ -34,6 +34,8 @@ class Booking extends Model
         'completion_notes',
         'service_duration_minutes',
         'final_price',
+    'confirmation_code',
+    'sample_picture',
         'payment_status',
         'status_history',
     ];
@@ -49,6 +51,8 @@ class Booking extends Model
         'completed_at' => 'datetime',
         'cancelled_at' => 'datetime',
         'final_price' => 'decimal:2',
+    'confirmation_code' => 'string',
+    'sample_picture' => 'string',
         'status_history' => 'array',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',

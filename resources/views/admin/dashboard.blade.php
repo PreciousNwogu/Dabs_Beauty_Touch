@@ -495,6 +495,7 @@
                                         <i class="bi bi-arrow-down-up text-muted"></i>
                                     @endif
                                 </th>
+                                       <th>Final Price</th>
                                 <th class="cursor-pointer" onclick="sortTable('appointment_date')">
                                     Appointment Date
                                     @if(request('sort_by') == 'appointment_date')
@@ -552,6 +553,15 @@
                                             @if($booking->length)
                                                 <small class="text-muted">Length: {{ $booking->length }}</small>
                                             @endif
+                                        </td>
+                                        <td>
+                                            <div>
+                                                @if(isset($booking->final_price))
+                                                    ${{ number_format($booking->final_price, 2) }}
+                                                @else
+                                                    <span class="text-muted">-</span>
+                                                @endif
+                                            </div>
                                         </td>
                                         <td>
                                             <div>
@@ -1009,6 +1019,7 @@
                                     <tr><td><strong>Confirmation Code:</strong></td><td>${booking.confirmation_code || 'N/A'}</td></tr>
                                     <tr><td><strong>Service:</strong></td><td>${booking.service}</td></tr>
                                     <tr><td><strong>Length:</strong></td><td>${booking.length || 'Not specified'}</td></tr>
+                                    <tr><td><strong>Final Price:</strong></td><td>${typeof booking.final_price !== 'undefined' ? ('$' + parseFloat(booking.final_price).toFixed(2)) : 'N/A'}</td></tr>
                                     <tr><td><strong>Date:</strong></td><td>${new Date(booking.appointment_date).toLocaleDateString()}</td></tr>
                                     <tr><td><strong>Time:</strong></td><td>${booking.appointment_time}</td></tr>
                                     <tr><td><strong>Status:</strong></td><td><span class="status-badge status-${booking.status}">${booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}</span></td></tr>
