@@ -738,6 +738,31 @@ Route::get('/bookings/details', function(Request $request) {
     return response()->json(['details' => []]);
 })->name('bookings.details');
 
+// Public booking confirmation link - shows booking details only when confirmation code matches
+Route::get('/bookings/confirm/{id}/{code}', function($id, $code) {
+    $booking = \App\Models\Booking::find($id);
+    if (!$booking || ($booking->confirmation_code ?? '') !== $code) {
+        return redirect()->route('home')->with(['booking_error' => true, 'error_message' => 'Invalid booking confirmation link.']);
+    }
+
+    // Render a simple page showing booking details (or reuse booking.success view)
+    $bookingDetails = [
+        'booking_id' => 'BK' . str_pad($booking->id, 6, '0', STR_PAD_LEFT),
+        'confirmation_code' => $booking->confirmation_code,
+        'service' => $booking->service,
+        'length' => $booking->length,
+        'final_price' => $booking->final_price,
+        'appointment_date' => $booking->appointment_date ? $booking->appointment_date->format('F j, Y') : null,
+        'appointment_time' => $booking->appointment_time,
+        'name' => $booking->name,
+        'email' => $booking->email,
+        'phone' => $booking->phone,
+        'message' => $booking->message,
+    ];
+
+    return view('booking.success', ['bookingDetails' => $bookingDetails]);
+})->name('bookings.confirm');
+
 // API routes for frontend - simplified closure implementation
 Route::prefix('api')->group(function () {
     Route::get('/services', function() {
