@@ -564,7 +564,13 @@ Route::post('/bookings', function(Request $request) {
             'status' => 'pending',
         ];
 
-        // Determine final price using Service model + length adjustments
+        // Normalize incoming length (accept hair_length or length) and determine final price using Service model + length adjustments
+        $lengthRaw = $request->input('hair_length') ?? $request->input('length');
+        if ($lengthRaw) {
+            $length = str_replace('-', '_', $lengthRaw);
+        } else {
+            $length = $request->length ?: 'mid_back';
+        }
         try {
             $serviceInput = $request->service;
             $serviceModel = null;
@@ -591,10 +597,10 @@ Route::post('/bookings', function(Request $request) {
                 'classic' => 40.00,
             ];
 
-            $length = $request->length ?: 'mid_back';
             $adjust = $adjustments[$length] ?? 0.00;
             $finalPrice = round($base + $adjust, 2);
             $bookingData['final_price'] = $finalPrice;
+            $bookingData['length'] = $length;
         } catch (\Exception $e) {
             Log::warning('Failed to compute final price: ' . $e->getMessage());
             $bookingData['final_price'] = 150.00;
@@ -610,6 +616,14 @@ Route::post('/bookings', function(Request $request) {
         // Generate booking ID in BK format and confirmation code
         $bookingId = 'BK' . str_pad($booking->id, 6, '0', STR_PAD_LEFT);
         $confirmationCode = 'CONF' . strtoupper(substr(md5($booking->id . time()), 0, 8));
+
+        // Persist confirmation code on the booking record
+        try {
+            $booking->confirmation_code = $confirmationCode;
+            $booking->save();
+        } catch (\Exception $e) {
+            Log::warning('Failed to save confirmation_code for booking', ['booking_id' => $booking->id, 'error' => $e->getMessage()]);
+        }
 
         // Log successful booking
         Log::info('Booking created successfully', [
@@ -630,6 +644,8 @@ Route::post('/bookings', function(Request $request) {
                 'appointment' => [
                     'booking_id' => $bookingId,
                     'confirmation_code' => $confirmationCode,
+                    'final_price' => $booking->final_price,
+                    'length' => $booking->length,
                     'service' => $booking->service,
                     'appointment_date' => $booking->appointment_date->format('F j, Y'),
                     'appointment_time' => $booking->appointment_time,
@@ -648,6 +664,8 @@ Route::post('/bookings', function(Request $request) {
             'booking_details' => [
                 'booking_id' => $bookingId,
                 'confirmation_code' => $confirmationCode,
+                'final_price' => $booking->final_price,
+                'length' => $booking->length,
                 'service' => $booking->service,
                 'appointment_date' => $booking->appointment_date->format('F j, Y'),
                 'appointment_time' => $booking->appointment_time,

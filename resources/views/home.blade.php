@@ -2350,7 +2350,7 @@
                         <div class="col-auto text-start">
                             <span style="font-size: 1.2rem; margin-right: 4px;">&#128176;</span>
                             <span style="font-size: 1rem; color: #6c757d;">Price:</span>
-                            <span style="font-weight: bold; color: #001f3f;">{{ session('booking_details.price') ?? '' }}</span>
+                            <span style="font-weight: bold; color: #001f3f;">{{ isset(session('booking_details')['final_price']) ? '$' . number_format(session('booking_details.final_price'),2) : '' }}</span>
                         </div>
                     </div>
                     <div class="alert alert-warning border-0 mb-3" style="background-color: #fff3cd; border-radius: 8px;">
@@ -3844,14 +3844,14 @@ console.log('=== LOADING BOOKING FUNCTIONS ===');
             for (let i=0;i<r.length;i++) if (r[i].checked) return r[i].value;
             return null;
         })();
-        if (!selectedLengthInput) {
+    if (!selectedLengthInput) {
             selectedLengthInput = document.createElement('input');
             selectedLengthInput.type = 'hidden';
             selectedLengthInput.name = 'length';
             selectedLengthInput.id = 'length_hidden_field';
             this.appendChild(selectedLengthInput);
         }
-        if (selectedHairLength) selectedLengthInput.value = selectedHairLength;
+    if (selectedHairLength) selectedLengthInput.value = selectedHairLength.replace(/-/g, '_');
 
         const formData = new FormData(this);
 
@@ -4917,32 +4917,37 @@ function clearImagePreview() {
 // Dynamic price preview and form wiring
 (function() {
     const priceMap = {
-        'small-knotless': 150,
-        'smedium-knotless': 130,
-        'wig-installation': 150,
-        'large-knotless': 110,
-        'jumbo-knotless': 80,
-        'kids-braids': 80,
-        'stitch-braids': 120,
-        'hair-mask': 50,
-        'boho-braids': 150,
-        'custom': 100
+    'small-knotless': 150,
+    'smedium-knotless': 130,
+    'wig-installation': 150,
+    'large-knotless': 110,
+    // Updated to match server-side data (seed & DB)
+    'jumbo-knotless': 60,
+    'kids-braids': 80,
+    'stitch-braids': 120,
+    'hair-mask': 50,
+    'boho-braids': 150,
+    'custom': 100
     };
 
     function lengthAdjustment(lengthValue) {
-        // Explicit per-length adjustments (in USD)
-        // tailbone & classic get an additional +$20 (total +$40)
-        // shoulder & neck get an additional -$20 (total -$40)
+        // Normalize incoming value (accept hyphen or underscore) and apply server-aligned adjustments
+        const key = (lengthValue || '').toString().replace(/-/g, '_');
+        // Match server-side adjustment map (USD)
         const adjustments = {
+            'neck': -20,
+            'shoulder': -20,
+            'armpit': -20,
+            'bra_strap': -20,
+            'mid_back': 0,
             'waist': 20,
             'hip': 20,
             'tailbone': 40,
-            'classic': 40,
-            'shoulder': -40,
-            'neck': -40,
-            'armpit': -20
+            'thigh': 40,
+            'classic': 40
         };
-        return adjustments[lengthValue] ?? 0;
+
+        return adjustments[key] ?? 0;
     }
 
     function getSelectedLength() {

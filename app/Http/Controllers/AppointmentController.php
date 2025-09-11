@@ -84,12 +84,19 @@ class AppointmentController extends Controller
             'headers' => $request->headers->all()
         ]);
 
+        // Normalize length input: accept hair_length (client) and convert hyphens to underscores
+        $lengthRaw = $request->input('hair_length') ?? $request->input('length');
+        if ($lengthRaw) {
+            $normalized = str_replace('-', '_', $lengthRaw);
+            $request->merge(['length' => $normalized]);
+        }
+
         // Handle sample_picture validation separately to avoid empty file issues
         $validationRules = [
             'name' => 'required|string|max:255',
             'email' => 'nullable|email|max:255',
             'phone' => 'required|string|max:20',
-            'length' => 'required|string|in:shoulder,mid_back,waist,hip,thigh',
+            'length' => 'required|string|in:neck,shoulder,armpit,bra_strap,mid_back,waist,hip,tailbone,thigh,classic',
             'service' => 'nullable|string|max:255',
             'appointment_date' => 'required|date|after_or_equal:today',
             'appointment_time' => 'required|date_format:H:i',
@@ -200,15 +207,17 @@ class AppointmentController extends Controller
                 Log::info('No file uploaded');
             }
 
-            // Compute final price based on selected length.
-            // Base mid-back price is treated as default. Adjustments:
-            // - shorter lengths (neck/shoulder/armpit/bra_strap) => -$20
-            // - waist, hip => +$20
-            // - tailbone, thigh, classic => +$40
+            // Compute final price based on selected length and per-service base price.
             $length = $request->input('length', 'mid_back');
 
-            // Default mid-back price. If later you have per-service base prices, replace this with service lookup.
-            $midBackPrice = 150.00;
+            // Lookup service base price if provided; fall back to 150.00
+            $serviceInput = $request->input('service');
+            $serviceModel = null;
+            if (!empty($serviceInput)) {
+                // Try slug first, then name
+                $serviceModel = \App\Models\Service::where('slug', $serviceInput)->orWhere('name', $serviceInput)->first();
+            }
+            $basePrice = $serviceModel ? (float) $serviceModel->base_price : 150.00;
 
             $lengthAdjustments = [
                 'neck' => -20.00,
@@ -224,7 +233,17 @@ class AppointmentController extends Controller
             ];
 
             $adjust = $lengthAdjustments[$length] ?? 0.00;
-            $finalPrice = round($midBackPrice + $adjust, 2);
+            $finalPrice = round($basePrice + $adjust, 2);
+
+            // Log pricing calculation details for debugging
+            Log::info('Pricing calculation', [
+                'service_input' => $serviceInput,
+                'service_model' => $serviceModel ? $serviceModel->toArray() : null,
+                'base_price' => $basePrice,
+                'length' => $length,
+                'adjust' => $adjust,
+                'final_price' => $finalPrice
+            ]);
 
             // Create the booking and persist length and final_price
             $booking = \App\Models\Booking::create([
@@ -251,9 +270,15 @@ class AppointmentController extends Controller
             $bookingId = 'BK' . str_pad($booking->id, 6, '0', STR_PAD_LEFT);
             $confirmationCode = 'CONF' . strtoupper(substr(md5($booking->id . time()), 0, 8));
 
+            // Persist confirmation code to booking record
+            $booking->confirmation_code = $confirmationCode;
+            $booking->save();
+
             Log::info('New appointment booked', [
                 'booking_id' => $bookingId,
-                'confirmation_code' => $confirmationCode
+                'confirmation_code' => $confirmationCode,
+                'final_price' => $finalPrice,
+                'length' => $booking->length
             ]);
 
             // Ensure clean JSON response
@@ -272,6 +297,8 @@ class AppointmentController extends Controller
                     'appointment' => [
                         'booking_id' => $bookingId,
                         'confirmation_code' => $confirmationCode,
+                        'final_price' => $finalPrice,
+                        'length' => $booking->length,
                         'appointment_date' => date('l, F j, Y', strtotime($request->appointment_date)),
                         'appointment_time' => date('g:i A', strtotime($request->appointment_time)),
                         'service' => $request->service ?: 'General Service',
@@ -285,6 +312,8 @@ class AppointmentController extends Controller
                     'booking_details' => [
                         'booking_id' => $bookingId,
                         'confirmation_code' => $confirmationCode,
+                        'final_price' => $finalPrice,
+                        'length' => $booking->length,
                         'appointment_date' => date('l, F j, Y', strtotime($request->appointment_date)),
                         'appointment_time' => date('g:i A', strtotime($request->appointment_time)),
                         'service' => $request->service ?: 'General Service'
@@ -453,7 +482,7 @@ class AppointmentController extends Controller
                     'appointment' => [
                         'id' => $booking->id,
                         'booking_id' => 'BK-' . str_pad($booking->id, 6, '0', STR_PAD_LEFT),
-                        'confirmation_code' => null, // Add if you have this field
+                        'confirmation_code' => $booking->confirmation_code,
                         'name' => $booking->name,
                         'email' => $booking->email,
                         'phone' => $booking->phone,
