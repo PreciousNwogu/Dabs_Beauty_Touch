@@ -2340,17 +2340,15 @@
                         <div class="col-auto text-start">
                             <span style="font-size: 1.2rem; margin-right: 4px;">&#128203;</span>
                             <span style="font-size: 1rem; color: #6c757d;">Booking ID:</span>
-                            <a href="#" style="font-weight: bold; color: #007bff; text-decoration: underline;">{{ session('booking_details.booking_id') }}</a>
+                            <a href="{{ route('booking.success') }}" style="font-weight: bold; color: #007bff; text-decoration: underline;">{{ session('booking_details.booking_id') }}</a>
                         </div>
                         <div class="col-auto text-start">
                             <span style="font-size: 1.2rem; margin-right: 4px;">&#128274;</span>
                             <span style="font-size: 1rem; color: #6c757d;">Confirmation Code:</span>
-                            <a href="#" style="font-weight: bold; color: #007bff; text-decoration: underline;">{{ session('booking_details.confirmation_code') }}</a>
+                            <a href="{{ route('booking.success') }}" style="font-weight: bold; color: #007bff; text-decoration: underline;">{{ session('booking_details.confirmation_code') }}</a>
                         </div>
-                        <div class="col-auto text-start">
-                            <span style="font-size: 1.2rem; margin-right: 4px;">&#128176;</span>
-                            <span style="font-size: 1rem; color: #6c757d;">Price:</span>
-                            <span style="font-weight: bold; color: #001f3f;">{{ isset(session('booking_details')['final_price']) ? '$' . number_format(session('booking_details.final_price'),2) : '' }}</span>
+                        <div class="col-12 text-center mt-2">
+                            <p class="mb-0" style="color: #6c757d;">Your booking was received — our admin will contact you to arrange the deposit and confirm details. For urgent queries, email <a href="mailto:info@dabsbeautytouch.com">info@dabsbeautytouch.com</a>.</p>
                         </div>
                     </div>
                     <div class="alert alert-warning border-0 mb-3" style="background-color: #fff3cd; border-radius: 8px;">
