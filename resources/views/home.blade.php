@@ -4239,7 +4239,7 @@ console.log('=== LOADING BOOKING FUNCTIONS ===');
                         toastEl.innerHTML = `
                             <div class="d-flex">
                                 <div class="toast-body">
-                                    Booking confirmed!${finalPrice ? ' Price: $' + parseFloat(finalPrice).toFixed(2) : ''}
+                                    Booking confirmed! Our admin will contact you to arrange the deposit and confirm details. For urgent queries, email info@dabsbeautytouch.com.
                                 </div>
                                 <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
                             </div>
