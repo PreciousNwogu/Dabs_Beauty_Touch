@@ -2337,20 +2337,9 @@
                 </div>
                 <div class="modal-body text-center px-4">
                     <div class="row mb-3 justify-content-center" style="gap: 0.5rem;">
-                        <div class="col-auto text-start">
-                            <span style="font-size: 1.2rem; margin-right: 4px;">&#128203;</span>
-                            <span style="font-size: 1rem; color: #6c757d;">Booking ID:</span>
-                            <a href="#" style="font-weight: bold; color: #007bff; text-decoration: underline;">{{ session('booking_details.booking_id') }}</a>
-                        </div>
-                        <div class="col-auto text-start">
-                            <span style="font-size: 1.2rem; margin-right: 4px;">&#128274;</span>
-                            <span style="font-size: 1rem; color: #6c757d;">Confirmation Code:</span>
-                            <a href="#" style="font-weight: bold; color: #007bff; text-decoration: underline;">{{ session('booking_details.confirmation_code') }}</a>
-                        </div>
-                        <div class="col-auto text-start">
-                            <span style="font-size: 1.2rem; margin-right: 4px;">&#128176;</span>
-                            <span style="font-size: 1rem; color: #6c757d;">Price:</span>
-                            <span style="font-weight: bold; color: #001f3f;">{{ isset(session('booking_details')['final_price']) ? '$' . number_format(session('booking_details.final_price'),2) : '' }}</span>
+                        <!-- Booking ID and confirmation code intentionally omitted from UI; available in confirmation email only -->
+                        <div class="col-12 text-center mt-2">
+                            <p class="mb-0" style="color: #6c757d;">Your booking was received — our admin will contact you to arrange the deposit and confirm details. For urgent queries, email <a href="mailto:info@dabsbeautytouch.com">info@dabsbeautytouch.com</a>.</p>
                         </div>
                     </div>
                     <div class="alert alert-warning border-0 mb-3" style="background-color: #fff3cd; border-radius: 8px;">
@@ -2988,7 +2977,7 @@
                                         <div class="mb-3">
                                             <i class="bi bi-envelope-fill text-warning me-2"></i>
                                             <strong>Email:</strong>
-                                            <a href="mailto:infor@dabsbeautytouch" style="color: #ff6600; text-decoration: none;">infor@dabsbeautytouch</a>
+                                            <a href="mailto:infor@dabsbeautytouch" style="color: #ff6600; text-decoration: none;">inf@dabsbeautytouch</a>
                                         </div>
                                         <div class="mb-3">
                                             <i class="bi bi-clock-fill text-warning me-2"></i>
@@ -3133,13 +3122,13 @@
                             <h2 class="section-title mb-3" style="font-size:2.2rem; font-weight:700;">Contact Information</h2>
                             <ul class="list-unstyled mb-4" style="font-size:1.08rem;">
                                 <li class="mb-3"><i class="bi bi-arrow-right-circle-fill text-primary me-2"></i><strong>Phone:</strong> <a href="tel:+13432458848" style="color:#030f68; text-decoration:none;">(+1)343-245-8848</a></li>
-                                <li class="mb-3"><i class="bi bi-arrow-right-circle-fill text-warning me-2"></i><strong>Email:</strong> <a href="mailto:infor@dabsbeautytouch" style="color:#ff6600; text-decoration:none;">infor@dabsbeautytouch</a></li>
-                                <li class="mb-3"><i class="bi bi-arrow-right-circle-fill text-danger me-2"></i><strong>Address:</strong> 123 Beauty Street, Hair City, HC 12345</li>
+                                <li class="mb-3"><i class="bi bi-arrow-right-circle-fill text-warning me-2"></i><strong>Email:</strong> <a href="mailto:infor@dabsbeautytouch" style="color:#ff6600; text-decoration:none;">info@dabsbeautytouch</a></li>
+                                <li class="mb-3"><i class="bi bi-arrow-right-circle-fill text-danger me-2"></i><strong>Address:</strong> Ottawa</li>
                                 <li class="mb-3"><i class="bi bi-arrow-right-circle-fill text-success me-2"></i><strong>Hours:</strong>
                                     <ul class="ps-4 mb-0" style="font-size:0.98rem;">
                                         <li>Monday - Friday: 9:00 AM - 7:00 PM</li>
-                                        <li>Saturday: 8:00 AM - 6:00 PM</li>
-                                        <li>Sunday: 10:00 AM - 4:00 PM</li>
+                                        <li>Saturday: 10:00 AM - 6:00 PM</li>
+                                        <li>Sunday: 1:00 PM - 6:00 PM</li>
                                     </ul>
                                 </li>
                             </ul>
@@ -4241,7 +4230,7 @@ console.log('=== LOADING BOOKING FUNCTIONS ===');
                         toastEl.innerHTML = `
                             <div class="d-flex">
                                 <div class="toast-body">
-                                    Booking confirmed!${finalPrice ? ' Price: $' + parseFloat(finalPrice).toFixed(2) : ''}
+                                    Booking confirmed! Our admin will contact you to arrange the deposit and confirm details. For urgent queries, email info@dabsbeautytouch.com.
                                 </div>
                                 <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
                             </div>

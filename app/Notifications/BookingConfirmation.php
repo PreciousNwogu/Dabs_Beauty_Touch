@@ -45,7 +45,8 @@ class BookingConfirmation extends Notification
             ->line('Service: ' . ($this->booking->service ?? 'N/A'))
             ->line('Length: ' . ($this->booking->length ?? 'N/A'))
             ->line('Total price: $' . number_format($this->booking->final_price ?? 0, 2))
-            ->action('View booking', url('/'))
+            // Build a direct confirmation URL to avoid route() parameter resolution errors
+            ->action('View booking', url('/bookings/confirm/' . ($this->booking->id ?? '') . '/' . ($this->booking->confirmation_code ?? '')))
             ->line('We will contact you shortly.');
     }
 

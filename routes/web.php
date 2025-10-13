@@ -373,6 +373,16 @@ Route::prefix('admin')->name('admin.')->group(function () {
         }
     })->name('bookings.update-status');
 
+    // Admin booking single view (so the 'View Booking' button in emails works)
+    Route::get('/bookings/{id}', function ($id) {
+        $booking = \App\Models\Booking::find($id);
+        if (! $booking) {
+            abort(404, 'Booking not found');
+        }
+
+        return view('admin.booking', compact('booking'));
+    })->name('bookings.show');
+
     Route::post('/bookings/search', function(Request $request) {
         $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
             'search' => 'required|string|min:2'
@@ -635,6 +645,38 @@ Route::post('/bookings', function(Request $request) {
             'message' => $booking->message
         ]);
 
+        // Log mail configuration active for this request (helps debug which env is loaded)
+        Log::info('Mail configuration for booking confirmation', [
+            'mail_mailer' => config('mail.default'),
+            'mail_host' => env('MAIL_HOST'),
+            'mail_port' => env('MAIL_PORT'),
+            'mail_username' => env('MAIL_USERNAME'),
+        ]);
+
+        // Attempt to send booking confirmation email to customer (if real email provided)
+        try {
+            if ($booking->email && $booking->email !== 'no-email@example.com') {
+                // Use Notification facade directly to send a one-off mail
+                \Illuminate\Support\Facades\Notification::route('mail', $booking->email)
+                    ->notify(new \App\Notifications\BookingConfirmation($booking));
+                Log::info('Booking confirmation email queued/sent for booking', ['booking_id' => $booking->id, 'email' => $booking->email]);
+            } else {
+                Log::info('No customer email provided; skipping booking confirmation email', ['booking_id' => $booking->id]);
+            }
+        } catch (\Exception $e) {
+            Log::error('Failed to send booking confirmation email', ['booking_id' => $booking->id, 'error' => $e->getMessage()]);
+        }
+
+        // Attempt to notify admin about new booking
+        try {
+            $adminEmail = config('mail.admin_address') ?: env('ADMIN_EMAIL') ?: 'admin@example.com';
+            \Illuminate\Support\Facades\Notification::route('mail', $adminEmail)
+                ->notify(new \App\Notifications\AdminBookingNotification($booking));
+            Log::info('Admin booking notification queued/sent', ['booking_id' => $booking->id, 'admin_email' => $adminEmail]);
+        } catch (\Exception $e) {
+            Log::error('Failed to send admin booking notification', ['booking_id' => $booking->id, 'error' => $e->getMessage()]);
+        }
+
         // Check if this is an AJAX request
         if ($request->wantsJson() || $request->header('X-Requested-With') === 'XMLHttpRequest') {
             // Return JSON response for AJAX requests
@@ -737,6 +779,72 @@ Route::post('/bookings/cancel', function(Request $request) {
 Route::get('/bookings/details', function(Request $request) {
     return response()->json(['details' => []]);
 })->name('bookings.details');
+
+// Public booking confirmation link - shows booking details only when confirmation code matches
+Route::get('/bookings/confirm/{id}/{code}', function($id, $code) {
+    $booking = \App\Models\Booking::find($id);
+    if (!$booking || ($booking->confirmation_code ?? '') !== $code) {
+        return redirect()->route('home')->with(['booking_error' => true, 'error_message' => 'Invalid booking confirmation link.']);
+    }
+
+    // Render a simple page showing booking details (or reuse booking.success view)
+    $bookingDetails = [
+        'booking_id' => 'BK' . str_pad($booking->id, 6, '0', STR_PAD_LEFT),
+        'confirmation_code' => $booking->confirmation_code,
+        'service' => $booking->service,
+        'length' => $booking->length,
+        'final_price' => $booking->final_price,
+        'appointment_date' => $booking->appointment_date ? $booking->appointment_date->format('F j, Y') : null,
+        'appointment_time' => $booking->appointment_time,
+        'name' => $booking->name,
+        'email' => $booking->email,
+        'phone' => $booking->phone,
+        'message' => $booking->message,
+    ];
+
+    return view('booking.success', ['bookingDetails' => $bookingDetails]);
+})->name('bookings.confirm');
+
+// Temporary debug route to inspect mail configuration from the running web process.
+// Use this to verify which MAIL_* values the server process is using (Mailtrap vs Zoho).
+Route::get('/_debug/mail', function() {
+    return response()->json([
+        'mail_default' => config('mail.default'),
+        'mail_host' => env('MAIL_HOST'),
+        'mail_port' => env('MAIL_PORT'),
+        'mail_username' => env('MAIL_USERNAME'),
+        'mail_from' => config('mail.from'),
+        'admin_email' => env('ADMIN_EMAIL'),
+    ]);
+});
+
+// Temporary debug route: force-send notifications for a booking id (admin + customer)
+Route::match(['get','post'], '/_debug/send-booking-notifs/{id}', function($id) {
+    $booking = \App\Models\Booking::find($id);
+    if (! $booking) {
+        return response()->json(['success' => false, 'message' => 'Booking not found'], 404);
+    }
+
+    try {
+        Log::info('[_debug] forcing booking notifications', ['booking_id' => $booking->id]);
+
+        if ($booking->email && $booking->email !== 'no-email@example.com') {
+            \Illuminate\Support\Facades\Notification::route('mail', $booking->email)
+                ->notify(new \App\Notifications\BookingConfirmation($booking));
+            Log::info('[_debug] sent booking confirmation', ['booking_id' => $booking->id, 'email' => $booking->email]);
+        }
+
+        $adminEmail = config('mail.admin_address') ?: env('ADMIN_EMAIL') ?: 'admin@example.com';
+        \Illuminate\Support\Facades\Notification::route('mail', $adminEmail)
+            ->notify(new \App\Notifications\AdminBookingNotification($booking));
+        Log::info('[_debug] sent admin booking notification', ['booking_id' => $booking->id, 'admin_email' => $adminEmail]);
+
+        return response()->json(['success' => true, 'message' => 'Notifications sent (or attempted)']);
+    } catch (\Exception $e) {
+        Log::error('[_debug] notification sending failed', ['booking_id' => $booking->id, 'error' => $e->getMessage()]);
+        return response()->json(['success' => false, 'message' => 'Notification sending failed', 'error' => $e->getMessage()], 500);
+    }
+});
 
 // API routes for frontend - simplified closure implementation
 Route::prefix('api')->group(function () {

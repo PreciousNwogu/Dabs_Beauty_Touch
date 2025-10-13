@@ -97,43 +97,21 @@
                 <h1 class="mb-3">Booking Confirmed!</h1>
                 <p class="lead mb-0">Your appointment has been successfully booked</p>
             </div>
-            
+
             <div class="p-4">
                 <div class="booking-details">
                     <h5 class="mb-3 text-success">
                         <i class="fas fa-calendar-check me-2"></i>
                         Appointment Details
                     </h5>
-                    
-                    @if(isset($booking_details))
-                    <div class="detail-row">
-                        <span class="detail-label">Booking ID:</span>
-                        <span class="detail-value fw-bold text-primary">{{ $booking_details['booking_id'] ?? 'N/A' }}</span>
-                    </div>
-                    <div class="detail-row">
-                        <span class="detail-label">Confirmation Code:</span>
-                        <span class="detail-value fw-bold text-success">{{ $booking_details['confirmation_code'] ?? 'N/A' }}</span>
-                    </div>
-                    <div class="detail-row">
-                        <span class="detail-label">Service:</span>
-                        <span class="detail-value">{{ $booking_details['service'] ?? 'General Service' }}</span>
-                    </div>
-                    <div class="detail-row">
-                        <span class="detail-label">Date:</span>
-                        <span class="detail-value">{{ $booking_details['appointment_date'] ?? 'N/A' }}</span>
-                    </div>
-                    <div class="detail-row">
-                        <span class="detail-label">Time:</span>
-                        <span class="detail-value">{{ $booking_details['appointment_time'] ?? 'N/A' }}</span>
-                    </div>
-                    @else
+
                     <div class="alert alert-success">
                         <i class="fas fa-info-circle me-2"></i>
-                        Your booking has been confirmed! We'll contact you with the details.
+                        Your booking has been confirmed! <br>
+                        All booking details (Booking ID, Confirmation Code and pricing) have been emailed to you. Please check your email for confirmation and follow-up from our admin.
                     </div>
-                    @endif
                 </div>
-                
+
                 <div class="alert alert-info">
                     <h6><i class="fas fa-info-circle me-2"></i>What's Next?</h6>
                     <ul class="mb-0 ps-3">
@@ -142,7 +120,7 @@
                         <li>Please keep your Booking ID and Confirmation Code for reference</li>
                     </ul>
                 </div>
-                
+
                 <div class="text-center mt-4">
                     <a href="{{ route('home') }}" class="btn-home me-3">
                         <i class="fas fa-home me-2"></i>
@@ -158,7 +136,7 @@
             </div>
         </div>
     </div>
-    
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
