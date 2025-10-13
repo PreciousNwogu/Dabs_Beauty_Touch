@@ -6,6 +6,8 @@ use App\Models\Appointment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Notification;
+use App\Notifications\BookingConfirmation;
 
 class AppointmentController extends Controller
 {
@@ -280,6 +282,31 @@ class AppointmentController extends Controller
                 'final_price' => $finalPrice,
                 'length' => $booking->length
             ]);
+
+            // Send booking confirmation email if a real email was provided
+            try {
+                if (!empty($booking->email) && $booking->email !== 'no-email@example.com') {
+                    // Log mailer config so we can confirm which SMTP is used for web requests
+                    Log::info('Mail configuration for booking confirmation', [
+                        'mail_default' => config('mail.default'),
+                        'mail_mailer_env' => env('MAIL_MAILER'),
+                        'mail_host' => config('mail.mailers.smtp.host') ?? env('MAIL_HOST'),
+                        'mail_port' => config('mail.mailers.smtp.port') ?? env('MAIL_PORT'),
+                        'mail_username' => env('MAIL_USERNAME'),
+                    ]);
+
+                    Notification::route('mail', $booking->email)->notify(new BookingConfirmation($booking));
+                    Log::info('Booking confirmation notification queued', ['booking_id' => $booking->id, 'email' => $booking->email]);
+                } else {
+                    Log::info('No valid email provided; skipping booking confirmation notification', ['booking_id' => $booking->id, 'email' => $booking->email]);
+                }
+            } catch (\Throwable $e) {
+                Log::warning('Failed to send booking confirmation notification', [
+                    'booking_id' => $booking->id,
+                    'email' => $booking->email,
+                    'error' => $e->getMessage()
+                ]);
+            }
 
             // Ensure clean JSON response
             if (ob_get_level()) {

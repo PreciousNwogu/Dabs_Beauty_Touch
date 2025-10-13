@@ -16,14 +16,16 @@ class SendTestMail extends Command
     {
         $email = $this->argument('email') ?? config('mail.from.address');
 
-        // Create a temporary Booking object (not persisted)
-        $booking = new Booking([
-            'id' => 999999,
+        // Persist a temporary Booking so notifications include a valid booking id
+        $booking = Booking::create([
             'name' => 'Test User',
             'email' => $email,
             'phone' => '0000000000',
             'service' => 'Jumbo Knotless Braids',
             'length' => 'neck',
+            // required fields on bookings table
+            'appointment_date' => date('Y-m-d'),
+            'appointment_time' => '12:00',
             'final_price' => 40.00,
             'confirmation_code' => 'CONFTEST'
         ]);
@@ -36,7 +38,16 @@ class SendTestMail extends Command
             $this->info('Mail queued/sent (check Mailtrap or configured mail driver)');
         } catch (\Exception $e) {
             $this->error('Failed to send mail: ' . $e->getMessage());
+            // Clean up the temporary booking if created
+            if (isset($booking) && $booking->exists) {
+                $booking->delete();
+            }
             return 1;
+        }
+
+        // Clean up the temporary booking we created for the test
+        if (isset($booking) && $booking->exists) {
+            $booking->delete();
         }
 
         return 0;
