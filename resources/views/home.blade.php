@@ -152,6 +152,34 @@
             text-decoration: none;
         }
 
+        /* Fix for dropdown issues */
+        .form-select {
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m1 6 7 7 7-7'/%3e%3c/svg%3e") !important;
+            background-repeat: no-repeat !important;
+            background-position: right 0.75rem center !important;
+            background-size: 16px 12px !important;
+            cursor: pointer !important;
+            pointer-events: auto !important;
+            -webkit-appearance: none !important;
+            -moz-appearance: none !important;
+            appearance: none !important;
+            position: relative !important;
+            z-index: 1 !important;
+        }
+
+        .form-select:focus {
+            border-color: #86b7fe !important;
+            outline: 0 !important;
+            box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25) !important;
+        }
+
+        .form-select option {
+            padding: 8px 12px !important;
+            cursor: pointer !important;
+            background-color: white !important;
+            color: #212529 !important;
+        }
+
         /* About Section Styles */
         .about-section {
             padding: 80px 0;
@@ -2309,7 +2337,7 @@
                     <p class="lead mb-4" style="color: #6c757d;">
                         We offer many more services beyond what's listed above. Book a consultation and let us know what you need!
                     </p>
-                    <button type="button" class="btn btn-outline-primary btn-lg px-5" onclick="openBookingModal('Custom Service Request', 'custom')" style="font-weight: 600; border-radius: 25px; box-shadow: 0 4px 12px rgba(3, 15, 104, 0.2);">
+                    <button type="button" class="btn btn-outline-primary btn-lg px-5" onclick="openOtherServicesModal()" style="font-weight: 600; border-radius: 25px; box-shadow: 0 4px 12px rgba(3, 15, 104, 0.2);">
                         <i class="bi bi-plus-circle me-2"></i>Book Other Services
                     </button>
                     <div class="mt-3">
@@ -2339,7 +2367,7 @@
                     <div class="row mb-3 justify-content-center" style="gap: 0.5rem;">
                         <!-- Booking ID and confirmation code intentionally omitted from UI; available in confirmation email only -->
                         <div class="col-12 text-center mt-2">
-                            <p class="mb-0" style="color: #6c757d;">Your booking was received — our admin will contact you to arrange the deposit and confirm details. For urgent queries, email <a href="mailto:info@dabsbeautytouch.com">info@dabsbeautytouch.com</a>.</p>
+                            <p class="mb-0" style="color: #6c757d;">Your booking was received — our admin will contact you to arrange the deposit and confirm details. For urgent enqueries, email <a href="mailto:info@dabsbeautytouch.com">info@dabsbeautytouch.com</a>.</p>
                         </div>
                     </div>
                     <div class="alert alert-warning border-0 mb-3" style="background-color: #fff3cd; border-radius: 8px;">
@@ -2357,7 +2385,7 @@
                         <div class="col-auto text-start">
                             <span style="font-size: 1.2rem; margin-right: 4px;">&#128231;</span>
                             <span style="font-weight: bold; color: #001f3f;">Email:</span>
-                            <a href="mailto:infor@dabsbeautytouch" style="color: #007bff; text-decoration: underline;">infor@dabsbeautytouch</a>
+                            <a href="mailto:infor@dabsbeautytouch" style="color: #007bff; text-decoration: underline;">info@dabsbeautytouch.com</a>
                         </div>
                     </div>
                     <p class="text-muted mb-3" style="font-size: 1rem;">We'll confirm your appointment once payment is received!</p>
@@ -2369,6 +2397,52 @@
         </div>
     </div>
     @endif
+
+    <!-- Other Services Success Modal -->
+    @if(session('success'))
+    <div class="modal fade show d-block" id="otherServicesSuccessModal" tabindex="-1" style="background-color: rgba(0,0,0,0.5); z-index: 1050;">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content" style="border-radius: 16px; border: none;">
+                <div class="modal-header text-center border-0 pb-0" style="display: flex; flex-direction: column; align-items: center;">
+                    <div style="background: #28a745; border-radius: 8px; width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; margin-bottom: 10px;">
+                        <span style="font-size: 2.5rem; color: #fff;">&#10004;</span>
+                    </div>
+                    <h4 class="modal-title text-success mb-0" style="font-weight: bold; color: #218838; margin-top: 8px;">Service Request Sent<br>Successfully!</h4>
+                </div>
+                <div class="modal-body text-center px-4">
+                    <div class="row mb-3 justify-content-center">
+                        <div class="col-12 text-center mt-2">
+                            <p class="mb-3" style="color: #6c757d; font-size: 1.1rem;">{{ session('success') }}</p>
+                            <div class="alert alert-info border-0 mb-3" style="background-color: #e3f2fd; border-radius: 8px;">
+                                <div class="d-flex align-items-center justify-content-center">
+                                    <span style="font-size: 1.3rem; margin-right: 8px;">ℹ️</span>
+                                    <span style="font-size: 1rem; color: #1976d2;">We'll review your request and contact you within 24 hours to discuss details and pricing.</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row mb-3 justify-content-center" style="gap: 0.5rem;">
+                        <div class="col-auto text-start">
+                            <span style="font-size: 1.2rem; margin-right: 4px;">📞</span>
+                            <span style="font-weight: bold; color: #001f3f;">Phone:</span>
+                            <a href="tel:+13432458848" style="color: #007bff; text-decoration: underline;">(+1)343-245-8848</a>
+                        </div>
+                        <div class="col-auto text-start">
+                            <span style="font-size: 1.2rem; margin-right: 4px;">📧</span>
+                            <span style="font-weight: bold; color: #001f3f;">Email:</span>
+                            <a href="mailto:info@dabsbeautytouch.com" style="color: #007bff; text-decoration: underline;">info@dabsbeautytouch.com</a>
+                        </div>
+                    </div>
+                    <p class="text-muted mb-3" style="font-size: 1rem;">Need urgent assistance? Feel free to contact us directly!</p>
+                </div>
+                <div class="modal-footer border-0 justify-content-center">
+                    <button type="button" class="btn btn-success px-4 py-2" onclick="closeOtherServicesSuccessModal()" style="background: linear-gradient(90deg, #28a745 0%, #20c997 100%); border: none; color: #fff; font-weight: bold; border-radius: 24px; width: 120px;">OK</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    @endif
+
                     <!-- Booking Modal (contains Single Booking Form) -->
                     <div class="modal fade" id="bookingModal" tabindex="-1" aria-labelledby="bookingModalLabel" aria-hidden="true">
                         <div class="modal-dialog modal-lg modal-dialog-centered">
@@ -2756,6 +2830,199 @@
         </div>
     </div>
 
+    <!-- Other Services Modal -->
+    <div class="modal fade" id="otherServicesModal" tabindex="-1" aria-labelledby="otherServicesModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content" style="border-radius: 20px; border: none;">
+                <div class="modal-header" style="background: linear-gradient(135deg, #ff6600 0%, #ff8533 100%); color: white; border-radius: 20px 20px 0 0;">
+                    <h5 class="modal-title" id="otherServicesModalLabel">
+                        <i class="bi bi-star me-2"></i>Request Other Services
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="text-center mb-4">
+                        <h4 style="color: #030f68; font-weight: 600;">Tell Us What You Need!</h4>
+                        <p class="text-muted">We offer many specialized services beyond our standard menu. Describe what you're looking for and we'll take care of you!</p>
+                    </div>
+
+                    <form id="otherServicesForm" action="{{ route('contact.store') }}" method="POST" class="needs-validation" novalidate>
+                        @csrf
+                        <input type="hidden" name="subject" value="Other Services Request">
+
+                        <div class="row g-4">
+                            <!-- Service Description -->
+                            <div class="col-12">
+                                <label for="service_description" class="form-label fw-bold">
+                                    <i class="bi bi-scissors me-2"></i>What service are you looking for? *
+                                </label>
+                                <textarea class="form-control" id="service_description" name="service_description" rows="4" placeholder="e.g., Goddess Braids, Box Braids, Passion Twists, Hair Extensions, Protective Styles, etc. Please be as detailed as possible..." required></textarea>
+                                <div class="invalid-feedback">
+                                    Please describe the service you're looking for.
+                                </div>
+                                <small class="form-text text-muted">
+                                    <i class="bi bi-info-circle me-1"></i>
+                                    The more details you provide, the better we can help you!
+                                </small>
+                            </div>
+
+                            <!-- Hair Length -->
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <h6 class="fw-bold text-primary mb-2" style="color: #030f68 !important; border-bottom: 2px solid #ff6600; padding-bottom: 5px;">
+                                        <i class="bi bi-rulers me-2" style="color: #ff6600;"></i>Desired Hair Length
+                                    </h6>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="hair_length" id="hair_neck" value="neck">
+                                        <label class="form-check-label" for="hair_neck">Neck Length</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="hair_length" id="hair_shoulder" value="shoulder">
+                                        <label class="form-check-label" for="hair_shoulder">Shoulder Length</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="hair_length" id="hair_armpit" value="armpit">
+                                        <label class="form-check-label" for="hair_armpit">Armpit Length</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="hair_length" id="hair_bra" value="bra-strap">
+                                        <label class="form-check-label" for="hair_bra">Bra Strap Length</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="hair_length" id="hair_mid" value="mid-back">
+                                        <label class="form-check-label" for="hair_mid">Mid Back Length</label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Budget Range -->
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <h6 class="fw-bold text-primary mb-2" style="color: #030f68 !important; border-bottom: 2px solid #ff6600; padding-bottom: 5px;">
+                                        <i class="bi bi-currency-dollar me-2" style="color: #ff6600;"></i>Budget Range
+                                    </h6>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="budget_range" id="budget_under100" value="under-100">
+                                        <label class="form-check-label" for="budget_under100">Under $100</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="budget_range" id="budget_100150" value="100-150">
+                                        <label class="form-check-label" for="budget_100150">$100 - $150</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="budget_range" id="budget_150200" value="150-200">
+                                        <label class="form-check-label" for="budget_150200">$150 - $200</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="budget_range" id="budget_200300" value="200-300">
+                                        <label class="form-check-label" for="budget_200300">$200 - $300</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="budget_range" id="budget_300plus" value="300-plus">
+                                        <label class="form-check-label" for="budget_300plus">$300+</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="budget_range" id="budget_flexible" value="flexible">
+                                        <label class="form-check-label" for="budget_flexible">Flexible</label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Preferred Contact Method -->
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <h6 class="fw-bold text-primary mb-2" style="color: #030f68 !important; border-bottom: 2px solid #ff6600; padding-bottom: 5px;">
+                                        <i class="bi bi-telephone me-2" style="color: #ff6600;"></i>Contact Method
+                                    </h6>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="preferred_contact" id="contact_phone" value="phone" checked>
+                                        <label class="form-check-label" for="contact_phone">Phone Call</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="preferred_contact" id="contact_text" value="text">
+                                        <label class="form-check-label" for="contact_text">Text Message</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="preferred_contact" id="contact_email" value="email">
+                                        <label class="form-check-label" for="contact_email">Email</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="preferred_contact" id="contact_whatsapp" value="whatsapp">
+                                        <label class="form-check-label" for="contact_whatsapp">WhatsApp</label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Personal Details -->
+                            <div class="col-md-6">
+                                <label for="other_name" class="form-label fw-bold">Full Name *</label>
+                                <input type="text" class="form-control" id="other_name" name="name" placeholder="Enter your full name" required>
+                                <div class="invalid-feedback">
+                                    Please provide your name.
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="other_phone" class="form-label fw-bold">Phone Number *</label>
+                                <input type="tel" class="form-control" id="other_phone" name="phone" placeholder="Enter your phone number" required>
+                                <div class="invalid-feedback">
+                                    Please provide your phone number.
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="other_email" class="form-label fw-bold">Email Address</label>
+                                <input type="email" class="form-control" id="other_email" name="email" placeholder="Enter your email address">
+                                <small class="form-text text-muted">
+                                    We'll send you a detailed quote and consultation details.
+                                </small>
+                            </div>
+
+
+
+                            <!-- Additional Information -->
+                            <div class="col-12">
+                                <label for="other_additional_info" class="form-label fw-bold">
+                                    <i class="bi bi-chat-dots me-2"></i>Additional Information
+                                </label>
+                                <textarea class="form-control" id="other_additional_info" name="additional_info" rows="3" placeholder="Any special requirements, timing preferences, inspiration photos you have, or other details we should know..."></textarea>
+                                <small class="form-text text-muted">
+                                    <i class="bi bi-lightbulb me-1"></i>
+                                    Feel free to mention if you have reference photos, specific techniques in mind, or timing preferences!
+                                </small>
+                            </div>
+                        </div>
+
+                        <!-- Alert Box -->
+                        <div class="alert alert-info mt-4" style="border-left: 4px solid #17a2b8; background: #f8f9fa;">
+                            <h6 class="fw-bold mb-2">
+                                <i class="bi bi-info-circle me-2"></i>What Happens Next?
+                            </h6>
+                            <ul class="mb-0 ps-3">
+                                <li>We'll review your request within 24 hours</li>
+                                <li>Contact you to discuss details and pricing</li>
+                                <li>Schedule a consultation if needed</li>
+                                <li>Book your appointment once everything is confirmed</li>
+                            </ul>
+                        </div>
+
+                        <div class="text-center mt-4">
+                            <button type="submit" class="btn btn-warning btn-lg px-5" id="otherServicesSubmitBtn" style="font-weight: 600; border-radius: 25px; box-shadow: 0 4px 12px rgba(255, 193, 7, 0.3); cursor: pointer; pointer-events: auto; z-index: 1;">
+                                <i class="bi bi-send me-2"></i>Send Request
+                            </button>
+                            <div class="mt-3">
+                                <small class="text-muted">
+                                    <i class="bi bi-shield-check me-1"></i>
+                                    Your information is secure and will only be used to process your service request.
+                                </small>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Important Information Section -->
     <div class="section section-xl" style="padding: 80px 0; background-color: #fff;">
         <div class="container">
@@ -2829,7 +3096,7 @@
                                                         <i class="bi bi-envelope-fill" style="color: #ff6600; font-size: 1.2rem; margin-right: 8px;"></i>
                                                         <strong style="color: #030f68;">Email:</strong>
                                                     </div>
-                                                    <a href="mailto:infor@dabsbeautytouch" style="color: #ff6600; text-decoration: none; font-weight: 600; font-size: 1.1rem;">
+                                                    <a href="mailto:info@dabsbeautytouch" style="color: #ff6600; text-decoration: none; font-weight: 600; font-size: 1.1rem;">
                                                         infor@dabsbeautytouch
                                                     </a>
                                                 </div>
@@ -3122,7 +3389,7 @@
                             <h2 class="section-title mb-3" style="font-size:2.2rem; font-weight:700;">Contact Information</h2>
                             <ul class="list-unstyled mb-4" style="font-size:1.08rem;">
                                 <li class="mb-3"><i class="bi bi-arrow-right-circle-fill text-primary me-2"></i><strong>Phone:</strong> <a href="tel:+13432458848" style="color:#030f68; text-decoration:none;">(+1)343-245-8848</a></li>
-                                <li class="mb-3"><i class="bi bi-arrow-right-circle-fill text-warning me-2"></i><strong>Email:</strong> <a href="mailto:infor@dabsbeautytouch" style="color:#ff6600; text-decoration:none;">info@dabsbeautytouch</a></li>
+                                <li class="mb-3"><i class="bi bi-arrow-right-circle-fill text-warning me-2"></i><strong>Email:</strong> <a href="mailto:infor@dabsbeautytouch" style="color:#ff6600; text-decoration:none;">info@dabsbeautytouch.com</a></li>
                                 <li class="mb-3"><i class="bi bi-arrow-right-circle-fill text-danger me-2"></i><strong>Address:</strong> Ottawa</li>
                                 <li class="mb-3"><i class="bi bi-arrow-right-circle-fill text-success me-2"></i><strong>Hours:</strong>
                                     <ul class="ps-4 mb-0" style="font-size:0.98rem;">
@@ -3388,6 +3655,38 @@ console.log('=== LOADING BOOKING FUNCTIONS ===');
         if (form) {
             form.reset();
             console.log('Form cleared');
+        }
+    };
+
+    // Other Services Modal function
+    window.openOtherServicesModal = function() {
+        console.log('openOtherServicesModal called');
+
+        try {
+            // Find the modal element
+            var modalEl = document.getElementById('otherServicesModal');
+            if (!modalEl) {
+                alert('Other services modal not found on page');
+                return;
+            }
+
+            // Show modal using Bootstrap
+            if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+                var modal = new bootstrap.Modal(modalEl);
+                modal.show();
+                console.log('Other services modal shown successfully');
+            } else {
+                // Fallback - show modal manually
+                modalEl.style.display = 'block';
+                modalEl.classList.add('show');
+                modalEl.setAttribute('aria-hidden', 'false');
+                document.body.classList.add('modal-open');
+                console.log('Other services modal shown with fallback method');
+            }
+
+        } catch (error) {
+            console.error('Error in openOtherServicesModal:', error);
+            alert('Error opening other services modal: ' + error.message);
         }
     };
 
@@ -4660,7 +4959,7 @@ console.log('=== LOADING BOOKING FUNCTIONS ===');
                     </div>
                     <div class="col-6 text-center" style="padding:0 12px;">
                         <div style="font-weight:700; color:#05204a; margin-bottom:6px;"><i class="bi bi-envelope-fill me-2" style="color:#111827;"></i>Email:</div>
-                        <a href="mailto:infor@dabsbeautytouch" style="color:#007bff; text-decoration:underline; font-size:16px;">infor@dabsbeautytouch</a>
+                        <a href="mailto:infor@dabsbeautytouch" style="color:#007bff; text-decoration:underline; font-size:16px;">info@dabsbeautytouch.com</a>
                     </div>
                 </div>
 
@@ -4829,6 +5128,40 @@ function closeSuccessModal() {
     }
 }
 
+// Function to close Other Services success modal
+function closeOtherServicesSuccessModal() {
+    console.log('closeOtherServicesSuccessModal called');
+    const successModal = document.getElementById('otherServicesSuccessModal');
+    if (successModal) {
+        console.log('Other Services success modal found, hiding it');
+        successModal.style.display = 'none';
+
+        // Remove modal from DOM after animation
+        setTimeout(function() {
+            if (successModal.parentNode) {
+                successModal.parentNode.removeChild(successModal);
+            }
+        }, 300);
+
+        // Clear session data
+        fetch('/clear-session', {
+            method: 'GET',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        }).then(function() {
+            console.log('Other Services session cleared successfully');
+            if (window.history && window.history.replaceState) {
+                window.history.replaceState({}, document.title, window.location.pathname);
+            }
+        }).catch(function(error) {
+            console.log('Other Services session clear request failed:', error);
+        });
+    } else {
+        console.log('Other Services success modal not found');
+    }
+}
+
 // Additional event listener for the OK button (backup in case onclick doesn't work)
 document.addEventListener('DOMContentLoaded', function() {
     // Wait for modal to be rendered
@@ -4841,6 +5174,18 @@ document.addEventListener('DOMContentLoaded', function() {
                 e.stopPropagation();
                 console.log('OK button clicked via event listener');
                 closeSuccessModal();
+            });
+        }
+
+        // Also add event listener for Other Services success modal OK button
+        const otherServicesOkButton = document.querySelector('#otherServicesSuccessModal .btn-success');
+        if (otherServicesOkButton) {
+            console.log('Other Services OK button found, adding event listener');
+            otherServicesOkButton.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('Other Services OK button clicked via event listener');
+                closeOtherServicesSuccessModal();
             });
         }
     }, 100);
@@ -4906,23 +5251,24 @@ function clearImagePreview() {
 // Dynamic price preview and form wiring
 (function() {
     const priceMap = {
-    'small-knotless': 150,
-    'smedium-knotless': 130,
-    'wig-installation': 150,
-    'large-knotless': 110,
-    // Updated to match server-side data (seed & DB)
-    'jumbo-knotless': 60,
-    'kids-braids': 80,
-    'stitch-braids': 120,
-    'hair-mask': 50,
-    'boho-braids': 150,
-    'custom': 100
+        'small-knotless': 150,
+        'smedium-knotless': 130,
+        'wig-installation': 150,
+        'large-knotless': 110,
+        'jumbo-knotless': 80, // Fixed: Updated to match server-side data (seed & DB)
+        'kids-braids': 80,
+        'stitch-braids': 120,
+        'hair-mask': 50,
+        'boho-braids': 150,
+        'custom': 100
     };
 
     function lengthAdjustment(lengthValue) {
         // Normalize incoming value (accept hyphen or underscore) and apply server-aligned adjustments
         const key = (lengthValue || '').toString().replace(/-/g, '_');
-        // Match server-side adjustment map (USD)
+        console.log('Length adjustment for:', lengthValue, '-> key:', key);
+
+        // Match server-side adjustment map exactly (USD)
         const adjustments = {
             'neck': -20,
             'shoulder': -20,
@@ -4931,17 +5277,25 @@ function clearImagePreview() {
             'mid_back': 0,
             'waist': 20,
             'hip': 20,
-            'tailbone': 40,
-            'thigh': 40,
-            'classic': 40
+            'tailbone': 40, // Match backend exactly
+            'thigh': 40,    // Match backend exactly
+            'classic': 40   // Match backend exactly
         };
 
-        return adjustments[key] ?? 0;
+        const adjustment = adjustments[key] ?? 0;
+        console.log('Length adjustment amount:', adjustment);
+        return adjustment;
     }
 
     function getSelectedLength() {
         const radios = document.getElementsByName('hair_length');
-        for (let i=0;i<radios.length;i++) if (radios[i].checked) return radios[i].value;
+        for (let i = 0; i < radios.length; i++) {
+            if (radios[i].checked) {
+                console.log('Selected length:', radios[i].value);
+                return radios[i].value;
+            }
+        }
+        console.log('No length selected, defaulting to mid-back');
         return 'mid-back';
     }
 
@@ -4949,41 +5303,92 @@ function clearImagePreview() {
         const length = getSelectedLength();
         const adj = lengthAdjustment(length);
         const finalPrice = (typeof basePrice === 'number' ? basePrice : 0) + adj;
+
+        console.log('Price calculation:', {
+            basePrice: basePrice,
+            length: length,
+            adjustment: adj,
+            finalPrice: finalPrice
+        });
+
         const disp = document.getElementById('priceDisplay');
         const hidden = document.getElementById('selectedPrice');
-    if (disp) disp.textContent = finalPrice ? ('$' + finalPrice) : '--';
-        if (hidden) hidden.value = finalPrice || '';
+
+        if (disp) {
+            disp.textContent = finalPrice ? ('$' + finalPrice) : '--';
+            console.log('Updated price display to:', disp.textContent);
+        }
+        if (hidden) {
+            hidden.value = finalPrice || '';
+            console.log('Updated hidden price input to:', hidden.value);
+        }
     }
+
+    // Store current service info globally for easy access
+    window.currentServiceInfo = { serviceName: '', serviceType: '', basePrice: 0 };
 
     // Wrap existing openBookingModal
     const prevOpen = window.openBookingModal;
     window.openBookingModal = function(serviceName, serviceType) {
-        // set service type hidden input
+        console.log('Opening booking modal for:', serviceName, serviceType);
+
+        // Store service info globally
+        window.currentServiceInfo = {
+            serviceName: serviceName,
+            serviceType: serviceType,
+            basePrice: (serviceType && priceMap[serviceType]) ? priceMap[serviceType] : priceMap['custom']
+        };
+
+        // Set service type hidden input
         const st = document.getElementById('selectedServiceType');
         if (st) st.value = serviceType || '';
 
-        const base = (serviceType && priceMap[serviceType]) ? priceMap[serviceType] : priceMap['custom'];
+        const base = window.currentServiceInfo.basePrice;
         updatePriceDisplay(base);
 
         if (typeof prevOpen === 'function') {
-            try { prevOpen(serviceName, serviceType); } catch(e){ console.error('openBookingModal inner error', e); }
+            try {
+                prevOpen(serviceName, serviceType);
+            } catch(e) {
+                console.error('openBookingModal inner error', e);
+            }
         }
     };
 
-    // Update price when length changes
-    document.addEventListener('change', function(e){
+    // Update price when length changes - with better event handling
+    function handleLengthChange(e) {
         if (e.target && e.target.name === 'hair_length') {
-            const serviceType = document.getElementById('selectedServiceType')?.value || 'custom';
+            console.log('Length changed to:', e.target.value);
+            const serviceType = window.currentServiceInfo.serviceType || document.getElementById('selectedServiceType')?.value || 'custom';
             const base = priceMap[serviceType] || priceMap['custom'];
             updatePriceDisplay(base);
         }
-    });
+    }
+
+    // Add event listeners for length changes
+    document.addEventListener('change', handleLengthChange);
+    document.addEventListener('click', handleLengthChange); // Also handle clicks for immediate feedback
 
     // Init on load
     document.addEventListener('DOMContentLoaded', function(){
+        console.log('Initializing price display system');
+
+        // Set up initial price display
         const serviceType = document.getElementById('selectedServiceType')?.value || 'custom';
         const base = priceMap[serviceType] || priceMap['custom'];
         updatePriceDisplay(base);
+
+        // Add individual event listeners to each radio button for better reliability
+        const lengthRadios = document.getElementsByName('hair_length');
+        for (let i = 0; i < lengthRadios.length; i++) {
+            lengthRadios[i].addEventListener('change', function() {
+                console.log('Radio button changed directly:', this.value);
+                const serviceType = window.currentServiceInfo.serviceType || document.getElementById('selectedServiceType')?.value || 'custom';
+                const base = priceMap[serviceType] || priceMap['custom'];
+                updatePriceDisplay(base);
+            });
+        }
+
         // Fetch booked dates on initial page load so calendar is up-to-date
         try {
             if (typeof fetchRealBookedDates === 'function') {
@@ -4996,6 +5401,287 @@ function clearImagePreview() {
             console.warn('Error calling fetchRealBookedDates on load:', e);
         }
     });
+
+    // Other Services Form - Use AJAX with popup success modal
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('Setting up Other Services form handler...');
+        const otherServicesForm = document.getElementById('otherServicesForm');
+        
+        if (otherServicesForm) {
+            console.log('Other Services form found:', otherServicesForm);
+            
+            // Add click handler to the submit button as backup
+            const submitButton = otherServicesForm.querySelector('button[type="submit"]');
+            if (submitButton) {
+                console.log('Submit button found:', submitButton);
+                
+                // Test button clickability
+                submitButton.style.cursor = 'pointer';
+                submitButton.style.pointerEvents = 'auto';
+                
+                submitButton.addEventListener('click', function(event) {
+                    console.log('Other Services submit button clicked directly!');
+                    
+                    // Manual form validation and submission if needed
+                    if (!otherServicesForm.checkValidity()) {
+                        console.log('Form invalid, showing validation');
+                        otherServicesForm.classList.add('was-validated');
+                        event.preventDefault();
+                        return false;
+                    }
+                    
+                    // Let the form submit event handle the actual submission
+                    console.log('Button click complete, form should submit...');
+                });
+                
+                // Add mousedown event for testing
+                submitButton.addEventListener('mousedown', function(event) {
+                    console.log('Submit button mousedown detected!');
+                });
+                
+                // Add a professional confirmation alert on click with form clearing and page refresh
+                submitButton.onclick = function(event) {
+                    console.log('Submit button onclick fired!');
+                    
+                    // Clear the form before showing success message
+                    clearOtherServicesForm();
+                    
+                    alert('Thank you for your service inquiry! Your request has been received and we will contact you within 24 hours to discuss your requirements and provide a personalized quote.');
+                    
+                    // Refresh the page after user clicks OK on the alert
+                    setTimeout(function() {
+                        window.location.reload();
+                    }, 500);
+                };
+                
+            } else {
+                console.error('Submit button not found in Other Services form!');
+            }
+            
+            otherServicesForm.addEventListener('submit', function(event) {
+                console.log('Other Services form submit event triggered!');
+                event.preventDefault();
+                event.stopPropagation();
+
+                // Validate form
+                if (!otherServicesForm.checkValidity()) {
+                    console.log('Form validation failed');
+                    otherServicesForm.classList.add('was-validated');
+                    return false;
+                }
+                
+                console.log('Form validation passed, processing submission...');
+
+                // Prepare form data
+                const formData = new FormData(otherServicesForm);
+
+                // Get selected radio button values
+                const hairLengthRadio = document.querySelector('input[name="hair_length"]:checked');
+                const budgetRangeRadio = document.querySelector('input[name="budget_range"]:checked');
+                const preferredContactRadio = document.querySelector('input[name="preferred_contact"]:checked');
+
+                const serviceDescription = document.getElementById('service_description').value;
+                const additionalInfo = document.getElementById('additional_info').value;
+                const hairLength = hairLengthRadio ? hairLengthRadio.value : '';
+                const budgetRange = budgetRangeRadio ? budgetRangeRadio.value : '';
+                const preferredContact = preferredContactRadio ? preferredContactRadio.value : '';
+
+                // Build combined message
+                let message = `Service Request: ${serviceDescription}`;
+                if (hairLength) message += `\n\nDesired Hair Length: ${hairLength}`;
+                if (budgetRange) message += `\nBudget Range: ${budgetRange}`;
+                if (preferredContact) message += `\nPreferred Contact: ${preferredContact}`;
+                if (additionalInfo) message += `\n\nAdditional Information: ${additionalInfo}`;
+
+                // Update form data with combined message
+                formData.set('message', message);
+
+                // Submit via AJAX
+                fetch(otherServicesForm.action, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                    }
+                })
+                .then(response => {
+                    if (response.ok) {
+                        // Success - show popup modal
+                        showOtherServicesSuccessPopup();
+
+                        // Close the form modal
+                        const modal = bootstrap.Modal.getInstance(document.getElementById('otherServicesModal'));
+                        if (modal) modal.hide();
+
+                        // Clear form completely using our comprehensive clearing function
+                        clearOtherServicesForm();
+
+                        return response.text();
+                    }
+                    throw new Error('Network response was not ok');
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('There was an error submitting your request. Please try again or contact us directly.');
+                });
+            });
+        } else {
+            console.error('Other Services form not found!');
+        }
+    });
+    
+    // Debug function to test Other Services button - can be called from console
+    window.testOtherServicesButton = function() {
+        console.log('=== TESTING OTHER SERVICES BUTTON ===');
+        
+        const form = document.getElementById('otherServicesForm');
+        const button = document.getElementById('otherServicesSubmitBtn');
+        
+        console.log('Form found:', !!form);
+        console.log('Button found:', !!button);
+        
+        if (button) {
+            console.log('Button properties:', {
+                type: button.type,
+                disabled: button.disabled,
+                form: button.form ? button.form.id : 'no form',
+                display: window.getComputedStyle(button).display,
+                visibility: window.getComputedStyle(button).visibility,
+                pointerEvents: window.getComputedStyle(button).pointerEvents,
+                zIndex: window.getComputedStyle(button).zIndex
+            });
+            
+            // Try to manually trigger click
+            console.log('Attempting to trigger click...');
+            button.click();
+        }
+        
+        if (form) {
+            console.log('Form properties:', {
+                id: form.id,
+                action: form.action,
+                method: form.method,
+                elements: form.elements.length
+            });
+        }
+    };
+
+    // Function to clear Other Services form completely
+    function clearOtherServicesForm() {
+        console.log('Clearing Other Services form...');
+        
+        const form = document.getElementById('otherServicesForm');
+        if (!form) {
+            console.error('Other Services form not found for clearing');
+            return;
+        }
+        
+        // Reset the form using built-in method
+        form.reset();
+        
+        // Remove validation classes
+        form.classList.remove('was-validated');
+        
+        // Clear all radio buttons explicitly
+        const radioButtons = form.querySelectorAll('input[type="radio"]');
+        radioButtons.forEach(radio => {
+            radio.checked = false;
+        });
+        
+        // Clear all text inputs and textareas explicitly
+        const textInputs = form.querySelectorAll('input[type="text"], input[type="email"], textarea');
+        textInputs.forEach(input => {
+            input.value = '';
+        });
+        
+        // Clear any validation feedback
+        const validationFeedback = form.querySelectorAll('.invalid-feedback, .valid-feedback');
+        validationFeedback.forEach(feedback => {
+            feedback.style.display = 'none';
+        });
+        
+        // Remove any is-invalid/is-valid classes from form controls
+        const formControls = form.querySelectorAll('.form-control, .form-check-input');
+        formControls.forEach(control => {
+            control.classList.remove('is-invalid', 'is-valid');
+        });
+        
+        console.log('Other Services form cleared successfully');
+    }
+
+    // Function to show Other Services success popup modal
+    function showOtherServicesSuccessPopup() {
+        // Create modal HTML
+        const modalHTML = `
+            <div class="modal fade show d-block" id="otherServicesPopupModal" tabindex="-1" style="background-color: rgba(0,0,0,0.5); z-index: 1060;">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content" style="border-radius: 16px; border: none;">
+                        <div class="modal-header text-center border-0 pb-0" style="display: flex; flex-direction: column; align-items: center;">
+                            <div style="background: #28a745; border-radius: 8px; width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; margin-bottom: 10px;">
+                                <span style="font-size: 2.5rem; color: #fff;">✓</span>
+                            </div>
+                            <h4 class="modal-title text-success mb-0" style="font-weight: bold; color: #218838; margin-top: 8px;">Service Request Sent<br>Successfully!</h4>
+                        </div>
+                        <div class="modal-body text-center px-4">
+                            <div class="row mb-3 justify-content-center">
+                                <div class="col-12 text-center mt-2">
+                                    <p class="mb-3" style="color: #6c757d; font-size: 1.1rem;">Thank you for your request! We will get back to you soon.</p>
+                                    <div class="alert alert-info border-0 mb-3" style="background-color: #e3f2fd; border-radius: 8px;">
+                                        <div class="d-flex align-items-center justify-content-center">
+                                            <span style="font-size: 1.3rem; margin-right: 8px;">ℹ️</span>
+                                            <span style="font-size: 1rem; color: #1976d2;">We'll review your request and contact you within 24 hours to discuss details and pricing.</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row mb-3 justify-content-center" style="gap: 0.5rem;">
+                                <div class="col-auto text-start">
+                                    <span style="font-size: 1.2rem; margin-right: 4px;">📞</span>
+                                    <span style="font-weight: bold; color: #001f3f;">Phone:</span>
+                                    <a href="tel:+13432458848" style="color: #007bff; text-decoration: underline;">(+1)343-245-8848</a>
+                                </div>
+                                <div class="col-auto text-start">
+                                    <span style="font-size: 1.2rem; margin-right: 4px;">📧</span>
+                                    <span style="font-weight: bold; color: #001f3f;">Email:</span>
+                                    <a href="mailto:info@dabsbeautytouch.com" style="color: #007bff; text-decoration: underline;">info@dabsbeautytouch.com</a>
+                                </div>
+                            </div>
+                            <p class="text-muted mb-3" style="font-size: 1rem;">Need urgent assistance? Feel free to contact us directly!</p>
+                        </div>
+                        <div class="modal-footer border-0 justify-content-center">
+                            <button type="button" class="btn btn-success px-4 py-2" onclick="closeOtherServicesPopupModal()" style="background: linear-gradient(90deg, #28a745 0%, #20c997 100%); border: none; color: #fff; font-weight: bold; border-radius: 24px; width: 120px;">OK</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        // Add modal to body
+        document.body.insertAdjacentHTML('beforeend', modalHTML);
+
+        // Show modal with animation
+        setTimeout(function() {
+            const modalElement = document.getElementById('otherServicesPopupModal');
+            if (modalElement) {
+                modalElement.style.opacity = '0';
+                modalElement.style.transition = 'opacity 0.3s ease';
+                setTimeout(function() {
+                    modalElement.style.opacity = '1';
+                }, 10);
+            }
+        }, 10);
+    }
+
+    // Function to close the popup modal
+    function closeOtherServicesPopupModal() {
+        const modalElement = document.getElementById('otherServicesPopupModal');
+        if (modalElement) {
+            modalElement.style.opacity = '0';
+            setTimeout(function() {
+                modalElement.remove();
+            }, 300);
+        }
+    }
 
 })();
 </script>
