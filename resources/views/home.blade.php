@@ -2289,7 +2289,7 @@
                 <div class="col-lg-4 col-md-6">
                     <div class="service-card h-100" onclick="openBookingModal('Kids Braids', 'kids-braids')">
                         <img src="{{ asset('images/kids hair style.webp') }}" alt="Kids Braids">
-                        <h4>Kids Braids</h4>
+                        <h4>Kids Braids(3-8yrs)</h4>
                         <p>Specialized braiding services for children with gentle, age-appropriate techniques. Creates adorable, manageable styles that are comfortable and long-lasting for active kids.</p>
                         <p class="price"><strong>Starting at $80</strong></p>
                         <button class="btn btn-warning mt-3">Book Now</button>
@@ -5406,22 +5406,22 @@ function clearImagePreview() {
     document.addEventListener('DOMContentLoaded', function() {
         console.log('Setting up Other Services form handler...');
         const otherServicesForm = document.getElementById('otherServicesForm');
-        
+
         if (otherServicesForm) {
             console.log('Other Services form found:', otherServicesForm);
-            
+
             // Add click handler to the submit button as backup
             const submitButton = otherServicesForm.querySelector('button[type="submit"]');
             if (submitButton) {
                 console.log('Submit button found:', submitButton);
-                
+
                 // Test button clickability
                 submitButton.style.cursor = 'pointer';
                 submitButton.style.pointerEvents = 'auto';
-                
+
                 submitButton.addEventListener('click', function(event) {
                     console.log('Other Services submit button clicked directly!');
-                    
+
                     // Manual form validation and submission if needed
                     if (!otherServicesForm.checkValidity()) {
                         console.log('Form invalid, showing validation');
@@ -5429,35 +5429,35 @@ function clearImagePreview() {
                         event.preventDefault();
                         return false;
                     }
-                    
+
                     // Let the form submit event handle the actual submission
                     console.log('Button click complete, form should submit...');
                 });
-                
+
                 // Add mousedown event for testing
                 submitButton.addEventListener('mousedown', function(event) {
                     console.log('Submit button mousedown detected!');
                 });
-                
+
                 // Add a professional confirmation alert on click with form clearing and page refresh
                 submitButton.onclick = function(event) {
                     console.log('Submit button onclick fired!');
-                    
+
                     // Clear the form before showing success message
                     clearOtherServicesForm();
-                    
+
                     alert('Thank you for your service inquiry! Your request has been received and we will contact you within 24 hours to discuss your requirements and provide a personalized quote.');
-                    
+
                     // Refresh the page after user clicks OK on the alert
                     setTimeout(function() {
                         window.location.reload();
                     }, 500);
                 };
-                
+
             } else {
                 console.error('Submit button not found in Other Services form!');
             }
-            
+
             otherServicesForm.addEventListener('submit', function(event) {
                 console.log('Other Services form submit event triggered!');
                 event.preventDefault();
@@ -5469,7 +5469,7 @@ function clearImagePreview() {
                     otherServicesForm.classList.add('was-validated');
                     return false;
                 }
-                
+
                 console.log('Form validation passed, processing submission...');
 
                 // Prepare form data
@@ -5529,17 +5529,17 @@ function clearImagePreview() {
             console.error('Other Services form not found!');
         }
     });
-    
+
     // Debug function to test Other Services button - can be called from console
     window.testOtherServicesButton = function() {
         console.log('=== TESTING OTHER SERVICES BUTTON ===');
-        
+
         const form = document.getElementById('otherServicesForm');
         const button = document.getElementById('otherServicesSubmitBtn');
-        
+
         console.log('Form found:', !!form);
         console.log('Button found:', !!button);
-        
+
         if (button) {
             console.log('Button properties:', {
                 type: button.type,
@@ -5550,12 +5550,12 @@ function clearImagePreview() {
                 pointerEvents: window.getComputedStyle(button).pointerEvents,
                 zIndex: window.getComputedStyle(button).zIndex
             });
-            
+
             // Try to manually trigger click
             console.log('Attempting to trigger click...');
             button.click();
         }
-        
+
         if (form) {
             console.log('Form properties:', {
                 id: form.id,
@@ -5569,43 +5569,43 @@ function clearImagePreview() {
     // Function to clear Other Services form completely
     function clearOtherServicesForm() {
         console.log('Clearing Other Services form...');
-        
+
         const form = document.getElementById('otherServicesForm');
         if (!form) {
             console.error('Other Services form not found for clearing');
             return;
         }
-        
+
         // Reset the form using built-in method
         form.reset();
-        
+
         // Remove validation classes
         form.classList.remove('was-validated');
-        
+
         // Clear all radio buttons explicitly
         const radioButtons = form.querySelectorAll('input[type="radio"]');
         radioButtons.forEach(radio => {
             radio.checked = false;
         });
-        
+
         // Clear all text inputs and textareas explicitly
         const textInputs = form.querySelectorAll('input[type="text"], input[type="email"], textarea');
         textInputs.forEach(input => {
             input.value = '';
         });
-        
+
         // Clear any validation feedback
         const validationFeedback = form.querySelectorAll('.invalid-feedback, .valid-feedback');
         validationFeedback.forEach(feedback => {
             feedback.style.display = 'none';
         });
-        
+
         // Remove any is-invalid/is-valid classes from form controls
         const formControls = form.querySelectorAll('.form-control, .form-check-input');
         formControls.forEach(control => {
             control.classList.remove('is-invalid', 'is-valid');
         });
-        
+
         console.log('Other Services form cleared successfully');
     }
 
