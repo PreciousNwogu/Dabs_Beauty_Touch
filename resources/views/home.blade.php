@@ -1089,6 +1089,8 @@
             justify-content: center;
             align-items: center;
             font-size: 0.9rem;
+            width: 100%;
+            box-sizing: border-box;
         }
 
         .calendar-day:hover {
@@ -1149,6 +1151,20 @@
         .calendar-day.other-month {
             background-color: #f8f9fa;
             color: #adb5bd;
+        }
+
+        /* Calendar grid alignment: use CSS Grid to force 7 equal columns so dates align under weekday headers */
+        .calendar-grid {
+            /* keep existing spacing but switch to grid layout for consistent columns */
+            padding: 18px 0 0 0;
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 8px;
+        }
+
+        /* Make the .row wrappers transparent so their .col children become direct grid items */
+        .calendar-grid .row {
+            display: contents;
         }
 
         .time-slot-btn {
@@ -2139,7 +2155,7 @@
                                     <div class="pricing-info mb-3" style="background: rgba(3, 15, 104, 0.1); padding: 15px; border-radius: 10px; border-left: 4px solid #030f68;">
                                         <p class="price" style="margin: 0; color: #030f68; font-weight: 700; font-size: 1.2rem;">Pricing varies by service</p>
                                     </div>
-                                    <button class="btn btn-warning mt-3" onclick="openBookingModal('Custom Service Request', 'custom')" style="font-weight: 600; padding: 12px 30px;">
+                                    <button class="btn btn-warning mt-3" onclick="openOtherServicesModal()" style="font-weight: 600; padding: 12px 30px;">
                                         <i class="bi bi-plus-circle me-2"></i>Book Consultation
                                     </button>
                                 </div>
@@ -2846,17 +2862,16 @@
                         <p class="text-muted">We offer many specialized services beyond our standard menu. Describe what you're looking for and we'll take care of you!</p>
                     </div>
 
-                    <form id="otherServicesForm" action="{{ route('contact.store') }}" method="POST" class="needs-validation" novalidate>
+                    <form id="otherServicesForm" action="{{ route('custom-service.store') }}" method="POST" class="needs-validation" novalidate>
                         @csrf
-                        <input type="hidden" name="subject" value="Other Services Request">
 
                         <div class="row g-4">
                             <!-- Service Description -->
                             <div class="col-12">
-                                <label for="service_description" class="form-label fw-bold">
-                                    <i class="bi bi-scissors me-2"></i>What service are you looking for? *
+                                <label for="service" class="form-label fw-bold">
+                                    <i class="bi bi-scissors me-2"></i>What service are you looking for?
                                 </label>
-                                <textarea class="form-control" id="service_description" name="service_description" rows="4" placeholder="e.g., Goddess Braids, Box Braids, Passion Twists, Hair Extensions, Protective Styles, etc. Please be as detailed as possible..." required></textarea>
+                                <input type="text" class="form-control" id="service" name="service" placeholder="e.g., Goddess Braids, Box Braids, Passion Twists, Hair Extensions" />
                                 <div class="invalid-feedback">
                                     Please describe the service you're looking for.
                                 </div>
@@ -3101,32 +3116,36 @@
                                                     </a>
                                                 </div>
                                             </div>
-                                            <div class="mt-3">
-                                                <p style="color: #666; font-size: 1rem; margin: 0; font-style: italic;">
-                                                    <i class="bi bi-clock me-1"></i>
-                                                    We respond within 24 hours for all inquiries
-                                                </p>
+                                            <div class="row g-4 mt-2">
+                                                <div class="col-md-6">
+                                                    <label class="form-label">Your Name *</label>
+                                                    <input type="text" class="form-control" id="name" name="name" required>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <label class="form-label">Your Phone *</label>
+                                                    <input type="text" class="form-control" id="phone" name="phone" required>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <label class="form-label">Your Email</label>
+                                                    <input type="email" class="form-control" id="email" name="email">
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <label class="form-label">Preferred Date</label>
+                                                    <input type="date" class="form-control" id="appointment_date" name="appointment_date">
+                                                </div>
+                                                <div class="col-12">
+                                                    <label class="form-label">Preferred Time</label>
+                                                    <input type="time" class="form-control" id="appointment_time" name="appointment_time">
+                                                </div>
+                                                <div class="col-12">
+                                                    <label class="form-label">Additional Details</label>
+                                                    <textarea class="form-control" id="message" name="message" rows="4"></textarea>
+                                                </div>
                                             </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-lg-4 text-center">
-                                    <div class="equipment-image-container">
-                                        <div class="equipment-image" style="width: 350px; height: 350px; border-radius: 20px; overflow: hidden; margin: 0 auto; border: 3px solid #ff6600; box-shadow: 0 15px 40px rgba(0,0,0,0.15); background: linear-gradient(135deg, #f8f9fa 0%, #e3eafc 100%); display: flex; align-items: center; justify-content: center;">
-                                            <img src="{{ asset('images/hair tools.jpg') }}" alt="Professional Hair Styling Tools" style="width: 100%; height: 100%; object-fit: cover; border-radius: 17px;">
-                                        </div>
-                                        <div class="image-caption mt-3" style="text-align: center;">
-                                            <h6 style="color: #030f68; font-weight: 600; margin-bottom: 5px;">Professional Equipment</h6>
-                                            <p style="color: #666; font-size: 0.9rem; margin: 0;">Sterilized tools for your safety</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+
+                                            <div class="text-end mt-3">
+                                                <button type="submit" class="btn btn-primary">Submit Request</button>
+                                            </div>
     </div>
 
     <!-- Terms and Conditions Section -->
@@ -4765,11 +4784,11 @@ console.log('=== LOADING BOOKING FUNCTIONS ===');
         }
     });
 
-    const contactForm = document.querySelector('form[action*="contact.store"]');
+    const contactForm = document.querySelector('form[action*="contact.store"], form[action*="custom-service.store"]');
     if (contactForm) {
         contactForm.addEventListener('submit', function(e) {
             // You can add client-side validation here if needed
-            console.log('Contact form submitted');
+            console.log('Contact or Custom-Service form submitted');
         });
     }
 

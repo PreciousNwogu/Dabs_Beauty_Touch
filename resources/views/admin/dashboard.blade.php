@@ -692,6 +692,45 @@
                     <!-- Content will be populated by JavaScript -->
                 </div>
             </div>
+
+            <!-- Recent Custom Service Requests -->
+            <div class="p-4">
+                <h5>Recent Custom Service Requests</h5>
+                @if(isset($customRequests) && $customRequests->count())
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Name</th>
+                                    <th>Email</th>
+                                    <th>Phone</th>
+                                    <th>Service</th>
+                                    <th>Submitted</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($customRequests as $req)
+                                    <tr>
+                                        <td>{{ $req->id }}</td>
+                                        <td>{{ $req->name }}</td>
+                                        <td>{{ $req->email ?? '-' }}</td>
+                                        <td>{{ $req->phone ?? '-' }}</td>
+                                        <td>{{ $req->service ?? '-' }}</td>
+                                        <td>{{ $req->created_at->diffForHumans() }}</td>
+                                        <td>
+                                            <a href="{{ url('/admin/bookings/'.$req->id) }}" class="btn btn-sm btn-outline-primary">View</a>
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                @else
+                    <p class="text-muted">No custom service requests yet.</p>
+                @endif
+            </div>
         </div>
     </div>
 

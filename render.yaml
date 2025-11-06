@@ -41,19 +41,19 @@ services:
       - key: MAIL_PORT
         value: 465
       - key: MAIL_USERNAME
-        value: infor@dabsbeautytouch
+        value: info@dabsbeautytouch
       - key: MAIL_PASSWORD
         sync: false
       - key: MAIL_ENCRYPTION
         value: ssl
       - key: MAIL_FROM_ADDRESS
-        value: infor@dabsbeautytouch
+        value: info@dabsbeautytouch
       - key: MAIL_FROM_NAME
         value: "Dab's Beauty Touch"
       - key: ADMIN_EMAIL
-        value: infor@dabsbeautytouch
+        value: info@dabsbeautytouch
       - key: BOOKING_NOTIFICATION_EMAIL
-        value: infor@dabsbeautytouch
+        value: info@dabsbeautytouch
       - key: DB_CONNECTION
         value: pgsql
       - key: DB_HOST

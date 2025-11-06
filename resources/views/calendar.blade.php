@@ -42,6 +42,15 @@
 
         .calendar-grid {
             padding: 30px;
+            /* Use CSS Grid so weekdays and day cells always align into 7 columns */
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 12px;
+        }
+
+        /* Make the bootstrap .row wrappers transparent so their child .col elements become grid items */
+        .calendar-grid .row {
+            display: contents;
         }
 
         .calendar-day {
@@ -55,6 +64,8 @@
             flex-direction: column;
             justify-content: center;
             align-items: center;
+            width: 100%;
+            box-sizing: border-box;
         }
 
         .calendar-day:hover {
@@ -232,6 +243,8 @@
 
             .calendar-grid {
                 padding: 15px;
+                gap: 8px;
+                grid-template-columns: repeat(7, 1fr);
             }
         }
     </style>
