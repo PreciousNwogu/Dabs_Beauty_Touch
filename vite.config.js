@@ -9,7 +9,7 @@ export default defineConfig({
             include: /\.(jsx|tsx)$/,
         }),
         laravel({
-            input: ["resources/css/app.css", "resources/js/App.tsx"],
+            input: ["resources/css/app.css", "resources/js/App.tsx", "resources/js/admin-calendar.js"],
             refresh: true,
         }),
         tailwindcss(),

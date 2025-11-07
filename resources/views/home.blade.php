@@ -1089,6 +1089,8 @@
             justify-content: center;
             align-items: center;
             font-size: 0.9rem;
+            width: 100%;
+            box-sizing: border-box;
         }
 
         .calendar-day:hover {
@@ -1132,6 +1134,26 @@
             font-size: 12px;
         }
 
+        /* Blocked day styling (admin-created blocked ranges) */
+        .calendar-day.blocked-range {
+            background: linear-gradient(180deg, #343a40 0%, #495057 100%);
+            color: #ffffff;
+            cursor: not-allowed;
+            opacity: 0.95;
+            position: relative;
+            pointer-events: none;
+        }
+
+        .calendar-day .blocked-text {
+            font-size: 0.7rem;
+            margin-top: 6px;
+            line-height: 1.1;
+            max-width: 100%;
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+        }
+
         .calendar-day.past {
             background-color: #e9ecef;
             color: #6c757d;
@@ -1149,6 +1171,20 @@
         .calendar-day.other-month {
             background-color: #f8f9fa;
             color: #adb5bd;
+        }
+
+        /* Calendar grid alignment: use CSS Grid to force 7 equal columns so dates align under weekday headers */
+        .calendar-grid {
+            /* keep existing spacing but switch to grid layout for consistent columns */
+            padding: 18px 0 0 0;
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 8px;
+        }
+
+        /* Make the .row wrappers transparent so their .col children become direct grid items */
+        .calendar-grid .row {
+            display: contents;
         }
 
         .time-slot-btn {
@@ -1385,7 +1421,8 @@
         let calendarCurrentDate = new Date();
         let selectedCalendarDate = null;
         let selectedCalendarTime = null;
-        let bookedDatesCache = []; // Cache for booked dates
+    let bookedDatesCache = []; // Cache for booked dates
+    let blockedDatesCache = []; // Cache for admin blocked dates (objects {date,title,slot_id})
 
         // Hardcoded test dates for August 2025 (for immediate testing)
         const testBookedDates = [
@@ -1418,24 +1455,80 @@
 
         // Fetch real booked dates from API
         function fetchRealBookedDates() {
-            fetch('/api/booked-dates')
-                .then(response => response.json())
-                .then(data => {
-                    console.log('Real API Response:', data);
-                    if (data.success) {
-                        const realBookedDates = data.booked_dates.filter(booking => booking.disabled).map(booking => booking.date);
-                        console.log('Real booked dates from API:', realBookedDates);
+            const year = calendarCurrentDate.getFullYear();
+            const month = calendarCurrentDate.getMonth() + 1;
 
-                        // Update cache with real data
-                        bookedDatesCache = realBookedDates;
-                        // Re-render calendar with real data
-                        renderCalendarModal();
+            const bookedPromise = fetch('/api/booked-dates').then(r => r.json()).catch(e => { console.error('Booked-dates fetch failed', e); return null; });
+            const blockedPromise = fetch(`/schedules/blocked-dates?year=${year}&month=${month}`).then(r => r.json()).catch(e => { console.error('Blocked-dates fetch failed', e); return null; });
+
+            Promise.all([bookedPromise, blockedPromise]).then(([bookedResp, blockedResp]) => {
+                if (bookedResp && bookedResp.success) {
+                    const realBookedDates = bookedResp.booked_dates.filter(booking => booking.disabled).map(booking => booking.date);
+                    bookedDatesCache = realBookedDates;
+                    console.log('Real booked dates from API:', realBookedDates);
+                }
+
+                if (blockedResp && blockedResp.success) {
+                    blockedDatesCache = blockedResp.blocked_dates || [];
+                    console.log('Blocked dates from API:', blockedDatesCache);
+                }
+
+                // Re-render calendar with combined data
+                renderCalendarModal();
+            }).catch(error => {
+                console.error('Error loading real calendar data:', error);
+            });
+        }
+
+        // Fetch and render a simple public list of upcoming blocked ranges
+        function fetchBlockedList() {
+            fetch('/schedules/blocked-list')
+                .then(r => r.json())
+                .then(resp => {
+                    const container = document.getElementById('publicBlockedList');
+                    if (!container) return;
+                    container.innerHTML = '';
+
+                    if (resp && resp.success && resp.blocked && resp.blocked.length) {
+                        const list = document.createElement('ul');
+                        list.className = 'list-unstyled mb-0';
+
+                        resp.blocked.forEach(b => {
+                            const li = document.createElement('li');
+                            li.className = 'mb-1';
+                            const title = document.createElement('strong');
+                            title.textContent = b.title || 'Blocked';
+                            const span = document.createElement('span');
+                            span.className = 'ms-2 text-muted';
+                            // If end equals start, show single day
+                            let text;
+                            if (b.start === b.end) {
+                                text = b.start;
+                            } else {
+                                text = b.start + ' — ' + b.end;
+                            }
+                            span.textContent = text;
+                            li.appendChild(title);
+                            li.appendChild(span);
+                            list.appendChild(li);
+                        });
+
+                        container.appendChild(list);
+                    } else {
+                        container.innerHTML = '<div class="alert alert-success mb-0">No upcoming closures or blocked dates.</div>';
                     }
-                })
-                .catch(error => {
-                    console.error('Error loading real booked dates:', error);
-                    // Keep using test dates if API fails
+                }).catch(e => {
+                    console.error('Failed to fetch blocked list', e);
+                    const container = document.getElementById('publicBlockedList');
+                    if (container) container.innerHTML = '<div class="text-muted">Unable to load closures.</div>';
                 });
+        }
+
+        // Run on page load
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', fetchBlockedList);
+        } else {
+            fetchBlockedList();
         }
 
         function renderCalendarModal() {
@@ -1477,29 +1570,46 @@
                     dayDiv.classList.add('other-month');
                 } else if (date < new Date().setHours(0, 0, 0, 0)) {
                     dayDiv.classList.add('past');
-                } else if (bookedDatesCache.includes(dateString)) {
-                    // Date is fully booked - FORCE RED STYLING
-                    dayDiv.classList.add('booked');
-                    dayDiv.title = 'This date is fully booked - pending or confirmed appointment exists';
-
-                    // Force inline styles to override any other styling
-                    dayDiv.style.backgroundColor = '#ff0000 !important';
-                    dayDiv.style.borderColor = '#cc0000 !important';
-                    dayDiv.style.color = '#ffffff !important';
-                    dayDiv.style.cursor = 'not-allowed';
-                    dayDiv.style.opacity = '1';
-                    dayDiv.style.position = 'relative';
-                    dayDiv.style.pointerEvents = 'none';
-
-                    dayDiv.innerHTML = date.getDate() + '<span style="position:absolute;top:2px;right:4px;color:#ffffff;font-weight:bold;font-size:12px;">×</span>';
-                    console.log(`🔴 FORCED RED STYLING for date ${dateString}`);
-                    // Don't add click event for booked dates
                 } else {
-                    dayDiv.classList.add('available');
-                    dayDiv.style.backgroundColor = '#d4edda';
-                    dayDiv.style.borderColor = '#c3e6cb';
-                    dayDiv.onclick = () => selectCalendarDate(date);
-                    console.log(`🟢 Date ${dateString} marked as AVAILABLE (green)`);
+                    // Determine blocked or booked or available
+                    // Check blocked first
+                    const blockedIndex = (blockedDatesCache || []).reduce((acc, b) => { acc[b.date] = b; return acc; }, {});
+
+                    if (bookedDatesCache.includes(dateString)) {
+                        // Date is fully booked - FORCE RED STYLING
+                        dayDiv.classList.add('booked');
+                        dayDiv.title = 'This date is fully booked - pending or confirmed appointment exists';
+
+                        // Force inline styles to override any other styling
+                        dayDiv.style.backgroundColor = '#ff0000 !important';
+                        dayDiv.style.borderColor = '#cc0000 !important';
+                        dayDiv.style.color = '#ffffff !important';
+                        dayDiv.style.cursor = 'not-allowed';
+                        dayDiv.style.opacity = '1';
+                        dayDiv.style.position = 'relative';
+                        dayDiv.style.pointerEvents = 'none';
+
+                        dayDiv.innerHTML = date.getDate() + '<span style="position:absolute;top:2px;right:4px;color:#ffffff;font-weight:bold;font-size:12px;">×</span>';
+                        console.log(`🔴 FORCED RED STYLING for date ${dateString}`);
+                        // Don't add click event for booked dates
+
+                    } else if (blockedIndex[dateString]) {
+                        // Blocked day: show dark styling and small title text
+                        dayDiv.classList.add('blocked-range');
+                        dayDiv.title = blockedIndex[dateString].title || 'Blocked';
+                        const textDiv = document.createElement('div');
+                        textDiv.className = 'blocked-text';
+                        textDiv.textContent = blockedIndex[dateString].title || 'Blocked';
+                        dayDiv.appendChild(textDiv);
+                        console.log(`⛔ Marked ${dateString} as BLOCKED (${blockedIndex[dateString].title})`);
+
+                    } else {
+                        dayDiv.classList.add('available');
+                        dayDiv.style.backgroundColor = '#d4edda';
+                        dayDiv.style.borderColor = '#c3e6cb';
+                        dayDiv.onclick = () => selectCalendarDate(date);
+                        console.log(`🟢 Date ${dateString} marked as AVAILABLE (green)`);
+                    }
                 }
 
                 calendarDays.appendChild(dayDiv);
@@ -2139,7 +2249,7 @@
                                     <div class="pricing-info mb-3" style="background: rgba(3, 15, 104, 0.1); padding: 15px; border-radius: 10px; border-left: 4px solid #030f68;">
                                         <p class="price" style="margin: 0; color: #030f68; font-weight: 700; font-size: 1.2rem;">Pricing varies by service</p>
                                     </div>
-                                    <button class="btn btn-warning mt-3" onclick="openBookingModal('Custom Service Request', 'custom')" style="font-weight: 600; padding: 12px 30px;">
+                                    <button class="btn btn-warning mt-3" onclick="openOtherServicesModal()" style="font-weight: 600; padding: 12px 30px;">
                                         <i class="bi bi-plus-circle me-2"></i>Book Consultation
                                     </button>
                                 </div>
@@ -2289,7 +2399,7 @@
                 <div class="col-lg-4 col-md-6">
                     <div class="service-card h-100" onclick="openBookingModal('Kids Braids', 'kids-braids')">
                         <img src="{{ asset('images/kids hair style.webp') }}" alt="Kids Braids">
-                        <h4>Kids Braids</h4>
+                        <h4>Kids Braids(3-8yrs)</h4>
                         <p>Specialized braiding services for children with gentle, age-appropriate techniques. Creates adorable, manageable styles that are comfortable and long-lasting for active kids.</p>
                         <p class="price"><strong>Starting at $80</strong></p>
                         <button class="btn btn-warning mt-3">Book Now</button>
@@ -2599,6 +2709,14 @@
                                 </small>
                             </div>
 
+                            <!-- Public blocked list visible to users -->
+                            <div class="col-12 mt-3">
+                                <div id="publicBlockedList" class="p-3" style="min-height:48px;">
+                                    {{-- Populated by JavaScript: upcoming blocked/closure ranges --}}
+                                    <div class="text-muted">Loading upcoming closures...</div>
+                                </div>
+                            </div>
+
 
 
                             <!-- Personal Details -->
@@ -2846,17 +2964,16 @@
                         <p class="text-muted">We offer many specialized services beyond our standard menu. Describe what you're looking for and we'll take care of you!</p>
                     </div>
 
-                    <form id="otherServicesForm" action="{{ route('contact.store') }}" method="POST" class="needs-validation" novalidate>
+                    <form id="otherServicesForm" action="{{ route('custom-service.store') }}" method="POST" class="needs-validation" novalidate>
                         @csrf
-                        <input type="hidden" name="subject" value="Other Services Request">
 
                         <div class="row g-4">
                             <!-- Service Description -->
                             <div class="col-12">
-                                <label for="service_description" class="form-label fw-bold">
-                                    <i class="bi bi-scissors me-2"></i>What service are you looking for? *
+                                <label for="service" class="form-label fw-bold">
+                                    <i class="bi bi-scissors me-2"></i>What service are you looking for?
                                 </label>
-                                <textarea class="form-control" id="service_description" name="service_description" rows="4" placeholder="e.g., Goddess Braids, Box Braids, Passion Twists, Hair Extensions, Protective Styles, etc. Please be as detailed as possible..." required></textarea>
+                                <input type="text" class="form-control" id="service" name="service" placeholder="e.g., Goddess Braids, Box Braids, Passion Twists, Hair Extensions" />
                                 <div class="invalid-feedback">
                                     Please describe the service you're looking for.
                                 </div>
@@ -3101,32 +3218,36 @@
                                                     </a>
                                                 </div>
                                             </div>
-                                            <div class="mt-3">
-                                                <p style="color: #666; font-size: 1rem; margin: 0; font-style: italic;">
-                                                    <i class="bi bi-clock me-1"></i>
-                                                    We respond within 24 hours for all inquiries
-                                                </p>
+                                            <div class="row g-4 mt-2">
+                                                <div class="col-md-6">
+                                                    <label class="form-label">Your Name *</label>
+                                                    <input type="text" class="form-control" id="name" name="name" required>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <label class="form-label">Your Phone *</label>
+                                                    <input type="text" class="form-control" id="phone" name="phone" required>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <label class="form-label">Your Email</label>
+                                                    <input type="email" class="form-control" id="email" name="email">
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <label class="form-label">Preferred Date</label>
+                                                    <input type="date" class="form-control" id="appointment_date" name="appointment_date">
+                                                </div>
+                                                <div class="col-12">
+                                                    <label class="form-label">Preferred Time</label>
+                                                    <input type="time" class="form-control" id="appointment_time" name="appointment_time">
+                                                </div>
+                                                <div class="col-12">
+                                                    <label class="form-label">Additional Details</label>
+                                                    <textarea class="form-control" id="message" name="message" rows="4"></textarea>
+                                                </div>
                                             </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-lg-4 text-center">
-                                    <div class="equipment-image-container">
-                                        <div class="equipment-image" style="width: 350px; height: 350px; border-radius: 20px; overflow: hidden; margin: 0 auto; border: 3px solid #ff6600; box-shadow: 0 15px 40px rgba(0,0,0,0.15); background: linear-gradient(135deg, #f8f9fa 0%, #e3eafc 100%); display: flex; align-items: center; justify-content: center;">
-                                            <img src="{{ asset('images/hair tools.jpg') }}" alt="Professional Hair Styling Tools" style="width: 100%; height: 100%; object-fit: cover; border-radius: 17px;">
-                                        </div>
-                                        <div class="image-caption mt-3" style="text-align: center;">
-                                            <h6 style="color: #030f68; font-weight: 600; margin-bottom: 5px;">Professional Equipment</h6>
-                                            <p style="color: #666; font-size: 0.9rem; margin: 0;">Sterilized tools for your safety</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+
+                                            <div class="text-end mt-3">
+                                                <button type="submit" class="btn btn-primary">Submit Request</button>
+                                            </div>
     </div>
 
     <!-- Terms and Conditions Section -->
@@ -4765,11 +4886,11 @@ console.log('=== LOADING BOOKING FUNCTIONS ===');
         }
     });
 
-    const contactForm = document.querySelector('form[action*="contact.store"]');
+    const contactForm = document.querySelector('form[action*="contact.store"], form[action*="custom-service.store"]');
     if (contactForm) {
         contactForm.addEventListener('submit', function(e) {
             // You can add client-side validation here if needed
-            console.log('Contact form submitted');
+            console.log('Contact or Custom-Service form submitted');
         });
     }
 
@@ -5406,22 +5527,22 @@ function clearImagePreview() {
     document.addEventListener('DOMContentLoaded', function() {
         console.log('Setting up Other Services form handler...');
         const otherServicesForm = document.getElementById('otherServicesForm');
-        
+
         if (otherServicesForm) {
             console.log('Other Services form found:', otherServicesForm);
-            
+
             // Add click handler to the submit button as backup
             const submitButton = otherServicesForm.querySelector('button[type="submit"]');
             if (submitButton) {
                 console.log('Submit button found:', submitButton);
-                
+
                 // Test button clickability
                 submitButton.style.cursor = 'pointer';
                 submitButton.style.pointerEvents = 'auto';
-                
+
                 submitButton.addEventListener('click', function(event) {
                     console.log('Other Services submit button clicked directly!');
-                    
+
                     // Manual form validation and submission if needed
                     if (!otherServicesForm.checkValidity()) {
                         console.log('Form invalid, showing validation');
@@ -5429,35 +5550,35 @@ function clearImagePreview() {
                         event.preventDefault();
                         return false;
                     }
-                    
+
                     // Let the form submit event handle the actual submission
                     console.log('Button click complete, form should submit...');
                 });
-                
+
                 // Add mousedown event for testing
                 submitButton.addEventListener('mousedown', function(event) {
                     console.log('Submit button mousedown detected!');
                 });
-                
+
                 // Add a professional confirmation alert on click with form clearing and page refresh
                 submitButton.onclick = function(event) {
                     console.log('Submit button onclick fired!');
-                    
+
                     // Clear the form before showing success message
                     clearOtherServicesForm();
-                    
+
                     alert('Thank you for your service inquiry! Your request has been received and we will contact you within 24 hours to discuss your requirements and provide a personalized quote.');
-                    
+
                     // Refresh the page after user clicks OK on the alert
                     setTimeout(function() {
                         window.location.reload();
                     }, 500);
                 };
-                
+
             } else {
                 console.error('Submit button not found in Other Services form!');
             }
-            
+
             otherServicesForm.addEventListener('submit', function(event) {
                 console.log('Other Services form submit event triggered!');
                 event.preventDefault();
@@ -5469,7 +5590,7 @@ function clearImagePreview() {
                     otherServicesForm.classList.add('was-validated');
                     return false;
                 }
-                
+
                 console.log('Form validation passed, processing submission...');
 
                 // Prepare form data
@@ -5529,17 +5650,17 @@ function clearImagePreview() {
             console.error('Other Services form not found!');
         }
     });
-    
+
     // Debug function to test Other Services button - can be called from console
     window.testOtherServicesButton = function() {
         console.log('=== TESTING OTHER SERVICES BUTTON ===');
-        
+
         const form = document.getElementById('otherServicesForm');
         const button = document.getElementById('otherServicesSubmitBtn');
-        
+
         console.log('Form found:', !!form);
         console.log('Button found:', !!button);
-        
+
         if (button) {
             console.log('Button properties:', {
                 type: button.type,
@@ -5550,12 +5671,12 @@ function clearImagePreview() {
                 pointerEvents: window.getComputedStyle(button).pointerEvents,
                 zIndex: window.getComputedStyle(button).zIndex
             });
-            
+
             // Try to manually trigger click
             console.log('Attempting to trigger click...');
             button.click();
         }
-        
+
         if (form) {
             console.log('Form properties:', {
                 id: form.id,
@@ -5569,43 +5690,43 @@ function clearImagePreview() {
     // Function to clear Other Services form completely
     function clearOtherServicesForm() {
         console.log('Clearing Other Services form...');
-        
+
         const form = document.getElementById('otherServicesForm');
         if (!form) {
             console.error('Other Services form not found for clearing');
             return;
         }
-        
+
         // Reset the form using built-in method
         form.reset();
-        
+
         // Remove validation classes
         form.classList.remove('was-validated');
-        
+
         // Clear all radio buttons explicitly
         const radioButtons = form.querySelectorAll('input[type="radio"]');
         radioButtons.forEach(radio => {
             radio.checked = false;
         });
-        
+
         // Clear all text inputs and textareas explicitly
         const textInputs = form.querySelectorAll('input[type="text"], input[type="email"], textarea');
         textInputs.forEach(input => {
             input.value = '';
         });
-        
+
         // Clear any validation feedback
         const validationFeedback = form.querySelectorAll('.invalid-feedback, .valid-feedback');
         validationFeedback.forEach(feedback => {
             feedback.style.display = 'none';
         });
-        
+
         // Remove any is-invalid/is-valid classes from form controls
         const formControls = form.querySelectorAll('.form-control, .form-check-input');
         formControls.forEach(control => {
             control.classList.remove('is-invalid', 'is-valid');
         });
-        
+
         console.log('Other Services form cleared successfully');
     }
 

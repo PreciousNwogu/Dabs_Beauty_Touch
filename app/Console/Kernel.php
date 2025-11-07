@@ -13,7 +13,9 @@ class Kernel extends ConsoleKernel
 
     protected function schedule(Schedule $schedule)
     {
-        // $schedule->command('inspire')->hourly();
+        // Send admin booking reminders 24 hours and 1 hour before appointment
+        $schedule->job(new \App\Jobs\SendBookingReminders(24))->everyTenMinutes();
+        $schedule->job(new \App\Jobs\SendBookingReminders(1))->everyFiveMinutes();
     }
 
     protected function commands()

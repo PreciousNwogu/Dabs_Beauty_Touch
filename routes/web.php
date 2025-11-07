@@ -153,6 +153,8 @@ Route::post('/test-upload', function (Request $request) {
     return response()->json($result);
 });
 
+// (test email route removed)
+
 // Debug route to test HTTPS and security
 Route::get('/debug/security', function (Request $request) {
     return response()->json([
@@ -287,7 +289,10 @@ Route::prefix('admin')->name('admin.')->group(function () {
                 ->sum('final_price') ?? 0,
         ];
 
-        return view('admin.dashboard', compact('bookings', 'stats'));
+    // Also fetch recent custom service requests for admin review
+    $customRequests = \App\Models\CustomServiceRequest::orderBy('created_at', 'desc')->take(10)->get();
+
+    return view('admin.dashboard', compact('bookings', 'stats', 'customRequests'));
     })->name('dashboard');
 
     // Get booking details for modal
@@ -376,12 +381,31 @@ Route::prefix('admin')->name('admin.')->group(function () {
     // Admin booking single view (so the 'View Booking' button in emails works)
     Route::get('/bookings/{id}', function ($id) {
         $booking = \App\Models\Booking::find($id);
-        if (! $booking) {
-            abort(404, 'Booking not found');
+
+        if ($booking) {
+            return view('admin.booking', compact('booking'));
         }
 
-        return view('admin.booking', compact('booking'));
+        // Fallback: check for custom service request with this id
+        $customRequest = \App\Models\CustomServiceRequest::find($id);
+        if ($customRequest) {
+            // Render the same view but provide booking variable as null and customRequest for the template to handle
+            return view('admin.booking', ['booking' => null, 'customRequest' => $customRequest]);
+        }
+
+        abort(404, 'Booking not found');
     })->name('bookings.show');
+
+    // Update status for custom service requests
+    Route::post('/custom-requests/{id}/status', function(Request $request, $id) {
+        $request->validate(['status' => 'required|string']);
+
+        $model = \App\Models\CustomServiceRequest::findOrFail($id);
+        $model->status = $request->status;
+        $model->save();
+
+        return response()->json(['success' => true, 'message' => 'Status updated', 'status' => $model->status]);
+    })->name('custom-requests.update-status');
 
     Route::post('/bookings/search', function(Request $request) {
         $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
@@ -450,6 +474,19 @@ Route::prefix('admin')->name('admin.')->group(function () {
             ], 500);
         }
     })->name('bookings.search');
+
+    // Admin schedule management (FullCalendar events)
+    Route::get('/schedules', [\App\Http\Controllers\Admin\ScheduleController::class, 'index'])->name('schedules.index');
+    Route::get('/schedules/events', [\App\Http\Controllers\Admin\ScheduleController::class, 'events'])->name('schedules.events');
+    Route::post('/schedules', [\App\Http\Controllers\Admin\ScheduleController::class, 'store'])->name('schedules.store');
+    Route::put('/schedules/{id}', [\App\Http\Controllers\Admin\ScheduleController::class, 'update'])->name('schedules.update');
+    Route::delete('/schedules/{id}', [\App\Http\Controllers\Admin\ScheduleController::class, 'destroy'])->name('schedules.destroy');
+    Route::post('/schedules/reschedule', [\App\Http\Controllers\Admin\ScheduleController::class, 'reschedule'])->name('schedules.reschedule');
+    // Public endpoint used by the booking calendar to mark blocked days
+    Route::get('/schedules/blocked-dates', [\App\Http\Controllers\Admin\ScheduleController::class, 'blockedDates'])->name('schedules.blocked-dates');
+    // Public endpoint: list upcoming blocked ranges for users
+    Route::get('/schedules/blocked-list', [\App\Http\Controllers\Admin\ScheduleController::class, 'blockedList'])->name('schedules.blocked-list');
+
 });
 
 // Test route to verify routing is working
@@ -754,6 +791,93 @@ Route::post('/contact', function(Request $request) {
     // For now, just redirect back with success message
     return redirect()->back()->with('success', 'Thank you for your message! We will get back to you soon.');
 })->name('contact.store');
+
+// Custom service request form handler
+Route::post('/custom-service', function(Request $request) {
+    $rules = [
+        'name' => 'required|string|max:255',
+        'email' => 'nullable|email|max:255',
+        'phone' => 'required|string|max:20',
+        'service' => 'nullable|string|max:255',
+        'appointment_date' => 'nullable|date',
+        'appointment_time' => 'nullable|string',
+        'message' => 'nullable|string|max:2000',
+    ];
+
+    $data = $request->validate($rules);
+
+    try {
+        // Persist request to database
+        $modelData = [
+            'name' => $data['name'],
+            'email' => $data['email'] ?? null,
+            'phone' => $data['phone'] ?? null,
+            'service' => $data['service'] ?? null,
+            'appointment_date' => $data['appointment_date'] ?? null,
+            'appointment_time' => $data['appointment_time'] ?? null,
+            'message' => $data['message'] ?? null,
+        ];
+
+        // Log incoming submission and DB config for debugging
+        \Illuminate\Support\Facades\Log::info('Custom service submission received', [
+            'model_data' => $modelData,
+            'remote_ip' => $request->ip(),
+            'user_agent' => $request->userAgent(),
+            'db_default_connection' => config('database.default'),
+            'db_database' => config('database.connections.' . config('database.default') . '.database'),
+        ]);
+
+        $record = \App\Models\CustomServiceRequest::create($modelData);
+
+        // Build payload for notification including record id
+        $payload = array_merge($modelData, [
+            'id' => $record->id ?? null,
+            'ip' => $request->ip(),
+            'user_agent' => $request->userAgent(),
+        ]);
+
+        // Log creation result
+        \Illuminate\Support\Facades\Log::info('Custom service record created', [
+            'record_id' => $record->id ?? null,
+            'record' => $record->toArray()
+        ]);
+
+        // Log before sending notifications
+        \Illuminate\Support\Facades\Log::info('Preparing to send notifications for custom service request', [
+            'payload' => $payload,
+        ]);
+
+        // Send notification to admin
+        $adminEmail = config('mail.admin_address') ?: env('ADMIN_EMAIL') ?: 'admin@example.com';
+        \Illuminate\Support\Facades\Notification::route('mail', $adminEmail)
+            ->notify(new \App\Notifications\CustomServiceRequest(array_merge($payload, ['is_admin' => true])));
+
+        // Send a simple confirmation to the user if email provided
+        if (!empty($record->email)) {
+            \Illuminate\Support\Facades\Notification::route('mail', $record->email)
+                ->notify(new \App\Notifications\UserCustomServiceConfirmation($payload));
+        }
+
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json(['success' => true, 'message' => 'Custom service request submitted', 'id' => $record->id]);
+        }
+
+        return redirect()->back()->with('success', 'Your custom service request has been submitted. We will contact you soon.');
+
+    } catch (\Exception $e) {
+        \Illuminate\Support\Facades\Log::error('Custom service submission failed: ' . $e->getMessage(), [
+            'payload' => $payload ?? $data,
+            'exception' => $e->getMessage(),
+            'trace' => $e->getTraceAsString(),
+        ]);
+
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json(['success' => false, 'message' => 'Failed to submit request'], 500);
+        }
+
+        return redirect()->back()->withErrors(['error' => 'Failed to submit request'])->withInput();
+    }
+})->name('custom-service.store');
 
 // Booking routes (public)
 Route::get('/bookings/slots', function(Request $request) {
