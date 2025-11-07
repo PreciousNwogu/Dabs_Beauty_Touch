@@ -110,6 +110,25 @@
             font-size: 12px;
         }
 
+        /* Blocked day styling (admin-created blocked ranges) */
+        .calendar-day.blocked-range {
+            background: linear-gradient(180deg, #343a40 0%, #495057 100%);
+            color: #ffffff;
+            cursor: not-allowed;
+            opacity: 0.95;
+            position: relative;
+        }
+
+        .calendar-day .blocked-text {
+            font-size: 0.7rem;
+            margin-top: 6px;
+            line-height: 1.1;
+            max-width: 100%;
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+        }
+
         .calendar-day.past {
             background-color: #e9ecef;
             color: #6c757d;
@@ -680,56 +699,90 @@
         function loadCalendarData() {
             console.log('📅 Loading calendar data for separate calendar page');
 
-            // Use the working API endpoint instead of the broken one
-            fetch('/api/booked-dates')
-                .then(response => response.json())
-                .then(data => {
-                    console.log('📊 Calendar API Response:', data);
-                    if (data.success) {
-                        // Extract booked dates from the API response
-                        const bookedDates = data.booked_dates.filter(booking => booking.disabled).map(booking => booking.date);
-                        console.log('🔴 Booked dates found:', bookedDates);
-                        updateCalendarDisplay(bookedDates);
-                    }
-                })
-                .catch(error => {
-                    console.error('❌ Error loading calendar data:', error);
-                });
+            const year = currentDate.getFullYear();
+            const month = currentDate.getMonth() + 1; // 1-based month
+
+            // Fetch booked dates API and blocked dates in parallel
+            const bookedPromise = fetch('/api/booked-dates').then(r => r.json()).catch(e => { console.error('Booked-dates fetch failed', e); return null; });
+            const blockedPromise = fetch(`/schedules/blocked-dates?year=${year}&month=${month}`).then(r => r.json()).catch(e => { console.error('Blocked-dates fetch failed', e); return null; });
+
+            Promise.all([bookedPromise, blockedPromise]).then(([bookedResp, blockedResp]) => {
+                let bookedDates = [];
+                if (bookedResp && bookedResp.success) {
+                    bookedDates = bookedResp.booked_dates.filter(booking => booking.disabled).map(booking => booking.date);
+                }
+
+                let blockedDates = [];
+                if (blockedResp && blockedResp.success) {
+                    blockedDates = blockedResp.blocked_dates || [];
+                }
+
+                console.log('🔴 Booked dates:', bookedDates);
+                console.log('⛔ Blocked dates:', blockedDates);
+
+                updateCalendarDisplay(bookedDates, blockedDates);
+            }).catch(error => {
+                console.error('❌ Error loading calendar data:', error);
+            });
         }
 
-        function updateCalendarDisplay(bookedDates) {
-            console.log('🎨 Updating calendar display with booked dates:', bookedDates);
+        function updateCalendarDisplay(bookedDates, blockedDates) {
+            console.log('🎨 Updating calendar display with booked dates and blocked dates:', bookedDates, blockedDates);
 
-            // Find all calendar day elements and mark booked ones as red
+            // Index blockedDates by date for quick lookup
+            const blockedIndex = {};
+            (blockedDates || []).forEach(b => {
+                blockedIndex[b.date] = b;
+            });
+
+            // Find all calendar day elements and mark booked/blocked ones
             const calendarDays = document.querySelectorAll('.calendar-day');
 
             calendarDays.forEach(dayElement => {
-                const dayText = dayElement.textContent.trim();
+                const rawText = dayElement.textContent.trim();
+                // remove any injected blocked text before parsing
+                const dayText = rawText.split('\n')[0].trim();
+
                 if (dayText && !isNaN(dayText)) {
-                    // Build the date string for this day
                     const year = currentDate.getFullYear();
                     const month = currentDate.getMonth();
                     const day = parseInt(dayText);
                     const dateString = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
 
-                    // Check if this date is booked
-                    if (bookedDates.includes(dateString)) {
+                    // Clean previous state
+                    dayElement.classList.remove('booked', 'available', 'blocked-range');
+                    dayElement.style.backgroundColor = '';
+                    dayElement.style.color = '';
+                    dayElement.style.cursor = '';
+                    dayElement.style.opacity = '';
+                    dayElement.title = '';
+
+                    // Remove old blocked-text node if exists
+                    const oldBlocked = dayElement.querySelector('.blocked-text');
+                    if (oldBlocked) oldBlocked.remove();
+
+                    if (bookedDates && bookedDates.includes(dateString)) {
                         // Mark as booked with red styling
-                        dayElement.style.backgroundColor = '#ff0000';
-                        dayElement.style.color = '#ffffff';
-                        dayElement.style.cursor = 'not-allowed';
-                        dayElement.style.opacity = '0.8';
+                        dayElement.classList.add('booked');
                         dayElement.title = 'This date is fully booked';
+                        // keep day number visible but add a cross
                         dayElement.innerHTML = dayText + '<span style="position:absolute;top:2px;right:4px;color:#ffffff;font-size:12px;">×</span>';
                         console.log(`🔴 Marked ${dateString} as BOOKED`);
+
+                    } else if (blockedIndex[dateString]) {
+                        // Mark as blocked-range and show title text
+                        dayElement.classList.add('blocked-range');
+                        dayElement.title = blockedIndex[dateString].title || 'Blocked';
+                        const textDiv = document.createElement('div');
+                        textDiv.className = 'blocked-text';
+                        textDiv.textContent = blockedIndex[dateString].title || 'Blocked';
+                        dayElement.appendChild(textDiv);
+                        console.log(`⛔ Marked ${dateString} as BLOCKED (${blockedIndex[dateString].title})`);
+
                     } else {
-                        // Reset to available styling
-                        dayElement.style.backgroundColor = '';
-                        dayElement.style.color = '';
-                        dayElement.style.cursor = '';
-                        dayElement.style.opacity = '';
-                        dayElement.title = '';
-                        dayElement.innerHTML = dayText;
+                        // Available
+                        dayElement.classList.add('available');
+                        dayElement.title = 'Click to see available time slots';
                         console.log(`🟢 Marked ${dateString} as AVAILABLE`);
                     }
                 }

@@ -299,6 +299,33 @@
             height: 38px;
         }
     </style>
+    <!-- FullCalendar CSS (loaded from CDN to avoid deep-import issues during Vite analysis) -->
+    <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/main.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/@fullcalendar/daygrid@6.1.8/main.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/@fullcalendar/timegrid@6.1.8/main.min.css" rel="stylesheet">
+    <style>
+        /* Styling for blocked ranges so their title text is visible inside the calendar.
+           We target common FullCalendar event classes across views (dayGrid/timeGrid).
+        */
+        .fc-event.blocked-range,
+        .fc-daygrid-event.blocked-range,
+        .fc-timegrid-event.blocked-range {
+            background-color: rgba(255,150,150,0.9) !important;
+            border-color: rgba(255,120,120,1) !important;
+            color: #000 !important;
+            opacity: 1 !important;
+        }
+
+        /* Make multi-day/all-day blocked bars fuller so the title is readable */
+        .fc-daygrid-event.blocked-range .fc-event-main,
+        .fc-event.blocked-range .fc-event-main {
+            padding: 2px 6px !important;
+            font-weight: 600;
+        }
+
+        /* Prevent pointer interactions (admins already have separate manage UI) */
+        .fc-event.blocked-range { pointer-events: auto; }
+    </style>
 </head>
 <body>
     <!-- Navigation -->
@@ -392,9 +419,154 @@
                     </div>
                 </div>
             </div>
+
+                    <!-- Block Dates Modal -->
+                    <div class="modal fade" id="blockModal" tabindex="-1">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title">Block Dates / Range</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <div class="mb-3">
+                                        <label class="form-label">Title (optional)</label>
+                                        <input id="blockTitle" type="text" class="form-control" placeholder="e.g., Closed for holidays">
+                                    </div>
+                                    <div class="mb-3 form-check">
+                                        <input type="checkbox" class="form-check-input" id="blockAllDay" checked>
+                                        <label class="form-check-label" for="blockAllDay">All day / whole-day block</label>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Start</label>
+                                        <input id="blockStart" type="datetime-local" class="form-control">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">End</label>
+                                        <input id="blockEnd" type="datetime-local" class="form-control">
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                    <button type="button" id="submitBlock" class="btn btn-danger">Create Block</button>
+                                </div>
+                            </div>
+                        </div>
+
+                                <!-- Manage Blocks Modal -->
+                                <div class="modal fade" id="manageBlocksModal" tabindex="-1">
+                                    <div class="modal-dialog modal-lg">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title">Manage Blocked Dates</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <div id="blocksList" class="list-group">
+                                                    <div class="text-muted">Loading blocked ranges...</div>
+                                                </div>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+            // Debug Events modal wiring
+            const openDebugBtn = document.getElementById('openDebugEvents');
+            if (openDebugBtn) {
+                openDebugBtn.addEventListener('click', () => {
+                    const modalEl = document.getElementById('debugEventsModal');
+                    if (modalEl) {
+                        const modal = new bootstrap.Modal(modalEl);
+                        modal.show();
+                    }
+                });
+            }
+
+            const loadEventsBtn = document.getElementById('loadEventsBtn');
+            if (loadEventsBtn) {
+                loadEventsBtn.addEventListener('click', async () => {
+                    const outPre = document.getElementById('debugEventsOutput');
+                    const summary = document.getElementById('debugEventsSummary');
+                    if (outPre) outPre.textContent = 'Loading...';
+                    if (summary) summary.textContent = 'Fetching events...';
+
+                    try {
+                        const calendarEl = document.getElementById('adminCalendar');
+                        const eventsUrl = (calendarEl && calendarEl.dataset && calendarEl.dataset.eventsUrl) ? calendarEl.dataset.eventsUrl : '/schedules/events';
+                        const resp = await fetch(eventsUrl);
+                        const data = await resp.json();
+
+                        // Pretty-print JSON
+                        if (outPre) outPre.textContent = JSON.stringify(data, null, 2);
+
+                        // compute summary
+                        const total = Array.isArray(data) ? data.length : (data?.length || 0);
+                        const blocked = (Array.isArray(data) ? data : (data?.filter ? data : [])).filter(i => i.extendedProps && i.extendedProps.type === 'blocked');
+                        const blockedCount = blocked.length || 0;
+                        if (summary) summary.textContent = `Events loaded: ${total} | Blocked events: ${blockedCount}`;
+
+                    } catch (e) {
+                        if (outPre) outPre.textContent = 'Failed to load events: ' + (e.message || e);
+                        if (summary) summary.textContent = 'Failed to fetch events.';
+                        console.error('Debug events fetch failed', e);
+                    }
+                });
+            }
+                    </div>
         </div>
 
-        <!-- Filters -->
+            <!-- Admin Calendar -->
+            <div class="row p-4">
+                <div class="col-12">
+                    <div class="appointment-card">
+                        <div class="appointment-header d-flex justify-content-between align-items-center">
+                            <div>
+                                <h4 class="mb-0">Schedule (Calendar)</h4>
+                                <small class="text-muted">Drag confirmed/pending bookings to reschedule</small>
+                            </div>
+                            <div class="btn-group" role="group">
+                                <button id="openBlockModal" class="btn btn-outline-danger btn-sm">
+                                    <i class="bi bi-slash-circle me-1"></i>Block Dates
+                                </button>
+                                <button id="openManageBlocks" class="btn btn-outline-secondary btn-sm">
+                                    <i class="bi bi-list-ul me-1"></i>Manage Blocks
+                                </button>
+                                <button id="openDebugEvents" class="btn btn-outline-info btn-sm">
+                                    <i class="bi bi-bug me-1"></i>Debug Events
+                                </button>
+                            </div>
+                        </div>
+                        <div class="appointment-body">
+                            <div id="adminCalendar" data-events-url="{{ route('admin.schedules.events') }}" data-reschedule-url="{{ route('admin.schedules.reschedule') }}" data-store-url="{{ route('admin.schedules.store') }}" style="max-width: 100%; min-height: 650px;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Debug Events Modal -->
+            <div class="modal fade" id="debugEventsModal" tabindex="-1">
+                <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Calendar Events Debug</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div id="debugEventsSummary" class="mb-3 text-muted">Click "Load Events" to fetch calendar events.</div>
+                            <pre id="debugEventsOutput" style="max-height:400px; overflow:auto; background:#f8f9fa; padding:12px; border-radius:6px;">No data loaded.</pre>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" id="loadEventsBtn" class="btn btn-primary">Load Events</button>
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filters -->
         <div class="filter-section">
             <div class="row align-items-center">
                 <div class="col-md-3">
@@ -438,89 +610,20 @@
                         <i class="bi bi-x-circle"></i>
                     </button>
                 </div>
-            </div>
-        </div>
 
-        <!-- Appointments Table -->
-        <div class="dashboard-container">
-            <div class="dashboard-header d-flex justify-content-between align-items-center">
-                <div>
-                    <h3 class="mb-0">Appointments</h3>
-                    <div class="d-flex align-items-center gap-3">
-                        @if($bookings->hasPages())
-                            <small class="text-white-50">
-                                Page {{ $bookings->currentPage() }} of {{ $bookings->lastPage() }} ({{ $bookings->total() }} total)
-                            </small>
-                        @endif
-                        @if(request('sort_by'))
-                            <small class="text-white-50">
-                                <i class="bi bi-sort-{{ request('sort_order') == 'asc' ? 'up' : 'down' }} me-1"></i>
-                                Sorted by {{ ucfirst(str_replace('_', ' ', request('sort_by'))) }}
-                                ({{ request('sort_order') == 'asc' ? 'A-Z' : 'Z-A' }})
-                            </small>
-                        @endif
-                    </div>
-                </div>
-                <a href="{{ route('admin.complete-service') }}" class="btn btn-success">
-                    <i class="bi bi-check-circle me-2"></i>Complete Service
-                </a>
-            </div>
-            <div class="p-4">
-                <div class="table-responsive">
+                <div class="table-responsive mt-4">
                     <table class="table table-hover">
                         <thead>
                             <tr>
-                                <th class="cursor-pointer" onclick="sortTable('id')">
-                                    Booking ID
-                                    @if(request('sort_by') == 'id')
-                                        <i class="bi bi-arrow-{{ request('sort_order') == 'asc' ? 'up' : 'down' }}"></i>
-                                    @else
-                                        <i class="bi bi-arrow-down-up text-muted"></i>
-                                    @endif
-                                </th>
-                                <th class="cursor-pointer" onclick="sortTable('name')">
-                                    Customer Name
-                                    @if(request('sort_by') == 'name')
-                                        <i class="bi bi-arrow-{{ request('sort_order') == 'asc' ? 'up' : 'down' }}"></i>
-                                    @else
-                                        <i class="bi bi-arrow-down-up text-muted"></i>
-                                    @endif
-                                </th>
+                                <th class="cursor-pointer" onclick="sortTable('id')">Booking ID <i class="bi bi-arrow-down-up text-muted"></i></th>
+                                <th class="cursor-pointer" onclick="sortTable('name')">Customer Name <i class="bi bi-arrow-down-up text-muted"></i></th>
                                 <th>Contact</th>
-                                <th class="cursor-pointer" onclick="sortTable('service')">
-                                    Service
-                                    @if(request('sort_by') == 'service')
-                                        <i class="bi bi-arrow-{{ request('sort_order') == 'asc' ? 'up' : 'down' }}"></i>
-                                    @else
-                                        <i class="bi bi-arrow-down-up text-muted"></i>
-                                    @endif
-                                </th>
-                                       <th>Final Price</th>
-                                <th class="cursor-pointer" onclick="sortTable('appointment_date')">
-                                    Appointment Date
-                                    @if(request('sort_by') == 'appointment_date')
-                                        <i class="bi bi-arrow-{{ request('sort_order') == 'asc' ? 'up' : 'down' }}"></i>
-                                    @else
-                                        <i class="bi bi-arrow-down-up text-muted"></i>
-                                    @endif
-                                </th>
-                                <th class="cursor-pointer" onclick="sortTable('appointment_time')">
-                                    Appointment Time
-                                    @if(request('sort_by') == 'appointment_time')
-                                        <i class="bi bi-arrow-{{ request('sort_order') == 'asc' ? 'up' : 'down' }}"></i>
-                                    @else
-                                        <i class="bi bi-arrow-down-up text-muted"></i>
-                                    @endif
-                                </th>
+                                <th class="cursor-pointer" onclick="sortTable('service')">Service <i class="bi bi-arrow-down-up text-muted"></i></th>
+                                <th>Final Price</th>
+                                <th class="cursor-pointer" onclick="sortTable('appointment_date')">Appointment Date <i class="bi bi-arrow-down-up text-muted"></i></th>
+                                <th class="cursor-pointer" onclick="sortTable('appointment_time')">Appointment Time <i class="bi bi-arrow-down-up text-muted"></i></th>
                                 <th>Sample Image</th>
-                                <th class="cursor-pointer" onclick="sortTable('status')">
-                                    Status
-                                    @if(request('sort_by') == 'status')
-                                        <i class="bi bi-arrow-{{ request('sort_order') == 'asc' ? 'up' : 'down' }}"></i>
-                                    @else
-                                        <i class="bi bi-arrow-down-up text-muted"></i>
-                                    @endif
-                                </th>
+                                <th class="cursor-pointer" onclick="sortTable('status')">Status <i class="bi bi-arrow-down-up text-muted"></i></th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
@@ -819,6 +922,8 @@
     <!-- Note: removed duplicate Enhanced Details Modal to avoid duplicate IDs -->
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- FullCalendar script will be loaded and initialized at the end of the page to avoid breaking Blade directives -->
     <script>
         let currentAppointmentId = null;
 
@@ -1284,6 +1389,9 @@
                 alert('Error updating booking status. Please try again.');
             });
         }
+        
+        // FullCalendar is bundled via Vite (resources/js/admin-calendar.js). See Vite build for the asset.
     </script>
+    @vite(['resources/css/app.css', 'resources/js/admin-calendar.js'])
 </body>
 </html>

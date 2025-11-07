@@ -1134,6 +1134,26 @@
             font-size: 12px;
         }
 
+        /* Blocked day styling (admin-created blocked ranges) */
+        .calendar-day.blocked-range {
+            background: linear-gradient(180deg, #343a40 0%, #495057 100%);
+            color: #ffffff;
+            cursor: not-allowed;
+            opacity: 0.95;
+            position: relative;
+            pointer-events: none;
+        }
+
+        .calendar-day .blocked-text {
+            font-size: 0.7rem;
+            margin-top: 6px;
+            line-height: 1.1;
+            max-width: 100%;
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+        }
+
         .calendar-day.past {
             background-color: #e9ecef;
             color: #6c757d;
@@ -1401,7 +1421,8 @@
         let calendarCurrentDate = new Date();
         let selectedCalendarDate = null;
         let selectedCalendarTime = null;
-        let bookedDatesCache = []; // Cache for booked dates
+    let bookedDatesCache = []; // Cache for booked dates
+    let blockedDatesCache = []; // Cache for admin blocked dates (objects {date,title,slot_id})
 
         // Hardcoded test dates for August 2025 (for immediate testing)
         const testBookedDates = [
@@ -1434,24 +1455,80 @@
 
         // Fetch real booked dates from API
         function fetchRealBookedDates() {
-            fetch('/api/booked-dates')
-                .then(response => response.json())
-                .then(data => {
-                    console.log('Real API Response:', data);
-                    if (data.success) {
-                        const realBookedDates = data.booked_dates.filter(booking => booking.disabled).map(booking => booking.date);
-                        console.log('Real booked dates from API:', realBookedDates);
+            const year = calendarCurrentDate.getFullYear();
+            const month = calendarCurrentDate.getMonth() + 1;
 
-                        // Update cache with real data
-                        bookedDatesCache = realBookedDates;
-                        // Re-render calendar with real data
-                        renderCalendarModal();
+            const bookedPromise = fetch('/api/booked-dates').then(r => r.json()).catch(e => { console.error('Booked-dates fetch failed', e); return null; });
+            const blockedPromise = fetch(`/schedules/blocked-dates?year=${year}&month=${month}`).then(r => r.json()).catch(e => { console.error('Blocked-dates fetch failed', e); return null; });
+
+            Promise.all([bookedPromise, blockedPromise]).then(([bookedResp, blockedResp]) => {
+                if (bookedResp && bookedResp.success) {
+                    const realBookedDates = bookedResp.booked_dates.filter(booking => booking.disabled).map(booking => booking.date);
+                    bookedDatesCache = realBookedDates;
+                    console.log('Real booked dates from API:', realBookedDates);
+                }
+
+                if (blockedResp && blockedResp.success) {
+                    blockedDatesCache = blockedResp.blocked_dates || [];
+                    console.log('Blocked dates from API:', blockedDatesCache);
+                }
+
+                // Re-render calendar with combined data
+                renderCalendarModal();
+            }).catch(error => {
+                console.error('Error loading real calendar data:', error);
+            });
+        }
+
+        // Fetch and render a simple public list of upcoming blocked ranges
+        function fetchBlockedList() {
+            fetch('/schedules/blocked-list')
+                .then(r => r.json())
+                .then(resp => {
+                    const container = document.getElementById('publicBlockedList');
+                    if (!container) return;
+                    container.innerHTML = '';
+
+                    if (resp && resp.success && resp.blocked && resp.blocked.length) {
+                        const list = document.createElement('ul');
+                        list.className = 'list-unstyled mb-0';
+
+                        resp.blocked.forEach(b => {
+                            const li = document.createElement('li');
+                            li.className = 'mb-1';
+                            const title = document.createElement('strong');
+                            title.textContent = b.title || 'Blocked';
+                            const span = document.createElement('span');
+                            span.className = 'ms-2 text-muted';
+                            // If end equals start, show single day
+                            let text;
+                            if (b.start === b.end) {
+                                text = b.start;
+                            } else {
+                                text = b.start + ' — ' + b.end;
+                            }
+                            span.textContent = text;
+                            li.appendChild(title);
+                            li.appendChild(span);
+                            list.appendChild(li);
+                        });
+
+                        container.appendChild(list);
+                    } else {
+                        container.innerHTML = '<div class="alert alert-success mb-0">No upcoming closures or blocked dates.</div>';
                     }
-                })
-                .catch(error => {
-                    console.error('Error loading real booked dates:', error);
-                    // Keep using test dates if API fails
+                }).catch(e => {
+                    console.error('Failed to fetch blocked list', e);
+                    const container = document.getElementById('publicBlockedList');
+                    if (container) container.innerHTML = '<div class="text-muted">Unable to load closures.</div>';
                 });
+        }
+
+        // Run on page load
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', fetchBlockedList);
+        } else {
+            fetchBlockedList();
         }
 
         function renderCalendarModal() {
@@ -1493,29 +1570,46 @@
                     dayDiv.classList.add('other-month');
                 } else if (date < new Date().setHours(0, 0, 0, 0)) {
                     dayDiv.classList.add('past');
-                } else if (bookedDatesCache.includes(dateString)) {
-                    // Date is fully booked - FORCE RED STYLING
-                    dayDiv.classList.add('booked');
-                    dayDiv.title = 'This date is fully booked - pending or confirmed appointment exists';
-
-                    // Force inline styles to override any other styling
-                    dayDiv.style.backgroundColor = '#ff0000 !important';
-                    dayDiv.style.borderColor = '#cc0000 !important';
-                    dayDiv.style.color = '#ffffff !important';
-                    dayDiv.style.cursor = 'not-allowed';
-                    dayDiv.style.opacity = '1';
-                    dayDiv.style.position = 'relative';
-                    dayDiv.style.pointerEvents = 'none';
-
-                    dayDiv.innerHTML = date.getDate() + '<span style="position:absolute;top:2px;right:4px;color:#ffffff;font-weight:bold;font-size:12px;">×</span>';
-                    console.log(`🔴 FORCED RED STYLING for date ${dateString}`);
-                    // Don't add click event for booked dates
                 } else {
-                    dayDiv.classList.add('available');
-                    dayDiv.style.backgroundColor = '#d4edda';
-                    dayDiv.style.borderColor = '#c3e6cb';
-                    dayDiv.onclick = () => selectCalendarDate(date);
-                    console.log(`🟢 Date ${dateString} marked as AVAILABLE (green)`);
+                    // Determine blocked or booked or available
+                    // Check blocked first
+                    const blockedIndex = (blockedDatesCache || []).reduce((acc, b) => { acc[b.date] = b; return acc; }, {});
+
+                    if (bookedDatesCache.includes(dateString)) {
+                        // Date is fully booked - FORCE RED STYLING
+                        dayDiv.classList.add('booked');
+                        dayDiv.title = 'This date is fully booked - pending or confirmed appointment exists';
+
+                        // Force inline styles to override any other styling
+                        dayDiv.style.backgroundColor = '#ff0000 !important';
+                        dayDiv.style.borderColor = '#cc0000 !important';
+                        dayDiv.style.color = '#ffffff !important';
+                        dayDiv.style.cursor = 'not-allowed';
+                        dayDiv.style.opacity = '1';
+                        dayDiv.style.position = 'relative';
+                        dayDiv.style.pointerEvents = 'none';
+
+                        dayDiv.innerHTML = date.getDate() + '<span style="position:absolute;top:2px;right:4px;color:#ffffff;font-weight:bold;font-size:12px;">×</span>';
+                        console.log(`🔴 FORCED RED STYLING for date ${dateString}`);
+                        // Don't add click event for booked dates
+
+                    } else if (blockedIndex[dateString]) {
+                        // Blocked day: show dark styling and small title text
+                        dayDiv.classList.add('blocked-range');
+                        dayDiv.title = blockedIndex[dateString].title || 'Blocked';
+                        const textDiv = document.createElement('div');
+                        textDiv.className = 'blocked-text';
+                        textDiv.textContent = blockedIndex[dateString].title || 'Blocked';
+                        dayDiv.appendChild(textDiv);
+                        console.log(`⛔ Marked ${dateString} as BLOCKED (${blockedIndex[dateString].title})`);
+
+                    } else {
+                        dayDiv.classList.add('available');
+                        dayDiv.style.backgroundColor = '#d4edda';
+                        dayDiv.style.borderColor = '#c3e6cb';
+                        dayDiv.onclick = () => selectCalendarDate(date);
+                        console.log(`🟢 Date ${dateString} marked as AVAILABLE (green)`);
+                    }
                 }
 
                 calendarDays.appendChild(dayDiv);
@@ -2613,6 +2707,14 @@
                                     <i class="bi bi-calendar me-1"></i>
                                     Click the calendar button to select your preferred date and time
                                 </small>
+                            </div>
+
+                            <!-- Public blocked list visible to users -->
+                            <div class="col-12 mt-3">
+                                <div id="publicBlockedList" class="p-3" style="min-height:48px;">
+                                    {{-- Populated by JavaScript: upcoming blocked/closure ranges --}}
+                                    <div class="text-muted">Loading upcoming closures...</div>
+                                </div>
                             </div>
 
 

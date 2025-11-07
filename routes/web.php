@@ -474,6 +474,19 @@ Route::prefix('admin')->name('admin.')->group(function () {
             ], 500);
         }
     })->name('bookings.search');
+
+    // Admin schedule management (FullCalendar events)
+    Route::get('/schedules', [\App\Http\Controllers\Admin\ScheduleController::class, 'index'])->name('schedules.index');
+    Route::get('/schedules/events', [\App\Http\Controllers\Admin\ScheduleController::class, 'events'])->name('schedules.events');
+    Route::post('/schedules', [\App\Http\Controllers\Admin\ScheduleController::class, 'store'])->name('schedules.store');
+    Route::put('/schedules/{id}', [\App\Http\Controllers\Admin\ScheduleController::class, 'update'])->name('schedules.update');
+    Route::delete('/schedules/{id}', [\App\Http\Controllers\Admin\ScheduleController::class, 'destroy'])->name('schedules.destroy');
+    Route::post('/schedules/reschedule', [\App\Http\Controllers\Admin\ScheduleController::class, 'reschedule'])->name('schedules.reschedule');
+    // Public endpoint used by the booking calendar to mark blocked days
+    Route::get('/schedules/blocked-dates', [\App\Http\Controllers\Admin\ScheduleController::class, 'blockedDates'])->name('schedules.blocked-dates');
+    // Public endpoint: list upcoming blocked ranges for users
+    Route::get('/schedules/blocked-list', [\App\Http\Controllers\Admin\ScheduleController::class, 'blockedList'])->name('schedules.blocked-list');
+
 });
 
 // Test route to verify routing is working

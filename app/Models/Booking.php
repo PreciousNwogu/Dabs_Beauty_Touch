@@ -36,6 +36,8 @@ class Booking extends Model
         'final_price',
     'confirmation_code',
     'sample_picture',
+        'reminder_24_sent',
+        'reminder_1_sent',
         'payment_status',
         'status_history',
     ];
@@ -53,6 +55,8 @@ class Booking extends Model
         'final_price' => 'decimal:2',
     'confirmation_code' => 'string',
     'sample_picture' => 'string',
+        'reminder_24_sent' => 'boolean',
+        'reminder_1_sent' => 'boolean',
         'status_history' => 'array',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
