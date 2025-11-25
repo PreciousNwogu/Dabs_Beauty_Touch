@@ -1,224 +1,64 @@
-<!DOCTYPE html>
-<html lang="en">
+<!doctype html>
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Booking Confirmation - Dab's Beauty Touch</title>
-    <style>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            background-color: #f7fafc;
-            margin: 0;
-            padding: 20px;
-            line-height: 1.6;
-        }
-        .container {
-            max-width: 600px;
-            margin: 0 auto;
-            background: white;
-            border-radius: 12px;
-            overflow: hidden;
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-        }
-        .header {
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-            padding: 40px 30px;
-            text-align: center;
-            color: white;
-        }
-        .header .icon {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            width: 64px;
-            height: 64px;
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 50%;
-            margin-bottom: 20px;
-            font-size: 28px;
-        }
-        .content {
-            padding: 30px;
-        }
-        .success-message {
-            text-align: center;
-            margin-bottom: 30px;
-        }
-        .booking-details {
-            background: #f8fafc;
-            border-radius: 8px;
-            padding: 25px;
-            margin-bottom: 25px;
-            border-left: 4px solid #10b981;
-        }
-        .detail-item {
-            display: flex;
-            align-items: center;
-            margin-bottom: 15px;
-            padding: 8px 0;
-        }
-        .detail-item:last-child {
-            margin-bottom: 0;
-        }
-        .detail-icon {
-            width: 24px;
-            height: 24px;
-            margin-right: 12px;
-            color: #6b7280;
-            flex-shrink: 0;
-        }
-        .detail-label {
-            color: #6b7280;
-            margin-right: 8px;
-            font-weight: 500;
-        }
-        .detail-value {
-            color: #1f2937;
-            font-weight: 600;
-        }
-        .warning-box {
-            background: #fef3cd;
-            border: 1px solid #fde68a;
-            border-radius: 8px;
-            padding: 16px;
-            margin: 20px 0;
-            display: flex;
-            align-items: flex-start;
-        }
-        .warning-icon {
-            color: #d97706;
-            margin-right: 12px;
-            margin-top: 2px;
-            flex-shrink: 0;
-        }
-        .contact-info {
-            background: #f1f5f9;
-            border-radius: 8px;
-            padding: 20px;
-            margin: 20px 0;
-        }
-        .contact-item {
-            display: flex;
-            align-items: center;
-            margin-bottom: 12px;
-        }
-        .contact-item:last-child {
-            margin-bottom: 0;
-        }
-        .contact-icon {
-            width: 20px;
-            height: 20px;
-            margin-right: 12px;
-            color: #4f46e5;
-        }
-        .footer {
-            background: #f8fafc;
-            padding: 20px 30px;
-            text-align: center;
-            color: #6b7280;
-            font-size: 14px;
-        }
-        a {
-            color: #4f46e5;
-            text-decoration: none;
-        }
-        a:hover {
-            text-decoration: underline;
-        }
-    </style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Booking Confirmation</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial; background:#f6f9fc; color:#222; }
+    .card { max-width:640px; margin:28px auto; background:#fff; border-radius:12px; padding:22px; box-shadow:0 8px 30px rgba(16,24,40,0.08); }
+    .brand { color:#0b3a66; font-weight:800; font-size:20px; }
+    .muted { color:#6c757d; }
+    .price { color:#0b3a66; font-weight:800; font-size:20px; }
+    .cta { display:inline-block; background:#ffb703;color:#081c15;padding:10px 16px;border-radius:8px;text-decoration:none;font-weight:700;margin-top:12px; }
+    .meta { background:#f1f5f9;padding:12px;border-radius:8px;margin-top:12px;font-size:14px; }
+    .summary-row { display:flex; gap:12px; align-items:center; justify-content:space-between; }
+    .summary-item { text-align:center; }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <!-- Header -->
-        <div class="header">
-            <div class="icon">✓</div>
-            <h1 style="margin: 0; font-size: 24px; font-weight: 600;">Appointment Booked Successfully!</h1>
-        </div>
+  <div class="card">
+    <div class="brand">Dabs Beauty Touch</div>
+    <h2>Booking Confirmation</h2>
+    <p class="muted">Hello {{ $booking->name ?? 'Customer' }},</p>
 
-        <!-- Content -->
-        <div class="content">
-            <div class="success-message">
-                <p style="color: #6b7280; margin: 0;">Your beauty appointment has been confirmed. Here are your booking details:</p>
-            </div>
+    <p>Thanks — we've received your booking. Below are the details we have on file.</p>
 
-            <!-- Booking Details -->
-            <div class="booking-details">
-                <h3 style="margin: 0 0 20px 0; color: #1f2937; font-size: 18px;">📅 Booking Information</h3>
-
-                <div class="detail-item">
-                    <span class="detail-icon">🔖</span>
-                    <span class="detail-label">Booking ID:</span>
-                    <span class="detail-value">{{ $booking_id ?? 'BK000024' }}</span>
-                </div>
-
-                <div class="detail-item">
-                    <span class="detail-icon">🛡️</span>
-                    <span class="detail-label">Confirmation Code:</span>
-                    <span class="detail-value">{{ $confirmation_code ?? 'CONFEAB923BD' }}</span>
-                </div>
-
-                @if(isset($appointment_date))
-                <div class="detail-item">
-                    <span class="detail-icon">📅</span>
-                    <span class="detail-label">Date:</span>
-                    <span class="detail-value">{{ $appointment_date }}</span>
-                </div>
-                @endif
-
-                @if(isset($appointment_time))
-                <div class="detail-item">
-                    <span class="detail-icon">⏰</span>
-                    <span class="detail-label">Time:</span>
-                    <span class="detail-value">{{ $appointment_time }}</span>
-                </div>
-                @endif
-
-                @if(isset($service))
-                <div class="detail-item">
-                    <span class="detail-icon">✂️</span>
-                    <span class="detail-label">Service:</span>
-                    <span class="detail-value">{{ $service }}</span>
-                </div>
-                @endif
-            </div>
-
-            <!-- Deposit Warning -->
-            <div class="warning-box">
-                <span class="warning-icon">⚠️</span>
-                <div>
-                    <strong>Important: Deposit Required</strong>
-                    <p style="margin: 5px 0 0 0; color: #92400e;">Please contact us to arrange the $20 deposit payment. Your appointment will be confirmed once payment is received!</p>
-                </div>
-            </div>
-
-            <!-- Contact Information -->
-            <div class="contact-info">
-                <h4 style="margin: 0 0 15px 0; color: #1f2937;">📞 Contact Us</h4>
-
-                <div class="contact-item">
-                    <span class="contact-icon">📱</span>
-                    <div>
-                        <strong>Phone:</strong> <a href="tel:+13432458848">(+1)343-245-8848</a>
-                    </div>
-                </div>
-
-                <div class="contact-item">
-                    <span class="contact-icon">✉️</span>
-                    <div>
-                        <strong>Email:</strong> <a href="mailto:infor@dabsbeautytouch">infor@dabsbeautytouch</a>
-                    </div>
-                </div>
-            </div>
-
-            <p style="text-align: center; color: #6b7280; margin: 25px 0 0 0;">
-                We look forward to seeing you! Please save this email for your records.
-            </p>
-        </div>
-
-        <!-- Footer -->
-        <div class="footer">
-            <p style="margin: 0;">© 2025 Dab's Beauty Touch. All rights reserved.</p>
-        </div>
+    <div class="meta">
+      <div><strong>Booking ID:</strong> BK{{ str_pad($booking->id ?? 0, 6, '0', STR_PAD_LEFT) }}</div>
+      <div><strong>Confirmation code:</strong> {{ $booking->confirmation_code ?? 'N/A' }}</div>
+      <div><strong>Service:</strong> {{ $booking->service ?? 'N/A' }}</div>
+      @if(!empty($booking->hair_mask_option))
+        <div><strong>Option:</strong> {{ $booking->hair_mask_option === 'mask-with-weave' ? 'With Weaving (+$30 estimate)' : 'Mask / Relaxing only' }}</div>
+      @endif
+      {{-- Show length only when this is NOT a hair-mask booking --}}
+      @if(empty($booking->hair_mask_option))
+        <div><strong>Length:</strong> {{ isset($booking->length) ? ucwords(str_replace('_', ' ', $booking->length)) : 'N/A' }}</div>
+      @endif
+      <div><strong>Appointment:</strong> {{ optional($booking->appointment_date)->format('F j, Y') ?? '' }} {{ $booking->appointment_time ?? '' }}</div>
     </div>
+
+    <p style="margin-top:14px;">Price summary:</p>
+    <div class="summary-row">
+      <div class="summary-item">
+        <div class="muted">Base price</div>
+        <div>${{ number_format($basePrice ?? ($booking->base_price ?? 0),2) }}</div>
+      </div>
+      <div class="summary-item">
+        <div class="muted">Adjustment</div>
+        <div>${{ number_format($adjust ?? ($booking->length_adjustment ?? 0),2) }}</div>
+      </div>
+      <div class="summary-item">
+        <div class="muted">Total</div>
+        <div class="price">${{ number_format($booking->final_price ?? 0,2) }}</div>
+      </div>
+    </div>
+
+    <p style="margin-top:16px;">If you need to make changes, click the button below to view your booking.</p>
+
+    <a class="cta" href="{{ url('/bookings/confirm/' . ($booking->id ?? '') . '/' . ($booking->confirmation_code ?? '')) }}">View booking</a>
+
+    <p style="margin-top:18px; font-size:13px; color:#6c757d;">We look forward to seeing you — Dabs Beauty Touch</p>
+  </div>
 </body>
 </html>

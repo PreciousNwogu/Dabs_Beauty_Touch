@@ -1983,7 +1983,7 @@
                             </div>
                             <div class="col-lg-6">
                                 <div class="slide-image" style="text-align: center;">
-                                    <img src="{{ asset('images/wig installation.jpg') }}" alt="Wig Installation" style="width: 100%; max-width: 500px; height: 400px; object-fit: cover; border-radius: 20px; box-shadow: 0 15px 40px rgba(0,0,0,0.15);">
+                                    <img src="{{ asset('images/wig installation.jpg') }}" alt="Wig Installation" style="width: 100%; max-width: 500px; height: 400px; object-fit: cover; border-radius: 20px; box-shadow: 0 15px 40px #00000026;">
                                 </div>
                             </div>
                         </div>
@@ -2290,12 +2290,7 @@
                             <h2 class="section-title mb-3" style="font-size:2.5rem; font-weight:700;">About Dab's Beauty Touch</h2>
                             <p class="lead mb-3" style="font-size:1.25rem; color:#333;">Professional hair braiding services with over 10 years of experience.</p>
                             <p style="font-size:1.05rem; color:#444;">At Dab's Beauty Touch, we specialize in creating beautiful, long-lasting braided hairstyles that enhance your natural beauty. <br>We believe that confidence begins with feeling great about how you look. Known for our exceptional craftsmanship and creative hairstyle designs, we don't just transform appearances—we help you radiate self-assurance. Whether it's a fresh new look or a signature style, we're here to be the touch that enhances your natural beauty and leaves you feeling confident.</p>
-                            <ul class="list-unstyled mt-3 mb-0" style="font-size:1.08rem;">
-                                <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i>Expert braiding techniques</li>
-                                <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i>High-quality hair products</li>
-                                <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i>Personalized consultations</li>
-                                <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i>Affordable pricing</li>
-                            </ul>
+
                         </div>
                         <div class="col-md-5 d-flex align-items-center justify-content-center p-4" style="background:linear-gradient(135deg,#e3eafc 0%,#f8f9fa 100%);">
                             <img src="{{ asset('images/About DBT.jpg') }}" alt="About Dab's Beauty Touch" class="img-fluid" style="max-width:320px; border-radius:18px; box-shadow:0 8px 32px rgba(0,0,0,0.12); border:6px solid #fff;">
@@ -2534,6 +2529,8 @@
                         <input type="hidden" id="appointment_time_hidden" name="appointment_time">
                         <input type="hidden" id="selectedService" name="service">
                         <input type="hidden" id="selectedServiceType" name="service_type">
+                        <input type="hidden" id="selectedPrice" name="price">
+                        <input type="hidden" id="selectedHairMaskOption" name="hair_mask_option" value="mask-only">
 
                         <!-- Pricing Information (detailed boxes like screenshot) -->
                         <div class="mb-3">
@@ -2621,6 +2618,22 @@
                                             <small class="form-text text-muted d-block mt-2">Default: Mid-back. Length adjustment affects pricing(+$20 long / -$20 short).</small>
                                         </div>
                                     </div>
+                                </div>
+                            </div>
+
+                            <!-- Hair Mask Options - shown only for Hair Mask/Relaxing service -->
+                            <div class="col-12 mt-3" id="hairMaskOptions" style="display:none;">
+                                <div class="mb-3">
+                                    <label class="form-label">Hair Mask/Relaxing Options *</label>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="hair_mask_option" id="mask_only" value="mask-only" checked>
+                                        <label class="form-check-label" for="mask_only">Mask / Relaxing only (Starting at $50)</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="hair_mask_option" id="mask_with_weave" value="mask-with-weave">
+                                        <label class="form-check-label" for="mask_with_weave">With Weaving (+$30 estimate, total ≈ $80)</label>
+                                    </div>
+                                    <small class="form-text text-muted d-block mt-2">Choose whether you want mask/relaxing only or with weave added. Final price computed on submit.</small>
                                 </div>
                             </div>
 
@@ -3170,41 +3183,10 @@
                                                         <strong style="color: #030f68;">Email:</strong>
                                                     </div>
                                                     <a href="mailto:info@dabsbeautytouch" style="color: #ff6600; text-decoration: none; font-weight: 600; font-size: 1.1rem;">
-                                                        infor@dabsbeautytouch
+                                                        info@dabsbeautytouch
                                                     </a>
                                                 </div>
                                             </div>
-                                            <div class="row g-4 mt-2">
-                                                <div class="col-md-6">
-                                                    <label class="form-label">Your Name *</label>
-                                                    <input type="text" class="form-control" id="name" name="name" required>
-                                                </div>
-                                                <div class="col-md-6">
-                                                    <label class="form-label">Your Phone *</label>
-                                                    <input type="text" class="form-control" id="phone" name="phone" required>
-                                                </div>
-                                                <div class="col-md-6">
-                                                    <label class="form-label">Your Email</label>
-                                                    <input type="email" class="form-control" id="email" name="email">
-                                                </div>
-                                                <div class="col-md-6">
-                                                    <label class="form-label">Preferred Date</label>
-                                                    <input type="date" class="form-control" id="appointment_date" name="appointment_date">
-                                                </div>
-                                                <div class="col-12">
-                                                    <label class="form-label">Preferred Time</label>
-                                                    <input type="time" class="form-control" id="appointment_time" name="appointment_time">
-                                                </div>
-                                                <div class="col-12">
-                                                    <label class="form-label">Additional Details</label>
-                                                    <textarea class="form-control" id="message" name="message" rows="4"></textarea>
-                                                </div>
-                                            </div>
-
-                                            <div class="text-end mt-3">
-                                                <button type="submit" class="btn btn-primary">Submit Request</button>
-                                            </div>
-    </div>
 
     <!-- Terms and Conditions Section -->
     <section id="terms" class="section section-xl" style="padding: 80px 0; background-color: #f8f9fa;">
@@ -3333,7 +3315,7 @@
                                         <div class="mb-3">
                                             <i class="bi bi-envelope-fill text-warning me-2"></i>
                                             <strong>Email:</strong>
-                                            <a href="mailto:infor@dabsbeautytouch" style="color: #ff6600; text-decoration: none;">inf@dabsbeautytouch</a>
+                                            <a href="mailto:infor@dabsbeautytouch" style="color: #ff6600; text-decoration: none;">info@dabsbeautytouch</a>
                                         </div>
                                         <div class="mb-3">
                                             <i class="bi bi-clock-fill text-warning me-2"></i>
@@ -3343,11 +3325,6 @@
                                             <i class="bi bi-chat-dots-fill text-warning me-2"></i>
                                             <strong>Consultation:</strong> Free consultation available
                                         </div>
-                                    </div>
-                                    <div class="text-center mt-4">
-                                        <p style="font-size: 0.9rem; opacity: 0.8;">
-                                            For specific questions about services, pricing, or special requests, please contact us directly.
-                                        </p>
                                     </div>
                                 </div>
                             </div>
@@ -4077,698 +4054,72 @@ console.log('=== LOADING BOOKING FUNCTIONS ===');
         }
 
         bookingForm.addEventListener('submit', function(e) {
-            console.log('=== SUBMIT EVENT HANDLER TRIGGERED ===');
-            console.log('Event object:', e);
-            console.log('Calling preventDefault()...');
-            e.preventDefault();
-            console.log('Calling stopPropagation()...');
-            e.stopPropagation();
-            console.log('Event prevention complete - form should NOT submit normally');
+            // Minimal submit handler: basic validation + keep hair-mask hidden-field behavior.
+            const requiredFields = ['name', 'phone', 'bookingDate', 'timeInput'];
+            const missingFields = [];
 
-            console.log('=== FORM SUBMISSION STARTED ===');
-            console.log('Form action:', this.action);
-            console.log('Form method:', this.method);
-
-            // Log all form field values for debugging
-            const debugFormData = new FormData(this);
-            console.log('=== FORM DATA ===');
-            for (let [key, value] of debugFormData.entries()) {
-                console.log(`${key}: ${value}`);
-            }
-
-            // Log all field values specifically
-            console.log('=== FIELD VALUES ===');
-            console.log('name:', document.getElementById('name')?.value);
-            console.log('phone:', document.getElementById('phone')?.value);
-            console.log('email:', document.getElementById('email')?.value);
-            console.log('bookingDate:', document.getElementById('bookingDate')?.value);
-            console.log('timeInput:', document.getElementById('timeInput')?.value);
-            console.log('appointment_date (hidden):', document.getElementById('appointment_date')?.value);
-            console.log('appointment_time (hidden):', document.getElementById('appointment_time_hidden')?.value);
-            console.log('selectedService:', document.getElementById('selectedService')?.value);
-
-        // Basic form validation
-        console.log('=== STARTING VALIDATION ===');
-        const requiredFields = ['name', 'phone', 'bookingDate', 'timeInput'];
-        const missingFields = [];
-
-        requiredFields.forEach(fieldId => {
-            const field = document.getElementById(fieldId);
-            const fieldValue = field ? field.value.trim() : '';
-            console.log(`Checking field ${fieldId}: "${fieldValue}"`);
-            if (!field || !fieldValue) {
-                missingFields.push(fieldId);
-                console.log(`❌ Field ${fieldId} is missing or empty`);
-            } else {
-                console.log(`✅ Field ${fieldId} is valid`);
-            }
-        });
-
-        if (missingFields.length > 0) {
-            console.log('❌ Validation failed - missing fields:', missingFields);
-            alert('Please fill in all required fields: ' + missingFields.join(', '));
-            return;
-        }
-        console.log('✅ Required fields validation passed');
-
-        // Validate email format if provided
-        console.log('=== EMAIL VALIDATION ===');
-        const emailField = document.getElementById('email');
-        if (emailField && emailField.value.trim()) {
-            const emailValue = emailField.value.trim();
-            console.log('Email value:', emailValue);
-            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            if (!emailRegex.test(emailValue)) {
-                console.log('❌ Email validation failed');
-                alert('Please enter a valid email address');
-                return;
-            }
-            console.log('✅ Email validation passed');
-        } else {
-            console.log('✅ Email field empty or not found - skipping validation');
-        }
-
-        // Validate phone format
-        console.log('=== PHONE VALIDATION ===');
-        const phoneField = document.getElementById('phone');
-        if (phoneField && phoneField.value.trim()) {
-            const phoneValue = phoneField.value.trim();
-            console.log('Phone value:', phoneValue);
-            const phoneRegex = /^[\d\s\-\(\)\+]{10,}$/;
-            if (!phoneRegex.test(phoneValue)) {
-                console.log('❌ Phone validation failed');
-                alert('Please enter a valid phone number (at least 10 digits)');
-                return;
-            }
-            console.log('✅ Phone validation passed');
-        } else {
-            console.log('❌ Phone field is required but empty');
-            alert('Phone number is required');
-            return;
-        }
-
-        // Check if date is not in the past
-        console.log('=== DATE VALIDATION ===');
-        const bookingDate = document.getElementById('bookingDate');
-        const appointmentDate = document.getElementById('appointment_date');
-        const selectedDate = appointmentDate ? appointmentDate.value : null;
-        console.log('bookingDate field value:', bookingDate?.value);
-        console.log('appointment_date hidden field value:', selectedDate);
-
-        if (selectedDate) {
-            const selected = new Date(selectedDate);
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
-            console.log('Selected date:', selected);
-            console.log('Today:', today);
-
-            if (selected < today) {
-                console.log('❌ Date validation failed - date is in the past');
-                alert('Please select a future date for your appointment');
-                return;
-            }
-            console.log('✅ Date validation passed');
-        } else {
-            console.log('❌ Date validation failed - no date selected');
-            alert('Please select an appointment date');
-            return;
-        }
-
-        // Validate time format
-        console.log('=== TIME VALIDATION ===');
-        const timeHidden = document.getElementById('appointment_time_hidden');
-        const timeValue = timeHidden ? timeHidden.value : null;
-        console.log('appointment_time_hidden value:', timeValue);
-
-        if (timeValue) {
-            const timeRegex = /^([01]?[0-9]|2[0-3]):[0-5][0-9]$/;
-            if (!timeRegex.test(timeValue)) {
-                console.log('❌ Time validation failed - invalid format');
-                alert('Invalid time format. Please select a time from the calendar modal.');
-                return;
-            }
-            console.log('✅ Time validation passed');
-        } else {
-            console.log('❌ Time validation failed - no time selected');
-            alert('Please select an appointment time');
-            return;
-        }
-
-        // Check if time and date were selected via modal
-        const timeInput = document.getElementById('timeInput');
-        // timeHidden already declared above
-        // bookingDate already declared above
-        // appointmentDate already declared above
-
-        if (!timeInput || !timeInput.value) {
-            alert('Please select appointment time using the calendar modal');
-            return;
-        }
-
-        if (!bookingDate || !bookingDate.value) {
-            alert('Please select appointment date using the calendar modal');
-            return;
-        }
-
-        // Values should already be set by the modal, just ensure they're in the hidden fields
-        if (timeHidden && !timeHidden.value) {
-            timeHidden.value = timeInput.value; // This should already be in 24-hour format from modal
-        }
-
-        if (appointmentDate && !appointmentDate.value) {
-            appointmentDate.value = bookingDate.value;
-        }
-
-        console.log('Date set:', bookingDate.value);
-        console.log('Time set:', timeInput.value);
-
-        const submitBtn = this.querySelector('button[type="submit"]');
-        const originalText = submitBtn.innerHTML;
-
-        // Show loading state
-        submitBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> Processing...';
-        submitBtn.disabled = true;
-
-        // Get form data
-        // Ensure a hidden 'length' field mirrors selected hair_length radios for server-side compatibility
-        let selectedLengthInput = this.querySelector('input[name="length"]');
-        const selectedHairLength = (function(){
-            const r = document.getElementsByName('hair_length');
-            for (let i=0;i<r.length;i++) if (r[i].checked) return r[i].value;
-            return null;
-        })();
-    if (!selectedLengthInput) {
-            selectedLengthInput = document.createElement('input');
-            selectedLengthInput.type = 'hidden';
-            selectedLengthInput.name = 'length';
-            selectedLengthInput.id = 'length_hidden_field';
-            this.appendChild(selectedLengthInput);
-        }
-    if (selectedHairLength) selectedLengthInput.value = selectedHairLength.replace(/-/g, '_');
-
-        const formData = new FormData(this);
-
-        // Log form data for debugging
-        console.log('Form data being sent:');
-        console.log('Name:', formData.get('name'));
-        console.log('Email:', formData.get('email'));
-        console.log('Phone:', formData.get('phone'));
-        console.log('Service:', formData.get('service'));
-        console.log('Appointment Date:', formData.get('appointment_date'));
-        console.log('Appointment Time:', formData.get('appointment_time'));
-        console.log('Notes:', formData.get('notes'));
-        console.log('CSRF Token:', formData.get('_token'));
-        console.log('Sample Picture File:', formData.get('sample_picture'));
-        console.log('Sample Picture File Name:', formData.get('sample_picture') ? formData.get('sample_picture').name : 'No file');
-
-        // Validate critical fields before sending
-        if (!formData.get('appointment_date')) {
-            // Set default date if none selected, but warn user
-            const tomorrow = new Date();
-            tomorrow.setDate(tomorrow.getDate() + 1);
-            const defaultDate = tomorrow.toISOString().split('T')[0];
-
-            // Update the hidden field
-            document.getElementById('appointment_date').value = defaultDate;
-            formData.set('appointment_date', defaultDate);
-
-            console.warn('No appointment date selected, using default:', defaultDate);
-        }
-
-        if (!formData.get('appointment_time')) {
-            // Set default time if none selected
-            const defaultTime = '09:00';
-            document.getElementById('appointment_time_hidden').value = defaultTime;
-            formData.set('appointment_time', defaultTime);
-
-            console.warn('No appointment time selected, using default:', defaultTime);
-        }
-
-        if (!formData.get('_token')) {
-            alert('Missing security token. Please refresh the page and try again.');
-            return;
-        }
-
-        for (let [key, value] of formData.entries()) {
-            console.log(key + ': ' + value);
-        }
-
-        // Log selected service specifically
-        const selectedService = document.getElementById('selectedService');
-        if (selectedService && selectedService.value) {
-            console.log('Selected service for booking:', selectedService.value);
-        } else {
-            console.log('No specific service selected, will use default');
-        }
-
-        // Submit via AJAX with improved error handling
-        console.log('=== PREPARING AJAX SUBMISSION ===');
-        const csrfToken = getCSRFToken();
-        console.log('CSRF Token:', csrfToken);
-
-        // Ensure the form action uses HTTPS in production
-        let actionUrl = this.action;
-        if (window.location.protocol === 'https:' && actionUrl.startsWith('http:')) {
-            actionUrl = actionUrl.replace('http:', 'https:');
-        }
-        console.log('Action URL:', actionUrl);
-
-        // Add a timeout to the fetch request
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
-
-        console.log('=== STARTING FETCH REQUEST ===');
-        console.log('Method: POST');
-        console.log('URL:', actionUrl);
-        console.log('Has FormData:', formData instanceof FormData);
-        console.log('About to call fetch()...');
-
-        fetch(actionUrl, {
-            method: 'POST',
-            body: formData,
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest',
-                'X-CSRF-TOKEN': csrfToken,
-                'Accept': 'application/json',
-                'Cache-Control': 'no-cache'
-            },
-            signal: controller.signal,
-            credentials: 'same-origin'
-        })
-        .then(response => {
-            clearTimeout(timeoutId); // Clear the timeout
-            console.log('=== FETCH RESPONSE RECEIVED ===');
-            console.log('Response status:', response.status);
-            console.log('Response ok:', response.ok);
-            console.log('Response headers:', response.headers);
-
-            // For debugging - log the raw response text and parse robustly even if PHP warnings/HTML are present
-            return response.text().then(text => {
-                console.log('Raw response:', text);
-
-                // Try normal JSON parse first
-                try {
-                    const data = JSON.parse(text);
-                    return { ok: response.ok, status: response.status, data: data };
-                } catch (e) {
-                    console.warn('Initial JSON.parse failed, attempting to extract JSON from mixed response');
-
-                    // Attempt 1: extract substring between first '{' and last '}'
-                    const firstBrace = text.indexOf('{');
-                    const lastBrace = text.lastIndexOf('}');
-                    if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
-                        const maybeJson = text.substring(firstBrace, lastBrace + 1);
-                        try {
-                            const data = JSON.parse(maybeJson);
-                            console.info('Recovered JSON by slicing raw response');
-                            return { ok: response.ok, status: response.status, data: data };
-                        } catch (e2) {
-                            console.warn('Parsing sliced substring failed:', e2);
-                        }
-                    }
-
-                    // Attempt 2: strip HTML tags then search again
-                    try {
-                        const stripped = text.replace(/<[^>]+>/g, '');
-                        const sFirst = stripped.indexOf('{');
-                        const sLast = stripped.lastIndexOf('}');
-                        if (sFirst !== -1 && sLast !== -1 && sLast > sFirst) {
-                            const maybe2 = stripped.substring(sFirst, sLast + 1);
-                            const data = JSON.parse(maybe2);
-                            console.info('Recovered JSON by stripping HTML tags');
-                            return { ok: response.ok, status: response.status, data: data };
-                        }
-                    } catch (e3) {
-                        console.warn('Stripping HTML and parsing failed:', e3);
-                    }
-
-                    // Attempt 3: parse returned HTML and look for booking elements (server-rendered success modal)
-                    try {
-                        const parser = new DOMParser();
-                        const doc = parser.parseFromString(text, 'text/html');
-
-                        // First try AJAX success modal IDs
-                        const bidEl = doc.getElementById('successBookingId');
-                        const confEl = doc.getElementById('successConfirmationCode');
-                        const dateEl = doc.getElementById('successAppointmentDate');
-                        const timeEl = doc.getElementById('successAppointmentTime');
-
-                        if (bidEl || confEl) {
-                            const recovered = {
-                                success: true,
-                                appointment: {
-                                    booking_id: bidEl ? bidEl.textContent.trim() : null,
-                                    confirmation_code: confEl ? confEl.textContent.trim() : null,
-                                    appointment_date: dateEl ? dateEl.textContent.trim() : null,
-                                    appointment_time: timeEl ? timeEl.textContent.trim() : null
-                                }
-                            };
-                            console.info('Recovered booking details from HTML modal');
-                            return { ok: response.ok, status: response.status, data: recovered };
-                        }
-
-                        // Second: fallback to regex extraction from raw HTML (e.g., server-rendered flash modal without IDs)
-                        const bkMatch = text.match(/\b(BK\d{3,})\b/); // match BK followed by digits
-                        const confMatch = text.match(/\b(CONF[a-zA-Z0-9]{4,})\b/); // match CONF + chars
-                        if (bkMatch || confMatch) {
-                            const recovered2 = {
-                                success: true,
-                                appointment: {
-                                    booking_id: bkMatch ? bkMatch[1] : null,
-                                    confirmation_code: confMatch ? confMatch[1] : null,
-                                    appointment_date: null,
-                                    appointment_time: null
-                                }
-                            };
-                            console.info('Recovered booking details via regex from HTML response');
-                            return { ok: response.ok, status: response.status, data: recovered2 };
-                        }
-                    } catch (e4) {
-                        console.warn('DOM parsing fallback failed:', e4);
-                    }
-
-                    // Give a helpful error including the start of the raw response
-                    throw new Error(`Server returned invalid JSON. Status: ${response.status}, Response Start: ${text.substring(0, 300)}...`);
-                }
+            requiredFields.forEach(fieldId => {
+                const field = document.getElementById(fieldId);
+                const fieldValue = field ? field.value.trim() : '';
+                if (!field || !fieldValue) missingFields.push(fieldId);
             });
-        })
-        .then(({ ok, status, data }) => {
-            console.log('Parsed response data:', data);
 
-            if (!ok) {
-                // Handle different HTTP status codes
-                if (status === 422) {
-                    // Validation errors
-                    let errorMessage = 'Validation failed:\n\n';
-                    if (data.errors) {
-                        // Laravel validation errors format
-                        Object.keys(data.errors).forEach(field => {
-                            const fieldErrors = data.errors[field];
-                            errorMessage += `• ${field}: ${fieldErrors.join(', ')}\n`;
-                        });
-                    } else if (data.message) {
-                        errorMessage += data.message;
-                    } else {
-                        errorMessage += 'Please check your form data and try again.';
-                    }
-                    throw new Error(errorMessage);
-                } else if (status === 419) {
-                    // Token expired - try to refresh and retry
-                    throw new Error('CSRF_TOKEN_EXPIRED');
-                } else if (status === 500) {
-                    throw new Error(data.message || 'Server error occurred. Please try again later.');
-                } else {
-                    throw new Error(data.message || `HTTP error! status: ${status}`);
+            if (missingFields.length > 0) {
+                e.preventDefault();
+                alert('Please fill in all required fields: ' + missingFields.join(', '));
+                return;
+            }
+
+            // Basic email & phone validation (non-blocking if empty email)
+            const emailField = document.getElementById('email');
+            if (emailField && emailField.value.trim()) {
+                const emailValue = emailField.value.trim();
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if (!emailRegex.test(emailValue)) {
+                    e.preventDefault();
+                    alert('Please enter a valid email address');
+                    return;
                 }
             }
 
-            return data;
-        })
-        .then(data => {
-            console.log('=== RESPONSE RECEIVED ===');
-            console.log('Response data:', data);
-            console.log('data.success value:', data.success);
-            console.log('typeof data.success:', typeof data.success);
+            const phoneField = document.getElementById('phone');
+            if (!phoneField || !phoneField.value.trim()) {
+                e.preventDefault();
+                alert('Phone number is required');
+                return;
+            }
 
-            if (data.success) {
-                console.log('=== SUCCESS CONDITION MET ===');
-                // Show styled success modal
-                const bookingId = data.appointment ? data.appointment.booking_id : 'N/A';
-                const confirmationCode = data.appointment ? data.appointment.confirmation_code : 'N/A';
-                const service = data.appointment ? data.appointment.service : 'General Service';
-                const priceDisplay = data.appointment ? (data.appointment.price || ('$' + (data.appointment.final_price ? Number(data.appointment.final_price).toFixed(2) : '0.00'))) : 'N/A';
-                const appointmentDate = data.appointment ? data.appointment.appointment_date : 'N/A';
-                const appointmentTime = data.appointment ? data.appointment.appointment_time : 'N/A';
+            // Ensure hidden 'length' follows hair_length radios unless hair mask is selected
+            let selectedLengthInput = this.querySelector('input[name="length"]');
+            const selectedHairLength = (function(){
+                const r = document.getElementsByName('hair_length');
+                for (let i=0;i<r.length;i++) if (r[i].checked) return r[i].value;
+                return null;
+            })();
+            if (!selectedLengthInput) {
+                selectedLengthInput = document.createElement('input');
+                selectedLengthInput.type = 'hidden';
+                selectedLengthInput.name = 'length';
+                selectedLengthInput.id = 'length_hidden_field';
+                this.appendChild(selectedLengthInput);
+            }
 
-                // Update modal content with actual booking data
-                console.log('=== UPDATING SUCCESS MODAL ===');
-                console.log('Booking ID:', bookingId);
-                console.log('Confirmation Code:', confirmationCode);
-                console.log('Service:', service);
-                console.log('Date:', appointmentDate);
-                console.log('Time:', appointmentTime);
+            const serviceTypeHidden = this.querySelector('input[name="service_type"]')?.value || document.getElementById('selectedServiceType')?.value || document.getElementById('selectedService')?.value || '';
+            const isHairMaskForm = (serviceTypeHidden && (serviceTypeHidden.toLowerCase().includes('hair-mask') || serviceTypeHidden.toLowerCase().includes('relax')));
 
-                // Show the success modal first
-                console.log('=== SHOWING SUCCESS MODAL ===');
-                console.log('Checking for ajaxSuccessModal...');
-                console.log('Document ready state:', document.readyState);
-                console.log('Document body:', !!document.body);
-
-                // Debug: Check all elements with modal in ID
-                console.log('All elements with "modal" in ID:',
-                    Array.from(document.querySelectorAll('[id*="modal"]')).map(el => ({
-                        id: el.id,
-                        tagName: el.tagName,
-                        classList: el.className
-                    })));
-
-                // Debug: Check all elements with "Success" in ID
-                console.log('All elements with "Success" in ID:',
-                    Array.from(document.querySelectorAll('[id*="Success"]')).map(el => ({
-                        id: el.id,
-                        tagName: el.tagName,
-                        classList: el.className
-                    })));
-
-                // Try multiple ways to find the modal
-                const successModalElement = document.getElementById('ajaxSuccessModal');
-                const successModalQuery = document.querySelector('#ajaxSuccessModal');
-                const successModalByClass = document.querySelector('.modal#ajaxSuccessModal');
-
-                console.log('Modal search results:');
-                console.log('- getElementById:', !!successModalElement);
-                console.log('- querySelector:', !!successModalQuery);
-                console.log('- querySelector with class:', !!successModalByClass);
-
-                if (!successModalElement) {
-                    console.warn('ajaxSuccessModal not found, falling back to toast notification');
-                }
-
-                console.log('Success modal element found:', !!successModalElement);
-                console.log('Modal element details:', {
-                    id: successModalElement.id,
-                    tagName: successModalElement.tagName,
-                    classList: successModalElement.className,
-                    style: successModalElement.style.cssText,
-                    parentElement: successModalElement.parentElement?.tagName
-                });
-
-                if (successModalElement) {
-                    console.log('Creating Bootstrap modal...');
-                    const successModal = new bootstrap.Modal(successModalElement);
-                    console.log('Bootstrap modal created:', !!successModal);
-
-                    // Update content before showing modal
-                    console.log('Updating modal content before show...');
-                    const bookingIdElement = document.getElementById('successBookingId');
-                    const confirmationCodeElement = document.getElementById('successConfirmationCode');
-                    const serviceElement = document.getElementById('successService');
-                    const dateElement = document.getElementById('successAppointmentDate');
-                    const timeElement = document.getElementById('successAppointmentTime');
-                    const priceElement = document.getElementById('successPrice');
-
-                    console.log('Elements found before modal show:', {
-                        bookingId: !!bookingIdElement,
-                        confirmationCode: !!confirmationCodeElement,
-                        service: !!serviceElement,
-                        date: !!dateElement,
-                        time: !!timeElement
-                    });
-
-                    // Update modal content with actual booking data
-                    if (bookingIdElement) {
-                        bookingIdElement.textContent = bookingId;
-                        console.log('Updated booking ID to:', bookingId);
-                    }
-                    if (confirmationCodeElement) {
-                        confirmationCodeElement.textContent = confirmationCode;
-                        console.log('Updated confirmation code to:', confirmationCode);
-                    }
-                    if (serviceElement) {
-                        serviceElement.textContent = service;
-                        console.log('Updated service to:', service);
-                    }
-                    if (dateElement) {
-                        dateElement.textContent = appointmentDate;
-                        console.log('Updated date to:', appointmentDate);
-                    }
-                    if (timeElement) {
-                        timeElement.textContent = appointmentTime;
-                        console.log('Updated time to:', appointmentTime);
-                    }
-                    if (priceElement) {
-                        priceElement.textContent = priceDisplay;
-                        console.log('Updated price to:', priceDisplay);
-                    }
-
-                    console.log('Calling modal.show()...');
-                    successModal.show();
-                    console.log('Modal show() called');
-
-                    // Add event listener to ensure modal is shown
-                    successModalElement.addEventListener('shown.bs.modal', function () {
-                        console.log('Modal is now fully visible!');
-                    });
-
-                    // Refresh the calendar data since a new booking was added
-                    console.log('🔄 Refreshing calendar data after successful booking');
-                    setTimeout(() => {
-                        fetchRealBookedDates();
-                    }, 500); // Small delay to ensure booking is saved
-                } else {
-                    console.error('Success modal element not found!');
-                    console.error('Available elements with ID containing "modal":',
-                        Array.from(document.querySelectorAll('[id*="modal"]')).map(el => el.id));
-                }
-
-                // Additionally, show a small toast confirmation with price (server authoritative)
-                (function showBookingToast() {
-                    try {
-                        const finalPrice = data.appointment && data.appointment.final_price ? data.appointment.final_price : (data.final_price || null);
-                        const toastId = 'bookingSuccessToast';
-
-                        // Create toast container if missing
-                        let toastContainer = document.getElementById('toastContainer');
-                        if (!toastContainer) {
-                            toastContainer = document.createElement('div');
-                            toastContainer.id = 'toastContainer';
-                            toastContainer.style.position = 'fixed';
-                            toastContainer.style.top = '20px';
-                            toastContainer.style.right = '20px';
-                            toastContainer.style.zIndex = 1080;
-                            document.body.appendChild(toastContainer);
-                        }
-
-                        // Remove existing toast with same id
-                        const existing = document.getElementById(toastId);
-                        if (existing) existing.remove();
-
-                        const toastEl = document.createElement('div');
-                        toastEl.id = toastId;
-                        toastEl.className = 'toast align-items-center text-bg-success border-0';
-                        toastEl.role = 'alert';
-                        toastEl.ariaLive = 'assertive';
-                        toastEl.ariaAtomic = 'true';
-                        toastEl.style.minWidth = '280px';
-
-                        toastEl.innerHTML = `
-                            <div class="d-flex">
-                                <div class="toast-body">
-                                    Booking confirmed! Our admin will contact you to arrange the deposit and confirm details. For urgent queries, email info@dabsbeautytouch.com.
-                                </div>
-                                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
-                            </div>
-                        `;
-
-                        toastContainer.appendChild(toastEl);
-                        const bsToast = new bootstrap.Toast(toastEl, { delay: 6000 });
-                        bsToast.show();
-                    } catch (e) {
-                        console.error('Failed to show booking toast:', e);
-                    }
-                })();
-
-                // Clear the form completely
-                this.reset();
-
-                // Clear any hidden fields except CSRF token
-                const hiddenInputs = this.querySelectorAll('input[type="hidden"]:not([name="_token"])');
-                hiddenInputs.forEach(input => {
-                    input.value = '';
-                });
-
-                // Clear textarea
-                const textareas = this.querySelectorAll('textarea');
-                textareas.forEach(textarea => {
-                    textarea.value = '';
-                });
-
-                // Close the booking modal
-                const bookingModal = bootstrap.Modal.getInstance(document.getElementById('bookingModal'));
-                if (bookingModal) {
-                    bookingModal.hide();
-                }
-
-                // Force browser to clear form cache
-                this.setAttribute('autocomplete', 'off');
+            if (isHairMaskForm) {
+                // clear length to avoid server applying length-based adjustments
+                selectedLengthInput.value = '';
+                // ensure hair_mask_option is set from the selected radio into the hidden field
+                const maskRadio = document.querySelector('input[name="hair_mask_option"]:checked');
+                const hiddenMask = document.getElementById('selectedHairMaskOption');
+                if (maskRadio && hiddenMask) hiddenMask.value = maskRadio.value;
             } else {
-                // Show error message
-                let errorMessage = 'Something went wrong. Please try again.';
-                if (data.message) {
-                    errorMessage = data.message;
-                } else if (data.errors) {
-                    errorMessage = Object.values(data.errors).flat().join(', ');
-                }
-                alert('Error: ' + errorMessage);
-            }
-        })
-        .catch(error => {
-            clearTimeout(timeoutId); // Clear the timeout
-            console.log('=== FETCH ERROR OCCURRED ===');
-            console.error('Network or parsing error:', error);
-            console.log('Error type:', error.constructor.name);
-            console.log('Error message:', error.message);
-            console.log('Error stack:', error.stack);
-
-            // Handle CSRF token expiration
-            if (error.message === 'CSRF_TOKEN_EXPIRED') {
-                console.log('CSRF token expired, attempting to refresh and retry...');
-
-                // Reset button state temporarily
-                submitBtn.innerHTML = '<i class="bi bi-arrow-clockwise"></i> Refreshing...';
-
-                // Refresh CSRF token and retry
-                window.refreshCSRFToken()
-                    .then(newToken => {
-                        if (newToken) {
-                            console.log('Token refreshed, retrying submission...');
-                            submitBtn.innerHTML = originalText;
-                            // Retry the form submission
-                            e.target.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
-                        } else {
-                            throw new Error('Failed to refresh CSRF token');
-                        }
-                    })
-                    .catch(refreshError => {
-                        console.error('Token refresh failed:', refreshError);
-                        alert('Session expired. Please refresh the page and try again.');
-                        submitBtn.innerHTML = originalText;
-                        submitBtn.disabled = false;
-                    });
-                return; // Exit early for token refresh
+                if (selectedHairLength) selectedLengthInput.value = selectedHairLength.replace(/-/g, '_');
             }
 
-            let errorMessage = 'An error occurred while submitting your appointment:';
-
-            if (error.name === 'AbortError') {
-                errorMessage += '\n\nRequest timed out. This may be due to a slow connection.';
-            } else if (error.message && error.message.includes('Failed to fetch')) {
-                errorMessage += '\n\nUnable to connect to the server. This may be due to:';
-                errorMessage += '\n• Network connectivity issues';
-                errorMessage += '\n• Server maintenance';
-                errorMessage += '\n• Firewall or security software blocking the request';
-            } else if (error.message) {
-                errorMessage += '\n\n' + error.message;
-            } else {
-                errorMessage += '\n\nPlease check your internet connection and try again.';
-            }
-
-            // Add helpful suggestions
-            errorMessage += '\n\nTips:\n• Make sure all required fields are filled\n• Check that your email format is valid\n• Ensure your phone number is complete\n• Try refreshing the page if the issue persists';
-            errorMessage += '\n\nIf the problem continues, please call us at (343) 254-8848';
-
-            alert(errorMessage);
-
-            // Reset button state
-            submitBtn.innerHTML = originalText;
-            submitBtn.disabled = false;
-        })
-        .finally(() => {
-            // Reset button state
-            submitBtn.innerHTML = originalText;
-            submitBtn.disabled = false;
+            // Allow normal form submission to proceed (server is authoritative)
         });
-        }); // End of form.addEventListener('submit')
     }); // End of DOMContentLoaded for form submission
 
     // SIMPLE FORM HANDLER FOR TESTING - DISABLED
@@ -5424,6 +4775,30 @@ function clearImagePreview() {
     }
 
     function updatePriceDisplay(basePrice) {
+        const serviceType = window.currentServiceInfo.serviceType || document.getElementById('selectedServiceType')?.value || 'custom';
+
+        // For hair-mask we show mask options and compute addon (+30 for weave)
+        if (serviceType === 'hair-mask') {
+            // read selected mask option
+            const maskRadio = document.querySelector('input[name="hair_mask_option"]:checked');
+            const maskVal = maskRadio ? maskRadio.value : document.getElementById('selectedHairMaskOption')?.value || 'mask-only';
+            const addon = (maskVal === 'mask-with-weave') ? 30 : 0;
+            const finalPrice = (typeof basePrice === 'number' ? basePrice : 0) + addon;
+
+            console.log('Hair-mask price calc', { basePrice, maskVal, addon, finalPrice });
+
+            const disp = document.getElementById('priceDisplay');
+            const hidden = document.getElementById('selectedPrice');
+            const hiddenMask = document.getElementById('selectedHairMaskOption');
+
+            if (disp) disp.textContent = finalPrice ? ('$' + finalPrice) : '--';
+            if (hidden) hidden.value = (typeof basePrice === 'number') ? basePrice : (parseFloat(basePrice) || '');
+            if (hiddenMask) hiddenMask.value = maskVal;
+
+            return finalPrice;
+        }
+
+        // default flow for braided services uses length adjustment
         const length = getSelectedLength();
         const adj = lengthAdjustment(length);
         const finalPrice = (typeof basePrice === 'number' ? basePrice : 0) + adj;
@@ -5448,6 +4823,7 @@ function clearImagePreview() {
             hidden.value = baseVal;
             console.log('Updated hidden price input to base price (client will not post adjusted final):', hidden.value);
         }
+        return finalPrice;
     }
 
     // Store current service info globally for easy access
@@ -5465,19 +4841,48 @@ function clearImagePreview() {
             basePrice: (serviceType && priceMap[serviceType]) ? priceMap[serviceType] : priceMap['custom']
         };
 
-        // Set service type hidden input
-        const st = document.getElementById('selectedServiceType');
-        if (st) st.value = serviceType || '';
-
-        const base = window.currentServiceInfo.basePrice;
-        updatePriceDisplay(base);
-
+        // Call original modal opener first (it may clear the form)
         if (typeof prevOpen === 'function') {
             try {
                 prevOpen(serviceName, serviceType);
             } catch(e) {
                 console.error('openBookingModal inner error', e);
             }
+        }
+
+        // Now set/restore hidden inputs and update UI (do this after prevOpen which may reset the form)
+        try {
+            const st = document.getElementById('selectedServiceType');
+            if (st) st.value = serviceType || '';
+
+            const sd = document.getElementById('selectedService');
+            if (sd) sd.value = serviceName || '';
+
+            const serviceDisplayEl = document.getElementById('serviceDisplay');
+            if (serviceDisplayEl) serviceDisplayEl.value = serviceName || '';
+
+            const base = window.currentServiceInfo.basePrice;
+            updatePriceDisplay(base);
+
+            // If this is Hair Mask/Relaxing, show mask options and disable length radios
+            const maskOptionsDiv = document.getElementById('hairMaskOptions');
+            const lengthRadios = document.getElementsByName('hair_length');
+            if (serviceType === 'hair-mask') {
+                if (maskOptionsDiv) maskOptionsDiv.style.display = 'block';
+                for (let i = 0; i < lengthRadios.length; i++) {
+                    lengthRadios[i].disabled = true;
+                }
+                // ensure default mask option selected
+                const defaultMask = document.getElementById('mask_only');
+                if (defaultMask) defaultMask.checked = true;
+            } else {
+                if (maskOptionsDiv) maskOptionsDiv.style.display = 'none';
+                for (let i = 0; i < lengthRadios.length; i++) {
+                    lengthRadios[i].disabled = false;
+                }
+            }
+        } catch (e) {
+            console.warn('Error toggling hair mask UI:', e);
         }
     };
 
@@ -5509,6 +4914,17 @@ function clearImagePreview() {
         for (let i = 0; i < lengthRadios.length; i++) {
             lengthRadios[i].addEventListener('change', function() {
                 console.log('Radio button changed directly:', this.value);
+                const serviceType = window.currentServiceInfo.serviceType || document.getElementById('selectedServiceType')?.value || 'custom';
+                const base = priceMap[serviceType] || priceMap['custom'];
+                updatePriceDisplay(base);
+            });
+        }
+
+        // hair_mask_option listeners (for hair mask service)
+        const maskRadios = document.getElementsByName('hair_mask_option');
+        for (let i = 0; i < maskRadios.length; i++) {
+            maskRadios[i].addEventListener('change', function() {
+                console.log('Hair mask option changed:', this.value);
                 const serviceType = window.currentServiceInfo.serviceType || document.getElementById('selectedServiceType')?.value || 'custom';
                 const base = priceMap[serviceType] || priceMap['custom'];
                 updatePriceDisplay(base);

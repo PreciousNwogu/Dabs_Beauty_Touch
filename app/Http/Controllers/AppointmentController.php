@@ -98,12 +98,32 @@ class AppointmentController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'nullable|email|max:255',
             'phone' => 'required|string|max:20',
-            'length' => 'required|string|in:neck,shoulder,armpit,bra_strap,mid_back,waist,hip,tailbone,classic',
+            // 'length' will be required for most services but not for Hair Mask/Relaxing
             'service' => 'nullable|string|max:255',
             'appointment_date' => 'required|date|after_or_equal:today',
             'appointment_time' => 'required|date_format:H:i',
             'message' => 'nullable|string|max:1000'
         ];
+
+        // If the user is booking Hair Mask/Relaxing, require a mask option instead of length
+        $serviceTypeInput = $request->input('service_type') ?? $request->input('service');
+        $serviceTypeNormalized = strtolower(trim((string)$serviceTypeInput));
+        $isHairMask = (
+            $serviceTypeNormalized === 'hair-mask' ||
+            str_contains($serviceTypeNormalized, 'hair-mask') ||
+            str_contains($serviceTypeNormalized, 'hair mask') ||
+            str_contains($serviceTypeNormalized, 'hairmask') ||
+            str_contains($serviceTypeNormalized, 'mask/relax') ||
+            str_contains($serviceTypeNormalized, 'relaxing')
+        );
+
+        if ($isHairMask) {
+            // hair mask - length optional, require hair_mask_option
+            $validationRules['length'] = 'nullable|string|in:neck,shoulder,armpit,bra_strap,mid_back,waist,hip,tailbone,classic';
+            $validationRules['hair_mask_option'] = 'required|string|in:mask-only,mask-with-weave';
+        } else {
+            $validationRules['length'] = 'required|string|in:neck,shoulder,armpit,bra_strap,mid_back,waist,hip,tailbone,classic';
+        }
 
         // Only validate sample_picture if a file was actually uploaded
         if ($request->hasFile('sample_picture')) {
@@ -221,20 +241,57 @@ class AppointmentController extends Controller
             }
             $basePrice = $serviceModel ? (float) $serviceModel->base_price : 150.00;
 
-            // Two-step rule: every two steps away from mid_back changes price by $20.
-            $ordered = ['neck','shoulder','armpit','bra_strap','mid_back','waist','hip','tailbone','classic'];
-            $midIndex = array_search('mid_back', $ordered, true);
-            $idx = array_search($length, $ordered, true);
+            // If this is Hair Mask/Relaxing, compute addon based on mask option (+30 for weave)
+            $serviceType = $request->input('service_type') ?? $request->input('service');
+            $serviceTypeNormalized = strtolower(trim((string)$serviceType));
+            $isHairMask = (
+                $serviceTypeNormalized === 'hair-mask' ||
+                str_contains($serviceTypeNormalized, 'hair-mask') ||
+                str_contains($serviceTypeNormalized, 'hair mask') ||
+                str_contains($serviceTypeNormalized, 'hairmask') ||
+                str_contains($serviceTypeNormalized, 'mask/relax') ||
+                str_contains($serviceTypeNormalized, 'relaxing')
+            );
 
-            if ($idx === false || $midIndex === false) {
-                $adjust = 0.00;
+            Log::info('Hair-mask detection', [
+                'service_type_raw' => $serviceType,
+                'service_type_normalized' => $serviceTypeNormalized,
+                'hair_mask_option_raw' => $request->input('hair_mask_option', null),
+            ]);
+
+            // Defensive rule: only apply `hair_mask_option` when this is actually a hair-mask service.
+            // If the client explicitly submitted a `hair_mask_option` but the service is NOT hair-mask,
+            // we will ignore it to prevent it from affecting unrelated services.
+            $explicitMaskOption = $request->input('hair_mask_option', null);
+            if ($explicitMaskOption !== null && $isHairMask) {
+                // prefer explicit service model price if available, otherwise default to $50
+                $basePrice = $serviceModel ? (float) $serviceModel->base_price : 50.00;
+                $addon = ($explicitMaskOption === 'mask-with-weave') ? 30.00 : 0.00;
+                $adjust = $addon; // persist as length_adjustment for email fidelity
+                $finalPrice = round($basePrice + $addon, 2);
+            } elseif ($isHairMask) {
+                // prefer explicit service model price if available, otherwise default to $50
+                $basePrice = $serviceModel ? (float) $serviceModel->base_price : 50.00;
+                $maskOption = $request->input('hair_mask_option', 'mask-only');
+                $addon = ($maskOption === 'mask-with-weave') ? 30.00 : 0.00;
+                $adjust = $addon; // persist as length_adjustment for email fidelity
+                $finalPrice = round($basePrice + $addon, 2);
             } else {
-                $d = $idx - $midIndex;
-                // Per-step rule: each single step away from mid_back changes price by $20.
-                // This makes waist = +20, bra_strap = -20, and two steps away = +/-40, etc.
-                $adjust = ($d * 20.00);
+                // Two-step rule: every two steps away from mid_back changes price by $20.
+                $ordered = ['neck','shoulder','armpit','bra_strap','mid_back','waist','hip','tailbone','classic'];
+                $midIndex = array_search('mid_back', $ordered, true);
+                $idx = array_search($length, $ordered, true);
+
+                if ($idx === false || $midIndex === false) {
+                    $adjust = 0.00;
+                } else {
+                    $d = $idx - $midIndex;
+                    // Per-step rule: each single step away from mid_back changes price by $20.
+                    // This makes waist = +20, bra_strap = -20, and two steps away = +/-40, etc.
+                    $adjust = ($d * 20.00);
+                }
+                $finalPrice = round($basePrice + $adjust, 2);
             }
-            $finalPrice = round($basePrice + $adjust, 2);
 
             // Log pricing calculation details for debugging
             Log::info('Pricing calculation', [
@@ -260,6 +317,7 @@ class AppointmentController extends Controller
                 // Persist base price and length adjustment for email fidelity
                 'base_price' => $basePrice,
                 'length_adjustment' => $adjust,
+                'hair_mask_option' => ($isHairMask ? $request->input('hair_mask_option') : null),
                 'final_price' => $finalPrice,
                 'status' => 'pending'
             ]);

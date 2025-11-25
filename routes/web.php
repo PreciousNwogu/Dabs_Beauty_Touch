@@ -651,20 +651,54 @@ Route::post('/bookings', function(Request $request) {
             // Determine authoritative base price from Service model (ignore client-provided price)
             $base = $serviceModel ? (float) $serviceModel->base_price : 150.00;
 
-            // Compute adjustment using same per-step $20 rule as controller
-            $ordered = ['neck','shoulder','armpit','bra_strap','mid_back','waist','hip','tailbone','classic'];
-            $midIndex = array_search('mid_back', $ordered, true);
-            $idx = array_search($length, $ordered, true);
-            $d = ($idx !== false && $midIndex !== false) ? ($idx - $midIndex) : 0;
-            $adjust = $d * 20.00;
+            // If client explicitly provided a hair_mask_option, prefer that
+            $explicitMaskOption = $request->input('hair_mask_option', null);
+            $serviceTypeInput = $request->input('service_type') ?? $request->input('service');
+            $serviceTypeNormalized = strtolower(trim((string)$serviceTypeInput));
+            $isHairMask = (
+                $serviceTypeNormalized === 'hair-mask' ||
+                str_contains($serviceTypeNormalized, 'hair-mask') ||
+                str_contains($serviceTypeNormalized, 'hair mask') ||
+                str_contains($serviceTypeNormalized, 'hairmask') ||
+                str_contains($serviceTypeNormalized, 'mask/relax') ||
+                str_contains($serviceTypeNormalized, 'relaxing')
+            );
 
-            $finalPrice = round($base + $adjust, 2);
+            if ($explicitMaskOption !== null && $isHairMask) {
+                // Treat as hair mask when explicit option present and service is hair-mask
+                $base = $serviceModel ? (float) $serviceModel->base_price : 50.00;
+                $addon = ($explicitMaskOption === 'mask-with-weave') ? 30.00 : 0.00;
+                $adjust = $addon;
+                $finalPrice = round($base + $addon, 2);
+            } elseif ($isHairMask) {
+                // service_type indicates hair mask; use hair-mask defaults
+                $base = $serviceModel ? (float) $serviceModel->base_price : 50.00;
+                $maskOption = $request->input('hair_mask_option', 'mask-only');
+                $addon = ($maskOption === 'mask-with-weave') ? 30.00 : 0.00;
+                $adjust = $addon;
+                $finalPrice = round($base + $addon, 2);
+            } else {
+                // Compute adjustment using same per-step $20 rule as controller
+                $ordered = ['neck','shoulder','armpit','bra_strap','mid_back','waist','hip','tailbone','classic'];
+                $midIndex = array_search('mid_back', $ordered, true);
+                $idx = array_search($length, $ordered, true);
+                $d = ($idx !== false && $midIndex !== false) ? ($idx - $midIndex) : 0;
+                $adjust = $d * 20.00;
+
+                $finalPrice = round($base + $adjust, 2);
+            }
 
             // Persist breakdown for email fidelity and audit
             $bookingData['base_price'] = $base;
             $bookingData['length_adjustment'] = $adjust;
             $bookingData['final_price'] = $finalPrice;
             $bookingData['length'] = $length;
+            // Persist hair mask option only when this booking is a hair-mask service
+            if ($explicitMaskOption !== null && $isHairMask) {
+                $bookingData['hair_mask_option'] = $explicitMaskOption;
+            } elseif ($isHairMask && $request->input('hair_mask_option')) {
+                $bookingData['hair_mask_option'] = $request->input('hair_mask_option');
+            }
         } catch (\Exception $e) {
             Log::warning('Failed to compute final price: ' . $e->getMessage());
             $bookingData['final_price'] = 150.00;

@@ -66,28 +66,16 @@ class BookingConfirmation extends Notification
             }
         }
 
-        $mail = (new MailMessage)
-            ->subject('Booking Confirmation')
-            ->greeting('Hello ' . ($b->name ?? 'Customer'))
-            ->line('Thank you for your booking. Here are your booking details:')
-            ->line('Booking ID: ' . ('BK' . str_pad($b->id, 6, '0', STR_PAD_LEFT)))
-            ->line('Confirmation code: ' . ($b->confirmation_code ?? 'N/A'))
-            ->line('Service: ' . ($b->service ?? 'N/A'))
-            ->line('Length: ' . ($b->length ?? 'N/A'));
+        // Use a styled blade view for confirmation emails so we can show base/adjustment/total
+        $subject = __('emails.confirmation.subject') ?: 'Booking Confirmation';
 
-        if (! is_null($basePrice)) {
-            $mail->line('Base price: $' . number_format($basePrice, 2));
-        }
-
-        if (! is_null($adjust)) {
-            $mail->line('Length adjustment: $' . number_format($adjust, 2));
-        }
-
-        $mail->line('Total price: $' . number_format($b->final_price ?? 0, 2))
-            ->action('View booking', url('/bookings/confirm/' . ($b->id ?? '') . '/' . ($b->confirmation_code ?? '')))
-            ->line('We will contact you shortly.');
-
-        return $mail;
+        return (new MailMessage)
+            ->subject($subject)
+            ->view('emails.booking_confirmation', [
+                'booking' => $b,
+                'basePrice' => $basePrice,
+                'adjust' => $adjust
+            ]);
     }
 
     /**
