@@ -1855,6 +1855,20 @@
                 <p class="lead" style="color: #666; font-size: 1.2rem;">See Real Results from Our Satisfied Clients</p>
             </div>
 
+            @php
+                // Single source of truth for service starting prices used by the carousel
+                $servicePrices = [
+                    'small-knotless' => 170,
+                    'smedium-knotless' => 150,
+                    'wig-installation' => 150,
+                    'medium-knotless' => 130,
+                    'jumbo-knotless' => 100,
+                    'kids-braids' => 80,
+                    'stitch-braids' => 120,
+                    'hair-mask' => 50,
+                    'boho-braids' => 150
+                ];
+            @endphp
             <div id="workSlider" class="carousel slide" data-bs-ride="carousel" data-bs-interval="5000">
                 <!-- Carousel Indicators -->
                 <div class="carousel-indicators">
@@ -1896,7 +1910,7 @@
                                         </div>
                                     </div>
                                     <div class="pricing-info mb-3" style="background: rgba(255, 102, 0, 0.1); padding: 15px; border-radius: 10px; border-left: 4px solid #ff6600;">
-                                        <p class="price" style="margin: 0; color: #030f68; font-weight: 700; font-size: 1.2rem;">Starting at $150</p>
+                                        <p class="price" style="margin: 0; color: #030f68; font-weight: 700; font-size: 1.2rem;">Starting at ${{ number_format($servicePrices['small-knotless'],0) }}</p>
                                     </div>
                                     <button class="btn btn-warning mt-3" onclick="openBookingModal('Small Knotless Braids', 'small-knotless')" style="font-weight: 600; padding: 12px 30px;">
                                         <i class="bi bi-calendar-check me-2"></i>Book This Style
@@ -1935,7 +1949,7 @@
                                         </div>
                                     </div>
                                     <div class="pricing-info mb-3" style="background: rgba(255, 102, 0, 0.1); padding: 15px; border-radius: 10px; border-left: 4px solid #ff6600;">
-                                        <p class="price" style="margin: 0; color: #030f68; font-weight: 700; font-size: 1.2rem;">Starting at $130</p>
+                                        <p class="price" style="margin: 0; color: #030f68; font-weight: 700; font-size: 1.2rem;">Starting at ${{ number_format($servicePrices['smedium-knotless'],0) }}</p>
                                     </div>
                                     <button class="btn btn-warning mt-3" onclick="openBookingModal('Smedium Knotless Braids', 'smedium-knotless')" style="font-weight: 600; padding: 12px 30px;">
                                         <i class="bi bi-calendar-check me-2"></i>Book This Style
@@ -1974,7 +1988,7 @@
                                         </div>
                                     </div>
                                     <div class="pricing-info mb-3" style="background: rgba(255, 102, 0, 0.1); padding: 15px; border-radius: 10px; border-left: 4px solid #ff6600;">
-                                        <p class="price" style="margin: 0; color: #030f68; font-weight: 700; font-size: 1.2rem;">Starting at $150</p>
+                                        <p class="price" style="margin: 0; color: #030f68; font-weight: 700; font-size: 1.2rem;">Starting at ${{ number_format($servicePrices['wig-installation'],0) }}</p>
                                     </div>
                                     <button class="btn btn-warning mt-3" onclick="openBookingModal('Wig Installation', 'wig-installation')" style="font-weight: 600; padding: 12px 30px;">
                                         <i class="bi bi-calendar-check me-2"></i>Book Now
@@ -2013,7 +2027,7 @@
                                         </div>
                                     </div>
                                     <div class="pricing-info mb-3" style="background: rgba(255, 102, 0, 0.1); padding: 15px; border-radius: 10px; border-left: 4px solid #ff6600;">
-                                        <p class="price" style="margin: 0; color: #030f68; font-weight: 700; font-size: 1.2rem;">Starting at $130</p>
+                                        <p class="price" style="margin: 0; color: #030f68; font-weight: 700; font-size: 1.2rem;">Starting at ${{ number_format($servicePrices['medium-knotless'],0) }}</p>
                                     </div>
                                     <button class="btn btn-warning mt-3" onclick="openBookingModal('Medium Knotless Braids', 'medium-knotless')" style="font-weight: 600; padding: 12px 30px;">
                                         <i class="bi bi-calendar-check me-2"></i>Book Now
@@ -2052,7 +2066,7 @@
                                         </div>
                                     </div>
                                     <div class="pricing-info mb-3" style="background: rgba(255, 102, 0, 0.1); padding: 15px; border-radius: 10px; border-left: 4px solid #ff6600;">
-                                        <p class="price" style="margin: 0; color: #030f68; font-weight: 700; font-size: 1.2rem;">Starting at $80</p>
+                                        <p class="price" style="margin: 0; color: #030f68; font-weight: 700; font-size: 1.2rem;">Starting at ${{ number_format($servicePrices['jumbo-knotless'],0) }}</p>
                                     </div>
                                     <button class="btn btn-warning mt-3" onclick="openBookingModal('Jumbo Knotless Braids', 'jumbo-knotless')" style="font-weight: 600; padding: 12px 30px;">
                                         <i class="bi bi-calendar-check me-2"></i>Book Now
@@ -2091,7 +2105,7 @@
                                         </div>
                                     </div>
                                     <div class="pricing-info mb-3" style="background: rgba(255, 102, 0, 0.1); padding: 15px; border-radius: 10px; border-left: 4px solid #ff6600;">
-                                        <p class="price" style="margin: 0; color: #030f68; font-weight: 700; font-size: 1.2rem;">Starting at $80</p>
+                                        <p class="price" style="margin: 0; color: #030f68; font-weight: 700; font-size: 1.2rem;">Starting at ${{ number_format($servicePrices['kids-braids'],0) }}</p>
                                     </div>
                                     <button class="btn btn-warning mt-3" onclick="openBookingModal('Kids Braids', 'kids-braids')" style="font-weight: 600; padding: 12px 30px;">
                                         <i class="bi bi-calendar-check me-2"></i>Book Now
@@ -2130,7 +2144,7 @@
                                         </div>
                                     </div>
                                     <div class="pricing-info mb-3" style="background: rgba(255, 102, 0, 0.1); padding: 15px; border-radius: 10px; border-left: 4px solid #ff6600;">
-                                        <p class="price" style="margin: 0; color: #030f68; font-weight: 700; font-size: 1.2rem;">Starting at $120</p>
+                                        <p class="price" style="margin: 0; color: #030f68; font-weight: 700; font-size: 1.2rem;">Starting at ${{ number_format($servicePrices['stitch-braids'],0) }}</p>
                                     </div>
                                     <button class="btn btn-warning mt-3" onclick="openBookingModal('8 Rows Stitch Braids', 'stitch-braids')" style="font-weight: 600; padding: 12px 30px;">
                                         <i class="bi bi-calendar-check me-2"></i>Book Now
@@ -2169,7 +2183,7 @@
                                         </div>
                                     </div>
                                     <div class="pricing-info mb-3" style="background: rgba(255, 102, 0, 0.1); padding: 15px; border-radius: 10px; border-left: 4px solid #ff6600;">
-                                        <p class="price" style="margin: 0; color: #030f68; font-weight: 700; font-size: 1.2rem;">Starting at $50</p>
+                                        <p class="price" style="margin: 0; color: #030f68; font-weight: 700; font-size: 1.2rem;">Starting at ${{ number_format($servicePrices['hair-mask'],0) }}</p>
                                     </div>
                                     <button class="btn btn-warning mt-3" onclick="openBookingModal('Hair Mask/Relaxing', 'hair-mask')" style="font-weight: 600; padding: 12px 30px;">
                                         <i class="bi bi-calendar-check me-2"></i>Book Now
@@ -2208,7 +2222,7 @@
                                         </div>
                                     </div>
                                     <div class="pricing-info mb-3" style="background: rgba(255, 102, 0, 0.1); padding: 15px; border-radius: 10px; border-left: 4px solid #ff6600;">
-                                        <p class="price" style="margin: 0; color: #030f68; font-weight: 700; font-size: 1.2rem;">Starting at $150</p>
+                                        <p class="price" style="margin: 0; color: #030f68; font-weight: 700; font-size: 1.2rem;">Starting at ${{ number_format($servicePrices['boho-braids'],0) }}</p>
                                     </div>
                                     <button class="btn btn-warning mt-3" onclick="openBookingModal('Smedium Boho Braids', 'boho-braids')" style="font-weight: 600; padding: 12px 30px;">
                                         <i class="bi bi-calendar-check me-2"></i>Book Now
