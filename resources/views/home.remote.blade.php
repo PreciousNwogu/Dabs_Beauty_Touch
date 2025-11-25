@@ -1855,20 +1855,7 @@
                 <p class="lead" style="color: #666; font-size: 1.2rem;">See Real Results from Our Satisfied Clients</p>
             </div>
 
-            @php
-                // Single source of truth for service starting prices used by the carousel
-                $servicePrices = [
-                    'small-knotless' => 170,
-                    'smedium-knotless' => 150,
-                    'wig-installation' => 150,
-                    'medium-knotless' => 130,
-                    'jumbo-knotless' => 100,
-                    'kids-braids' => 80,
-                    'stitch-braids' => 120,
-                    'hair-mask' => 50,
-                    'boho-braids' => 150
-                ];
-            @endphp
+            {{-- Prices are stored in config/service_prices.php --}}
             <div id="workSlider" class="carousel slide" data-bs-ride="carousel" data-bs-interval="5000">
                 <!-- Carousel Indicators -->
                 <div class="carousel-indicators">
@@ -1910,7 +1897,7 @@
                                         </div>
                                     </div>
                                     <div class="pricing-info mb-3" style="background: rgba(255, 102, 0, 0.1); padding: 15px; border-radius: 10px; border-left: 4px solid #ff6600;">
-                                        <p class="price" style="margin: 0; color: #030f68; font-weight: 700; font-size: 1.2rem;">Starting at ${{ number_format($servicePrices['small-knotless'],0) }}</p>
+                                        <p class="price" style="margin: 0; color: #030f68; font-weight: 700; font-size: 1.2rem;">Starting at ${{ number_format(config('service_prices.small_knotless', 170),0) }}</p>
                                     </div>
                                     <button class="btn btn-warning mt-3" onclick="openBookingModal('Small Knotless Braids', 'small-knotless')" style="font-weight: 600; padding: 12px 30px;">
                                         <i class="bi bi-calendar-check me-2"></i>Book This Style
@@ -1949,7 +1936,7 @@
                                         </div>
                                     </div>
                                     <div class="pricing-info mb-3" style="background: rgba(255, 102, 0, 0.1); padding: 15px; border-radius: 10px; border-left: 4px solid #ff6600;">
-                                        <p class="price" style="margin: 0; color: #030f68; font-weight: 700; font-size: 1.2rem;">Starting at ${{ number_format($servicePrices['smedium-knotless'],0) }}</p>
+                                        <p class="price" style="margin: 0; color: #030f68; font-weight: 700; font-size: 1.2rem;">Starting at ${{ number_format(config('service_prices.smedium_knotless', 150),0) }}</p>
                                     </div>
                                     <button class="btn btn-warning mt-3" onclick="openBookingModal('Smedium Knotless Braids', 'smedium-knotless')" style="font-weight: 600; padding: 12px 30px;">
                                         <i class="bi bi-calendar-check me-2"></i>Book This Style
@@ -1988,7 +1975,7 @@
                                         </div>
                                     </div>
                                     <div class="pricing-info mb-3" style="background: rgba(255, 102, 0, 0.1); padding: 15px; border-radius: 10px; border-left: 4px solid #ff6600;">
-                                        <p class="price" style="margin: 0; color: #030f68; font-weight: 700; font-size: 1.2rem;">Starting at ${{ number_format($servicePrices['wig-installation'],0) }}</p>
+                                        <p class="price" style="margin: 0; color: #030f68; font-weight: 700; font-size: 1.2rem;">Starting at ${{ number_format(config('service_prices.wig_installation', 150),0) }}</p>
                                     </div>
                                     <button class="btn btn-warning mt-3" onclick="openBookingModal('Wig Installation', 'wig-installation')" style="font-weight: 600; padding: 12px 30px;">
                                         <i class="bi bi-calendar-check me-2"></i>Book Now
@@ -2027,7 +2014,7 @@
                                         </div>
                                     </div>
                                     <div class="pricing-info mb-3" style="background: rgba(255, 102, 0, 0.1); padding: 15px; border-radius: 10px; border-left: 4px solid #ff6600;">
-                                        <p class="price" style="margin: 0; color: #030f68; font-weight: 700; font-size: 1.2rem;">Starting at ${{ number_format($servicePrices['medium-knotless'],0) }}</p>
+                                        <p class="price" style="margin: 0; color: #030f68; font-weight: 700; font-size: 1.2rem;">Starting at ${{ number_format(config('service_prices.medium_knotless', 130),0) }}</p>
                                     </div>
                                     <button class="btn btn-warning mt-3" onclick="openBookingModal('Medium Knotless Braids', 'medium-knotless')" style="font-weight: 600; padding: 12px 30px;">
                                         <i class="bi bi-calendar-check me-2"></i>Book Now
@@ -2066,7 +2053,7 @@
                                         </div>
                                     </div>
                                     <div class="pricing-info mb-3" style="background: rgba(255, 102, 0, 0.1); padding: 15px; border-radius: 10px; border-left: 4px solid #ff6600;">
-                                        <p class="price" style="margin: 0; color: #030f68; font-weight: 700; font-size: 1.2rem;">Starting at ${{ number_format($servicePrices['jumbo-knotless'],0) }}</p>
+                                        <p class="price" style="margin: 0; color: #030f68; font-weight: 700; font-size: 1.2rem;">Starting at ${{ number_format(config('service_prices.jumbo_knotless', 100),0) }}</p>
                                     </div>
                                     <button class="btn btn-warning mt-3" onclick="openBookingModal('Jumbo Knotless Braids', 'jumbo-knotless')" style="font-weight: 600; padding: 12px 30px;">
                                         <i class="bi bi-calendar-check me-2"></i>Book Now
@@ -2105,7 +2092,7 @@
                                         </div>
                                     </div>
                                     <div class="pricing-info mb-3" style="background: rgba(255, 102, 0, 0.1); padding: 15px; border-radius: 10px; border-left: 4px solid #ff6600;">
-                                        <p class="price" style="margin: 0; color: #030f68; font-weight: 700; font-size: 1.2rem;">Starting at ${{ number_format($servicePrices['kids-braids'],0) }}</p>
+                                        <p class="price" style="margin: 0; color: #030f68; font-weight: 700; font-size: 1.2rem;">Starting at ${{ number_format(config('service_prices.kids_braids', 80),0) }}</p>
                                     </div>
                                     <button class="btn btn-warning mt-3" onclick="openBookingModal('Kids Braids', 'kids-braids')" style="font-weight: 600; padding: 12px 30px;">
                                         <i class="bi bi-calendar-check me-2"></i>Book Now
@@ -2144,7 +2131,7 @@
                                         </div>
                                     </div>
                                     <div class="pricing-info mb-3" style="background: rgba(255, 102, 0, 0.1); padding: 15px; border-radius: 10px; border-left: 4px solid #ff6600;">
-                                        <p class="price" style="margin: 0; color: #030f68; font-weight: 700; font-size: 1.2rem;">Starting at ${{ number_format($servicePrices['stitch-braids'],0) }}</p>
+                                        <p class="price" style="margin: 0; color: #030f68; font-weight: 700; font-size: 1.2rem;">Starting at ${{ number_format(config('service_prices.stitch_braids', 120),0) }}</p>
                                     </div>
                                     <button class="btn btn-warning mt-3" onclick="openBookingModal('8 Rows Stitch Braids', 'stitch-braids')" style="font-weight: 600; padding: 12px 30px;">
                                         <i class="bi bi-calendar-check me-2"></i>Book Now
@@ -2183,7 +2170,7 @@
                                         </div>
                                     </div>
                                     <div class="pricing-info mb-3" style="background: rgba(255, 102, 0, 0.1); padding: 15px; border-radius: 10px; border-left: 4px solid #ff6600;">
-                                        <p class="price" style="margin: 0; color: #030f68; font-weight: 700; font-size: 1.2rem;">Starting at ${{ number_format($servicePrices['hair-mask'],0) }}</p>
+                                        <p class="price" style="margin: 0; color: #030f68; font-weight: 700; font-size: 1.2rem;">Starting at ${{ number_format(config('service_prices.hair_mask', 50),0) }}</p>
                                     </div>
                                     <button class="btn btn-warning mt-3" onclick="openBookingModal('Hair Mask/Relaxing', 'hair-mask')" style="font-weight: 600; padding: 12px 30px;">
                                         <i class="bi bi-calendar-check me-2"></i>Book Now
@@ -2222,7 +2209,7 @@
                                         </div>
                                     </div>
                                     <div class="pricing-info mb-3" style="background: rgba(255, 102, 0, 0.1); padding: 15px; border-radius: 10px; border-left: 4px solid #ff6600;">
-                                        <p class="price" style="margin: 0; color: #030f68; font-weight: 700; font-size: 1.2rem;">Starting at ${{ number_format($servicePrices['boho-braids'],0) }}</p>
+                                        <p class="price" style="margin: 0; color: #030f68; font-weight: 700; font-size: 1.2rem;">Starting at ${{ number_format(config('service_prices.boho_braids', 150),0) }}</p>
                                     </div>
                                     <button class="btn btn-warning mt-3" onclick="openBookingModal('Smedium Boho Braids', 'boho-braids')" style="font-weight: 600; padding: 12px 30px;">
                                         <i class="bi bi-calendar-check me-2"></i>Book Now
@@ -2330,7 +2317,7 @@
                         <img src="{{ asset('images/small braid.jpg') }}" alt="Small Knotless Braids">
                         <h4>Small Knotless Braids</h4>
                         <p>Ultra-fine knotless braids that blend seamlessly with your natural hair. Perfect for a sleek, professional look with minimal tension and maximum comfort.</p>
-                        <p class="price"><strong>Starting at $170</strong></p>
+                        <p class="price"><strong>Starting at ${{ number_format(config('service_prices.small_knotless', 170),0) }}</strong></p>
                         <button class="btn btn-warning mt-3">Book Now</button>
                     </div>
                 </div>
@@ -2339,7 +2326,7 @@
                         <img src="{{ asset('images/webbraids2.jpg') }}" alt="Smedium Knotless Braids">
                         <h4>Smedium Knotless Braids</h4>
                         <p>Perfect balance between small and medium braids for a versatile, everyday style. Offers excellent durability while maintaining a natural, lightweight feel.</p>
-                        <p class="price"><strong>Starting at $150</strong></p>
+                        <p class="price"><strong>Starting at ${{ number_format(config('service_prices.smedium_knotless', 150),0) }}</strong></p>
                         <button class="btn btn-warning mt-3">Book Now</button>
                     </div>
                 </div>
@@ -2348,7 +2335,7 @@
                         <img src="{{ asset('images/wig installation.jpg') }}" alt="Smedium Knotless Braids">
                         <h4>Wig Installation</h4>
                         <p>Professional wig installation with custom fitting and styling. Sleek natural hairline blending, and personalized styling to match your desired look.</p>
-                        <p class="price"><strong>Starting at $150</strong></p>
+                        <p class="price"><strong>Starting at ${{ number_format(config('service_prices.wig_installation', 150),0) }}</strong></p>
                         <button class="btn btn-warning mt-3">Book Now</button>
                     </div>
                 </div>
@@ -2357,7 +2344,7 @@
                         <img src="{{ asset('images/large braid.jpg') }}" alt="Medium Knotless Braids">
                         <h4>Medium Knotless Braids</h4>
                         <p>Bold, statement-making braids that create a dramatic, eye-catching look. Perfect for those who want to make a strong fashion statement with their hair.</p>
-                        <p class="price"><strong>Starting at $130</strong></p>
+                        <p class="price"><strong>Starting at ${{ number_format(config('service_prices.medium_knotless', 130),0) }}</strong></p>
                         <button class="btn btn-warning mt-3">Book Now</button>
                     </div>
                 </div>
@@ -2366,7 +2353,7 @@
                         <img src="{{ asset('images/jumbo braid.jpg') }}" alt="Jumbo Knotless Braids">
                         <h4>Jumbo Knotless Braids</h4>
                         <p>Extra large, voluminous braids for maximum impact and style. Creates a bold, confident look that's perfect for special occasions and fashion-forward individuals.</p>
-                        <p class="price"><strong>Starting at $100</strong></p>
+                        <p class="price"><strong>Starting at ${{ number_format(config('service_prices.jumbo_knotless', 100),0) }}</strong></p>
                         <button class="btn btn-warning mt-3">Book Now</button>
                     </div>
                 </div>
@@ -2375,7 +2362,7 @@
                         <img src="{{ asset('images/kids hair style.webp') }}" alt="Kids Braids">
                         <h4>Kids Braids(3-8yrs)</h4>
                         <p>Specialized braiding services for children with gentle, age-appropriate techniques. Creates adorable, manageable styles that are comfortable and long-lasting for active kids.</p>
-                        <p class="price"><strong>Starting at $80</strong></p>
+                        <p class="price"><strong>Starting at ${{ number_format(config('service_prices.kids_braids', 80),0) }}</strong></p>
                         <button class="btn btn-warning mt-3">Book Now</button>
                     </div>
                 </div>
@@ -2384,7 +2371,7 @@
                         <img src="{{ asset('images/stitch braid.jpg') }}" alt="8 Rows Stitch Braids">
                         <h4>8 Rows Stitch Braids</h4>
                         <p>Unique stitch pattern braids that create a distinctive, textured look. Features a special weaving technique that adds dimension and style to your braided hairstyle.</p>
-                        <p class="price"><strong>Starting at $120</strong></p>
+                        <p class="price"><strong>Starting at ${{ number_format(config('service_prices.stitch_braids', 120),0) }}</strong></p>
                         <button class="btn btn-warning mt-3">Book Now</button>
                     </div>
                 </div>
@@ -2393,7 +2380,7 @@
                         <img src="{{ asset('images/hair_mask.png') }}" alt="Hair Mask/Relaxing">
                         <h4>Hair Mask/Relaxing</h4>
                         <p>Professional hair mask treatment and relaxing services to restore moisture, shine, and manageability.</p>
-                        <p class="price"><strong>Starting at $50</strong></p>
+                        <p class="price"><strong>Starting at ${{ number_format(config('service_prices.hair_mask', 50),0) }}</strong></p>
                         <button class="btn btn-warning mt-3">Book Now</button>
                     </div>
                 </div>
@@ -2402,7 +2389,7 @@
                         <img src="{{ asset('images/boho braid.jpg') }}" alt="Smedium Boho Braids">
                         <h4>Smedium Boho Braids</h4>
                         <p>Bohemian-inspired braids with a free-spirited, artistic touch. Features unique styling elements and accessories for a trendy, fashion-forward look.</p>
-                        <p class="price"><strong>Starting at $150</strong></p>
+                        <p class="price"><strong>Starting at ${{ number_format(config('service_prices.boho_braids', 150),0) }}</strong></p>
                         <button class="btn btn-warning mt-3">Book Now</button>
                     </div>
                 </div>
