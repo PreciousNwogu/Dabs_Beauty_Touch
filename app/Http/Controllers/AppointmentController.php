@@ -98,7 +98,7 @@ class AppointmentController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'nullable|email|max:255',
             'phone' => 'required|string|max:20',
-            'length' => 'required|string|in:neck,shoulder,armpit,bra_strap,mid_back,waist,hip,tailbone,thigh,classic',
+            'length' => 'required|string|in:neck,shoulder,armpit,bra_strap,mid_back,waist,hip,tailbone,classic',
             'service' => 'nullable|string|max:255',
             'appointment_date' => 'required|date|after_or_equal:today',
             'appointment_time' => 'required|date_format:H:i',
@@ -221,20 +221,19 @@ class AppointmentController extends Controller
             }
             $basePrice = $serviceModel ? (float) $serviceModel->base_price : 150.00;
 
-            $lengthAdjustments = [
-                'neck' => -20.00,
-                'shoulder' => -20.00,
-                'armpit' => -20.00,
-                'bra_strap' => -20.00,
-                'mid_back' => 0.00,
-                'waist' => 20.00,
-                'hip' => 20.00,
-                'tailbone' => 40.00,
-                'thigh' => 40.00,
-                'classic' => 40.00,
-            ];
+            // Two-step rule: every two steps away from mid_back changes price by $20.
+            $ordered = ['neck','shoulder','armpit','bra_strap','mid_back','waist','hip','tailbone','classic'];
+            $midIndex = array_search('mid_back', $ordered, true);
+            $idx = array_search($length, $ordered, true);
 
-            $adjust = $lengthAdjustments[$length] ?? 0.00;
+            if ($idx === false || $midIndex === false) {
+                $adjust = 0.00;
+            } else {
+                $d = $idx - $midIndex;
+                // Per-step rule: each single step away from mid_back changes price by $20.
+                // This makes waist = +20, bra_strap = -20, and two steps away = +/-40, etc.
+                $adjust = ($d * 20.00);
+            }
             $finalPrice = round($basePrice + $adjust, 2);
 
             // Log pricing calculation details for debugging
@@ -258,6 +257,9 @@ class AppointmentController extends Controller
                 'appointment_time' => $request->appointment_time,
                 'message' => $request->message,
                 'sample_picture' => $samplePicturePath,
+                // Persist base price and length adjustment for email fidelity
+                'base_price' => $basePrice,
+                'length_adjustment' => $adjust,
                 'final_price' => $finalPrice,
                 'status' => 'pending'
             ]);

@@ -1989,12 +1989,12 @@
                         </div>
                     </div>
 
-                    <!-- Slide 4: Large Knotless Braids -->
+                    <!-- Slide 4: Medium Knotless Braids -->
                     <div class="carousel-item">
                         <div class="row align-items-center">
                             <div class="col-lg-6">
                                 <div class="slide-content" style="padding: 40px;">
-                                    <h3 style="color: #030f68; font-weight: 700; font-size: 2rem; margin-bottom: 20px;">Large Knotless Braids</h3>
+                                    <h3 style="color: #030f68; font-weight: 700; font-size: 2rem; margin-bottom: 20px;">Medium Knotless Braids</h3>
                                     <p style="color: #666; font-size: 1.1rem; line-height: 1.6; margin-bottom: 25px;">
                                         Bold, statement-making braids that create a dramatic, eye-catching look. Perfect for those who want to make a strong fashion statement with their hair.
                                     </p>
@@ -2013,16 +2013,16 @@
                                         </div>
                                     </div>
                                     <div class="pricing-info mb-3" style="background: rgba(255, 102, 0, 0.1); padding: 15px; border-radius: 10px; border-left: 4px solid #ff6600;">
-                                        <p class="price" style="margin: 0; color: #030f68; font-weight: 700; font-size: 1.2rem;">Starting at $110</p>
+                                        <p class="price" style="margin: 0; color: #030f68; font-weight: 700; font-size: 1.2rem;">Starting at $130</p>
                                     </div>
-                                    <button class="btn btn-warning mt-3" onclick="openBookingModal('Large Knotless Braids', 'large-knotless')" style="font-weight: 600; padding: 12px 30px;">
+                                    <button class="btn btn-warning mt-3" onclick="openBookingModal('Medium Knotless Braids', 'medium-knotless')" style="font-weight: 600; padding: 12px 30px;">
                                         <i class="bi bi-calendar-check me-2"></i>Book Now
                                     </button>
                                 </div>
                             </div>
                             <div class="col-lg-6">
                                 <div class="slide-image" style="text-align: center;">
-                                    <img src="{{ asset('images/large braid.jpg') }}" alt="Large Knotless Braids" style="width: 100%; max-width: 500px; height: 400px; object-fit: cover; border-radius: 20px; box-shadow: 0 15px 40px rgba(0,0,0,0.15);">
+                                    <img src="{{ asset('images/large braid.jpg') }}" alt="Medium Knotless Braids" style="width: 100%; max-width: 500px; height: 400px; object-fit: cover; border-radius: 20px; box-shadow: 0 15px 40px rgba(0,0,0,0.15);">
                                 </div>
                             </div>
                         </div>
@@ -2111,7 +2111,7 @@
                         <div class="row align-items-center">
                             <div class="col-lg-6">
                                 <div class="slide-content" style="padding: 40px;">
-                                    <h3 style="color: #030f68; font-weight: 700; font-size: 2rem; margin-bottom: 20px;">6 Rows Stitch Braids</h3>
+                                    <h3 style="color: #030f68; font-weight: 700; font-size: 2rem; margin-bottom: 20px;">8 Rows Stitch Braids</h3>
                                     <p style="color: #666; font-size: 1.1rem; line-height: 1.6; margin-bottom: 25px;">
                                         Unique stitch pattern braids that create a distinctive, textured look. Features a special weaving technique that adds dimension and style to your braided hairstyle.
                                     </p>
@@ -2279,41 +2279,6 @@
             </div>
         </div>
     </section>
-    <!-- Reviews Section -->
-    <div class="section section-lg bg-gray-150" style="padding: 80px 0; background: #f8f9fa;">
-        <div class="text-center mb-5">
-            <p class="subtitle" style="font-size:1.5rem; color:#ff6600; font-weight:600;">Our customers love DBT</p>
-            <div class="subtitle-box" style="display:inline-block; margin-bottom:18px;">
-                <div class="subtitle-box-text" style="font-size:2rem; color:#030f68; font-weight:700;">Reviews</div>
-            </div>
-        </div>
-        <div class="owl-carousel owl-theme-1" data-items="1" data-sm-items="1" data-md-items="1" data-lg-items="1" data-xl-items="2" data-xxl-items="3" data-margin="15px" data-nav="false" data-dots="true" data-autoplay="5000">
-            <div class="testimonial-box" style="background:linear-gradient(135deg,#e3eafc 0%,#f8f9fa 100%); border-radius:18px; box-shadow:0 8px 32px rgba(0,0,0,0.12); padding:38px 28px; margin:0 12px; position:relative;">
-                <div class="testimonial-title" style="font-size:1.3rem; color:#ff6600; font-weight:700; margin-top:32px;">Cool!</div>
-                <div class="testimonial-rate"><img src="{{ asset('images/star-ratings.webp') }}" alt="" width="120" height="22"/></div>
-                <div class="testimonial-text" style="font-size:1.12rem; color:#222; margin:18px 0; font-style:italic;">"DBT offers great services and she delivers excellently. </div>
-                <div class="testimonial-name" style="font-size:1rem; color:#030f68; font-weight:500;">Client 1</div>
-            </div>
-            <div class="testimonial-box" style="background:linear-gradient(135deg,#fff6e3 0%,#ffe3e3 100%); border-radius:18px; box-shadow:0 8px 32px rgba(0,0,0,0.12); padding:38px 28px; margin:0 12px; position:relative;">
-                <div class="testimonial-title" style="font-size:1.3rem; color:#ff6600; font-weight:700; margin-top:32px;">Excellent!</div>
-                <div class="testimonial-rate"><img src="{{ asset('images/star-ratings.webp') }}" alt="" width="120" height="22"/></div>
-                <div class="testimonial-text" style="font-size:1.12rem; color:#222; margin:18px 0; font-style:italic;">"Very patient and time conscious. She follows up and ensures customer comfortability. I always leave happy!"</div>
-                <div class="testimonial-name" style="font-size:1rem; color:#030f68; font-weight:500;">Client 2</div>
-            </div>
-            <div class="testimonial-box" style="background:linear-gradient(135deg,#e3ffe3 0%,#e3f8ff 100%); border-radius:18px; box-shadow:0 8px 32px rgba(0,0,0,0.12); padding:38px 28px; margin:0 12px; position:relative;">
-                <div class="testimonial-title" style="font-size:1.3rem; color:#ff6600; font-weight:700; margin-top:32px;">Amazing!</div>
-                <div class="testimonial-rate"><img src="{{ asset('images/star-ratings.webp') }}" alt="" width="120" height="22"/></div>
-                <div class="testimonial-text" style="font-size:1.12rem; color:#222; margin:18px 0; font-style:italic;">"DBT braided my child's hair and my child was very comfortable. Her braids don't hurt much and last long!"</div>
-                <div class="testimonial-name" style="font-size:1rem; color:#030f68; font-weight:500;">Client 3</div>
-            </div>
-            <div class="testimonial-box" style="background:linear-gradient(135deg,#f8e3ff 0%,#e3eaff 100%); border-radius:18px; box-shadow:0 8px 32px rgba(0,0,0,0.12); padding:38px 28px; margin:0 12px; position:relative;">
-                <div class="testimonial-title" style="font-size:1.3rem; color:#ff6600; font-weight:700; margin-top:32px;">Excellent!</div>
-                <div class="testimonial-rate"><img src="{{ asset('images/star-ratings.webp') }}" alt="" width="120" height="22"/></div>
-                <div class="testimonial-text" style="font-size:1.12rem; color:#222; margin:18px 0; font-style:italic;"> "Customer relationship is amazing. Very professional and very affordable service. Highly recommend DBT!"</div>
-                <div class="testimonial-name" style="font-size:1rem; color:#030f68; font-weight:500;">Client 4</div>
-            </div>
-        </div>
-    </div>
 
     <!-- About Section -->
     <section id="about" class="about-section">
@@ -2356,7 +2321,7 @@
                         <img src="{{ asset('images/small braid.jpg') }}" alt="Small Knotless Braids">
                         <h4>Small Knotless Braids</h4>
                         <p>Ultra-fine knotless braids that blend seamlessly with your natural hair. Perfect for a sleek, professional look with minimal tension and maximum comfort.</p>
-                        <p class="price"><strong>Starting at $150</strong></p>
+                        <p class="price"><strong>Starting at $170</strong></p>
                         <button class="btn btn-warning mt-3">Book Now</button>
                     </div>
                 </div>
@@ -2365,7 +2330,7 @@
                         <img src="{{ asset('images/webbraids2.jpg') }}" alt="Smedium Knotless Braids">
                         <h4>Smedium Knotless Braids</h4>
                         <p>Perfect balance between small and medium braids for a versatile, everyday style. Offers excellent durability while maintaining a natural, lightweight feel.</p>
-                        <p class="price"><strong>Starting at $130</strong></p>
+                        <p class="price"><strong>Starting at $150</strong></p>
                         <button class="btn btn-warning mt-3">Book Now</button>
                     </div>
                 </div>
@@ -2379,11 +2344,11 @@
                     </div>
                 </div>
                 <div class="col-lg-4 col-md-6">
-                    <div class="service-card h-100" onclick="openBookingModal('Large Knotless Braids', 'large-knotless')">
-                        <img src="{{ asset('images/large braid.jpg') }}" alt="Large Knotless Braids">
-                        <h4>Large Knotless Braids</h4>
+                    <div class="service-card h-100" onclick="openBookingModal('Medium Knotless Braids', 'medium-knotless')">
+                        <img src="{{ asset('images/large braid.jpg') }}" alt="Medium Knotless Braids">
+                        <h4>Medium Knotless Braids</h4>
                         <p>Bold, statement-making braids that create a dramatic, eye-catching look. Perfect for those who want to make a strong fashion statement with their hair.</p>
-                        <p class="price"><strong>Starting at $110</strong></p>
+                        <p class="price"><strong>Starting at $130</strong></p>
                         <button class="btn btn-warning mt-3">Book Now</button>
                     </div>
                 </div>
@@ -2392,7 +2357,7 @@
                         <img src="{{ asset('images/jumbo braid.jpg') }}" alt="Jumbo Knotless Braids">
                         <h4>Jumbo Knotless Braids</h4>
                         <p>Extra large, voluminous braids for maximum impact and style. Creates a bold, confident look that's perfect for special occasions and fashion-forward individuals.</p>
-                        <p class="price"><strong>Starting at $80</strong></p>
+                        <p class="price"><strong>Starting at $100</strong></p>
                         <button class="btn btn-warning mt-3">Book Now</button>
                     </div>
                 </div>
@@ -2408,7 +2373,7 @@
                 <div class="col-lg-4 col-md-6">
                     <div class="service-card h-100" onclick="openBookingModal('8 Rows Stitch Braids', 'stitch-braids')">
                         <img src="{{ asset('images/stitch braid.jpg') }}" alt="8 Rows Stitch Braids">
-                        <h4>6 Rows Stitch Braids</h4>
+                        <h4>8 Rows Stitch Braids</h4>
                         <p>Unique stitch pattern braids that create a distinctive, textured look. Features a special weaving technique that adds dimension and style to your braided hairstyle.</p>
                         <p class="price"><strong>Starting at $120</strong></p>
                         <button class="btn btn-warning mt-3">Book Now</button>
@@ -2659,7 +2624,7 @@
                                 </div>
                             </div>
 
-                            <input type="hidden" id="selectedPrice" name="price" value="">
+                            <!-- Price hidden input removed: server now computes authoritative price -->
                         </div>
 
                         <div class="row g-4">
@@ -2709,7 +2674,7 @@
                                 </small>
                             </div>
 
-                
+
                             <!-- Personal Details -->
                             <div class="col-md-6">
                                 <div class="form-group">
@@ -3248,7 +3213,19 @@
                 <div class="col-lg-10">
                     <div class="text-center mb-5">
                         <h2 class="section-title" style="font-size: 2.5rem; font-weight: 700; color: #030f68;">Terms & Conditions</h2>
-                        <p class="lead" style="color: #666; font-size: 1.2rem;">Please read our terms and conditions carefully before booking your appointment</p>
+                        <div style="display:inline-block; max-width:820px; margin-top:18px; text-align:left;">
+                            <div style="background: linear-gradient(90deg, rgba(255,102,0,0.06), rgba(3,15,104,0.03)); border-left: 6px solid #ff6600; padding: 18px 20px; border-radius: 12px; box-shadow: 0 6px 18px rgba(3,15,104,0.06);">
+                                <div style="display:flex; align-items:flex-start; gap:12px;">
+                                    <div style="font-size:1.6rem; color:#ff6600; line-height:1; margin-top:2px;"><i class="bi bi-exclamation-triangle-fill"></i></div>
+                                    <div>
+                                        <div style="font-size:1.05rem; color:#03253f; font-weight:700; margin-bottom:6px;">Please Read — Important Booking Terms</div>
+                                        <p style="margin:0; color:#33475b; font-size:0.98rem; line-height:1.45;">
+                                            Before booking, please review our terms and conditions.</br> Deposits are required to secure appointments, cancellations within 48 hours may forfeit the deposit.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
                     <div class="row g-4">
@@ -3417,6 +3394,42 @@
                         </div>
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reviews Section -->
+    <div class="section section-lg bg-gray-150" style="padding: 80px 0; background: #f8f9fa;">
+        <div class="text-center mb-5">
+            <p class="subtitle" style="font-size:1.5rem; color:#ff6600; font-weight:600;">Our customers love DBT</p>
+            <div class="subtitle-box" style="display:inline-block; margin-bottom:18px;">
+                <div class="subtitle-box-text" style="font-size:2rem; color:#030f68; font-weight:700;">Reviews</div>
+            </div>
+        </div>
+        <div class="owl-carousel owl-theme-1" data-items="1" data-sm-items="1" data-md-items="1" data-lg-items="1" data-xl-items="2" data-xxl-items="3" data-margin="15px" data-nav="false" data-dots="true" data-autoplay="5000">
+            <div class="testimonial-box" style="background:linear-gradient(135deg,#e3eafc 0%,#f8f9fa 100%); border-radius:18px; box-shadow:0 8px 32px rgba(0,0,0,0.12); padding:38px 28px; margin:0 12px; position:relative;">
+                <div class="testimonial-title" style="font-size:1.3rem; color:#ff6600; font-weight:700; margin-top:32px;">Cool!</div>
+                <div class="testimonial-rate"><img src="{{ asset('images/star-ratings.webp') }}" alt="" width="120" height="22"/></div>
+                <div class="testimonial-text" style="font-size:1.12rem; color:#222; margin:18px 0; font-style:italic;">"DBT offers great services and she delivers excellently. </div>
+                <div class="testimonial-name" style="font-size:1rem; color:#030f68; font-weight:500;">Client 1</div>
+            </div>
+            <div class="testimonial-box" style="background:linear-gradient(135deg,#fff6e3 0%,#ffe3e3 100%); border-radius:18px; box-shadow:0 8px 32px rgba(0,0,0,0.12); padding:38px 28px; margin:0 12px; position:relative;">
+                <div class="testimonial-title" style="font-size:1.3rem; color:#ff6600; font-weight:700; margin-top:32px;">Excellent!</div>
+                <div class="testimonial-rate"><img src="{{ asset('images/star-ratings.webp') }}" alt="" width="120" height="22"/></div>
+                <div class="testimonial-text" style="font-size:1.12rem; color:#222; margin:18px 0; font-style:italic;">"Very patient and time conscious. She follows up and ensures customer comfortability. I always leave happy!"</div>
+                <div class="testimonial-name" style="font-size:1rem; color:#030f68; font-weight:500;">Client 2</div>
+            </div>
+            <div class="testimonial-box" style="background:linear-gradient(135deg,#e3ffe3 0%,#e3f8ff 100%); border-radius:18px; box-shadow:0 8px 32px rgba(0,0,0,0.12); padding:38px 28px; margin:0 12px; position:relative;">
+                <div class="testimonial-title" style="font-size:1.3rem; color:#ff6600; font-weight:700; margin-top:32px;">Amazing!</div>
+                <div class="testimonial-rate"><img src="{{ asset('images/star-ratings.webp') }}" alt="" width="120" height="22"/></div>
+                <div class="testimonial-text" style="font-size:1.12rem; color:#222; margin:18px 0; font-style:italic;">"DBT braided my child's hair and my child was very comfortable. Her braids don't hurt much and last long!"</div>
+                <div class="testimonial-name" style="font-size:1rem; color:#030f68; font-weight:500;">Client 3</div>
+            </div>
+            <div class="testimonial-box" style="background:linear-gradient(135deg,#f8e3ff 0%,#e3eaff 100%); border-radius:18px; box-shadow:0 8px 32px rgba(0,0,0,0.12); padding:38px 28px; margin:0 12px; position:relative;">
+                <div class="testimonial-title" style="font-size:1.3rem; color:#ff6600; font-weight:700; margin-top:32px;">Excellent!</div>
+                <div class="testimonial-rate"><img src="{{ asset('images/star-ratings.webp') }}" alt="" width="120" height="22"/></div>
+                <div class="testimonial-text" style="font-size:1.12rem; color:#222; margin:18px 0; font-style:italic;"> "Customer relationship is amazing. Very professional and very affordable service. Highly recommend DBT!"</div>
+                <div class="testimonial-name" style="font-size:1rem; color:#030f68; font-weight:500;">Client 4</div>
             </div>
         </div>
     </div>
@@ -5363,11 +5376,11 @@ function clearImagePreview() {
 // Dynamic price preview and form wiring
 (function() {
     const priceMap = {
-        'small-knotless': 150,
-        'smedium-knotless': 130,
+        'small-knotless': 170,
+        'smedium-knotless': 150,
         'wig-installation': 150,
-        'large-knotless': 110,
-        'jumbo-knotless': 80, // Fixed: Updated to match server-side data (seed & DB)
+        'medium-knotless': 130,
+        'jumbo-knotless': 100,
         'kids-braids': 80,
         'stitch-braids': 120,
         'hair-mask': 50,
@@ -5376,26 +5389,25 @@ function clearImagePreview() {
     };
 
     function lengthAdjustment(lengthValue) {
-        // Normalize incoming value (accept hyphen or underscore) and apply server-aligned adjustments
+        // Normalize incoming value (accept hyphen or underscore)
         const key = (lengthValue || '').toString().replace(/-/g, '_');
         console.log('Length adjustment for:', lengthValue, '-> key:', key);
 
-        // Match server-side adjustment map exactly (USD)
-        const adjustments = {
-            'neck': -20,
-            'shoulder': -20,
-            'armpit': -20,
-            'bra_strap': -20,
-            'mid_back': 0,
-            'waist': 20,
-            'hip': 20,
-            'tailbone': 40, // Match backend exactly
-            'thigh': 40,    // Match backend exactly
-            'classic': 40   // Match backend exactly
-        };
+        // Ordered lengths from shortest -> longest (must match server)
+        const ordered = ['neck','shoulder','armpit','bra_strap','mid_back','waist','hip','tailbone','classic'];
+        const midIndex = ordered.indexOf('mid_back');
+        const idx = ordered.indexOf(key);
 
-        const adjustment = adjustments[key] ?? 0;
-        console.log('Length adjustment amount:', adjustment);
+        if (idx === -1 || midIndex === -1) {
+            console.warn('Unknown length key:', key, 'defaulting to 0 adjustment');
+            return 0;
+        }
+
+        // Per-step rule: each single step away from mid_back changes price by $20.
+        // This makes waist = +20, bra_strap = -20, and two steps away = +/-40, etc.
+        const d = idx - midIndex;
+        const adjustment = d * 20;
+        console.log('Length adjustment amount (per-step $20):', adjustment, {d});
         return adjustment;
     }
 
@@ -5431,8 +5443,10 @@ function clearImagePreview() {
             console.log('Updated price display to:', disp.textContent);
         }
         if (hidden) {
-            hidden.value = finalPrice || '';
-            console.log('Updated hidden price input to:', hidden.value);
+            // Store only the authoritative base price in the hidden input (do NOT post client-side adjusted finalPrice)
+            const baseVal = (typeof basePrice === 'number') ? basePrice : (parseFloat(basePrice) || '');
+            hidden.value = baseVal;
+            console.log('Updated hidden price input to base price (client will not post adjusted final):', hidden.value);
         }
     }
 

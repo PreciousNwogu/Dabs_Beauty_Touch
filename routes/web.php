@@ -366,6 +366,24 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
             $booking->save();
 
+            // Send notifications for completed or cancelled statuses
+            try {
+                if ($request->status === 'completed' && $booking->email) {
+                    \Illuminate\Support\Facades\Notification::route('mail', $booking->email)
+                        ->notify(new \App\Notifications\ServiceCompletedNotification($booking));
+                } elseif ($request->status === 'cancelled' && $booking->email) {
+                    $cancelledBy = $request->cancelled_by ?? 'Admin';
+                    \Illuminate\Support\Facades\Notification::route('mail', $booking->email)
+                        ->notify(new \App\Notifications\BookingCancelledNotification($booking, $cancelledBy));
+                }
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\Log::warning('Failed to send booking status notification', [
+                    'booking_id' => $booking->id,
+                    'status' => $request->status,
+                    'error' => $e->getMessage()
+                ]);
+            }
+
             return response()->json([
                 'success' => true,
                 'message' => 'Booking status updated successfully'
@@ -530,7 +548,7 @@ Route::post('/bookings', function(Request $request) {
     $validationRules = [
         'name' => 'required|string|max:255',
         'email' => 'nullable|email|max:255',
-        'phone' => 'required|string|max:20',
+        'phone' => ['required','string','regex:/^[0-9+\-\s()]+$/','min:7','max:20'],
         'service' => 'nullable|string|max:255',
         'appointment_date' => 'required|date|after_or_equal:today',
         'appointment_time' => 'required|string',
@@ -630,22 +648,21 @@ Route::post('/bookings', function(Request $request) {
                 }
             }
 
+            // Determine authoritative base price from Service model (ignore client-provided price)
             $base = $serviceModel ? (float) $serviceModel->base_price : 150.00;
-            $adjustments = [
-                'neck' => -20.00,
-                'shoulder' => -20.00,
-                'armpit' => -20.00,
-                'bra_strap' => -20.00,
-                'mid_back' => 0.00,
-                'waist' => 20.00,
-                'hip' => 20.00,
-                'tailbone' => 40.00,
-                'thigh' => 40.00,
-                'classic' => 40.00,
-            ];
 
-            $adjust = $adjustments[$length] ?? 0.00;
+            // Compute adjustment using same per-step $20 rule as controller
+            $ordered = ['neck','shoulder','armpit','bra_strap','mid_back','waist','hip','tailbone','classic'];
+            $midIndex = array_search('mid_back', $ordered, true);
+            $idx = array_search($length, $ordered, true);
+            $d = ($idx !== false && $midIndex !== false) ? ($idx - $midIndex) : 0;
+            $adjust = $d * 20.00;
+
             $finalPrice = round($base + $adjust, 2);
+
+            // Persist breakdown for email fidelity and audit
+            $bookingData['base_price'] = $base;
+            $bookingData['length_adjustment'] = $adjust;
             $bookingData['final_price'] = $finalPrice;
             $bookingData['length'] = $length;
         } catch (\Exception $e) {

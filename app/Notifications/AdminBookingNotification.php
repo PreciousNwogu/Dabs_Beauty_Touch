@@ -56,6 +56,39 @@ class AdminBookingNotification extends Notification
             ->line("Phone: " . ($b->phone ?? 'N/A'));
 
         if (! is_null($b->final_price)) {
+            // Prefer persisted base price/adjustment if present
+            $basePrice = $b->base_price ?? null;
+            $adjust = $b->length_adjustment ?? null;
+
+            // If basePrice missing, try lookup
+            if (is_null($basePrice)) {
+                try {
+                    $serviceModel = \App\Models\Service::where('slug', $b->service)->orWhere('name', $b->service)->first();
+                    if ($serviceModel) $basePrice = (float) $serviceModel->base_price;
+                } catch (\Exception $e) {
+                    $serviceModel = null;
+                }
+            }
+
+            // If adjust missing, compute using per-step $20 rule
+            if (is_null($adjust) && $b->length) {
+                $ordered = ['neck','shoulder','armpit','bra_strap','mid_back','waist','hip','tailbone','classic'];
+                $midIndex = array_search('mid_back', $ordered, true);
+                $idx = array_search($b->length, $ordered, true);
+                if ($idx !== false && $midIndex !== false) {
+                    $d = $idx - $midIndex;
+                    $adjust = ($d * 20.00);
+                }
+            }
+
+            if (! is_null($basePrice)) {
+                $mail->line('Base price: $' . number_format($basePrice, 2));
+            }
+
+            if (! is_null($adjust)) {
+                $mail->line('Length adjustment: $' . number_format($adjust, 2));
+            }
+
             $mail->line('Final Price: $' . number_format($b->final_price, 2));
         }
 

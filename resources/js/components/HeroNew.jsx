@@ -39,12 +39,12 @@ const braidStyles = [
         image: require("../../images/backgroundbraidimg.jpg"),
     },
     {
-        name: "Large Knotless",
+        name: "Medium Knotless",
         options: [
-            { label: "Waist Length", price: "$180" },
-            { label: "Top Butt", price: "$220" },
-            { label: "Mid Butt", price: "$260" },
-            { label: "Under Butt", price: "$300" },
+            { label: "Starting", price: "$130" },
+            { label: "Top Butt", price: "$160" },
+            { label: "Mid Butt", price: "$190" },
+            { label: "Under Butt", price: "$220" },
         ],
         image: require("../../images/braidstyle.jpg"),
     },

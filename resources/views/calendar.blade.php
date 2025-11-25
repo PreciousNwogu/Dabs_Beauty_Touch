@@ -364,12 +364,14 @@
                         <div class="col-md-6 mb-3">
                             <label for="phone" class="form-label">Phone Number *</label>
                             <input type="tel" class="form-control" id="phone" name="phone" required>
+                            <div class="invalid-feedback" id="phoneFeedback"></div>
                         </div>
                     </div>
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label for="email" class="form-label">Email</label>
                             <input type="email" class="form-control" id="email" name="email">
+                            <div class="invalid-feedback" id="emailFeedback"></div>
                         </div>
                         <div class="col-md-6 mb-3">
                             <label for="service" class="form-label">Service *</label>
@@ -378,7 +380,7 @@
                                 <option value="Small Knotless Braids">Small Knotless Braids</option>
                                 <option value="Smedium Knotless Braids">Smedium Knotless Braids</option>
                                 <option value="Wig Installation">Wig Installation</option>
-                                <option value="Large Knotless Braids">Large Knotless Braids</option>
+                                <option value="Medium Knotless Braids">Medium Knotless Braids</option>
                                 <option value="Jumbo Knotless Braids">Jumbo Knotless Braids</option>
                                 <option value="Kids Braids">Kids Braids</option>
                                 <option value="8 Rows Stitch Braids">8 Rows Stitch Braids</option>
@@ -632,7 +634,45 @@
 
             const submitBtn = this.querySelector('button[type="submit"]');
             const originalText = submitBtn.innerHTML;
-            submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Booking...';
+
+            // Validate contact details before submitting
+            try {
+                const emailInput = this.querySelector('input[name="email"]') || document.getElementById('email');
+                const phoneInput = this.querySelector('input[name="phone"]') || document.getElementById('phone');
+                const emailVal = emailInput && emailInput.value ? emailInput.value.trim() : '';
+                const phoneVal = phoneInput && phoneInput.value ? phoneInput.value.trim() : '';
+
+                // Clear previous inline errors
+                if (window.clearFieldError) {
+                    try { clearFieldError(emailInput); clearFieldError(phoneInput); } catch(e){}
+                }
+
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if (!emailVal || !emailRegex.test(emailVal)) {
+                    if (window.showFieldError) {
+                        showFieldError(emailInput, 'Please enter a valid email address');
+                    } else {
+                        alert('Please enter a valid email address.');
+                    }
+                    if (emailInput) emailInput.focus();
+                    return;
+                }
+
+                const phoneDigits = phoneVal.replace(/\D/g, '');
+                if (!phoneVal || phoneDigits.length < 7 || phoneDigits.length > 15) {
+                    if (window.showFieldError) {
+                        showFieldError(phoneInput, 'Please enter a valid phone number (7–15 digits)');
+                    } else {
+                        alert('Please enter a valid phone number (7–15 digits).');
+                    }
+                    if (phoneInput) phoneInput.focus();
+                    return;
+                }
+            } catch (e) {
+                console.warn('Contact validation failed', e);
+            }
+
+            submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Processing...';
             submitBtn.disabled = true;
 
             fetch('/appointments/book', {

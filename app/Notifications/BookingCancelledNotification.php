@@ -30,12 +30,8 @@ class BookingCancelledNotification extends Notification
         $b = $this->booking;
 
         return (new MailMessage)
-            ->subject('Your appointment has been cancelled')
-            ->greeting('Hello ' . ($b->name ?? 'Customer'))
-            ->line('Your appointment scheduled for ' . ($b->appointment_date?->format('F j, Y') ?? '') . ' ' . ($b->appointment_time ?? '') . ' has been cancelled.')
-            ->line('Cancelled by: ' . ($this->cancelledBy ?? 'System'))
-            ->action('View bookings', url('/admin/bookings/' . $b->id))
-            ->line('If you have questions or would like to reschedule, please contact us.');
+            ->subject(__('emails.cancelled.subject'))
+            ->view('emails.booking_cancelled', ['booking' => $b, 'cancelledBy' => $this->cancelledBy]);
     }
 
     public function toArray(object $notifiable): array
