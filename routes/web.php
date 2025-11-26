@@ -191,6 +191,38 @@ Route::get('/calendar', function () {
     return view('calendar');
 })->name('calendar');
 
+// Kids Braids Selector page
+Route::get('/kids-selector', function () {
+    // Pass service prices to the selector page (from config or Service model)
+    $servicePrices = config('service_prices', []);
+    return view('kids-selector', compact('servicePrices'));
+})->name('kids.selector');
+
+// Handle kids selector submission (server-side) and redirect to home with flashed session
+Route::post('/kids-selector/submit', function (Request $request) {
+    $data = $request->validate([
+        'kb_braid_type' => 'required|string',
+        'kb_finish' => 'nullable|string',
+        'kb_length' => 'required|string',
+        'extras' => 'nullable|string',
+        'price' => 'required|numeric'
+    ]);
+
+    // Normalize payload
+    $payload = [
+        'service' => 'Kids Braids',
+        'service_type' => 'kids-braids',
+        'price' => (float) $data['price'],
+        'hair_length' => $data['kb_length'],
+        'braid_type' => $data['kb_braid_type'],
+        'finish' => $data['kb_finish'] ?? null,
+        'extras' => $data['extras'] ?? null,
+    ];
+
+    // Flash to session for one-time consumption on home page
+    return redirect()->route('home')->with('kids_selector', $payload);
+})->name('kids.selector.submit');
+
 // Admin authentication routes (unprotected but rate limited) - TEMPORARY SIMPLE VERSION
 Route::get('/admin/login', function () {
     return view('admin.login');

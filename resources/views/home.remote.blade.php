@@ -1801,41 +1801,7 @@
     </div>
     @endif
 
-    <!-- Navigation -->
-    <nav class="navbar navbar-expand-lg navbar-light bg-white" style="margin-bottom: 0; box-shadow: 0 2px 8px rgba(0,0,0,0.04); min-height: 80px;">
-        <div class="container-fluid py-3">
-            <a class="navbar-brand d-flex align-items-center" href="#home">
-                <img src="{{ asset('images/logo.jpg') }}" alt="Logo" style="height: 60px; margin-right: 15px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
-                <span style="font-weight: bold; font-size: 1.4rem; color: #ff6600;">Dab's Beauty Touch</span>
-            </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav mb-2 mb-lg-0">
-                    <li class="nav-item">
-                        <a class="nav-link px-3" href="#home">Home</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link px-3" href="#about">About</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link px-3" href="#services">Services</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link px-3" href="#contact">Contact</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link px-3" href="#terms">Terms</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link px-3" href="{{ route('calendar') }}" style="background: linear-gradient(135deg, #ff6600 0%, #ff8533 100%); color: white; border-radius: 20px; padding: 8px 20px !important;">Book Now</a>
-                    </li>
-                </ul>
-
-            </div>
-        </div>
-    </nav>
+    @include('partials.site-header')
 
     <!-- Hero Section -->
     <section id="home" class="hero-section">
@@ -2094,7 +2060,7 @@
                                     <div class="pricing-info mb-3" style="background: rgba(255, 102, 0, 0.1); padding: 15px; border-radius: 10px; border-left: 4px solid #ff6600;">
                                         <p class="price" style="margin: 0; color: #030f68; font-weight: 700; font-size: 1.2rem;">Starting at ${{ number_format(config('service_prices.kids_braids', 80),0) }}</p>
                                     </div>
-                                    <button class="btn btn-warning mt-3" onclick="openBookingModal('Kids Braids', 'kids-braids')" style="font-weight: 600; padding: 12px 30px;">
+                                    <button class="btn btn-warning mt-3" onclick="window.location='{{ route('kids.selector') }}'" style="font-weight: 600; padding: 12px 30px;">
                                         <i class="bi bi-calendar-check me-2"></i>Book Now
                                     </button>
                                 </div>
@@ -2358,7 +2324,7 @@
                     </div>
                 </div>
                 <div class="col-lg-4 col-md-6">
-                    <div class="service-card h-100" onclick="openBookingModal('Kids Braids', 'kids-braids')">
+                    <div class="service-card h-100" onclick="window.location='{{ route('kids.selector') }}'">
                         <img src="{{ asset('images/kids hair style.webp') }}" alt="Kids Braids">
                         <h4>Kids Braids(3-8yrs)</h4>
                         <p>Specialized braiding services for children with gentle, age-appropriate techniques. Creates adorable, manageable styles that are comfortable and long-lasting for active kids.</p>
@@ -2534,8 +2500,8 @@
                         <input type="hidden" id="selectedHairMaskOption" name="hair_mask_option" value="mask-only">
 
                         <!-- Pricing Information (detailed boxes like screenshot) -->
-                        <div class="mb-3">
-                            <div style="background:#fff7e0;border-radius:12px;padding:18px;border-left:6px solid #ff6600;">
+                            <div id="bookingDetailedInfo" class="mb-3">
+                                <div style="background:#fff7e0;border-radius:12px;padding:18px;border-left:6px solid #ff6600;">
                                 <h5 style="color:#0b3a66;font-weight:700;margin-bottom:8px;">Pricing Information</h5>
                                 <p style="margin:0 0 12px 0;color:#0b3a66;font-weight:600;">💰 <span style="font-weight:700;">Default Pricing:</span> All service prices shown are for <strong>mid-back length</strong>.</p>
 
@@ -2545,6 +2511,16 @@
                                         <li><strong>+ $20</strong> for longer length (waist length and beyond)</li>
                                         <li><strong>- $20</strong> for shorter length (shoulder length and above)</li>
                                     </ul>
+                                </div>
+
+                                <!-- Kids booking summary (shown only for kids-braids) -->
+                                <div id="kidsBookingSummary" style="display:none; margin-top:12px;">
+                                    <div style="background:#fff;border-radius:10px;padding:12px;border-left:6px solid #ff6600;">
+                                        <h6 style="margin:0 0 8px 0;color:#0b3a66;font-weight:700;">Price Summary</h6>
+                                        <div id="kbs_base">Base: <strong>$--</strong></div>
+                                        <div id="kbs_adjustments">Adjustments: <strong>$0</strong></div>
+                                        <div id="kbs_total" style="margin-top:6px;"><strong>Total: $--</strong></div>
+                                    </div>
                                 </div>
 
                                 <div style="background:#f0efe9;border-radius:10px;padding:14px;margin-bottom:12px;">
@@ -2570,7 +2546,7 @@
 
                             </div>
                             <!-- Braid Length Guide + Selection (inside booking form so it is submitted) -->
-                            <div class="col-12">
+                            <div class="col-12" id="lengthGuideBlock">
                                 <div class="mb-3">
                                     <div class="row align-items-center">
                                         <div class="col-12 col-md-5 text-center mb-3 mb-md-0">
@@ -2913,6 +2889,96 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Kids Booking Modal (separate, simplified form for Kids Braids) -->
+    <div class="modal fade" id="kidsBookingModal" tabindex="-1" aria-labelledby="kidsBookingModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content" style="border-radius:12px;">
+                <div class="modal-header" style="background: linear-gradient(135deg, #030f68 0%, #4a8bc2 100%); color: white; border-radius: 12px 12px 0 0;">
+                    <h5 class="modal-title" id="kidsBookingModalLabel">Book Kids Braids</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div id="kidsSelectorPanel">
+                        @include('partials.kids-selector-form')
+                    </div>
+
+                    <div id="kidsBookingPanel" style="display:none">
+                    <form id="kidsBookingForm" action="{{ route('bookings.store') }}" method="POST" enctype="multipart/form-data">
+                        @csrf
+                        <input type="hidden" name="service" id="kids_service_input" value="Kids Braids">
+                        <input type="hidden" name="service_type" id="kids_service_type_input" value="kids-braids">
+                        <input type="hidden" name="price" id="kids_price_input" value="">
+
+                        <div class="row g-3">
+                            <!-- Hidden selector mapping so bookings.store receives selector choices -->
+                            <input type="hidden" name="kb_braid_type" id="kids_braid_type_input" value="">
+                            <input type="hidden" name="kb_finish" id="kids_finish_input" value="">
+                            <input type="hidden" name="kb_length" id="kids_length_input" value="">
+                            <input type="hidden" name="kb_extras" id="kids_extras_input" value="">
+                            <div class="col-12 mb-3">
+                                <div style="background:#fff7e0;border-radius:10px;padding:12px;border-left:6px solid #ff6600;">
+                                    <h6 style="margin:0 0 8px 0;color:#0b3a66;font-weight:700;">Price Preview</h6>
+                                    <div id="kidsModal_base">Base: <strong>$--</strong></div>
+                                    <div id="kidsModal_adjustments">Adjustments: <strong>$0</strong></div>
+                                    <div id="kidsModal_addons">Add-ons: <strong>$0</strong></div>
+                                    <div id="kidsModal_total" style="margin-top:6px;"><strong>Total: $--</strong></div>
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">Appointment Date *</label>
+                                <div class="input-group">
+                                    <input type="text" class="form-control" id="kidsBookingDate" name="appointment_date" placeholder="Click calendar to select date" readonly required style="background-color:#f8f9fa; cursor:pointer;" onclick="openCalendarModal()">
+                                    <button class="btn btn-outline-secondary" type="button" onclick="openCalendarModal()"><i class="bi bi-calendar"></i></button>
+                                </div>
+                            </div>
+
+                            <div class="col-12">
+                                <label class="form-label">Appointment Time *</label>
+                                <div class="input-group">
+                                    <input type="text" class="form-control" id="kidsBookingTime" name="appointment_time" placeholder="Click calendar to select time" readonly required style="background-color:#f8f9fa; cursor:pointer;" onclick="openCalendarModal()">
+                                    <button class="btn btn-outline-secondary" type="button" onclick="openCalendarModal()"><i class="bi bi-clock"></i></button>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label">Full Name *</label>
+                                <input type="text" class="form-control" name="name" id="kids_name" required autocomplete="off">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Phone Number *</label>
+                                <input type="tel" class="form-control" name="phone" id="kids_phone" required autocomplete="off">
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label">Email</label>
+                                <input type="email" class="form-control" name="email" id="kids_email" autocomplete="off">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Home Address</label>
+                                <input type="text" class="form-control" name="address" id="kids_address" autocomplete="off">
+                            </div>
+
+                            <div class="col-12">
+                                <label class="form-label">Special Requests or Notes</label>
+                                <textarea class="form-control" name="message" id="kids_message" rows="3"></textarea>
+                            </div>
+
+                            <div class="col-12">
+                                <label class="form-label">Upload Reference Image (optional)</label>
+                                <input type="file" class="form-control" name="sample_picture" id="kids_sample_picture" accept="image/*">
+                            </div>
+
+                        </div>
+                        <div class="text-center mt-4">
+                            <button type="submit" class="btn btn-primary" id="kidsSubmitBtn">Book Kids Appointment</button>
+                        </div>
+                    </form>
+                    </div>
                 </div>
             </div>
         </div>
@@ -3547,21 +3613,7 @@
         </div>
     </section>
 
-    <!-- Footer -->
-    <footer class="footer">
-        <div class="container">
-            <div class="row">
-                <div class="col-lg-6">
-                    <h5>Dab's Beauty Touch</h5>
-                    <p>Professional hair braiding services delivering flawless results with every appointment.</p>
-                </div>
-                <div class="col-lg-6 text-lg-end">
-                    <p>&copy; 2024 Dab's Beauty Touch. All rights reserved.</p>
-                    <p>Made with ❤️ for beautiful hair</p>
-                </div>
-            </div>
-        </div>
-    </footer>
+    @include('partials.site-footer')
 
 
 
@@ -3907,6 +3959,125 @@ console.log('=== LOADING BOOKING FUNCTIONS ===');
         const serviceModal = new bootstrap.Modal(document.getElementById('serviceSelectionModal'));
         serviceModal.show();
     }
+
+    // Open the kids-only booking modal (does not redirect to main booking modal)
+    function openKidsBookingModal(serviceName, serviceType){
+        try{
+            // populate basic hidden fields in the kids modal
+            const svc = document.getElementById('kids_service_input'); if(svc) svc.value = serviceName || 'Kids Braids';
+            const st = document.getElementById('kids_service_type_input'); if(st) st.value = serviceType || 'kids-braids';
+                // Prefill price preview from selector data if available, otherwise fall back to configured base
+            try{
+                const sel = (typeof window !== 'undefined') ? window.__kidsSelectorData : null;
+                const baseConfigured = {{ (int) config('service_prices.kids_braids', 80) }};
+
+                // Helper maps
+                const typeAdj = { protective: -20, cornrows: -40, knotless_small: 20, knotless_med: 0, box_small: 10, box_med: 0, stitch: 20 };
+                const lengthAdj = { shoulder: 0, armpit: 10, mid_back: 20, waist: 30 };
+                const finishAdj = { curled: -10, plain: 0 };
+
+                let base = baseConfigured;
+                let adjustments = 0;
+                let addons = 0;
+                let total = 0;
+
+                if(sel){
+                    // type adj
+                    const bt = sel.braid_type || sel.kb_braid_type || sel.braidType || '';
+                    adjustments += (typeAdj[bt] || 0);
+
+                    // length adj
+                    const hl = sel.hair_length || sel.kb_length || sel.hairLength || '';
+                    adjustments += (lengthAdj[hl] || 0);
+
+                    // finish adj
+                    const f = sel.finish || sel.kb_finish || sel.finishType || '';
+                    adjustments += (finishAdj[f] || 0);
+
+                    // try parse extras (accept JSON array, numeric CSV or names)
+                    try{
+                        if(sel.extras){
+                            if(typeof sel.extras === 'string' && sel.extras.trim().startsWith('[')){
+                                const parsed = JSON.parse(sel.extras);
+                                if(Array.isArray(parsed)){
+                                    parsed.forEach(it => { if(typeof it === 'number') addons += it; else if(typeof it === 'object' && it.value) addons += Number(it.value) || 0; else if(!isNaN(Number(it))) addons += Number(it); });
+                                }
+                            } else if(typeof sel.extras === 'string' && sel.extras.indexOf(',')>-1){
+                                sel.extras.split(',').forEach(t => { const n = Number(t.trim()); if(!isNaN(n)) addons += n; });
+                            } else if(typeof sel.extras === 'number'){
+                                addons += Number(sel.extras);
+                            }
+                        }
+                    }catch(e){ console.warn('Failed to parse selector extras', e); }
+
+                    // computed total
+                    total = base + adjustments + addons;
+
+                    // if payload included authoritative price, prefer it for total display
+                    if(sel.price && !isNaN(Number(sel.price))){ total = Number(sel.price); }
+                } else {
+                    // no selector payload — fallback
+                    total = baseConfigured;
+                }
+
+                // populate hidden price input and visible preview elements
+                const kp = document.getElementById('kids_price_input'); if(kp) kp.value = total;
+                // also populate mapping hidden fields so the booking POST includes selector choices
+                try{
+                    const bt = sel ? (sel.braid_type || sel.kb_braid_type || '') : '';
+                    const fin = sel ? (sel.finish || sel.kb_finish || '') : '';
+                    const ln = sel ? (sel.hair_length || sel.kb_length || '') : '';
+                    const ex = sel ? (sel.extras || '') : '';
+                    const ibt = document.getElementById('kids_braid_type_input'); if(ibt) ibt.value = bt;
+                    const ifin = document.getElementById('kids_finish_input'); if(ifin) ifin.value = fin;
+                    const iln = document.getElementById('kids_length_input'); if(iln) iln.value = ln;
+                    const iex = document.getElementById('kids_extras_input'); if(iex) iex.value = ex;
+                }catch(e){ /* noop */ }
+                const kb = document.getElementById('kidsModal_base'); if(kb) kb.innerHTML = 'Base: <strong>$' + base + '</strong>';
+                const ka = document.getElementById('kidsModal_adjustments'); if(ka) ka.innerHTML = 'Adjustments: <strong>$' + (adjustments >=0 ? '+' : '-') + Math.abs(adjustments) + '</strong>';
+                const kadd = document.getElementById('kidsModal_addons'); if(kadd) kadd.innerHTML = 'Add-ons: <strong>$' + addons + '</strong>';
+                const kt = document.getElementById('kidsModal_total'); if(kt) kt.innerHTML = '<strong>Total: $' + (total ? Number(total).toFixed(0) : '--') + '</strong>';
+            }catch(e){ console.warn('Kids price preview compute failed', e); }
+
+            // show modal
+            const m = new bootstrap.Modal(document.getElementById('kidsBookingModal'));
+            m.show();
+
+            // ensure we show the booking panel (hide selector panel) when opening via this function
+            try{
+                const selectorPanel = document.getElementById('kidsSelectorPanel');
+                const bookingPanel = document.getElementById('kidsBookingPanel');
+                if(selectorPanel) selectorPanel.style.display = 'none';
+                if(bookingPanel) bookingPanel.style.display = '';
+            }catch(e){ /* noop */ }
+
+            // accessibility: focus first input when modal shown
+            try{
+                const modalEl = document.getElementById('kidsBookingModal');
+                modalEl.addEventListener('shown.bs.modal', function(){
+                    const nameField = document.getElementById('kids_name'); if(nameField) nameField.focus();
+                }, { once: true });
+            }catch(e){ /* noop */ }
+        }catch(e){ console.warn('openKidsBookingModal failed', e); }
+    }
+
+    // Show the booking panel inside the kids modal (used when selector is embedded)
+    window.showKidsBookingPanel = function(sel){
+        try{
+            if(sel) try{ window.__kidsSelectorData = sel; }catch(e){}
+            // Use openKidsBookingModal to compute preview and ensure hidden inputs are set
+            if(typeof openKidsBookingModal === 'function'){
+                openKidsBookingModal('Kids Braids','kids-braids');
+            }
+            // toggle panels
+            const selectorPanel = document.getElementById('kidsSelectorPanel');
+            const bookingPanel = document.getElementById('kidsBookingPanel');
+            if(selectorPanel) selectorPanel.style.display = 'none';
+            if(bookingPanel) bookingPanel.style.display = '';
+            // focus name input
+            setTimeout(function(){ const nf = document.getElementById('kids_name'); if(nf) nf.focus(); }, 200);
+        }catch(e){ console.warn('showKidsBookingPanel failed', e); }
+    };
 
     // Function to select a quick service
     function selectQuickService(serviceName) {
@@ -4865,6 +5036,49 @@ function clearImagePreview() {
             const base = window.currentServiceInfo.basePrice;
             updatePriceDisplay(base);
 
+            // If we have kids selector data and this is the kids-braids flow,
+            // show a compact kids-only booking summary and hide the detailed info.
+            try {
+                const kidsData = (typeof window !== 'undefined') ? window.__kidsSelectorData : null;
+                const kidsSummaryDiv = document.getElementById('kidsBookingSummary');
+                const detailedDiv = document.getElementById('bookingDetailedInfo');
+                if (serviceType === 'kids-braids' && kidsData && kidsSummaryDiv) {
+                    const selPrice = parseFloat(kidsData.price) || 0;
+                    const basePrice = parseFloat(base) || 0;
+                    const adjustments = selPrice - basePrice;
+
+                    const kbs_base = document.getElementById('kbs_base');
+                    const kbs_adjustments = document.getElementById('kbs_adjustments');
+                    const kbs_total = document.getElementById('kbs_total');
+
+                    if (kbs_base) kbs_base.innerHTML = 'Base: <strong>$' + (basePrice ? basePrice.toFixed(0) : '--') + '</strong>';
+                    if (kbs_adjustments) kbs_adjustments.innerHTML = 'Adjustments: <strong>' + (adjustments >= 0 ? '+' : '-') + '$' + Math.abs(adjustments).toFixed(0) + '</strong>';
+                    if (kbs_total) kbs_total.innerHTML = '<strong>Total: $' + (selPrice ? selPrice.toFixed(0) : '--') + '</strong>';
+
+                    // update visible price to the selector's total and ensure hidden base remains set via updatePriceDisplay
+                    const priceDisplay = document.getElementById('priceDisplay');
+                    if (priceDisplay) priceDisplay.textContent = selPrice ? ('$' + selPrice.toFixed(0)) : '--';
+
+                    if (detailedDiv) detailedDiv.style.display = 'none';
+                    // hide the braid length guide (image + radios) for kids bookings
+                    try{
+                        const lengthGuide = document.getElementById('lengthGuideBlock');
+                        if(lengthGuide) lengthGuide.style.display = 'none';
+                    }catch(e){ /* noop */ }
+
+                    kidsSummaryDiv.style.display = 'block';
+                } else {
+                    if (kidsSummaryDiv) kidsSummaryDiv.style.display = 'none';
+                    if (detailedDiv) detailedDiv.style.display = '';
+                    try{
+                        const lengthGuide = document.getElementById('lengthGuideBlock');
+                        if(lengthGuide) lengthGuide.style.display = '';
+                    }catch(e){ /* noop */ }
+                }
+            } catch (e) {
+                console.warn('Kids summary render failed', e);
+            }
+
             // If this is Hair Mask/Relaxing, show mask options and disable length radios
             const maskOptionsDiv = document.getElementById('hairMaskOptions');
             const lengthRadios = document.getElementsByName('hair_length');
@@ -5228,6 +5442,94 @@ function clearImagePreview() {
 
 })();
 </script>
+
+</script>
+
+<script>
+// If user was redirected from a selector page, pick up params and open booking modal
+(function(){
+    try{
+        const params = new URLSearchParams(window.location.search);
+        const serviceType = params.get('service_type');
+        if(!serviceType) return;
+        const serviceName = params.get('service') || '';
+        const price = params.get('price');
+        const hairLength = params.get('hair_length');
+        const extras = params.get('extras');
+
+        // Populate booking form hidden inputs if present
+        const sd = document.getElementById('selectedService'); if(sd) sd.value = serviceName;
+        const st = document.getElementById('selectedServiceType'); if(st) st.value = serviceType;
+        const priceInput = document.getElementById('selectedPrice'); if(priceInput && price) priceInput.value = price;
+        if(hairLength){
+            const radio = document.querySelector('input[name="hair_length"][value="'+hairLength+'"]');
+            if(radio) radio.checked = true;
+        }
+        if(extras){
+            let ext = document.getElementById('selectedExtras');
+            if(!ext){
+                ext = document.createElement('input'); ext.type='hidden'; ext.id='selectedExtras'; ext.name='extras';
+                const form = document.getElementById('bookingForm'); if(form) form.appendChild(ext);
+            }
+            if(ext) ext.value = extras;
+        }
+
+        // Open booking modal if function exists
+        if(typeof openBookingModal === 'function'){
+            setTimeout(function(){ try{ openBookingModal(serviceName, serviceType); }catch(e){ console.warn('openBookingModal failed', e); } }, 200);
+        }
+
+        // Remove query params from URL
+        if(window.history && window.history.replaceState){
+            const clean = window.location.pathname + window.location.hash;
+            window.history.replaceState({}, document.title, clean);
+        }
+    }catch(e){ console.warn('Selector redirect handler error', e); }
+})();
+</script>
+@if(session('kids_selector'))
+<script>
+    // Open booking modal from server-side flashed kids selector data
+    (function(){
+        try{
+            const sel = @json(session('kids_selector'));
+            if(!sel || !sel.service_type) return;
+            const serviceName = sel.service || '';
+            const serviceType = sel.service_type;
+            const price = sel.price;
+            const hairLength = sel.hair_length;
+            const extras = sel.extras;
+
+            const sd = document.getElementById('selectedService'); if(sd) sd.value = serviceName;
+            const st = document.getElementById('selectedServiceType'); if(st) st.value = serviceType;
+            const priceInput = document.getElementById('selectedPrice'); if(priceInput && price) priceInput.value = price;
+            if(hairLength){
+                const radio = document.querySelector('input[name="hair_length"][value="'+hairLength+'"]');
+                if(radio) radio.checked = true;
+            }
+            if(extras){
+                let ext = document.getElementById('selectedExtras');
+                if(!ext){
+                    ext = document.createElement('input'); ext.type='hidden'; ext.id='selectedExtras'; ext.name='extras';
+                    const form = document.getElementById('bookingForm'); if(form) form.appendChild(ext);
+                }
+                if(ext) ext.value = extras;
+            }
+            // (Session selector) -- populate basic booking fields (no adjustments UI)
+            // Note: keep this block minimal so the booking modal behavior remains unchanged.
+
+            // expose the selector payload for client-side summary rendering
+            try{ window.__kidsSelectorData = sel || null; }catch(e){ window.__kidsSelectorData = null; }
+            // If this is the kids flow, open the dedicated kids booking modal instead of the main booking modal
+            if(serviceType === 'kids-braids' && typeof openKidsBookingModal === 'function'){
+                setTimeout(function(){ try{ openKidsBookingModal(serviceName, serviceType); }catch(e){ console.warn('openKidsBookingModal failed', e); } }, 200);
+            } else if(typeof openBookingModal === 'function'){
+                setTimeout(function(){ try{ openBookingModal(serviceName, serviceType); }catch(e){ console.warn('openBookingModal failed', e); } }, 200);
+            }
+        }catch(e){ console.warn('Failed to open booking modal from session selector', e); }
+    })();
+</script>
+@endif
 
 </body>
 </html>
