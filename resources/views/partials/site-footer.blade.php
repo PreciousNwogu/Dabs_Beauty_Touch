@@ -8,7 +8,6 @@
             </div>
             <div class="col-lg-6 text-lg-end">
                 <p>&copy; {{ date('Y') }} Dab's Beauty Touch. All rights reserved.</p>
-                <p>Made with ❤️ for beautiful hair</p>
             </div>
         </div>
     </div>

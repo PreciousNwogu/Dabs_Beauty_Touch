@@ -647,10 +647,22 @@ Route::post('/bookings', function(Request $request) {
             Log::info('No file uploaded');
         }
 
+        // Normalize phone server-side: allow leading + and digits, strip other characters
+        $rawPhone = $request->phone ?? '';
+        $normalizedPhone = preg_replace('/[^0-9+]/', '', $rawPhone);
+        // If there are multiple + signs, keep only the leading one
+        if (substr_count($normalizedPhone, '+') > 1) {
+            $normalizedPhone = preg_replace('/\++/', '+', $normalizedPhone);
+            if (strpos($normalizedPhone, '+') !== 0) {
+                // move single + to start
+                $normalizedPhone = '+' . str_replace('+', '', $normalizedPhone);
+            }
+        }
+
         $bookingData = [
             'name' => $request->name,
             'email' => $request->email ?: 'no-email@example.com',
-            'phone' => $request->phone,
+            'phone' => $normalizedPhone,
             'address' => $request->address,
             'service' => $request->service ?: 'General Service',
             'appointment_date' => $request->appointment_date,
@@ -660,6 +672,76 @@ Route::post('/bookings', function(Request $request) {
             'sample_picture' => $samplePicturePath,
             'status' => 'pending',
         ];
+
+        // Capture kids selector fields if present and append to notes for email fidelity
+        try{
+            $selectorFields = [];
+            if($request->filled('kb_braid_type')) $selectorFields['braid_type'] = $request->input('kb_braid_type');
+            if($request->filled('kb_finish')) $selectorFields['finish'] = $request->input('kb_finish');
+            if($request->filled('kb_length')) $selectorFields['length'] = $request->input('kb_length');
+            if($request->filled('kb_extras')) $selectorFields['extras'] = $request->input('kb_extras');
+            if(!empty($selectorFields)){
+                $json = json_encode($selectorFields);
+                $bookingData['notes'] = trim(($bookingData['notes'] ?? '') . "\nSelector: " . $json);
+                // persist selector fields directly on booking for easier access
+
+                $bookingData['kb_braid_type'] = $selectorFields['braid_type'] ?? null;
+                $bookingData['kb_finish'] = $selectorFields['finish'] ?? null;
+                $bookingData['kb_length'] = $selectorFields['length'] ?? null;
+                $bookingData['kb_extras'] = $selectorFields['extras'] ?? null;
+
+                // Map the braid type to a human friendly service label and store as service for clarity
+                $braidMap = [
+                    'protective' => 'Protective style',
+                    'cornrows' => 'Cornrows',
+                    'knotless_small' => 'Knotless (small)',
+                    'knotless_med' => 'Knotless (medium)',
+                    'box_small' => 'Box (small)',
+                    'box_med' => 'Box (medium)',
+                    'stitch' => 'Stitch',
+                ];
+                if(!empty($selectorFields['braid_type'])){
+                    $human = $braidMap[$selectorFields['braid_type']] ?? ucwords(str_replace(['_','-'], ' ', $selectorFields['braid_type']));
+                    $bookingData['service'] = 'Kids Braids — ' . $human;
+                    $bookingData['service_type'] = 'kids-braids';
+                }
+
+                // Compute authoritative kids price using the same mapping as notifications
+                $baseConfigured = (float) (config('service_prices.kids_braids', 80));
+                $typeAdj = ['protective'=>-20,'cornrows'=>-40,'knotless_small'=>20,'knotless_med'=>0,'box_small'=>10,'box_med'=>0,'stitch'=>20];
+                $lengthAdj = ['shoulder'=>0,'armpit'=>10,'mid_back'=>20,'waist'=>30];
+                $finishAdj = ['curled'=>-10,'plain'=>0];
+                $addonMap = ['kb_add_detangle'=>15,'kb_add_beads'=>10,'kb_add_beads_full'=>15,'kb_add_extension'=>20,'kb_add_rest'=>5];
+
+                $adjustments = 0; $addons = 0;
+                $bt = $selectorFields['braid_type'] ?? null;
+                $ln = $selectorFields['length'] ?? null;
+                $fi = $selectorFields['finish'] ?? null;
+                $ex = $selectorFields['extras'] ?? null;
+
+                if($bt && isset($typeAdj[$bt])) $adjustments += $typeAdj[$bt];
+                if($ln && isset($lengthAdj[$ln])) $adjustments += $lengthAdj[$ln];
+                if($fi && isset($finishAdj[$fi])) $adjustments += $finishAdj[$fi];
+
+                if($ex){
+                    if(is_string($ex) && strpos($ex,'kb_add_')!==false){
+                        foreach(explode(',', $ex) as $it){ $it = trim($it); if(isset($addonMap[$it])) $addons += $addonMap[$it]; }
+                    } else if(is_string($ex) && preg_match('/^\d+(?:\.\d+)?(,\d+(?:\.\d+)?)*$/', $ex)){
+                        foreach(explode(',', $ex) as $n){ $addons += floatval($n); }
+                    }
+                }
+
+                $finalKidsPrice = round($baseConfigured + $adjustments + $addons, 2);
+                $bookingData['base_price'] = $baseConfigured;
+                $bookingData['length_adjustment'] = $adjustments;
+                $bookingData['final_price'] = $finalKidsPrice;
+                // Also persist selector-specific breakdown so we don't overwrite other services
+                $bookingData['kb_base_price'] = $baseConfigured;
+                $bookingData['kb_length_adjustment'] = $adjustments;
+                $bookingData['kb_final_price'] = $finalKidsPrice;
+            }
+        }catch(
+        Exception $e){ /* noop */ }
 
         // Normalize incoming length (accept hair_length or length) and determine final price using Service model + length adjustments
         $lengthRaw = $request->input('hair_length') ?? $request->input('length');

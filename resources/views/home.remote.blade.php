@@ -1435,22 +1435,52 @@
         // Calendar Modal Functions
         window.openCalendarModal = function() {
             console.log('🚀 openCalendarModal() called');
+                // Ensure the calendar modal is a child of <body> so it can overlay other modals
+                const modalEl = document.getElementById('calendarModal');
+                if(modalEl && modalEl.parentNode !== document.body){
+                    try{ document.body.appendChild(modalEl); }catch(e){ /* noop */ }
+                }
 
-            const calendarModal = new bootstrap.Modal(document.getElementById('calendarModal'));
-            calendarModal.show();
+                // Use a high z-index so calendar appears above other modals/backdrops
+                const forcedZ = 2050; // Bootstrap default modal z-index is 1050; pick higher to be safe
+                if(modalEl){
+                    modalEl.style.zIndex = forcedZ;
+                    // Ensure dialog inside modal also accepts pointer events
+                    const dialog = modalEl.querySelector('.modal-dialog'); if(dialog) dialog.style.pointerEvents = 'auto';
+                }
 
-            // Set calendar to current month
-            calendarCurrentDate = new Date(); // Current date
+                const calendarModal = new bootstrap.Modal(modalEl);
+                calendarModal.show();
 
-            // Always fetch fresh data when calendar opens
-            console.log('🔄 Fetching fresh booked dates...');
-            fetchRealBookedDates();
+                // Set calendar to current month
+                calendarCurrentDate = new Date(); // Current date
 
-            // Render calendar with loading state first
-            setTimeout(() => {
-                console.log('🎨 Starting renderCalendarModal()');
-                renderCalendarModal();
-            }, 100);
+                // Always fetch fresh data when calendar opens
+                console.log('🔄 Fetching fresh booked dates...');
+                fetchRealBookedDates();
+
+                // After modal is shown, adjust backdrop z-index so it's behind the calendar but above other content
+                setTimeout(() => {
+                    try{
+                        // Find the most recent backdrop inserted by Bootstrap for this modal
+                        const backdrops = document.querySelectorAll('.modal-backdrop');
+                        if(backdrops && backdrops.length){
+                            const lastBackdrop = backdrops[backdrops.length - 1];
+                            // Place backdrop slightly below modal z-index so clicks reach modal
+                            lastBackdrop.style.zIndex = (forcedZ - 5).toString();
+                            lastBackdrop.style.pointerEvents = 'auto';
+                        }
+
+                        // ensure modal element keeps highest z
+                        if(modalEl) modalEl.style.zIndex = forcedZ;
+                    }catch(e){ console.warn('Failed to adjust calendar modal/backdrop z-index', e); }
+                }, 50);
+
+                // Render calendar with loading state first
+                setTimeout(() => {
+                    console.log('🎨 Starting renderCalendarModal()');
+                    renderCalendarModal();
+                }, 100);
         };
 
         // Fetch real booked dates from API
@@ -1753,18 +1783,77 @@
                     month: 'long',
                     day: 'numeric'
                 });
+                // Set the values in the main booking form if present
+                try{
+                    const bd = document.getElementById('bookingDate'); if(bd) bd.value = formattedDate;
+                    const apptDate = document.getElementById('appointment_date'); if(apptDate) apptDate.value = selectedCalendarDate.toISOString().split('T')[0];
+                    const apptTimeHidden = document.getElementById('appointment_time_hidden'); if(apptTimeHidden) apptTimeHidden.value = selectedCalendarTime.time;
+                    const timeInput = document.getElementById('timeInput'); if(timeInput) timeInput.value = selectedCalendarTime.formattedTime;
+                }catch(e){ console.warn('Failed to populate main booking inputs', e); }
 
-                // Set the values in the booking form
-                document.getElementById('bookingDate').value = formattedDate;
-                document.getElementById('appointment_date').value = selectedCalendarDate.toISOString().split('T')[0];
-                document.getElementById('appointment_time_hidden').value = selectedCalendarTime.time;
+                // Also populate kids booking inputs if the kids modal is present
+                try{
+                    const kbd = document.getElementById('kidsBookingDate'); if(kbd) kbd.value = formattedDate;
+                    const kbt = document.getElementById('kidsBookingTime'); if(kbt) kbt.value = selectedCalendarTime.formattedTime;
+                    // hidden inputs inside kids booking form (by name)
+                    const kidsForm = document.getElementById('kidsBookingForm');
+                    if(kidsForm){
+                        const hiddenDate = kidsForm.querySelector('input[name="appointment_date"]'); if(hiddenDate) hiddenDate.value = selectedCalendarDate.toISOString().split('T')[0];
+                        const hiddenTime = kidsForm.querySelector('input[name="appointment_time"]'); if(hiddenTime) hiddenTime.value = selectedCalendarTime.time;
+                    }
 
-                // Set the time input with the formatted time from modal
-                document.getElementById('timeInput').value = selectedCalendarTime.formattedTime;
+                    // Ensure selector-derived hidden fields are populated in the kids booking form
+                    try{
+                        const kidsForm2 = document.getElementById('kidsBookingForm');
+                        if(kidsForm2){
+                            // Prefer global selector payload if available
+                            const sel = window.__kidsSelectorData || {};
+                            const btInput = document.getElementById('kids_braid_type_input');
+                            const finInput = document.getElementById('kids_finish_input');
+                            const lenInput = document.getElementById('kids_length_input');
+                            const exInput = document.getElementById('kids_extras_input');
+                            const priceInput = document.getElementById('kids_price_input');
+
+                            if(sel && (sel.kb_braid_type || sel.braid_type)) btInput.value = sel.kb_braid_type || sel.braid_type;
+                            if(sel && (sel.kb_finish || sel.finish)) finInput.value = sel.kb_finish || sel.finish;
+                            if(sel && (sel.kb_length || sel.length)) lenInput.value = (sel.kb_length || sel.length).replace(/-/g,'_');
+                            // fallback to mirrors if sel not present
+                            try{
+                                const mirrorLen = document.getElementById('kb_length_hidden'); if(!lenInput.value && mirrorLen && mirrorLen.value) lenInput.value = mirrorLen.value;
+                                const mirrorFin = document.getElementById('kb_finish_hidden'); if(!finInput.value && mirrorFin && mirrorFin.value) finInput.value = mirrorFin.value;
+                                const mirrorExtras = document.getElementById('kb_extras_input'); if(!exInput.value && mirrorExtras && mirrorExtras.value) exInput.value = mirrorExtras.value;
+                                const mirrorPrice = document.getElementById('kb_price_input'); if(!priceInput.value && mirrorPrice && mirrorPrice.value) priceInput.value = mirrorPrice.value;
+                            }catch(e){}
+                        }
+                    }catch(e){ console.warn('populate kids hidden selector fields failed', e); }
+
+                    // Update visible labels in kids modal (if present)
+                    try{
+                        const dateLabel = document.getElementById('kidsSelectedDateLabel'); if(dateLabel) dateLabel.textContent = formattedDate;
+                        const timeLabel = document.getElementById('kidsSelectedTimeLabel'); if(timeLabel) timeLabel.textContent = selectedCalendarTime.formattedTime;
+                    }catch(e){ /* noop */ }
+                }catch(e){ console.warn('Failed to populate kids booking inputs', e); }
 
                 // Close calendar modal
-                const calendarModal = bootstrap.Modal.getInstance(document.getElementById('calendarModal'));
-                calendarModal.hide();
+                try{
+                    const calendarModal = bootstrap.Modal.getInstance(document.getElementById('calendarModal'));
+                    if(calendarModal) calendarModal.hide();
+                }catch(e){ console.warn('Failed to hide calendar modal', e); }
+
+                // After closing calendar, ensure the booking modal (kids or main) regains focus
+                setTimeout(function(){
+                    try{
+                        const kidsModalEl = document.getElementById('kidsBookingModal');
+                        if(kidsModalEl && kidsModalEl.classList.contains('show')){
+                            const nameField = document.getElementById('kids_name'); if(nameField) nameField.focus();
+                        } else {
+                            const bookingModalEl = document.getElementById('bookingModal');
+                            if(bookingModalEl && bookingModalEl.classList.contains('show')){
+                                const nameField = document.getElementById('name'); if(nameField) nameField.focus();
+                            }
+                        }
+                    }catch(e){ /* noop */ }
+                }, 150);
             }
         };
 
@@ -2247,6 +2336,237 @@
         </div>
     </section>
 
+    <!-- Terms and Conditions Section -->
+    <section id="terms" class="section section-xl" style="padding: 80px 0; background-color: #f8f9fa;">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-lg-10">
+                    <div class="text-center mb-5">
+                        <h2 class="section-title" style="font-size: 2.5rem; font-weight: 700; color: #030f68;">Terms & Conditions</h2>
+                        <div style="display:inline-block; max-width:820px; margin-top:18px; text-align:left;">
+                            <div style="background: linear-gradient(90deg, rgba(255,102,0,0.06), rgba(3,15,104,0.03)); border-left: 6px solid #ff6600; padding: 18px 20px; border-radius: 12px; box-shadow: 0 6px 18px rgba(3,15,104,0.06);">
+                                <div style="display:flex; align-items:flex-start; gap:12px;">
+                                    <div style="font-size:1.6rem; color:#ff6600; line-height:1; margin-top:2px;"><i class="bi bi-exclamation-triangle-fill"></i></div>
+                                    <div>
+                                        <div style="font-size:1.05rem; color:#03253f; font-weight:700; margin-bottom:6px;">Before booking, please review our terms and conditions</div>                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Important Hair Preparation Notice -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <div style="background: linear-gradient(135deg, rgba(255, 193, 7, 0.15), rgba(255, 152, 0, 0.1)); border-left: 6px solid #ff6600; border-top: 2px solid rgba(255, 102, 0, 0.3); padding: 20px 24px; border-radius: 12px; box-shadow: 0 4px 12px rgba(255, 102, 0, 0.1);">
+                                <p style="margin: 0; color: #ff6600; font-size: 1.1rem; line-height: 1.6;">
+                                    <strong style="font-weight: 700;">Important:</strong> Hair must come washed and blow dried/detangled for optimal styling results.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row g-4">
+                        <!-- Deposit & Payment Terms -->
+                        <div class="col-lg-6">
+                            <div class="card h-100 shadow-lg border-0" style="border-radius: 20px; background: #fff;">
+                                <div class="card-body p-4">
+                                    <div class="text-center mb-4">
+                                        <i class="bi bi-credit-card" style="font-size: 3rem; color: #ff6600;"></i>
+                                    </div>
+                                    <h4 style="color: #030f68; font-weight: 700; text-align: center; margin-bottom: 20px;">Deposit & Payment</h4>
+                                    <ul class="list-unstyled" style="font-size: 1rem; line-height: 1.8;">
+                                        <li class="mb-3">
+                                            <i class="bi bi-check-circle-fill text-success me-2"></i>
+                                            <strong>Deposit Required:</strong> A non-refundable deposit is required to secure your appointment
+                                        </li>
+                                        <li class="mb-3">
+                                            <i class="bi bi-check-circle-fill text-success me-2"></i>
+                                            <strong>Payment Methods:</strong> We accept cash, bank transfers, and mobile money payments
+                                        </li>
+                                        <li class="mb-3">
+                                            <i class="bi bi-check-circle-fill text-success me-2"></i>
+                                            <strong>Balance Payment:</strong> Remaining balance is due on the day of your appointment
+                                        </li>
+                                        <li class="mb-3">
+                                            <i class="bi bi-exclamation-triangle-fill text-warning me-2"></i>
+                                            <strong>No Refunds:</strong> Deposits are non-refundable once appointment is confirmed
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Cancellation Policy -->
+                        <div class="col-lg-6">
+                            <div class="card h-100 shadow-lg border-0" style="border-radius: 20px; background: #fff;">
+                                <div class="card-body p-4">
+                                    <div class="text-center mb-4">
+                                        <i class="bi bi-calendar-x" style="font-size: 3rem; color: #ff6600;"></i>
+                                    </div>
+                                    <h4 style="color: #030f68; font-weight: 700; text-align: center; margin-bottom: 20px;">Cancellation Policy</h4>
+                                    <ul class="list-unstyled" style="font-size: 1rem; line-height: 1.8;">
+                                        <li class="mb-3">
+                                            <i class="bi bi-clock-fill text-info me-2"></i>
+                                            <strong>Notice Required:</strong> Minimum 48 hours notice required for cancellations
+                                        </li>
+                                        <li class="mb-3">
+                                            <i class="bi bi-exclamation-triangle-fill text-warning me-2"></i>
+                                            <strong>Late Cancellation:</strong> Cancellations within 48 hours forfeit the deposit
+                                        </li>
+                                        <li class="mb-3">
+                                            <i class="bi bi-x-circle-fill text-danger me-2"></i>
+                                            <strong>No Show:</strong> No-shows will result in full charge and may affect future bookings
+                                        </li>
+                                        <li class="mb-3">
+                                            <i class="bi bi-arrow-clockwise text-success me-2"></i>
+                                            <strong>Rescheduling:</strong> Rescheduling is allowed with 24 hours notice
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Home Service Terms -->
+                        <div class="col-lg-6">
+                            <div class="card h-100 shadow-lg border-0" style="border-radius: 20px; background: #fff;">
+                                <div class="card-body p-4">
+                                    <div class="text-center mb-4">
+                                        <i class="bi bi-house-heart" style="font-size: 3rem; color: #ff6600;"></i>
+                                    </div>
+                                    <h4 style="color: #030f68; font-weight: 700; text-align: center; margin-bottom: 20px;">Home Service</h4>
+                                    <ul class="list-unstyled" style="font-size: 1rem; line-height: 1.8;">
+                                        <li class="mb-3">
+                                            <i class="bi bi-check-circle-fill text-success me-2"></i>
+                                            <strong>No Extra Fee:</strong> Home service does not affect our standard pricing
+                                        </li>
+                                        <li class="mb-3">
+                                            <i class="bi bi-car-front-fill text-info me-2"></i>
+                                            <strong>Transportation:</strong> Clients are responsible for providing transportation for the stylist
+                                        </li>
+                                        <li class="mb-3">
+                                            <i class="bi bi-geo-alt-fill text-warning me-2"></i>
+                                            <strong>Service Area:</strong> Available within reasonable distance from our base location
+                                        </li>
+
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Contact Information -->
+                        <div class="col-lg-6">
+                            <div class="card h-100 shadow-lg border-0" style="border-radius: 20px; background: linear-gradient(135deg, #030f68 0%, #05137c 100%); color: white;">
+                                <div class="card-body p-4">
+                                    <div class="text-center mb-4">
+                                        <i class="bi bi-telephone-fill" style="font-size: 3rem; color: #ff6600;"></i>
+                                    </div>
+                                    <h4 style="color: #fff; font-weight: 700; text-align: center; margin-bottom: 20px;">Contact for More Information</h4>
+                                    <div class="contact-info" style="font-size: 1rem; line-height: 1.8;">
+                                        <div class="mb-3">
+                                            <i class="bi bi-telephone-fill text-warning me-2"></i>
+                                            <strong>Phone:</strong>
+                                            <a href="tel:+13432458848" style="color: #ff6600; text-decoration: none;">(+1)343-245-8848</a>
+                                        </div>
+                                        <div class="mb-3">
+                                            <i class="bi bi-envelope-fill text-warning me-2"></i>
+                                            <strong>Email:</strong>
+                                            <a href="mailto:info@dabsbeautytouch.com" style="color: #ff6600; text-decoration: none;">info@dabsbeautytouch.com</a>
+                                        </div>
+                                        <div class="mb-3">
+                                            <i class="bi bi-clock-fill text-warning me-2"></i>
+                                            <strong>Response Time:</strong> Within 24 hours
+                                        </div>
+                                        <div class="mb-3">
+                                            <i class="bi bi-chat-dots-fill text-warning me-2"></i>
+                                            <strong>Consultation:</strong> Free consultation available
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Additional Terms -->
+                    <div class="row mt-5">
+                        <div class="col-12">
+                            <div class="card shadow-lg border-0" style="border-radius: 20px; background: #fff;">
+                                <div class="card-body p-4">
+                                    <h4 style="color: #030f68; font-weight: 700; text-align: center; margin-bottom: 30px;">
+                                        <i class="bi bi-file-text me-2" style="color: #ff6600;"></i>
+                                        Additional Terms
+                                    </h4>
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <ul class="list-unstyled" style="font-size: 1rem; line-height: 1.8;">
+                                                <li class="mb-3">
+                                                    <i class="bi bi-check-circle-fill text-success me-2"></i>
+                                                    <strong>Hair Preparation:</strong> Hair must be washed and detangled before appointment
+                                                </li>
+                                                <li class="mb-3">
+                                                    <i class="bi bi-check-circle-fill text-success me-2"></i>
+                                                    <strong>Extensions:</strong> Clients may provide their own extensions or purchase from us
+                                                </li>
+                                                <li class="mb-3">
+                                                    <i class="bi bi-check-circle-fill text-success me-2"></i>
+                                                    <strong>Duration:</strong> Service duration varies based on style complexity
+                                                </li>
+
+                                            </ul>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <ul class="list-unstyled" style="font-size: 1rem; line-height: 1.8;">
+
+
+
+
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Reviews Section -->
+    <div class="section section-lg bg-gray-150" style="padding: 80px 0; background: #f8f9fa;">
+        <div class="text-center mb-5">
+            <p class="subtitle" style="font-size:1.5rem; color:#ff6600; font-weight:600;">Our customers love DBT</p>
+            <div class="subtitle-box" style="display:inline-block; margin-bottom:18px;">
+                <div class="subtitle-box-text" style="font-size:2rem; color:#030f68; font-weight:700;">Reviews</div>
+            </div>
+        </div>
+        <div class="owl-carousel owl-theme-1" data-items="1" data-sm-items="1" data-md-items="1" data-lg-items="1" data-xl-items="2" data-xxl-items="3" data-margin="15px" data-nav="false" data-dots="true" data-autoplay="5000">
+            <div class="testimonial-box" style="background:linear-gradient(135deg,#e3eafc 0%,#f8f9fa 100%); border-radius:18px; box-shadow:0 8px 32px rgba(0,0,0,0.12); padding:38px 28px; margin:0 12px; position:relative;">
+                <div class="testimonial-title" style="font-size:1.3rem; color:#ff6600; font-weight:700; margin-top:32px;">Cool!</div>
+                <div class="testimonial-rate"><img src="{{ asset('images/star-ratings.webp') }}" alt="" width="120" height="22"/></div>
+                <div class="testimonial-text" style="font-size:1.12rem; color:#222; margin:18px 0; font-style:italic;">"DBT offers great services and she delivers excellently. </div>
+                <div class="testimonial-name" style="font-size:1rem; color:#030f68; font-weight:500;">Client 1</div>
+            </div>
+            <div class="testimonial-box" style="background:linear-gradient(135deg,#fff6e3 0%,#ffe3e3 100%); border-radius:18px; box-shadow:0 8px 32px rgba(0,0,0,0.12); padding:38px 28px; margin:0 12px; position:relative;">
+                <div class="testimonial-title" style="font-size:1.3rem; color:#ff6600; font-weight:700; margin-top:32px;">Excellent!</div>
+                <div class="testimonial-rate"><img src="{{ asset('images/star-ratings.webp') }}" alt="" width="120" height="22"/></div>
+                <div class="testimonial-text" style="font-size:1.12rem; color:#222; margin:18px 0; font-style:italic;">"Very patient and time conscious. She follows up and ensures customer comfortability. I always leave happy!"</div>
+                <div class="testimonial-name" style="font-size:1rem; color:#030f68; font-weight:500;">Client 2</div>
+            </div>
+            <div class="testimonial-box" style="background:linear-gradient(135deg,#e3ffe3 0%,#e3f8ff 100%); border-radius:18px; box-shadow:0 8px 32px rgba(0,0,0,0.12); padding:38px 28px; margin:0 12px; position:relative;">
+                <div class="testimonial-title" style="font-size:1.3rem; color:#ff6600; font-weight:700; margin-top:32px;">Amazing!</div>
+                <div class="testimonial-rate"><img src="{{ asset('images/star-ratings.webp') }}" alt="" width="120" height="22"/></div>
+                <div class="testimonial-text" style="font-size:1.12rem; color:#222; margin:18px 0; font-style:italic;">"DBT braided my child's hair and my child was very comfortable. Her braids don't hurt much and last long!"</div>
+                <div class="testimonial-name" style="font-size:1rem; color:#030f68; font-weight:500;">Client 3</div>
+            </div>
+            <div class="testimonial-box" style="background:linear-gradient(135deg,#f8e3ff 0%,#e3eaff 100%); border-radius:18px; box-shadow:0 8px 32px rgba(0,0,0,0.12); padding:38px 28px; margin:0 12px; position:relative;">
+                <div class="testimonial-title" style="font-size:1.3rem; color:#ff6600; font-weight:700; margin-top:32px;">Excellent!</div>
+                <div class="testimonial-rate"><img src="{{ asset('images/star-ratings.webp') }}" alt="" width="120" height="22"/></div>
+                <div class="testimonial-text" style="font-size:1.12rem; color:#222; margin:18px 0; font-style:italic;"> "Customer relationship is amazing. Very professional and very affordable service. Highly recommend DBT!"</div>
+                <div class="testimonial-name" style="font-size:1rem; color:#030f68; font-weight:500;">Client 4</div>
+            </div>
+        </div>
+    </div>
+
     <!-- About Section -->
     <section id="about" class="about-section">
         <div class="container" style="padding-top: 60px; padding-bottom: 60px;">
@@ -2272,7 +2592,7 @@
     <section id="services" class="services-section">
         <div class="container" style="padding-top: 60px; padding-bottom: 60px;">
             <div class="text-center mb-5">
-                <h2>Our Services</h2>
+                <h2 class="section-title" style="font-weight: 700;">Our Services</h2>
                 <p class="lead">Professional hair braiding and styling services</p>
             </div>
                         <!-- length guide removed from services section (moved into booking form) -->
@@ -2422,7 +2742,7 @@
                         <div class="col-auto text-start">
                             <span style="font-size: 1.2rem; margin-right: 4px;">&#128231;</span>
                             <span style="font-weight: bold; color: #001f3f;">Email:</span>
-                            <a href="mailto:infor@dabsbeautytouch" style="color: #007bff; text-decoration: underline;">info@dabsbeautytouch.com</a>
+                            <a href="mailto:info@dabsbeautytouch.com" style="color: #007bff; text-decoration: underline;">info@dabsbeautytouch.com</a>
                         </div>
                     </div>
                     <p class="text-muted mb-3" style="font-size: 1rem;">We'll confirm your appointment once payment is received!</p>
@@ -2894,289 +3214,28 @@
         </div>
     </div>
 
-    <!-- Kids Booking Modal (separate, simplified form for Kids Braids) -->
-    <div class="modal fade" id="kidsBookingModal" tabindex="-1" aria-labelledby="kidsBookingModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg modal-dialog-centered">
-            <div class="modal-content" style="border-radius:12px;">
-                <div class="modal-header" style="background: linear-gradient(135deg, #030f68 0%, #4a8bc2 100%); color: white; border-radius: 12px 12px 0 0;">
-                    <h5 class="modal-title" id="kidsBookingModalLabel">Book Kids Braids</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body p-4">
-                    <div id="kidsSelectorPanel">
-                        @include('partials.kids-selector-form')
-                    </div>
-
-                    <div id="kidsBookingPanel" style="display:none">
-                    <form id="kidsBookingForm" action="{{ route('bookings.store') }}" method="POST" enctype="multipart/form-data">
-                        @csrf
-                        <input type="hidden" name="service" id="kids_service_input" value="Kids Braids">
-                        <input type="hidden" name="service_type" id="kids_service_type_input" value="kids-braids">
-                        <input type="hidden" name="price" id="kids_price_input" value="">
-
-                        <div class="row g-3">
-                            <!-- Hidden selector mapping so bookings.store receives selector choices -->
-                            <input type="hidden" name="kb_braid_type" id="kids_braid_type_input" value="">
-                            <input type="hidden" name="kb_finish" id="kids_finish_input" value="">
-                            <input type="hidden" name="kb_length" id="kids_length_input" value="">
-                            <input type="hidden" name="kb_extras" id="kids_extras_input" value="">
-                            <div class="col-12 mb-3">
-                                <div style="background:#fff7e0;border-radius:10px;padding:12px;border-left:6px solid #ff6600;">
-                                    <h6 style="margin:0 0 8px 0;color:#0b3a66;font-weight:700;">Price Preview</h6>
-                                    <div id="kidsModal_base">Base: <strong>$--</strong></div>
-                                    <div id="kidsModal_adjustments">Adjustments: <strong>$0</strong></div>
-                                    <div id="kidsModal_addons">Add-ons: <strong>$0</strong></div>
-                                    <div id="kidsModal_total" style="margin-top:6px;"><strong>Total: $--</strong></div>
-                                </div>
-                            </div>
-                            <div class="col-12">
-                                <label class="form-label">Appointment Date *</label>
-                                <div class="input-group">
-                                    <input type="text" class="form-control" id="kidsBookingDate" name="appointment_date" placeholder="Click calendar to select date" readonly required style="background-color:#f8f9fa; cursor:pointer;" onclick="openCalendarModal()">
-                                    <button class="btn btn-outline-secondary" type="button" onclick="openCalendarModal()"><i class="bi bi-calendar"></i></button>
-                                </div>
-                            </div>
-
-                            <div class="col-12">
-                                <label class="form-label">Appointment Time *</label>
-                                <div class="input-group">
-                                    <input type="text" class="form-control" id="kidsBookingTime" name="appointment_time" placeholder="Click calendar to select time" readonly required style="background-color:#f8f9fa; cursor:pointer;" onclick="openCalendarModal()">
-                                    <button class="btn btn-outline-secondary" type="button" onclick="openCalendarModal()"><i class="bi bi-clock"></i></button>
-                                </div>
-                            </div>
-
-                            <div class="col-md-6">
-                                <label class="form-label">Full Name *</label>
-                                <input type="text" class="form-control" name="name" id="kids_name" required autocomplete="off">
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Phone Number *</label>
-                                <input type="tel" class="form-control" name="phone" id="kids_phone" required autocomplete="off">
-                            </div>
-
-                            <div class="col-md-6">
-                                <label class="form-label">Email</label>
-                                <input type="email" class="form-control" name="email" id="kids_email" autocomplete="off">
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Home Address</label>
-                                <input type="text" class="form-control" name="address" id="kids_address" autocomplete="off">
-                            </div>
-
-                            <div class="col-12">
-                                <label class="form-label">Special Requests or Notes</label>
-                                <textarea class="form-control" name="message" id="kids_message" rows="3"></textarea>
-                            </div>
-
-                            <div class="col-12">
-                                <label class="form-label">Upload Reference Image (optional)</label>
-                                <input type="file" class="form-control" name="sample_picture" id="kids_sample_picture" accept="image/*">
-                            </div>
-
-                        </div>
-                        <div class="text-center mt-4">
-                            <button type="submit" class="btn btn-primary" id="kidsSubmitBtn">Book Kids Appointment</button>
-                        </div>
-                    </form>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Other Services Modal -->
-    <div class="modal fade" id="otherServicesModal" tabindex="-1" aria-labelledby="otherServicesModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content" style="border-radius: 20px; border: none;">
-                <div class="modal-header" style="background: linear-gradient(135deg, #ff6600 0%, #ff8533 100%); color: white; border-radius: 20px 20px 0 0;">
-                    <h5 class="modal-title" id="otherServicesModalLabel">
-                        <i class="bi bi-star me-2"></i>Request Other Services
-                    </h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body p-4">
-                    <div class="text-center mb-4">
-                        <h4 style="color: #030f68; font-weight: 600;">Tell Us What You Need!</h4>
-                        <p class="text-muted">We offer many specialized services beyond our standard menu. Describe what you're looking for and we'll take care of you!</p>
-                    </div>
-
-                    <form id="otherServicesForm" action="{{ route('custom-service.store') }}" method="POST" class="needs-validation" novalidate>
-                        @csrf
-
-                        <div class="row g-4">
-                            <!-- Service Description -->
-                            <div class="col-12">
-                                <label for="service" class="form-label fw-bold">
-                                    <i class="bi bi-scissors me-2"></i>What service are you looking for?
-                                </label>
-                                <input type="text" class="form-control" id="service" name="service" placeholder="e.g., Goddess Braids, Box Braids, Passion Twists, Hair Extensions" />
-                                <div class="invalid-feedback">
-                                    Please describe the service you're looking for.
-                                </div>
-                                <small class="form-text text-muted">
-                                    <i class="bi bi-info-circle me-1"></i>
-                                    The more details you provide, the better we can help you!
-                                </small>
-                            </div>
-
-                            <!-- Hair Length -->
-                            <div class="col-md-4">
-                                <div class="mb-3">
-                                    <h6 class="fw-bold text-primary mb-2" style="color: #030f68 !important; border-bottom: 2px solid #ff6600; padding-bottom: 5px;">
-                                        <i class="bi bi-rulers me-2" style="color: #ff6600;"></i>Desired Hair Length
-                                    </h6>
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="radio" name="hair_length" id="hair_neck" value="neck">
-                                        <label class="form-check-label" for="hair_neck">Neck Length</label>
-                                    </div>
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="radio" name="hair_length" id="hair_shoulder" value="shoulder">
-                                        <label class="form-check-label" for="hair_shoulder">Shoulder Length</label>
-                                    </div>
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="radio" name="hair_length" id="hair_armpit" value="armpit">
-                                        <label class="form-check-label" for="hair_armpit">Armpit Length</label>
-                                    </div>
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="radio" name="hair_length" id="hair_bra" value="bra-strap">
-                                        <label class="form-check-label" for="hair_bra">Bra Strap Length</label>
-                                    </div>
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="radio" name="hair_length" id="hair_mid" value="mid-back">
-                                        <label class="form-check-label" for="hair_mid">Mid Back Length</label>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Budget Range -->
-                            <div class="col-md-4">
-                                <div class="mb-3">
-                                    <h6 class="fw-bold text-primary mb-2" style="color: #030f68 !important; border-bottom: 2px solid #ff6600; padding-bottom: 5px;">
-                                        <i class="bi bi-currency-dollar me-2" style="color: #ff6600;"></i>Budget Range
-                                    </h6>
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="radio" name="budget_range" id="budget_under100" value="under-100">
-                                        <label class="form-check-label" for="budget_under100">Under $100</label>
-                                    </div>
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="radio" name="budget_range" id="budget_100150" value="100-150">
-                                        <label class="form-check-label" for="budget_100150">$100 - $150</label>
-                                    </div>
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="radio" name="budget_range" id="budget_150200" value="150-200">
-                                        <label class="form-check-label" for="budget_150200">$150 - $200</label>
-                                    </div>
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="radio" name="budget_range" id="budget_200300" value="200-300">
-                                        <label class="form-check-label" for="budget_200300">$200 - $300</label>
-                                    </div>
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="radio" name="budget_range" id="budget_300plus" value="300-plus">
-                                        <label class="form-check-label" for="budget_300plus">$300+</label>
-                                    </div>
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="radio" name="budget_range" id="budget_flexible" value="flexible">
-                                        <label class="form-check-label" for="budget_flexible">Flexible</label>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Preferred Contact Method -->
-                            <div class="col-md-4">
-                                <div class="mb-3">
-                                    <h6 class="fw-bold text-primary mb-2" style="color: #030f68 !important; border-bottom: 2px solid #ff6600; padding-bottom: 5px;">
-                                        <i class="bi bi-telephone me-2" style="color: #ff6600;"></i>Contact Method
-                                    </h6>
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="radio" name="preferred_contact" id="contact_phone" value="phone" checked>
-                                        <label class="form-check-label" for="contact_phone">Phone Call</label>
-                                    </div>
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="radio" name="preferred_contact" id="contact_text" value="text">
-                                        <label class="form-check-label" for="contact_text">Text Message</label>
-                                    </div>
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="radio" name="preferred_contact" id="contact_email" value="email">
-                                        <label class="form-check-label" for="contact_email">Email</label>
-                                    </div>
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="radio" name="preferred_contact" id="contact_whatsapp" value="whatsapp">
-                                        <label class="form-check-label" for="contact_whatsapp">WhatsApp</label>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Personal Details -->
-                            <div class="col-md-6">
-                                <label for="other_name" class="form-label fw-bold">Full Name *</label>
-                                <input type="text" class="form-control" id="other_name" name="name" placeholder="Enter your full name" required>
-                                <div class="invalid-feedback">
-                                    Please provide your name.
-                                </div>
-                            </div>
-
-                            <div class="col-md-6">
-                                <label for="other_phone" class="form-label fw-bold">Phone Number *</label>
-                                <input type="tel" class="form-control" id="other_phone" name="phone" placeholder="Enter your phone number" required>
-                                <div class="invalid-feedback">
-                                    Please provide your phone number.
-                                </div>
-                            </div>
-
-                            <div class="col-md-6">
-                                <label for="other_email" class="form-label fw-bold">Email Address</label>
-                                <input type="email" class="form-control" id="other_email" name="email" placeholder="Enter your email address">
-                                <small class="form-text text-muted">
-                                    We'll send you a detailed quote and consultation details.
-                                </small>
-                            </div>
-
-
-
-                            <!-- Additional Information -->
-                            <div class="col-12">
-                                <label for="other_additional_info" class="form-label fw-bold">
-                                    <i class="bi bi-chat-dots me-2"></i>Additional Information
-                                </label>
-                                <textarea class="form-control" id="other_additional_info" name="additional_info" rows="3" placeholder="Any special requirements, timing preferences, inspiration photos you have, or other details we should know..."></textarea>
-                                <small class="form-text text-muted">
-                                    <i class="bi bi-lightbulb me-1"></i>
-                                    Feel free to mention if you have reference photos, specific techniques in mind, or timing preferences!
-                                </small>
-                            </div>
-                        </div>
-
-                        <!-- Alert Box -->
-                        <div class="alert alert-info mt-4" style="border-left: 4px solid #17a2b8; background: #f8f9fa;">
-                            <h6 class="fw-bold mb-2">
-                                <i class="bi bi-info-circle me-2"></i>What Happens Next?
-                            </h6>
-                            <ul class="mb-0 ps-3">
-                                <li>We'll review your request within 24 hours</li>
-                                <li>Contact you to discuss details and pricing</li>
-                                <li>Schedule a consultation if needed</li>
-                                <li>Book your appointment once everything is confirmed</li>
-                            </ul>
-                        </div>
-
-                        <div class="text-center mt-4">
-                            <button type="submit" class="btn btn-warning btn-lg px-5" id="otherServicesSubmitBtn" style="font-weight: 600; border-radius: 25px; box-shadow: 0 4px 12px rgba(255, 193, 7, 0.3); cursor: pointer; pointer-events: auto; z-index: 1;">
-                                <i class="bi bi-send me-2"></i>Send Request
-                            </button>
-                            <div class="mt-3">
-                                <small class="text-muted">
-                                    <i class="bi bi-shield-check me-1"></i>
-                                    Your information is secure and will only be used to process your service request.
-                                </small>
-                            </div>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
+    <!-- Kids Booking Modal moved to end of file -->
 
     <!-- Important Information Section -->
+    <script>
+        // Ensure the kids booking modal is a direct child of <body>
+        // This prevents the modal from enclosing or visually attaching subsequent page sections.
+        (function(){
+            try{
+                function moveKidsModal(){
+                    var el = document.getElementById('kidsBookingModal');
+                    if(!el) return;
+                    if(el.parentNode !== document.body){
+                        document.body.appendChild(el);
+                        // also ensure it is hidden by default
+                        el.style.display = 'none';
+                        el.classList.remove('show');
+                    }
+                }
+                if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', moveKidsModal); else moveKidsModal();
+            }catch(e){ console.warn('moveKidsModal failed', e); }
+        })();
+    </script>
     <div class="section section-xl" style="padding: 80px 0; background-color: #fff;">
         <div class="container">
             <div class="row justify-content-center">
@@ -3219,16 +3278,6 @@
                                             </p>
                                         </div>
 
-                                        <div class="info-item">
-                                            <h5 style="color: #030f68; font-weight: 600; margin-bottom: 15px;">
-                                                <i class="bi bi-exclamation-triangle me-2" style="color: #ff6600;"></i>
-                                                Client Preparation Requirement
-                                            </h5>
-                                            <p style="color: #ff6600; font-size: 1.2rem; font-weight: 600; line-height: 1.6; background: rgba(255, 102, 0, 0.1); padding: 15px; border-radius: 10px; border-left: 4px solid #ff6600;">
-                                                <strong>Important:</strong> Hair must come washed and blow dried/detangled for optimal styling results.
-                                            </p>
-                                        </div>
-
                                         <div class="info-item mt-4">
                                             <h5 style="color: #030f68; font-weight: 600; margin-bottom: 15px;">
                                                 <i class="bi bi-telephone-fill me-2" style="color: #ff6600;"></i>
@@ -3240,8 +3289,9 @@
                                                         <i class="bi bi-whatsapp" style="color: #25D366; font-size: 1.2rem; margin-right: 8px;"></i>
                                                         <strong style="color: #030f68;">WhatsApp:</strong>
                                                     </div>
-                                                    <a href="https://wa.me/1234567890" style="color: #ff6600; text-decoration: none; font-weight: 600; font-size: 1.1rem;">
-                                                        +233 24 123 4567
+                                                    <a href="https://wa.me/13432548848" target="_blank" rel="noopener noreferrer" style="color: #ff6600; text-decoration: none; font-weight: 600; font-size: 1.1rem;">
+                                                        <i class="bi bi-whatsapp" aria-hidden="true" style="font-size:1.4rem; vertical-align:middle;"></i>
+                                                         (+1) 343-254-8848</span>
                                                     </a>
                                                 </div>
                                                 <div class="contact-item" style="background: rgba(255, 102, 0, 0.1); padding: 15px; border-radius: 10px; border-left: 4px solid #ff6600;">
@@ -3249,188 +3299,11 @@
                                                         <i class="bi bi-envelope-fill" style="color: #ff6600; font-size: 1.2rem; margin-right: 8px;"></i>
                                                         <strong style="color: #030f68;">Email:</strong>
                                                     </div>
-                                                    <a href="mailto:info@dabsbeautytouch" style="color: #ff6600; text-decoration: none; font-weight: 600; font-size: 1.1rem;">
-                                                        info@dabsbeautytouch
+                                                    <a href="mailto:info@dabsbeautytouch.com" style="color: #ff6600; text-decoration: none; font-weight: 600; font-size: 1.1rem;">
+                                                        info@dabsbeautytouch.com
                                                     </a>
                                                 </div>
                                             </div>
-
-    <!-- Terms and Conditions Section -->
-    <section id="terms" class="section section-xl" style="padding: 80px 0; background-color: #f8f9fa;">
-        <div class="container">
-            <div class="row justify-content-center">
-                <div class="col-lg-10">
-                    <div class="text-center mb-5">
-                        <h2 class="section-title" style="font-size: 2.5rem; font-weight: 700; color: #030f68;">Terms & Conditions</h2>
-                        <div style="display:inline-block; max-width:820px; margin-top:18px; text-align:left;">
-                            <div style="background: linear-gradient(90deg, rgba(255,102,0,0.06), rgba(3,15,104,0.03)); border-left: 6px solid #ff6600; padding: 18px 20px; border-radius: 12px; box-shadow: 0 6px 18px rgba(3,15,104,0.06);">
-                                <div style="display:flex; align-items:flex-start; gap:12px;">
-                                    <div style="font-size:1.6rem; color:#ff6600; line-height:1; margin-top:2px;"><i class="bi bi-exclamation-triangle-fill"></i></div>
-                                    <div>
-                                        <div style="font-size:1.05rem; color:#03253f; font-weight:700; margin-bottom:6px;">Please Read — Important Booking Terms</div>
-                                        <p style="margin:0; color:#33475b; font-size:0.98rem; line-height:1.45;">
-                                            Before booking, please review our terms and conditions.</br> Deposits are required to secure appointments, cancellations within 48 hours may forfeit the deposit.
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="row g-4">
-                        <!-- Deposit & Payment Terms -->
-                        <div class="col-lg-6">
-                            <div class="card h-100 shadow-lg border-0" style="border-radius: 20px; background: #fff;">
-                                <div class="card-body p-4">
-                                    <div class="text-center mb-4">
-                                        <i class="bi bi-credit-card" style="font-size: 3rem; color: #ff6600;"></i>
-                                    </div>
-                                    <h4 style="color: #030f68; font-weight: 700; text-align: center; margin-bottom: 20px;">Deposit & Payment</h4>
-                                    <ul class="list-unstyled" style="font-size: 1rem; line-height: 1.8;">
-                                        <li class="mb-3">
-                                            <i class="bi bi-check-circle-fill text-success me-2"></i>
-                                            <strong>Deposit Required:</strong> A non-refundable deposit is required to secure your appointment
-                                        </li>
-                                        <li class="mb-3">
-                                            <i class="bi bi-check-circle-fill text-success me-2"></i>
-                                            <strong>Payment Methods:</strong> We accept cash, bank transfers, and mobile money payments
-                                        </li>
-                                        <li class="mb-3">
-                                            <i class="bi bi-check-circle-fill text-success me-2"></i>
-                                            <strong>Balance Payment:</strong> Remaining balance is due on the day of your appointment
-                                        </li>
-                                        <li class="mb-3">
-                                            <i class="bi bi-exclamation-triangle-fill text-warning me-2"></i>
-                                            <strong>No Refunds:</strong> Deposits are non-refundable once appointment is confirmed
-                                        </li>
-                                    </ul>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Cancellation Policy -->
-                        <div class="col-lg-6">
-                            <div class="card h-100 shadow-lg border-0" style="border-radius: 20px; background: #fff;">
-                                <div class="card-body p-4">
-                                    <div class="text-center mb-4">
-                                        <i class="bi bi-calendar-x" style="font-size: 3rem; color: #ff6600;"></i>
-                                    </div>
-                                    <h4 style="color: #030f68; font-weight: 700; text-align: center; margin-bottom: 20px;">Cancellation Policy</h4>
-                                    <ul class="list-unstyled" style="font-size: 1rem; line-height: 1.8;">
-                                        <li class="mb-3">
-                                            <i class="bi bi-clock-fill text-info me-2"></i>
-                                            <strong>Notice Required:</strong> Minimum 48 hours notice required for cancellations
-                                        </li>
-                                        <li class="mb-3">
-                                            <i class="bi bi-exclamation-triangle-fill text-warning me-2"></i>
-                                            <strong>Late Cancellation:</strong> Cancellations within 48 hours forfeit the deposit
-                                        </li>
-                                        <li class="mb-3">
-                                            <i class="bi bi-x-circle-fill text-danger me-2"></i>
-                                            <strong>No Show:</strong> No-shows will result in full charge and may affect future bookings
-                                        </li>
-                                        <li class="mb-3">
-                                            <i class="bi bi-arrow-clockwise text-success me-2"></i>
-                                            <strong>Rescheduling:</strong> Rescheduling is allowed with 24 hours notice
-                                        </li>
-                                    </ul>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Home Service Terms -->
-                        <div class="col-lg-6">
-                            <div class="card h-100 shadow-lg border-0" style="border-radius: 20px; background: #fff;">
-                                <div class="card-body p-4">
-                                    <div class="text-center mb-4">
-                                        <i class="bi bi-house-heart" style="font-size: 3rem; color: #ff6600;"></i>
-                                    </div>
-                                    <h4 style="color: #030f68; font-weight: 700; text-align: center; margin-bottom: 20px;">Home Service</h4>
-                                    <ul class="list-unstyled" style="font-size: 1rem; line-height: 1.8;">
-                                        <li class="mb-3">
-                                            <i class="bi bi-check-circle-fill text-success me-2"></i>
-                                            <strong>No Extra Fee:</strong> Home service does not affect our standard pricing
-                                        </li>
-                                        <li class="mb-3">
-                                            <i class="bi bi-car-front-fill text-info me-2"></i>
-                                            <strong>Transportation:</strong> Clients are responsible for providing transportation for the stylist
-                                        </li>
-                                        <li class="mb-3">
-                                            <i class="bi bi-geo-alt-fill text-warning me-2"></i>
-                                            <strong>Service Area:</strong> Available within reasonable distance from our base location
-                                        </li>
-
-                                    </ul>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Contact Information -->
-                        <div class="col-lg-6">
-                            <div class="card h-100 shadow-lg border-0" style="border-radius: 20px; background: linear-gradient(135deg, #030f68 0%, #05137c 100%); color: white;">
-                                <div class="card-body p-4">
-                                    <div class="text-center mb-4">
-                                        <i class="bi bi-telephone-fill" style="font-size: 3rem; color: #ff6600;"></i>
-                                    </div>
-                                    <h4 style="color: #fff; font-weight: 700; text-align: center; margin-bottom: 20px;">Contact for More Information</h4>
-                                    <div class="contact-info" style="font-size: 1rem; line-height: 1.8;">
-                                        <div class="mb-3">
-                                            <i class="bi bi-telephone-fill text-warning me-2"></i>
-                                            <strong>Phone:</strong>
-                                            <a href="tel:+13432458848" style="color: #ff6600; text-decoration: none;">(+1)343-245-8848</a>
-                                        </div>
-                                        <div class="mb-3">
-                                            <i class="bi bi-envelope-fill text-warning me-2"></i>
-                                            <strong>Email:</strong>
-                                            <a href="mailto:infor@dabsbeautytouch" style="color: #ff6600; text-decoration: none;">info@dabsbeautytouch</a>
-                                        </div>
-                                        <div class="mb-3">
-                                            <i class="bi bi-clock-fill text-warning me-2"></i>
-                                            <strong>Response Time:</strong> Within 24 hours
-                                        </div>
-                                        <div class="mb-3">
-                                            <i class="bi bi-chat-dots-fill text-warning me-2"></i>
-                                            <strong>Consultation:</strong> Free consultation available
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Additional Terms -->
-                    <div class="row mt-5">
-                        <div class="col-12">
-                            <div class="card shadow-lg border-0" style="border-radius: 20px; background: #fff;">
-                                <div class="card-body p-4">
-                                    <h4 style="color: #030f68; font-weight: 700; text-align: center; margin-bottom: 30px;">
-                                        <i class="bi bi-file-text me-2" style="color: #ff6600;"></i>
-                                        Additional Terms
-                                    </h4>
-                                    <div class="row">
-                                        <div class="col-md-6">
-                                            <ul class="list-unstyled" style="font-size: 1rem; line-height: 1.8;">
-                                                <li class="mb-3">
-                                                    <i class="bi bi-check-circle-fill text-success me-2"></i>
-                                                    <strong>Hair Preparation:</strong> Hair must be washed and detangled before appointment
-                                                </li>
-                                                <li class="mb-3">
-                                                    <i class="bi bi-check-circle-fill text-success me-2"></i>
-                                                    <strong>Extensions:</strong> Clients may provide their own extensions or purchase from us
-                                                </li>
-                                                <li class="mb-3">
-                                                    <i class="bi bi-check-circle-fill text-success me-2"></i>
-                                                    <strong>Duration:</strong> Service duration varies based on style complexity
-                                                </li>
-
-                                            </ul>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <ul class="list-unstyled" style="font-size: 1rem; line-height: 1.8;">
-
-
-
-                                            </ul>
                                         </div>
                                     </div>
                                 </div>
@@ -3442,43 +3315,7 @@
         </div>
     </div>
 
-    <!-- Reviews Section -->
-    <div class="section section-lg bg-gray-150" style="padding: 80px 0; background: #f8f9fa;">
-        <div class="text-center mb-5">
-            <p class="subtitle" style="font-size:1.5rem; color:#ff6600; font-weight:600;">Our customers love DBT</p>
-            <div class="subtitle-box" style="display:inline-block; margin-bottom:18px;">
-                <div class="subtitle-box-text" style="font-size:2rem; color:#030f68; font-weight:700;">Reviews</div>
-            </div>
-        </div>
-        <div class="owl-carousel owl-theme-1" data-items="1" data-sm-items="1" data-md-items="1" data-lg-items="1" data-xl-items="2" data-xxl-items="3" data-margin="15px" data-nav="false" data-dots="true" data-autoplay="5000">
-            <div class="testimonial-box" style="background:linear-gradient(135deg,#e3eafc 0%,#f8f9fa 100%); border-radius:18px; box-shadow:0 8px 32px rgba(0,0,0,0.12); padding:38px 28px; margin:0 12px; position:relative;">
-                <div class="testimonial-title" style="font-size:1.3rem; color:#ff6600; font-weight:700; margin-top:32px;">Cool!</div>
-                <div class="testimonial-rate"><img src="{{ asset('images/star-ratings.webp') }}" alt="" width="120" height="22"/></div>
-                <div class="testimonial-text" style="font-size:1.12rem; color:#222; margin:18px 0; font-style:italic;">"DBT offers great services and she delivers excellently. </div>
-                <div class="testimonial-name" style="font-size:1rem; color:#030f68; font-weight:500;">Client 1</div>
-            </div>
-            <div class="testimonial-box" style="background:linear-gradient(135deg,#fff6e3 0%,#ffe3e3 100%); border-radius:18px; box-shadow:0 8px 32px rgba(0,0,0,0.12); padding:38px 28px; margin:0 12px; position:relative;">
-                <div class="testimonial-title" style="font-size:1.3rem; color:#ff6600; font-weight:700; margin-top:32px;">Excellent!</div>
-                <div class="testimonial-rate"><img src="{{ asset('images/star-ratings.webp') }}" alt="" width="120" height="22"/></div>
-                <div class="testimonial-text" style="font-size:1.12rem; color:#222; margin:18px 0; font-style:italic;">"Very patient and time conscious. She follows up and ensures customer comfortability. I always leave happy!"</div>
-                <div class="testimonial-name" style="font-size:1rem; color:#030f68; font-weight:500;">Client 2</div>
-            </div>
-            <div class="testimonial-box" style="background:linear-gradient(135deg,#e3ffe3 0%,#e3f8ff 100%); border-radius:18px; box-shadow:0 8px 32px rgba(0,0,0,0.12); padding:38px 28px; margin:0 12px; position:relative;">
-                <div class="testimonial-title" style="font-size:1.3rem; color:#ff6600; font-weight:700; margin-top:32px;">Amazing!</div>
-                <div class="testimonial-rate"><img src="{{ asset('images/star-ratings.webp') }}" alt="" width="120" height="22"/></div>
-                <div class="testimonial-text" style="font-size:1.12rem; color:#222; margin:18px 0; font-style:italic;">"DBT braided my child's hair and my child was very comfortable. Her braids don't hurt much and last long!"</div>
-                <div class="testimonial-name" style="font-size:1rem; color:#030f68; font-weight:500;">Client 3</div>
-            </div>
-            <div class="testimonial-box" style="background:linear-gradient(135deg,#f8e3ff 0%,#e3eaff 100%); border-radius:18px; box-shadow:0 8px 32px rgba(0,0,0,0.12); padding:38px 28px; margin:0 12px; position:relative;">
-                <div class="testimonial-title" style="font-size:1.3rem; color:#ff6600; font-weight:700; margin-top:32px;">Excellent!</div>
-                <div class="testimonial-rate"><img src="{{ asset('images/star-ratings.webp') }}" alt="" width="120" height="22"/></div>
-                <div class="testimonial-text" style="font-size:1.12rem; color:#222; margin:18px 0; font-style:italic;"> "Customer relationship is amazing. Very professional and very affordable service. Highly recommend DBT!"</div>
-                <div class="testimonial-name" style="font-size:1rem; color:#030f68; font-weight:500;">Client 4</div>
-            </div>
-        </div>
-    </div>
-
-    <!-- FAQ Section -->
+    <!-- Contact Section -->
     <div class="section section-xl" style="padding: 80px 0; background-color: #f8f9fa;">
         <div class="container">
             <div class="row row-md-80 row-sm-50">
@@ -3542,12 +3379,10 @@
                             </div>
                         </li>
                     </ul>
-                    </div>
                 </div>
             </div>
         </div>
     </div>
-
     <!-- Contact Section -->
     <section id="contact" class="contact-section">
         <div class="container" style="padding-top: 60px; padding-bottom: 60px;">
@@ -3558,7 +3393,7 @@
                             <h2 class="section-title mb-3" style="font-size:2.2rem; font-weight:700;">Contact Information</h2>
                             <ul class="list-unstyled mb-4" style="font-size:1.08rem;">
                                 <li class="mb-3"><i class="bi bi-arrow-right-circle-fill text-primary me-2"></i><strong>Phone:</strong> <a href="tel:+13432458848" style="color:#030f68; text-decoration:none;">(+1)343-245-8848</a></li>
-                                <li class="mb-3"><i class="bi bi-arrow-right-circle-fill text-warning me-2"></i><strong>Email:</strong> <a href="mailto:infor@dabsbeautytouch" style="color:#ff6600; text-decoration:none;">info@dabsbeautytouch.com</a></li>
+                                <li class="mb-3"><i class="bi bi-arrow-right-circle-fill text-warning me-2"></i><strong>Email:</strong> <a href="mailto:info@dabsbeautytouch.com" style="color:#ff6600; text-decoration:none;">info@dabsbeautytouch.com</a></li>
                                 <li class="mb-3"><i class="bi bi-arrow-right-circle-fill text-danger me-2"></i><strong>Address:</strong> Ottawa</li>
                                 <li class="mb-3"><i class="bi bi-arrow-right-circle-fill text-success me-2"></i><strong>Hours:</strong>
                                     <ul class="ps-4 mb-0" style="font-size:0.98rem;">
@@ -3570,8 +3405,8 @@
                             </ul>
                             <div class="social-links mt-3">
                                 <a href="#" class="btn btn-outline-primary me-2"><i class="bi bi-facebook me-1"></i>Facebook</a>
-                                <a href="#" class="btn btn-outline-info me-2"><i class="bi bi-instagram me-1"></i>Instagram</a>
-                                <a href="#" class="btn btn-outline-success"><i class="bi bi-whatsapp me-1"></i>WhatsApp</a>
+                                <a href="https://www.instagram.com/dabs_beauty_touch?igsh=MXYycGNraGxwem5tZw%3D%3D&utm_source=qr" class="btn btn-outline-info me-2" target="_blank" rel="noopener noreferrer"><i class="bi bi-instagram me-1"></i>Instagram</a>
+                                <a href="https://wa.me/13432548848" class="btn btn-outline-success" target="_blank" rel="noopener noreferrer"><i class="bi bi-whatsapp me-1"></i>WhatsApp</a>
                             </div>
                         </div>
                         <div class="col-md-6 p-5 d-flex flex-column justify-content-center">
@@ -3678,7 +3513,6 @@
 
         // Clear form on page load to ensure it starts fresh
         clearBookingForm();
-    });
 
     // Clear form data when page is about to unload (refresh/close)
     window.addEventListener('beforeunload', function() {
@@ -3697,7 +3531,7 @@
         depositModal.hide();
 
         // Show contact information
-    alert('Please contact us at:\n\nPhone: (+1)343-245-8848\nEmail: infor@dabsbeautytouch\nWhatsApp: Available\n\nWe will provide you with payment details and confirm your appointment once payment is received.');
+    alert('Please contact us at:\n\nPhone: (+1)343-245-8848\nEmail: info@dabsbeautytouch.com\nWhatsApp: https://wa.me/13432548848\n\nWe will provide you with payment details and confirm your appointment once payment is received.');
     }
 
     // Function to scroll to services section
@@ -3733,6 +3567,133 @@
         }, 300); // Small delay to ensure modal closes first
     }
 
+</script>
+
+<!-- Temporary debug overlay for length pricing (remove in production) -->
+<style>
+  #lengthDebugOverlay {
+    position: fixed;
+    right: 18px;
+    bottom: 18px;
+    background: rgba(3,15,104,0.92);
+    color: #fff;
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-family: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+    font-size: 13px;
+    z-index: 99999;
+    box-shadow: 0 8px 28px rgba(3,15,104,0.28);
+    pointer-events: none;
+    opacity: 0;
+    transform: translateY(8px);
+    transition: opacity 160ms ease, transform 160ms ease;
+  }
+  #lengthDebugOverlay.visible { pointer-events: auto; opacity: 1; transform: translateY(0); }
+  #lengthDebugOverlay .k { color:#ffd166; font-weight:700; }
+  #lengthDebugOverlay .a { color:#06d6a0; font-weight:700; }
+</style>
+
+<div id="lengthDebugOverlay" aria-hidden="true" role="status">
+  <div>Length key: <span class="k">--</span></div>
+  <div>Adj: <span class="a">--</span></div>
+  <div style="font-size:11px; opacity:0.9; margin-top:6px;">(debug)</div>
+</div>
+
+<script>
+// Temporary debug helpers: show computed length key and adjustment
+(function(){
+    function showDebug(key, adj){
+        try{
+            const el = document.getElementById('lengthDebugOverlay');
+            if(!el) return;
+            el.querySelector('.k').textContent = key || '--';
+            el.querySelector('.a').textContent = (typeof adj === 'number') ? ('$' + adj) : (adj || '--');
+            el.classList.add('visible');
+            el.setAttribute('aria-hidden','false');
+        }catch(e){console.warn('showDebug error',e);}    
+    }
+    function hideDebug(){
+        try{
+            const el = document.getElementById('lengthDebugOverlay');
+            if(!el) return;
+            el.classList.remove('visible');
+            el.setAttribute('aria-hidden','true');
+        }catch(e){console.warn('hideDebug error',e);}    
+    }
+
+    // Compute key + adjustment using same function used by app
+    function computeForRadio(radio){
+        try{
+            const key = (radio && radio.value) ? radio.value.toString().replace(/-/g,'_') : '';
+            // reuse global lengthAdjustment if present
+            const adj = (typeof lengthAdjustment === 'function') ? lengthAdjustment(key) : 0;
+            return { key: key || '(empty)', adj: adj };
+        }catch(e){ return { key:'err', adj:0 }; }
+    }
+
+    // Attach listeners to radios and labels inside lengthGuideBlock
+    function attach() {
+        try{
+            if (window._lengthDebugAttached) return;
+            window._lengthDebugAttached = true;
+
+            const container = document.getElementById('lengthGuideBlock');
+            const radios = document.getElementsByName('hair_length');
+            if(!radios || radios.length===0) return;
+
+            Array.from(radios).forEach(r => {
+                // Deduplicate by tagging the node
+                if (r._lengthDebugAttached) return; r._lengthDebugAttached = true;
+
+                // hover
+                r.addEventListener('mouseenter', function(){ const c = computeForRadio(r); showDebug(c.key, c.adj); });
+                r.addEventListener('mouseleave', function(){ hideDebug(); });
+                // also on focus for keyboard users
+                r.addEventListener('focus', function(){ const c = computeForRadio(r); showDebug(c.key, c.adj); });
+                r.addEventListener('blur', hideDebug);
+                // on click show briefly and keep until mouse leaves
+                r.addEventListener('click', function(){ const c = computeForRadio(r); showDebug(c.key, c.adj); setTimeout(hideDebug, 2500); });
+            });
+
+            // label clicks: labels may not bubble value, so listen on labels inside container
+            if(container){
+                container.querySelectorAll('label').forEach(lbl => {
+                    if (lbl._lengthDebugAttached) return; lbl._lengthDebugAttached = true;
+                    lbl.addEventListener('mouseenter', function(e){
+                        // try to find associated input
+                        const forId = lbl.getAttribute('for');
+                        let r = forId ? document.getElementById(forId) : lbl.querySelector('input[name="hair_length"]');
+                        // fallback: try to find by proximity (previous element)
+                        if(!r) r = lbl.previousElementSibling && lbl.previousElementSibling.querySelector && lbl.previousElementSibling.querySelector('input[name="hair_length"]');
+                        if(!r) {
+                            // try to infer by label text matching value
+                            const txt = (lbl.textContent || '').toLowerCase();
+                            const found = Array.from(radios).find(rr => (rr.value || '').toString().toLowerCase().indexOf(txt.split(' ')[0]) !== -1);
+                            if(found) r = found;
+                        }
+                        if(r) { const c = computeForRadio(r); showDebug(c.key, c.adj); }
+                    });
+                    lbl.addEventListener('mouseleave', hideDebug);
+                    lbl.addEventListener('click', function(e){
+                        const forId = lbl.getAttribute('for');
+                        let r = forId ? document.getElementById(forId) : lbl.querySelector('input[name="hair_length"]');
+                        if(!r) r = lbl.previousElementSibling && lbl.previousElementSibling.querySelector && lbl.previousElementSibling.querySelector('input[name="hair_length"]');
+                        if(r) { const c = computeForRadio(r); showDebug(c.key, c.adj); setTimeout(hideDebug, 2500); }
+                    });
+                });
+            }
+        }catch(e){ console.warn('attach debug listeners failed', e); }
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', attach);
+    } else {
+        attach();
+    }
+
+    // Expose helpers for quick console testing
+    window._lengthDebug = { show: showDebug, hide: hideDebug, compute: computeForRadio };
+})();
 </script>
 <script src="{{ asset('js/core.min.js') }}"></script>
 <script src="{{ asset('js/script.js') }}"></script>
@@ -3821,7 +3782,10 @@ console.log('=== LOADING BOOKING FUNCTIONS ===');
             // Find the modal element
             var modalEl = document.getElementById('otherServicesModal');
             if (!modalEl) {
-                alert('Other services modal not found on page');
+                console.warn('Other services modal not found on page — falling back to service selection modal');
+                if (typeof openServiceSelectionModal === 'function') {
+                    try { openServiceSelectionModal(); } catch(e){ console.warn('Fallback to openServiceSelectionModal failed', e); }
+                }
                 return;
             }
 
@@ -3958,6 +3922,27 @@ console.log('=== LOADING BOOKING FUNCTIONS ===');
     function openServiceSelectionModal() {
         const serviceModal = new bootstrap.Modal(document.getElementById('serviceSelectionModal'));
         serviceModal.show();
+    }
+
+    // Close kids modal and open service selection modal
+    function backToServiceSelection(){
+        try{
+            const kidsEl = document.getElementById('kidsBookingModal');
+            const kidsModalInstance = bootstrap.Modal.getInstance(kidsEl);
+            if(kidsModalInstance){
+                kidsModalInstance.hide();
+            } else if(kidsEl){
+                // fallback: remove show class
+                kidsEl.classList.remove('show');
+                kidsEl.style.display = 'none';
+                document.body.classList.remove('modal-open');
+            }
+
+            // small delay to allow modal hide animation then open service selection
+            setTimeout(function(){
+                try{ openServiceSelectionModal(); }catch(e){ console.warn('openServiceSelectionModal failed', e); }
+            }, 260);
+        }catch(e){ console.warn('backToServiceSelection failed', e); }
     }
 
     // Open the kids-only booking modal (does not redirect to main booking modal)
@@ -4528,12 +4513,12 @@ console.log('=== LOADING BOOKING FUNCTIONS ===');
                                 <div class="mb-3">
                                     <i class="bi bi-envelope-fill text-success me-2"></i>
                                     <strong>Email:</strong><br>
-                                    <a href="mailto:infor@dabsbeautytouch" style="color: #ff6600; text-decoration: none; font-weight: 600;">infor@dabsbeautytouch</a>
+                                    <a href="mailto:info@dabsbeautytouch.com" style="color: #ff6600; text-decoration: none; font-weight: 600;">info@dabsbeautytouch.com</a>
                                 </div>
                                 <div class="mb-3">
                                     <i class="bi bi-whatsapp text-success me-2"></i>
                                     <strong>WhatsApp:</strong><br>
-                                    <a href="https://wa.me/1234567890" style="color: #ff6600; text-decoration: none; font-weight: 600;">Send Message</a>
+                                    <a href="https://wa.me/13432548848" style="color: #ff6600; text-decoration: none; font-weight: 600;" target="_blank" rel="noopener noreferrer">Send Message</a>
                                 </div>
                             </div>
 
@@ -4607,7 +4592,7 @@ console.log('=== LOADING BOOKING FUNCTIONS ===');
                     </div>
                     <div class="col-6 text-center" style="padding:0 12px;">
                         <div style="font-weight:700; color:#05204a; margin-bottom:6px;"><i class="bi bi-envelope-fill me-2" style="color:#111827;"></i>Email:</div>
-                        <a href="mailto:infor@dabsbeautytouch" style="color:#007bff; text-decoration:underline; font-size:16px;">info@dabsbeautytouch.com</a>
+                        <a href="mailto:info@dabsbeautytouch.com" style="color:#007bff; text-decoration:underline; font-size:16px;">info@dabsbeautytouch.com</a>
                     </div>
                 </div>
 
@@ -4723,7 +4708,14 @@ document.addEventListener('DOMContentLoaded', function() {
         // Auto close modal after 5 seconds and clear session data
         setTimeout(function() {
             closeSuccessModal();
-            // Clear session data after closing modal
+        .accessible-kids-modal .form-label { font-size: 1.02rem; color: #03253f; }
+        .accessible-kids-modal .form-control { font-size: 1.03rem; padding: .65rem .8rem; border-radius: 8px; }
+        .accessible-kids-modal .btn { min-height: 44px; padding: .6rem 1rem; font-size: 1rem; }
+        .accessible-kids-modal .modal-header .btn { min-height: 38px; }
+        .accessible-kids-modal .modal-title { font-size: 1.15rem; font-weight: 800; color: #ffffff; }
+        .visually-hidden { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
+        .accessible-kids-modal #kidsPricePreview { box-shadow: 0 6px 18px rgba(3,15,104,0.06); }
+        .accessible-kids-modal [role="status"]:focus { outline: 3px solid #ffb703; }
             try {
                 clearSessionData();
             } catch (e) {
@@ -4892,6 +4884,90 @@ function clearImagePreview() {
     if (fileName) fileName.textContent = '';
 }
 </script>
+    <!-- Kids Booking Modal (placed at end to ensure it is top-level) -->
+    <div class="modal fade" id="kidsBookingModal" tabindex="-1" aria-labelledby="kidsBookingModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content" style="border-radius: 12px;">
+                <div class="modal-header" style="background: linear-gradient(135deg, #ff6600 0%, #ff8533 100%); color: white; border-radius: 12px 12px 0 0;">
+                    <h5 class="modal-title" id="kidsBookingModalLabel">Kids Booking</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <form id="kidsBookingForm" action="{{ route('bookings.store') }}" method="POST" autocomplete="on" novalidate enctype="multipart/form-data">
+                        @csrf
+                        <input type="hidden" id="kids_service_input" name="service" value="">
+                        <input type="hidden" id="kids_service_type_input" name="service_type" value="kids-braids">
+                        <input type="hidden" id="kids_braid_type_input" name="kb_braid_type" value="">
+                        <input type="hidden" id="kids_finish_input" name="kb_finish" value="">
+                        <input type="hidden" id="kids_length_input" name="kb_length" value="">
+                        <input type="hidden" id="kids_extras_input" name="kb_extras" value="">
+                        <input type="hidden" id="kids_price_input" name="price" value="">
+                        <input type="hidden" name="appointment_date" value="" />
+                        <input type="hidden" name="appointment_time" value="" />
+
+                        <div class="row">
+                            <div class="col-md-7">
+                                <div class="mb-3">
+                                    <label class="form-label">Child's Name *</label>
+                                    <input id="kids_name" name="name" type="text" class="form-control" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Parent / Guardian Email</label>
+                                    <input id="kids_email" name="email" type="email" class="form-control" placeholder="you@example.com">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Parent / Guardian Phone *</label>
+                                    <input id="kids_phone" name="phone" type="tel" class="form-control" required pattern="[0-9+()\s\-]{7,}" placeholder="+1 555 555 5555">
+                                    <div class="form-text small text-muted">Include country code, e.g. <code>+1</code></div>
+                                </div>
+                                <div class="mb-3 d-flex gap-2 align-items-center">
+                                    <div>
+                                        <label class="form-label mb-1">Selected Date</label>
+                                        <div id="kidsSelectedDateLabel" class="form-control-plaintext">--</div>
+                                    </div>
+                                    <div>
+                                        <label class="form-label mb-1">Selected Time</label>
+                                        <div id="kidsSelectedTimeLabel" class="form-control-plaintext">--</div>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Date (opens calendar)</label>
+                                    <input id="kidsBookingDate" type="text" class="form-control" readonly onclick="openCalendarModal(); return false;" />
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Time</label>
+                                    <input id="kidsBookingTime" type="text" class="form-control" readonly />
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label">Sample Picture (optional)</label>
+                                    <input id="kids_sample_picture" name="sample_picture" type="file" accept="image/*" class="form-control">
+                                    <div id="kids_imagePreview" class="mt-2" style="display:none;">
+                                        <img id="kids_previewImg" src="" alt="Sample preview" style="max-width:120px; border-radius:8px; display:block;" />
+                                        <div id="kids_fileName" class="small text-muted mt-1"></div>
+                                        <button type="button" id="kids_removeSampleBtn" class="btn btn-sm btn-outline-secondary mt-2">Remove</button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-5">
+                                <div style="background:#fff7e0;border-radius:10px;padding:14px;border-left:6px solid #ff6600;">
+                                    <h6 style="color:#0b3a66;font-weight:700;margin-bottom:8px;">Price Summary</h6>
+                                    <div id="kidsModal_base">Base: <strong>$--</strong></div>
+                                    <div id="kidsModal_adjustments">Adjustments: <strong>$0</strong></div>
+                                    <div id="kidsModal_total" style="margin-top:6px;"><strong>Total: $--</strong></div>
+                                </div>
+                                <div class="d-grid mt-3">
+                                    <button type="submit" class="btn btn-warning" style="font-weight:600;">Confirm Booking</button>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
 </body>
 </html>
 
@@ -4936,12 +5012,52 @@ function clearImagePreview() {
 
     function getSelectedLength() {
         const radios = document.getElementsByName('hair_length');
-        for (let i = 0; i < radios.length; i++) {
-            if (radios[i].checked) {
-                console.log('Selected length:', radios[i].value);
-                return radios[i].value;
+        // Prefer querySelector for direct checked lookup
+        const checked = document.querySelector('input[name="hair_length"]:checked');
+        if (checked) {
+            const raw = (checked.value || '').toString().trim();
+            if (raw) {
+                window.lastSelectedLength = raw;
+                console.log('Selected length (queried):', raw);
+                return raw;
+            }
+
+            // If value is empty, try dataset attributes or infer from id
+            const ds = (checked.dataset && (checked.dataset.length || checked.dataset.value)) || '';
+            if (ds) {
+                window.lastSelectedLength = ds;
+                console.log('Selected length inferred from dataset:', ds);
+                return ds;
+            }
+
+            if (checked.id) {
+                const id = checked.id.toLowerCase();
+                if (id.indexOf('mid') !== -1) {
+                    window.lastSelectedLength = 'mid-back';
+                    console.log('Selected length inferred from id -> mid-back');
+                    return 'mid-back';
+                }
+                if (id.indexOf('waist') !== -1) {
+                    window.lastSelectedLength = 'waist';
+                    return 'waist';
+                }
             }
         }
+
+        // If we previously recorded a selection, reuse it
+        if (window.lastSelectedLength) {
+            console.log('No checked value found, using lastSelectedLength:', window.lastSelectedLength);
+            return window.lastSelectedLength;
+        }
+
+        // As a last resort log available radios for debugging and default to mid-back
+        try {
+            const debugList = Array.from(radios).map(r => ({ id: r.id, value: (r.value||''), checked: r.checked }));
+            console.warn('No hair_length checked value; radios:', debugList);
+        } catch (e) {
+            console.warn('No hair_length radios found to debug');
+        }
+        window.lastSelectedLength = 'mid-back';
         console.log('No length selected, defaulting to mid-back');
         return 'mid-back';
     }
@@ -5103,11 +5219,34 @@ function clearImagePreview() {
 
     // Update price when length changes - with better event handling
     function handleLengthChange(e) {
-        if (e.target && e.target.name === 'hair_length') {
-            console.log('Length changed to:', e.target.value);
-            const serviceType = window.currentServiceInfo.serviceType || document.getElementById('selectedServiceType')?.value || 'custom';
-            const base = priceMap[serviceType] || priceMap['custom'];
-            updatePriceDisplay(base);
+        try {
+            const target = e && e.target;
+            const insideLengthGuide = target && (target.closest && target.closest('#lengthGuideBlock'));
+            const isLabel = target && target.tagName && target.tagName.toLowerCase() === 'label';
+            const isInput = target && target.name === 'hair_length';
+
+            // Only react to events that are likely to change the selected length:
+            if (isInput || isLabel || insideLengthGuide) {
+                console.log('Length change event detected (raw target):', target && target.tagName, target && (target.name || target.id || target.className));
+
+                // Defer reading the selected radio until after the browser updates the checked state
+                setTimeout(function(){
+                    const sel = getSelectedLength();
+                    console.log('Selected length (deferred):', sel);
+                    // Prefer the authoritative base price stored in the hidden `selectedPrice` input
+                    const selectedPriceEl = document.getElementById('selectedPrice');
+                    let base = null;
+                    if (selectedPriceEl && selectedPriceEl.value && !isNaN(parseFloat(selectedPriceEl.value))) {
+                        base = parseFloat(selectedPriceEl.value);
+                    } else {
+                        const serviceType = window.currentServiceInfo.serviceType || document.getElementById('selectedServiceType')?.value || 'custom';
+                        base = priceMap[serviceType] || priceMap['custom'];
+                    }
+                    updatePriceDisplay(base);
+                }, 0);
+            }
+        } catch (err) {
+            console.warn('handleLengthChange error', err);
         }
     }
 
@@ -5128,10 +5267,21 @@ function clearImagePreview() {
         const lengthRadios = document.getElementsByName('hair_length');
         for (let i = 0; i < lengthRadios.length; i++) {
             lengthRadios[i].addEventListener('change', function() {
-                console.log('Radio button changed directly:', this.value);
-                const serviceType = window.currentServiceInfo.serviceType || document.getElementById('selectedServiceType')?.value || 'custom';
-                const base = priceMap[serviceType] || priceMap['custom'];
-                updatePriceDisplay(base);
+                console.log('Radio button changed directly (raw):', this.value);
+                // Defer to ensure checked state is fully applied
+                setTimeout(function(){
+                    const sel = getSelectedLength();
+                    console.log('Radio selected length (deferred):', sel);
+                    const selectedPriceEl = document.getElementById('selectedPrice');
+                    let base = null;
+                    if (selectedPriceEl && selectedPriceEl.value && !isNaN(parseFloat(selectedPriceEl.value))) {
+                        base = parseFloat(selectedPriceEl.value);
+                    } else {
+                        const serviceType = window.currentServiceInfo.serviceType || document.getElementById('selectedServiceType')?.value || 'custom';
+                        base = priceMap[serviceType] || priceMap['custom'];
+                    }
+                    updatePriceDisplay(base);
+                }, 0);
             });
         }
 
@@ -5474,9 +5624,32 @@ function clearImagePreview() {
             if(ext) ext.value = extras;
         }
 
-        // Open booking modal if function exists
-        if(typeof openBookingModal === 'function'){
-            setTimeout(function(){ try{ openBookingModal(serviceName, serviceType); }catch(e){ console.warn('openBookingModal failed', e); } }, 200);
+        // If this is a kids selector redirect, construct a small selector payload
+        // and open the kids booking modal (preserves selector price summary).
+        if(serviceType === 'kids-braids'){
+            try{
+                const sel = {
+                    service: serviceName || 'Kids Braids',
+                    service_type: serviceType,
+                    price: price ? Number(price) : undefined,
+                    hair_length: hairLength || params.get('hair_length') || params.get('kb_length') || '',
+                    braid_type: params.get('braid_type') || params.get('kb_braid_type') || '',
+                    finish: params.get('finish') || params.get('kb_finish') || '',
+                    extras: extras || params.get('extras') || ''
+                };
+                try{ window.__kidsSelectorData = sel; }catch(e){}
+
+                if(typeof openKidsBookingModal === 'function'){
+                    setTimeout(function(){ try{ openKidsBookingModal(serviceName, serviceType); }catch(e){ console.warn('openKidsBookingModal failed', e); } }, 200);
+                } else if(typeof openBookingModal === 'function'){
+                    setTimeout(function(){ try{ openBookingModal(serviceName, serviceType); }catch(e){ console.warn('openBookingModal failed', e); } }, 200);
+                }
+            }catch(e){ console.warn('Failed to open kids booking modal from params', e); }
+        } else {
+            // Open booking modal for non-kids flows
+            if(typeof openBookingModal === 'function'){
+                setTimeout(function(){ try{ openBookingModal(serviceName, serviceType); }catch(e){ console.warn('openBookingModal failed', e); } }, 200);
+            }
         }
 
         // Remove query params from URL
@@ -5530,6 +5703,63 @@ function clearImagePreview() {
     })();
 </script>
 @endif
+
+<script>
+// Client-side phone formatter for kids booking phone input
+(function(){
+    function formatPhoneForDisplay(raw){
+        if(!raw) return '';
+        const s = raw.toString().trim();
+        const leadingPlus = s.startsWith('+') ? '+' : '';
+        const digits = s.replace(/[^0-9]/g,'');
+        if(!digits) return leadingPlus;
+        // If looks like +1... format as +1 234 567 8901
+        if(leadingPlus === '+' && digits.length >= 11 && digits.startsWith('1')){
+            const rest = digits.slice(1);
+            return '+1 ' + rest.replace(/(\d{3})(\d{3})(\d{0,4})/, function(_,a,b,c){
+                return [a,b,c].filter(Boolean).join(' ');
+            }).trim();
+        }
+        // Generic grouping: groups of 3
+        return leadingPlus + digits.replace(/(\d{3})(?=\d)/g, '$1 ').trim();
+    }
+
+    function normalizePhoneForSubmit(raw){
+        if(!raw) return '';
+        const s = raw.toString().trim();
+        const plus = s.startsWith('+') ? '+' : '';
+        const digits = s.replace(/[^0-9]/g,'');
+        return plus + digits;
+    }
+
+    document.addEventListener('DOMContentLoaded', function(){
+        const input = document.getElementById('kids_phone');
+        if(!input) return;
+
+        input.addEventListener('input', function(e){
+            // remember cursor position loosely
+            const raw = input.value;
+            const formatted = formatPhoneForDisplay(raw);
+            input.value = formatted;
+            input.setSelectionRange(input.value.length, input.value.length);
+        });
+
+        input.addEventListener('blur', function(e){
+            input.value = normalizePhoneForSubmit(input.value);
+        });
+
+        const kidsForm = document.getElementById('kidsBookingForm');
+        if(kidsForm){
+            kidsForm.addEventListener('submit', function(){
+                try{
+                    const el = document.getElementById('kids_phone');
+                    if(el) el.value = normalizePhoneForSubmit(el.value);
+                }catch(err){/* noop */}
+            });
+        }
+    });
+})();
+</script>
 
 </body>
 </html>

@@ -44,11 +44,11 @@
                     <div class="mb-3" id="kb-finish-block">
                         <div class="form-check form-check-inline">
                             <input class="form-check-input" type="radio" name="kb_finish" id="kb_finish_curled" value="curled">
-                            <label class="form-check-label" for="kb_finish_curled">With curled tip (-$10)</label>
+                            <label class="form-check-label" for="kb_finish_curled">With curl (-$10)</label>
                         </div>
                         <div class="form-check form-check-inline">
                             <input class="form-check-input" type="radio" name="kb_finish" id="kb_finish_plain" value="plain" checked>
-                            <label class="form-check-label" for="kb_finish_plain">Without curled tip</label>
+                            <label class="form-check-label" for="kb_finish_plain">Without curl</label>
                         </div>
                     </div>
 
@@ -100,7 +100,7 @@
                     <div id="kb_disabled_note" class="form-text text-muted mt-2" style="display:none">Finish and hair length are disabled for the selected braid type.</div>
 
                     <input type="hidden" name="price" id="kb_price_input" value="">
-                    <input type="hidden" name="extras" id="kb_extras_input" value="">
+                    <input type="hidden" name="kb_extras" id="kb_extras_input" value="">
                     <!-- Hidden mirrors so disabled radios still submit values -->
                     <input type="hidden" name="kb_length" id="kb_length_hidden" value="">
                     <input type="hidden" name="kb_finish" id="kb_finish_hidden" value="">
@@ -243,5 +243,121 @@ document.addEventListener('DOMContentLoaded', function(){
 
     // run initial evaluation
     evaluateBraidType();
+});
+
+// Fallback: ensure `showKidsBookingPanel` exists so Continue opens the kids booking modal
+// This does not touch calendar state and only attempts to populate/show the kids modal
+if(typeof window.showKidsBookingPanel !== 'function'){
+    window.showKidsBookingPanel = function(sel){
+        try{
+            if(sel) try{ window.__kidsSelectorData = sel; }catch(e){}
+
+            // keep selector hidden mirrors in sync if present
+            try{ if(typeof syncHiddenMirrors === 'function') syncHiddenMirrors(); }catch(e){}
+
+            // write back to local selector hidden inputs if available
+            try{
+                const kbPriceInput = document.getElementById('kb_price_input'); if(kbPriceInput && sel && sel.price) kbPriceInput.value = sel.price;
+                const kbExtrasInput = document.getElementById('kb_extras_input'); if(kbExtrasInput && sel && sel.extras) kbExtrasInput.value = sel.extras;
+            }catch(e){ /* noop */ }
+
+            const kidsModal = document.getElementById('kidsBookingModal');
+            if(!kidsModal) return; // nothing to do if modal markup not present on page
+
+            // Populate modal fields (best-effort) but do NOT call any calendar functions
+            try{
+                const svc = document.getElementById('kids_service_input'); if(svc) svc.value = 'Kids Braids';
+                const st = document.getElementById('kids_service_type_input'); if(st) st.value = 'kids-braids';
+
+                const bt = sel && (sel.kb_braid_type || sel.braid_type) ? (sel.kb_braid_type || sel.braid_type) : '';
+                const fin = sel && (sel.kb_finish || sel.finish) ? (sel.kb_finish || sel.finish) : '';
+                const ln = sel && (sel.kb_length || sel.length) ? (sel.kb_length || sel.length) : '';
+
+                const ibt = document.getElementById('kids_braid_type_input'); if(ibt) ibt.value = bt;
+                const ifin = document.getElementById('kids_finish_input'); if(ifin) ifin.value = fin;
+                const iln = document.getElementById('kids_length_input'); if(iln) iln.value = ln;
+                const iex = document.getElementById('kids_extras_input'); if(iex) iex.value = sel && sel.extras ? sel.extras : '';
+
+                // Try to populate visible preview pieces in the modal if present
+                const kb_total = document.getElementById('kidsModal_total');
+                if(kb_total){
+                    const total = sel && sel.price ? Number(sel.price).toFixed(0) : (document.getElementById('kb_total_price') ? document.getElementById('kb_total_price').textContent.replace('$','') : '');
+                    kb_total.innerHTML = '<strong>Total: $' + (total || '--') + '</strong>';
+                }
+                const kb_base = document.getElementById('kidsModal_base'); if(kb_base && typeof kb_base.innerHTML === 'string') { /* leave as-is or set by page scripts */ }
+            }catch(e){ console.warn('populate kids modal fallback failed', e); }
+
+            // Show modal (Bootstrap if available; fallback otherwise). Don't touch calendar.
+            try{
+                if(typeof bootstrap !== 'undefined' && bootstrap.Modal){
+                    const m = new bootstrap.Modal(kidsModal);
+                    m.show();
+                } else {
+                    kidsModal.style.display = 'block';
+                    kidsModal.classList.add('show');
+                    document.body.classList.add('modal-open');
+                }
+            }catch(e){ console.warn('showing kids modal failed', e); }
+        }catch(e){ console.warn('fallback showKidsBookingPanel error', e); }
+    };
+}
+
+</script>
+
+<script>
+// Ensure kids booking form hidden selector fields are populated before submit
+document.addEventListener('DOMContentLoaded', function(){
+    try{
+        const kidsForm = document.getElementById('kidsBookingForm');
+        if(!kidsForm) return;
+
+        function populateKidsHiddenFields(){
+            // Prefer global selector payload if present (set by selector submit)
+            const sel = window.__kidsSelectorData || {};
+
+            // Fallback to selector hidden mirrors on the page
+            const mirrorLen = document.getElementById('kb_length_hidden');
+            const mirrorFin = document.getElementById('kb_finish_hidden');
+            const extrasMirror = document.getElementById('kb_extras_input');
+            const priceMirror = document.getElementById('kb_price_input');
+
+            const btInput = document.getElementById('kids_braid_type_input');
+            const finInput = document.getElementById('kids_finish_input');
+            const lenInput = document.getElementById('kids_length_input');
+            const exInput = document.getElementById('kids_extras_input');
+            const priceInput = document.getElementById('kids_price_input');
+
+            // Set braid type
+            if(!btInput.value && (sel.kb_braid_type || sel.braid_type)) btInput.value = sel.kb_braid_type || sel.braid_type;
+            // Set finish
+            if(!finInput.value && (sel.kb_finish || sel.finish)) finInput.value = sel.kb_finish || sel.finish;
+            // Set length: priority - sel.kb_length -> mirrorHidden -> sel.length
+            if(sel.kb_length){
+                lenInput.value = sel.kb_length;
+            } else if(mirrorLen && mirrorLen.value){
+                lenInput.value = mirrorLen.value;
+            } else if(sel.length){
+                lenInput.value = sel.length;
+            }
+            // extras
+            if(!exInput.value && (sel.extras || (extrasMirror && extrasMirror.value))){
+                exInput.value = sel.extras || (extrasMirror ? extrasMirror.value : '');
+            }
+            // price
+            if(!priceInput.value && (sel.price || (priceMirror && priceMirror.value))){
+                priceInput.value = sel.price || (priceMirror ? priceMirror.value : '');
+            }
+
+            // Normalize underscores for length (server expects underscores)
+            if(lenInput && lenInput.value){ lenInput.value = lenInput.value.replace(/-/g,'_'); }
+        }
+
+        // Populate once on page load (in case modal is pre-opened)
+        populateKidsHiddenFields();
+
+        kidsForm.addEventListener('submit', function(){
+            try{ populateKidsHiddenFields(); }catch(e){ console.warn('populateKidsHiddenFields failed', e); }
+        });
+    }catch(e){ console.warn('kidsBookingForm hookup failed', e); }
 });
 </script>

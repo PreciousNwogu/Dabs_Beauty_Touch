@@ -32,25 +32,20 @@ class AppointmentController extends Controller
             $date = $request->date;
             $service = $request->service;
 
-            // Check if this date is already booked with non-completed appointment
-            $existingBooking = \App\Models\Booking::where('appointment_date', $date)
-                ->where('status', '!=', 'completed')
-                ->first();
-
-            if ($existingBooking) {
-                return response()->json([
-                    'success' => true,
-                    'slots' => [],
-                    'date' => $date,
-                    'message' => 'This date is already booked. Please select another date.'
-                ]);
-            }
-
-            $slots = Appointment::getAvailableSlots($date, $service);
+            // Get booked time slots for the requested date (exclude completed/cancelled)
+            $bookedTimeSlots = \App\Models\Booking::where('appointment_date', $date)
+                ->whereNotIn('status', ['completed', 'cancelled'])
+                ->whereNotNull('appointment_time')
+                ->select('appointment_time')
+                ->pluck('appointment_time')
+                ->map(function($time) {
+                    return \Carbon\Carbon::parse($time)->format('H:i');
+                })
+                ->toArray();
 
             return response()->json([
                 'success' => true,
-                'slots' => $slots,
+                'booked_time_slots' => $bookedTimeSlots,
                 'date' => $date
             ]);
         } catch (\Exception $e) {
@@ -60,6 +55,7 @@ class AppointmentController extends Controller
                 'message' => 'Error retrieving available slots'
             ], 500);
         }
+
     }
 
     /**
@@ -86,7 +82,13 @@ class AppointmentController extends Controller
             'headers' => $request->headers->all()
         ]);
 
-        // Normalize length input: accept hair_length (client) and convert hyphens to underscores
+        // Normalize length input: accept kb_length (kids selector), hair_length (client) and convert hyphens to underscores
+        $kbLengthRaw = $request->input('kb_length');
+        if ($kbLengthRaw) {
+            $normalizedKb = str_replace('-', '_', $kbLengthRaw);
+            $request->merge(['kb_length' => $normalizedKb]);
+        }
+
         $lengthRaw = $request->input('hair_length') ?? $request->input('length');
         if ($lengthRaw) {
             $normalized = str_replace('-', '_', $lengthRaw);
@@ -97,6 +99,10 @@ class AppointmentController extends Controller
         $validationRules = [
             'name' => 'required|string|max:255',
             'email' => 'nullable|email|max:255',
+            'contact_email' => 'nullable|email|max:255',
+            'other_email' => 'nullable|email|max:255',
+            'kids_email' => 'nullable|email|max:255',
+            'booking_email' => 'nullable|email|max:255',
             'phone' => 'required|string|max:20',
             // 'length' will be required for most services but not for Hair Mask/Relaxing
             'service' => 'nullable|string|max:255',
@@ -152,6 +158,33 @@ class AppointmentController extends Controller
             } else {
                 return redirect()->route('home')
                     ->withErrors($validator)
+                    ->withInput()
+                    ->with('booking_error', true);
+            }
+        }
+
+        // Additional validation: require at least one email candidate so we can reliably send confirmations
+        $emailCandidates = array_filter([
+            trim((string)$request->input('email', '')),
+            trim((string)$request->input('contact_email', '')),
+            trim((string)$request->input('other_email', '')),
+            trim((string)$request->input('kids_email', '')),
+            trim((string)$request->input('booking_email', '')),
+        ]);
+
+        if (empty($emailCandidates)) {
+            Log::warning('Appointment booking validation failed: no email provided', ['request_keys' => array_keys($request->all())]);
+
+            $isApiRequest = $request->expectsJson() || $request->is('api/*') || $request->header('X-Requested-With') === 'XMLHttpRequest';
+            if ($isApiRequest) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Please provide an email address so we can send a booking confirmation.',
+                    'errors' => ['email' => ['At least one valid email is required.']]
+                ], 422);
+            } else {
+                return redirect()->route('home')
+                    ->withErrors(['email' => 'Please provide an email address so we can send a booking confirmation.'])
                     ->withInput()
                     ->with('booking_error', true);
             }
@@ -230,7 +263,8 @@ class AppointmentController extends Controller
             }
 
             // Compute final price based on selected length and per-service base price.
-            $length = $request->input('length', 'mid_back');
+            // Prefer kids selector length (`kb_length`) when present, otherwise use normalized `length`.
+            $length = $request->input('kb_length') ?? $request->input('length', 'mid_back');
 
             // Lookup service base price if provided; fall back to 150.00
             $serviceInput = $request->input('service');
@@ -303,13 +337,35 @@ class AppointmentController extends Controller
                 'final_price' => $finalPrice
             ]);
 
-            // Create the booking and persist length and final_price
+            // Resolve customer email from multiple possible input names (carousel/forms may use different ids)
+            $emailCandidates = [
+                'email',
+                'contact_email',
+                'other_email',
+                'kids_email',
+                'booking_email'
+            ];
+
+            $resolvedEmail = null;
+            foreach ($emailCandidates as $c) {
+                $val = trim((string) $request->input($c, ''));
+                if (!empty($val) && filter_var($val, FILTER_VALIDATE_EMAIL)) {
+                    $resolvedEmail = $val;
+                    break;
+                }
+            }
+
+            // Create the booking and persist kb_* selector fields, length and final_price
             $booking = \App\Models\Booking::create([
                 'name' => $request->name,
-                'email' => $request->email ?: 'no-email@example.com',
+                'email' => $resolvedEmail ?: ($request->email ?: 'no-email@example.com'),
                 'phone' => $request->phone,
                 'service' => $request->service ?: 'General Service',
                 'length' => $length,
+                'kb_braid_type' => $request->input('kb_braid_type'),
+                'kb_finish' => $request->input('kb_finish'),
+                'kb_length' => $request->input('kb_length') ?? null,
+                'kb_extras' => $request->input('kb_extras') ?? null,
                 'appointment_date' => $request->appointment_date,
                 'appointment_time' => $request->appointment_time,
                 'message' => $request->message,
@@ -321,18 +377,39 @@ class AppointmentController extends Controller
                 'final_price' => $finalPrice,
                 'status' => 'pending'
             ]);
+                try {
+                    // Use the resolved email we selected earlier if available
+                    $notifyEmail = $resolvedEmail ?: ($booking->email && $booking->email !== 'no-email@example.com' ? $booking->email : null);
+                    Log::info('Resolved customer email for booking (pre-send)', ['booking_id' => $booking->id, 'resolved_email' => $resolvedEmail, 'booking_email_field' => $booking->email]);
 
-            Log::info('Booking created successfully', [
-                'booking_id' => $booking->id,
-                'sample_picture_saved' => $booking->sample_picture,
-                'sample_picture_variable' => $samplePicturePath
-            ]);
+                    if (!empty($notifyEmail)) {
+                        // Log mailer config so we can confirm which SMTP is used for web requests
+                        Log::info('Mail configuration for booking confirmation (pre-send)', [
+                            'mail_default' => config('mail.default'),
+                            'mail_mailer_env' => env('MAIL_MAILER'),
+                            'mail_host' => config('mail.mailers.smtp.host') ?? env('MAIL_HOST'),
+                            'mail_port' => config('mail.mailers.smtp.port') ?? env('MAIL_PORT'),
+                            'mail_username' => env('MAIL_USERNAME'),
+                        ]);
 
-            // Generate a simple booking ID and confirmation code
+                        try {
+                            // Attempt immediate delivery via Notification sendNow
+                            Notification::route('mail', $notifyEmail)->sendNow(new BookingConfirmation($booking));
+                            Log::info('Booking confirmation notification sent (sendNow)', ['booking_id' => $booking->id, 'email' => $notifyEmail]);
+                        } catch (\Throwable $notifyErr) {
+                            Log::warning('Notification sendNow failed, attempting Mail fallback', ['booking_id' => $booking->id, 'email' => $notifyEmail, 'error' => $notifyErr->getMessage()]);
+                            try {
+                                \Illuminate\Support\Facades\Mail::to($notifyEmail)->send(new \App\Mail\BookingConfirmationMail($booking));
+                                Log::info('Booking confirmation sent via Mail::to()->send() fallback', ['booking_id' => $booking->id, 'email' => $notifyEmail]);
+                            } catch (\Throwable $mailErr) {
+                                Log::error('Failed to send booking confirmation via Mail fallback', ['booking_id' => $booking->id, 'email' => $notifyEmail, 'error' => $mailErr->getMessage()]);
+                            }
+                        }
+                    } else {
+                        Log::info('No valid email provided; skipping booking confirmation notification', ['booking_id' => $booking->id, 'email' => $booking->email]);
+                    }
             $bookingId = 'BK' . str_pad($booking->id, 6, '0', STR_PAD_LEFT);
             $confirmationCode = 'CONF' . strtoupper(substr(md5($booking->id . time()), 0, 8));
-
-            // Persist confirmation code to booking record
             $booking->confirmation_code = $confirmationCode;
             $booking->save();
 
@@ -355,8 +432,19 @@ class AppointmentController extends Controller
                         'mail_username' => env('MAIL_USERNAME'),
                     ]);
 
-                    Notification::route('mail', $booking->email)->notify(new BookingConfirmation($booking));
-                    Log::info('Booking confirmation notification queued', ['booking_id' => $booking->id, 'email' => $booking->email]);
+                    // Attempt immediate delivery via Notification sendNow, with Mail fallback
+                    try {
+                        Notification::route('mail', $booking->email)->sendNow(new BookingConfirmation($booking));
+                        Log::info('Booking confirmation notification sent (sendNow)', ['booking_id' => $booking->id, 'email' => $booking->email]);
+                    } catch (\Throwable $notifyErr) {
+                        Log::warning('Notification sendNow failed (post-save), attempting Mail fallback', ['booking_id' => $booking->id, 'email' => $booking->email, 'error' => $notifyErr->getMessage()]);
+                        try {
+                            \Illuminate\Support\Facades\Mail::to($booking->email)->send(new \App\Mail\BookingConfirmationMail($booking));
+                            Log::info('Booking confirmation sent via Mail::to()->send() fallback (post-save)', ['booking_id' => $booking->id, 'email' => $booking->email]);
+                        } catch (\Throwable $mailErr) {
+                            Log::error('Failed to send booking confirmation via Mail fallback (post-save)', ['booking_id' => $booking->id, 'email' => $booking->email, 'error' => $mailErr->getMessage()]);
+                        }
+                    }
                 } else {
                     Log::info('No valid email provided; skipping booking confirmation notification', ['booking_id' => $booking->id, 'email' => $booking->email]);
                 }
@@ -381,7 +469,7 @@ class AppointmentController extends Controller
                 return response()->json([
                     'success' => true,
                     'message' => 'Appointment booked successfully!',
-                    'appointment' => [
+                        'appointment' => [
                         'booking_id' => $bookingId,
                         'confirmation_code' => $confirmationCode,
                         'final_price' => $finalPrice,
@@ -389,7 +477,7 @@ class AppointmentController extends Controller
                         'appointment_date' => date('l, F j, Y', strtotime($request->appointment_date)),
                         'appointment_time' => date('g:i A', strtotime($request->appointment_time)),
                         'service' => $request->service ?: 'General Service',
-                        'email_provided' => !empty($request->email)
+                        'email_provided' => !empty($resolvedEmail) || !empty($request->email)
                     ]
                 ]);
             } else {
