@@ -4885,52 +4885,12 @@ function clearImagePreview() {
 
     function getSelectedLength() {
         const radios = document.getElementsByName('hair_length');
-        // Prefer querySelector for direct checked lookup
-        const checked = document.querySelector('input[name="hair_length"]:checked');
-        if (checked) {
-            const raw = (checked.value || '').toString().trim();
-            if (raw) {
-                window.lastSelectedLength = raw;
-                console.log('Selected length (queried):', raw);
-                return raw;
-            }
-
-            // If value is empty, try dataset attributes or infer from id
-            const ds = (checked.dataset && (checked.dataset.length || checked.dataset.value)) || '';
-            if (ds) {
-                window.lastSelectedLength = ds;
-                console.log('Selected length inferred from dataset:', ds);
-                return ds;
-            }
-
-            if (checked.id) {
-                const id = checked.id.toLowerCase();
-                if (id.indexOf('mid') !== -1) {
-                    window.lastSelectedLength = 'mid-back';
-                    console.log('Selected length inferred from id -> mid-back');
-                    return 'mid-back';
-                }
-                if (id.indexOf('waist') !== -1) {
-                    window.lastSelectedLength = 'waist';
-                    return 'waist';
-                }
+        for (let i = 0; i < radios.length; i++) {
+            if (radios[i].checked) {
+                console.log('Selected length:', radios[i].value);
+                return radios[i].value;
             }
         }
-
-        // If we previously recorded a selection, reuse it
-        if (window.lastSelectedLength) {
-            console.log('No checked value found, using lastSelectedLength:', window.lastSelectedLength);
-            return window.lastSelectedLength;
-        }
-
-        // As a last resort log available radios for debugging and default to mid-back
-        try {
-            const debugList = Array.from(radios).map(r => ({ id: r.id, value: (r.value||''), checked: r.checked }));
-            console.warn('No hair_length checked value; radios:', debugList);
-        } catch (e) {
-            console.warn('No hair_length radios found to debug');
-        }
-        window.lastSelectedLength = 'mid-back';
         console.log('No length selected, defaulting to mid-back');
         return 'mid-back';
     }
@@ -5090,36 +5050,13 @@ function clearImagePreview() {
         }
     };
 
-    // Update price when length changes - with better event handling
+    // Update price when length changes
     function handleLengthChange(e) {
-        try {
-            const target = e && e.target;
-            const insideLengthGuide = target && (target.closest && target.closest('#lengthGuideBlock'));
-            const isLabel = target && target.tagName && target.tagName.toLowerCase() === 'label';
-            const isInput = target && target.name === 'hair_length';
-
-            // Only react to events that are likely to change the selected length:
-            if (isInput || isLabel || insideLengthGuide) {
-                console.log('Length change event detected (raw target):', target && target.tagName, target && (target.name || target.id || target.className));
-
-                // Defer reading the selected radio until after the browser updates the checked state
-                setTimeout(function(){
-                    const sel = getSelectedLength();
-                    console.log('Selected length (deferred):', sel);
-                    // Prefer the authoritative base price stored in the hidden `selectedPrice` input
-                    const selectedPriceEl = document.getElementById('selectedPrice');
-                    let base = null;
-                    if (selectedPriceEl && selectedPriceEl.value && !isNaN(parseFloat(selectedPriceEl.value))) {
-                        base = parseFloat(selectedPriceEl.value);
-                    } else {
-                        const serviceType = window.currentServiceInfo.serviceType || document.getElementById('selectedServiceType')?.value || 'custom';
-                        base = priceMap[serviceType] || priceMap['custom'];
-                    }
-                    updatePriceDisplay(base);
-                }, 0);
-            }
-        } catch (err) {
-            console.warn('handleLengthChange error', err);
+        if (e.target && e.target.name === 'hair_length') {
+            console.log('Length changed to:', e.target.value);
+            const serviceType = window.currentServiceInfo.serviceType || document.getElementById('selectedServiceType')?.value || 'custom';
+            const base = priceMap[serviceType] || priceMap['custom'];
+            updatePriceDisplay(base);
         }
     }
 
