@@ -4884,12 +4884,46 @@ function clearImagePreview() {
     }
 
     function getSelectedLength() {
-        const radios = document.getElementsByName('hair_length');
+        // Prefer a checked radio with a non-empty value. If the checked input has
+        // an empty value (unexpected), fall back to deriving the length from the
+        // element id (e.g. "length_midback") or from its label text.
+        const radios = Array.from(document.querySelectorAll('input[name="hair_length"]'));
         for (let i = 0; i < radios.length; i++) {
-            if (radios[i].checked) {
-                console.log('Selected length:', radios[i].value);
-                return radios[i].value;
-            }
+            const r = radios[i];
+            try {
+                if (r.checked) {
+                    const v = (r.value || '').toString().trim();
+                    if (v !== '') {
+                        console.log('Selected length (value):', v);
+                        return v;
+                    }
+                    // fallback: derive from id after the first underscore, e.g. length_midback -> midback
+                    if (r.id) {
+                        const parts = r.id.split('_');
+                        if (parts.length > 1) {
+                            const derived = parts.slice(1).join('_').replace(/_/g, '-');
+                            console.log('Selected length derived from id:', derived, r.id);
+                            return derived;
+                        }
+                    }
+                    // fallback: try to find a label[for] or closest label and extract text
+                    try {
+                        const label = document.querySelector('label[for="' + (r.id || '') + '"]') || r.closest('label');
+                        if (label) {
+                            const txt = (label.textContent || '').trim().toLowerCase();
+                            // take first word that looks like a length (e.g. 'mid-back' or 'waist')
+                            const match = txt.match(/(neck|shoulder|armpit|bra-strap|mid-back|waist|hip|tailbone|classic)/i);
+                            if (match) {
+                                console.log('Selected length derived from label:', match[0]);
+                                return match[0].toLowerCase();
+                            }
+                        }
+                    } catch (e) { /* ignore */ }
+                    // if we reach here, checked input exists but we couldn't derive a value
+                    console.warn('Checked hair_length input has empty value and no id/label fallback', r);
+                    return '';
+                }
+            } catch (e) { /* ignore per-input failures */ }
         }
         console.log('No length selected, defaulting to mid-back');
         return 'mid-back';
@@ -4897,12 +4931,62 @@ function clearImagePreview() {
 
     function updatePriceDisplay(basePrice) {
         const serviceType = window.currentServiceInfo.serviceType || document.getElementById('selectedServiceType')?.value || 'custom';
+        const serviceNameDisplay = (window.currentServiceInfo && window.currentServiceInfo.serviceName) || document.getElementById('serviceDisplay')?.value || '';
+        const isHairMask = (serviceType === 'hair-mask') || (''+serviceNameDisplay).toLowerCase().includes('mask');
+
+        // Resolve authoritative base price when caller didn't pass a number
+        let base = (typeof basePrice === 'number') ? basePrice : null;
+        if (base === null) {
+            // try hidden input
+            const hiddenBaseEl = document.getElementById('selectedPrice');
+            if (hiddenBaseEl && hiddenBaseEl.value && !isNaN(parseFloat(hiddenBaseEl.value))) {
+                base = parseFloat(hiddenBaseEl.value);
+            } else if (window.currentServiceInfo && typeof window.currentServiceInfo.basePrice === 'number') {
+                base = window.currentServiceInfo.basePrice;
+            } else {
+                base = priceMap[serviceType] || priceMap['custom'];
+            }
+        }
 
         // For hair-mask we show mask options and compute addon (+30 for weave)
-        if (serviceType === 'hair-mask') {
-            // read selected mask option
-            const maskRadio = document.querySelector('input[name="hair_mask_option"]:checked');
-            const maskVal = maskRadio ? maskRadio.value : document.getElementById('selectedHairMaskOption')?.value || 'mask-only';
+        if (isHairMask) {
+            // read selected mask option (only consider actual radio inputs)
+            const maskRadio = document.querySelector('input[type="radio"][name="hair_mask_option"]:checked');
+            // log snapshot of all mask radio inputs for debugging
+            try {
+                const maskInputs = Array.from(document.querySelectorAll('input[type="radio"][name="hair_mask_option"]'));
+                const maskSnapshot = maskInputs.map((m, idx) => ({ idx, id: m.id || null, type: m.type, value: m.value, checked: !!m.checked }));
+                console.log('Mask radios snapshot:', maskSnapshot);
+            } catch (e) { /* ignore */ }
+
+            // Derive maskVal robustly: prefer radio.value; if empty, derive from id or label text; finally fallback to hidden field or 'mask-only'
+            let maskVal = '';
+            if (maskRadio) {
+                maskVal = (maskRadio.value || '').toString().trim();
+                if (!maskVal) {
+                    // try from id (mask_with_weave -> mask-with-weave)
+                    if (maskRadio.id) {
+                        const derived = maskRadio.id.replace(/_/g, '-');
+                        if (derived.includes('weav') || derived.includes('weave')) maskVal = 'mask-with-weave';
+                        else if (derived.includes('mask')) maskVal = 'mask-only';
+                        else maskVal = derived;
+                        console.log('Derived maskVal from id:', derived, '->', maskVal);
+                    }
+                    // try from label text
+                    if (!maskVal) {
+                        try {
+                            const label = document.querySelector('label[for="' + (maskRadio.id || '') + '"]') || maskRadio.closest('label');
+                            if (label) {
+                                const txt = (label.textContent || '').toLowerCase();
+                                if (txt.includes('weav')) maskVal = 'mask-with-weave';
+                                else if (txt.includes('mask') || txt.includes('relax')) maskVal = 'mask-only';
+                                console.log('Derived maskVal from label text:', txt, '->', maskVal);
+                            }
+                        } catch (e) { /* ignore */ }
+                    }
+                }
+            }
+            if (!maskVal) maskVal = document.getElementById('selectedHairMaskOption')?.value || 'mask-only';
             const addon = (maskVal === 'mask-with-weave') ? 30 : 0;
             const finalPrice = (typeof basePrice === 'number' ? basePrice : 0) + addon;
 
@@ -4920,12 +5004,28 @@ function clearImagePreview() {
         }
 
         // default flow for braided services uses length adjustment
-        const length = getSelectedLength();
+        // collect diagnostics about the hair_length radios to help debug empty selections
+        const radios = document.getElementsByName('hair_length');
+        let checkedVal = '';
+        let checkedIndex = -1;
+        const radiosSnapshot = [];
+        for (let i = 0; i < radios.length; i++) {
+            try {
+                const v = radios[i].value || '';
+                const c = !!radios[i].checked;
+                radiosSnapshot.push({ idx: i, value: v, checked: c, id: radios[i].id || null });
+                if (c) { checkedVal = v; checkedIndex = i; break; }
+            } catch(e) {
+                radiosSnapshot.push({ idx: i, value: '', checked: false, id: null });
+            }
+        }
+        const length = checkedVal || getSelectedLength();
+        console.log('Radios snapshot:', radiosSnapshot, 'resolved length:', length, 'checkedIndex:', checkedIndex);
         const adj = lengthAdjustment(length);
-        const finalPrice = (typeof basePrice === 'number' ? basePrice : 0) + adj;
+        const finalPrice = base + adj;
 
         console.log('Price calculation:', {
-            basePrice: basePrice,
+            basePrice: base,
             length: length,
             adjustment: adj,
             finalPrice: finalPrice
@@ -4935,13 +5035,14 @@ function clearImagePreview() {
         const hidden = document.getElementById('selectedPrice');
 
         if (disp) {
-            disp.textContent = finalPrice ? ('$' + finalPrice) : '--';
+            const newText = finalPrice ? ('$' + finalPrice) : '--';
+            if (disp.textContent !== newText) { disp.textContent = newText; animatePriceChange(disp); } else { disp.textContent = newText; }
             console.log('Updated price display to:', disp.textContent);
         }
+        // debug badge removed: no-op
         if (hidden) {
             // Store only the authoritative base price in the hidden input (do NOT post client-side adjusted finalPrice)
-            const baseVal = (typeof basePrice === 'number') ? basePrice : (parseFloat(basePrice) || '');
-            hidden.value = baseVal;
+            hidden.value = base;
             console.log('Updated hidden price input to base price (client will not post adjusted final):', hidden.value);
         }
         return finalPrice;
@@ -4983,7 +5084,6 @@ function clearImagePreview() {
             if (serviceDisplayEl) serviceDisplayEl.value = serviceName || '';
 
             const base = window.currentServiceInfo.basePrice;
-            updatePriceDisplay(base);
 
             // If we have kids selector data and this is the kids-braids flow,
             // show a compact kids-only booking summary and hide the detailed info.
@@ -5028,23 +5128,69 @@ function clearImagePreview() {
                 console.warn('Kids summary render failed', e);
             }
 
-            // If this is Hair Mask/Relaxing, show mask options and disable length radios
+            // For hair-mask show mask options. For hair-mask OR retouching disable length radios.
             const maskOptionsDiv = document.getElementById('hairMaskOptions');
             const lengthRadios = document.getElementsByName('hair_length');
+            // accept either slug or display name containing 'mask'
+            const isHairMaskLocal = (serviceType === 'hair-mask') || (''+serviceName).toLowerCase().includes('mask');
+            const disableLengths = (isHairMaskLocal || serviceType === 'retouching');
+
+            // hair-mask specific UI (only hair-mask shows mask options)
             if (serviceType === 'hair-mask') {
                 if (maskOptionsDiv) maskOptionsDiv.style.display = 'block';
-                for (let i = 0; i < lengthRadios.length; i++) {
-                    lengthRadios[i].disabled = true;
-                }
                 // ensure default mask option selected
                 const defaultMask = document.getElementById('mask_only');
                 if (defaultMask) defaultMask.checked = true;
             } else {
                 if (maskOptionsDiv) maskOptionsDiv.style.display = 'none';
-                for (let i = 0; i < lengthRadios.length; i++) {
-                    lengthRadios[i].disabled = false;
-                }
             }
+
+            // enable/disable length radios according to service; do NOT change kids flows here
+            for (let i = 0; i < lengthRadios.length; i++) {
+                try { lengthRadios[i].disabled = !!disableLengths; } catch (e) { /* ignore */ }
+            }
+
+            // Attach change listeners to any mask option radios inside the modal
+            try {
+                const maskRadiosModal = document.querySelectorAll('input[type="radio"][name="hair_mask_option"]');
+                for (let i = 0; i < maskRadiosModal.length; i++) {
+                    const el = maskRadiosModal[i];
+                    // avoid attaching multiple times
+                    if (el.dataset && el.dataset.maskListenerAttached) continue;
+                    el.addEventListener('change', function() {
+                        const selVal = this.value;
+                        setTimeout(function(){
+                            // update hidden input for submission
+                            const hiddenMask = document.getElementById('selectedHairMaskOption');
+                            if (hiddenMask) hiddenMask.value = selVal;
+                            // resolve base price
+                            const selectedPriceEl = document.getElementById('selectedPrice');
+                            let base = null;
+                            if (selectedPriceEl && selectedPriceEl.value && !isNaN(parseFloat(selectedPriceEl.value))) {
+                                base = parseFloat(selectedPriceEl.value);
+                            } else if (window.currentServiceInfo && typeof window.currentServiceInfo.basePrice === 'number') {
+                                base = window.currentServiceInfo.basePrice;
+                            } else {
+                                base = priceMap[serviceType] || priceMap['custom'];
+                            }
+                            updatePriceDisplay(base);
+                        }, 0);
+                    });
+                    try { el.dataset.maskListenerAttached = '1'; } catch(e) { /* ignore */ }
+                }
+            } catch (e) { /* ignore modal mask radio attach errors */ }
+
+            // Ensure hidden mask option reflects default before computing price
+            try {
+                const hiddenMask = document.getElementById('selectedHairMaskOption');
+                const checkedMask = document.querySelector('input[name="hair_mask_option"]:checked');
+                if (hiddenMask) {
+                    hiddenMask.value = (checkedMask && checkedMask.value) ? checkedMask.value : (hiddenMask.value || 'mask-only');
+                }
+            } catch (e) { /* ignore */ }
+
+            // Now that modal UI is set up (radios, defaults, hidden inputs), update the price display using authoritative base
+            try { updatePriceDisplay(base); } catch (e) { console.warn('updatePriceDisplay failed after modal setup', e); }
         } catch (e) {
             console.warn('Error toggling hair mask UI:', e);
         }
@@ -5056,13 +5202,18 @@ function clearImagePreview() {
             console.log('Length changed to:', e.target.value);
             const serviceType = window.currentServiceInfo.serviceType || document.getElementById('selectedServiceType')?.value || 'custom';
             const base = priceMap[serviceType] || priceMap['custom'];
-            updatePriceDisplay(base);
+            // Defer price update to ensure the radio's checked state has been applied
+            setTimeout(function(){
+                console.log('Deferred updatePriceDisplay after click/change for:', e.target.value);
+                updatePriceDisplay(base);
+            }, 0);
         }
     }
 
     // Add event listeners for length changes
     document.addEventListener('change', handleLengthChange);
-    document.addEventListener('click', handleLengthChange); // Also handle clicks for immediate feedback
+    // For click events, defer handling so the input checked state is reliable
+    document.addEventListener('click', function(e){ if (e.target && e.target.name === 'hair_length') { setTimeout(function(){ handleLengthChange(e); }, 0); } });
 
     // Init on load
     document.addEventListener('DOMContentLoaded', function(){
@@ -5096,13 +5247,30 @@ function clearImagePreview() {
         }
 
         // hair_mask_option listeners (for hair mask service)
-        const maskRadios = document.getElementsByName('hair_mask_option');
+        const maskRadios = document.querySelectorAll('input[type="radio"][name="hair_mask_option"]');
         for (let i = 0; i < maskRadios.length; i++) {
             maskRadios[i].addEventListener('change', function() {
-                console.log('Hair mask option changed:', this.value);
-                const serviceType = window.currentServiceInfo.serviceType || document.getElementById('selectedServiceType')?.value || 'custom';
-                const base = priceMap[serviceType] || priceMap['custom'];
-                updatePriceDisplay(base);
+                console.log('Hair mask option changed (radio):', this.value);
+                // Defer to ensure the checked state and any form hidden inputs are updated
+                const selVal = this.value;
+                setTimeout(function(){
+                    // Resolve authoritative base: prefer hidden selectedPrice, then currentServiceInfo, then priceMap
+                    const selectedPriceEl = document.getElementById('selectedPrice');
+                    let base = null;
+                    if (selectedPriceEl && selectedPriceEl.value && !isNaN(parseFloat(selectedPriceEl.value))) {
+                        base = parseFloat(selectedPriceEl.value);
+                    } else if (window.currentServiceInfo && typeof window.currentServiceInfo.basePrice === 'number') {
+                        base = window.currentServiceInfo.basePrice;
+                    } else {
+                        const serviceType = window.currentServiceInfo.serviceType || document.getElementById('selectedServiceType')?.value || 'custom';
+                        base = priceMap[serviceType] || priceMap['custom'];
+                    }
+                    // Ensure hidden mask option input updated for form submission
+                    const hiddenMask = document.getElementById('selectedHairMaskOption');
+                    if (hiddenMask) hiddenMask.value = selVal;
+                    // Update the visible price using the resolved base so hair-mask branch uses correct base
+                    updatePriceDisplay(base);
+                }, 0);
             });
         }
 

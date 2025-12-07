@@ -163,6 +163,36 @@ class AppointmentController extends Controller
             }
         }
 
+
+            // Enforce length for braid/knotless services (runtime guard)
+            $serviceTypeInput = $request->input('service_type') ?? $request->input('service');
+            $serviceTypeNormalized = strtolower(trim((string)$serviceTypeInput));
+            $isBraid = (
+                str_contains($serviceTypeNormalized, 'braid') ||
+                str_contains($serviceTypeNormalized, 'braids') ||
+                str_contains($serviceTypeNormalized, 'knotless') ||
+                str_contains($serviceTypeNormalized, 'knot')
+            );
+            if ($isBraid) {
+                $selectedLength = $request->input('kb_length') ?? $request->input('length');
+                if (empty($selectedLength)) {
+                    Log::warning('Appointment booking validation failed: missing length for braid service', ['request_keys' => array_keys($request->all())]);
+                    $isApiRequest = $request->expectsJson() || $request->is('api/*') || $request->header('X-Requested-With') === 'XMLHttpRequest';
+                    if ($isApiRequest) {
+                        return response()->json([
+                            'success' => false,
+                            'message' => 'Please select a hair length for braid/knotless services.',
+                            'errors' => ['length' => ['Please select a hair length for this service.']]
+                        ], 422);
+                    } else {
+                        return redirect()->route('home')
+                            ->withErrors(['length' => 'Please select a hair length for this service.'])
+                            ->withInput()
+                            ->with('booking_error', true);
+                    }
+                }
+            }
+
         // Additional validation: require at least one email candidate so we can reliably send confirmations
         $emailCandidates = array_filter([
             trim((string)$request->input('email', '')),
