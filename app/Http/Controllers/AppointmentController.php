@@ -163,6 +163,36 @@ class AppointmentController extends Controller
             }
         }
 
+
+            // Enforce length for braid/knotless services (runtime guard)
+            $serviceTypeInput = $request->input('service_type') ?? $request->input('service');
+            $serviceTypeNormalized = strtolower(trim((string)$serviceTypeInput));
+            $isBraid = (
+                str_contains($serviceTypeNormalized, 'braid') ||
+                str_contains($serviceTypeNormalized, 'braids') ||
+                str_contains($serviceTypeNormalized, 'knotless') ||
+                str_contains($serviceTypeNormalized, 'knot')
+            );
+            if ($isBraid) {
+                $selectedLength = $request->input('kb_length') ?? $request->input('length');
+                if (empty($selectedLength)) {
+                    Log::warning('Appointment booking validation failed: missing length for braid service', ['request_keys' => array_keys($request->all())]);
+                    $isApiRequest = $request->expectsJson() || $request->is('api/*') || $request->header('X-Requested-With') === 'XMLHttpRequest';
+                    if ($isApiRequest) {
+                        return response()->json([
+                            'success' => false,
+                            'message' => 'Please select a hair length for braid/knotless services.',
+                            'errors' => ['length' => ['Please select a hair length for this service.']]
+                        ], 422);
+                    } else {
+                        return redirect()->route('home')
+                            ->withErrors(['length' => 'Please select a hair length for this service.'])
+                            ->withInput()
+                            ->with('booking_error', true);
+                    }
+                }
+            }
+
         // Additional validation: require at least one email candidate so we can reliably send confirmations
         $emailCandidates = array_filter([
             trim((string)$request->input('email', '')),
@@ -397,12 +427,12 @@ class AppointmentController extends Controller
                             Notification::route('mail', $notifyEmail)->sendNow(new BookingConfirmation($booking));
                             Log::info('Booking confirmation notification sent (sendNow)', ['booking_id' => $booking->id, 'email' => $notifyEmail]);
                         } catch (\Throwable $notifyErr) {
-                            Log::warning('Notification sendNow failed, attempting Mail fallback', ['booking_id' => $booking->id, 'email' => $notifyEmail, 'error' => $notifyErr->getMessage()]);
+                            Log::warning('Notification sendNow failed, attempting Mail fallback', ['booking_id' => $booking->id, 'email' => $notifyEmail, 'error' => $notifyErr->getMessage(), 'trace' => $notifyErr->getTraceAsString()]);
                             try {
                                 \Illuminate\Support\Facades\Mail::to($notifyEmail)->send(new \App\Mail\BookingConfirmationMail($booking));
                                 Log::info('Booking confirmation sent via Mail::to()->send() fallback', ['booking_id' => $booking->id, 'email' => $notifyEmail]);
                             } catch (\Throwable $mailErr) {
-                                Log::error('Failed to send booking confirmation via Mail fallback', ['booking_id' => $booking->id, 'email' => $notifyEmail, 'error' => $mailErr->getMessage()]);
+                                Log::error('Failed to send booking confirmation via Mail fallback', ['booking_id' => $booking->id, 'email' => $notifyEmail, 'error' => $mailErr->getMessage(), 'trace' => $mailErr->getTraceAsString()]);
                             }
                         }
                     } else {
@@ -437,12 +467,12 @@ class AppointmentController extends Controller
                         Notification::route('mail', $booking->email)->sendNow(new BookingConfirmation($booking));
                         Log::info('Booking confirmation notification sent (sendNow)', ['booking_id' => $booking->id, 'email' => $booking->email]);
                     } catch (\Throwable $notifyErr) {
-                        Log::warning('Notification sendNow failed (post-save), attempting Mail fallback', ['booking_id' => $booking->id, 'email' => $booking->email, 'error' => $notifyErr->getMessage()]);
+                        Log::warning('Notification sendNow failed (post-save), attempting Mail fallback', ['booking_id' => $booking->id, 'email' => $booking->email, 'error' => $notifyErr->getMessage(), 'trace' => $notifyErr->getTraceAsString()]);
                         try {
                             \Illuminate\Support\Facades\Mail::to($booking->email)->send(new \App\Mail\BookingConfirmationMail($booking));
                             Log::info('Booking confirmation sent via Mail::to()->send() fallback (post-save)', ['booking_id' => $booking->id, 'email' => $booking->email]);
                         } catch (\Throwable $mailErr) {
-                            Log::error('Failed to send booking confirmation via Mail fallback (post-save)', ['booking_id' => $booking->id, 'email' => $booking->email, 'error' => $mailErr->getMessage()]);
+                            Log::error('Failed to send booking confirmation via Mail fallback (post-save)', ['booking_id' => $booking->id, 'email' => $booking->email, 'error' => $mailErr->getMessage(), 'trace' => $mailErr->getTraceAsString()]);
                         }
                     }
                 } else {
