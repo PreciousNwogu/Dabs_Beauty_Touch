@@ -427,12 +427,12 @@ class AppointmentController extends Controller
                             Notification::route('mail', $notifyEmail)->sendNow(new BookingConfirmation($booking));
                             Log::info('Booking confirmation notification sent (sendNow)', ['booking_id' => $booking->id, 'email' => $notifyEmail]);
                         } catch (\Throwable $notifyErr) {
-                            Log::warning('Notification sendNow failed, attempting Mail fallback', ['booking_id' => $booking->id, 'email' => $notifyEmail, 'error' => $notifyErr->getMessage()]);
+                            Log::warning('Notification sendNow failed, attempting Mail fallback', ['booking_id' => $booking->id, 'email' => $notifyEmail, 'error' => $notifyErr->getMessage(), 'trace' => $notifyErr->getTraceAsString()]);
                             try {
                                 \Illuminate\Support\Facades\Mail::to($notifyEmail)->send(new \App\Mail\BookingConfirmationMail($booking));
                                 Log::info('Booking confirmation sent via Mail::to()->send() fallback', ['booking_id' => $booking->id, 'email' => $notifyEmail]);
                             } catch (\Throwable $mailErr) {
-                                Log::error('Failed to send booking confirmation via Mail fallback', ['booking_id' => $booking->id, 'email' => $notifyEmail, 'error' => $mailErr->getMessage()]);
+                                Log::error('Failed to send booking confirmation via Mail fallback', ['booking_id' => $booking->id, 'email' => $notifyEmail, 'error' => $mailErr->getMessage(), 'trace' => $mailErr->getTraceAsString()]);
                             }
                         }
                     } else {
@@ -467,12 +467,12 @@ class AppointmentController extends Controller
                         Notification::route('mail', $booking->email)->sendNow(new BookingConfirmation($booking));
                         Log::info('Booking confirmation notification sent (sendNow)', ['booking_id' => $booking->id, 'email' => $booking->email]);
                     } catch (\Throwable $notifyErr) {
-                        Log::warning('Notification sendNow failed (post-save), attempting Mail fallback', ['booking_id' => $booking->id, 'email' => $booking->email, 'error' => $notifyErr->getMessage()]);
+                        Log::warning('Notification sendNow failed (post-save), attempting Mail fallback', ['booking_id' => $booking->id, 'email' => $booking->email, 'error' => $notifyErr->getMessage(), 'trace' => $notifyErr->getTraceAsString()]);
                         try {
                             \Illuminate\Support\Facades\Mail::to($booking->email)->send(new \App\Mail\BookingConfirmationMail($booking));
                             Log::info('Booking confirmation sent via Mail::to()->send() fallback (post-save)', ['booking_id' => $booking->id, 'email' => $booking->email]);
                         } catch (\Throwable $mailErr) {
-                            Log::error('Failed to send booking confirmation via Mail fallback (post-save)', ['booking_id' => $booking->id, 'email' => $booking->email, 'error' => $mailErr->getMessage()]);
+                            Log::error('Failed to send booking confirmation via Mail fallback (post-save)', ['booking_id' => $booking->id, 'email' => $booking->email, 'error' => $mailErr->getMessage(), 'trace' => $mailErr->getTraceAsString()]);
                         }
                     }
                 } else {
