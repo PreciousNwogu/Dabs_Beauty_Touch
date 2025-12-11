@@ -590,7 +590,7 @@
                         <option value="Small Knotless Braids">Small Knotless Braids</option>
                         <option value="Smedium Knotless Braids">Smedium Knotless Braids</option>
                         <option value="Wig Installation">Wig Installation</option>
-                        <option value="Large Knotless Braids">Large Knotless Braids</option>
+                        <option value="Medium Knotless Braids">Medium Knotless Braids</option>
                         <option value="Jumbo Knotless Braids">Jumbo Knotless Braids</option>
                         <option value="Kids Braids">Kids Braids</option>
                         <option value="8 Rows Stitch Braids">8 Rows Stitch Braids</option>
@@ -717,8 +717,8 @@
                                                         <i class="bi bi-x"></i> Cancel
                                                     </button>
                                                 @elseif($booking->status === 'confirmed')
-                                                    <button class="btn btn-info btn-sm mb-1" onclick="updateStatusQuick({{ $booking->id }}, 'completed')">
-                                                        <i class="bi bi-award"></i> Complete
+                                                    <button class="btn btn-info btn-sm mb-1" onclick="updateStatusQuick({{ $booking->id }}, 'completed')" title="Mark service as completed">
+                                                        <i class="bi bi-award"></i> Complete Service
                                                     </button>
                                                     <button class="btn btn-danger btn-sm" onclick="updateStatusQuick({{ $booking->id }}, 'cancelled')">
                                                         <i class="bi bi-x"></i> Cancel
@@ -855,6 +855,14 @@
                                 <option value="completed">Completed</option>
                                 <option value="cancelled">Cancelled</option>
                             </select>
+                        </div>
+
+                        <!-- Cancelled by input (show when status is 'cancelled') -->
+                        <div id="cancelFields" style="display: none;">
+                            <div class="mb-3">
+                                <label for="cancelledBy" class="form-label">Cancelled By (Name)</label>
+                                <input type="text" class="form-control" id="cancelledBy" placeholder="Enter who cancelled (e.g., Admin, User)">
+                            </div>
                         </div>
 
                         <!-- Completion fields - only show when status is 'completed' -->
@@ -1247,7 +1255,19 @@
                 </div>
             `;
 
-            document.getElementById('bookingDetailsContent').innerHTML = detailsHtml;
+            // Add a modal footer with action buttons (Close + Complete Service when applicable)
+            const footerHtml = `
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    ${booking.status !== 'completed' && booking.status !== 'cancelled' ? `
+                        <button type="button" class="btn btn-info" onclick="updateStatusQuick(${booking.id}, 'completed')">
+                            <i class="bi bi-award me-1"></i> Complete Service
+                        </button>
+                    ` : ''}
+                </div>
+            `;
+
+            document.getElementById('bookingDetailsContent').innerHTML = detailsHtml + footerHtml;
             const modal = new bootstrap.Modal(document.getElementById('detailsModal'));
             modal.show();
         }
@@ -1258,13 +1278,14 @@
             modal.show();
         }
 
-    function updateStatusModal() {
+        function updateStatusModal() {
             const newStatus = document.getElementById('newStatus').value;
             const notes = document.getElementById('statusNotes').value;
             const completedBy = document.getElementById('completedBy').value;
             const serviceDuration = document.getElementById('serviceDuration').value;
             const finalPrice = document.getElementById('finalPrice').value;
             const paymentStatus = document.getElementById('paymentStatus').value;
+            const cancelledBy = document.getElementById('cancelledBy') ? document.getElementById('cancelledBy').value : null;
 
             if (!currentAppointmentId) {
                 alert('No appointment selected');
@@ -1292,6 +1313,11 @@
                 if (paymentStatus) requestData.payment_status = paymentStatus;
             }
 
+            // Add cancelled_by if status is 'cancelled'
+            if (newStatus === 'cancelled' && cancelledBy) {
+                requestData.cancelled_by = cancelledBy;
+            }
+
             // Send update to API
             fetch('/admin/bookings/update-status', {
                 method: 'POST',
@@ -1301,7 +1327,23 @@
                 },
                 body: JSON.stringify(requestData)
             })
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    return response.text().then(text => {
+                        // Build a short summary from HTML or plain text
+                        let summary = text;
+                        if (/<[a-z][\s\S]*>/i.test(text)) {
+                            const titleMatch = text.match(/<title[^>]*>([^<]*)<\/title>/i);
+                            const h1Match = text.match(/<h1[^>]*>([^<]*)<\/h1>/i);
+                            summary = (titleMatch && titleMatch[1]) || (h1Match && h1Match[1]) || text.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+                        }
+                        summary = summary.split('\n')[0].trim();
+                        if (summary.length > 200) summary = summary.slice(0, 200) + '...';
+                        throw { message: `Server error (HTTP ${response.status}): ${summary}`, status: response.status, body: text };
+                    });
+                }
+                return response.json();
+            })
             .then(data => {
                 if (data.success) {
                     // Close modal and reload page
@@ -1316,8 +1358,13 @@
                 }
             })
             .catch(error => {
-                console.error('Error updating status:', error);
-                alert('Error updating appointment status. Please try again.');
+                if (error && error.body) {
+                    console.error('Full server response for appointment status update:', error.body);
+                } else {
+                    console.error('Error updating status:', error);
+                }
+                const userMessage = (error && error.message) ? error.message : 'Error updating appointment status. Please try again.';
+                alert(userMessage);
             })
             .finally(() => {
                 // Reset button state
@@ -1329,6 +1376,7 @@
         function toggleCompletionFields() {
             const status = document.getElementById('newStatus').value;
             const completionFields = document.getElementById('completionFields');
+            const cancelFields = document.getElementById('cancelFields');
 
             if (status === 'completed') {
                 completionFields.style.display = 'block';
@@ -1336,12 +1384,22 @@
                 document.getElementById('completedBy').required = true;
                 document.getElementById('serviceDuration').required = true;
                 document.getElementById('finalPrice').required = true;
+                // hide cancelled fields
+                if (cancelFields) cancelFields.style.display = 'none';
+                if (document.getElementById('cancelledBy')) document.getElementById('cancelledBy').required = false;
             } else {
                 completionFields.style.display = 'none';
                 // Remove required attribute when not completing
                 document.getElementById('completedBy').required = false;
                 document.getElementById('serviceDuration').required = false;
                 document.getElementById('finalPrice').required = false;
+            }
+
+            if (status === 'cancelled') {
+                if (cancelFields) cancelFields.style.display = 'block';
+                if (document.getElementById('cancelledBy')) document.getElementById('cancelledBy').required = false;
+            } else {
+                if (cancelFields) cancelFields.style.display = 'none';
             }
         }
 
@@ -1365,6 +1423,12 @@
 
             const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
+            // If cancelling via quick action, ask who cancelled (optional) so notification can include it
+            let cancelledBy = null;
+            if (newStatus === 'cancelled') {
+                cancelledBy = prompt('Enter name to record as who cancelled (leave blank for Admin):', 'Admin');
+            }
+
             fetch('{{ route("admin.bookings.update-status") }}', {
                 method: 'POST',
                 headers: {
@@ -1373,10 +1437,26 @@
                 },
                 body: JSON.stringify({
                     booking_id: bookingId,
-                    status: newStatus
+                    status: newStatus,
+                    cancelled_by: cancelledBy
                 })
             })
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    return response.text().then(text => {
+                        let summary = text;
+                        if (/<[a-z][\s\S]*>/i.test(text)) {
+                            const titleMatch = text.match(/<title[^>]*>([^<]*)<\/title>/i);
+                            const h1Match = text.match(/<h1[^>]*>([^<]*)<\/h1>/i);
+                            summary = (titleMatch && titleMatch[1]) || (h1Match && h1Match[1]) || text.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+                        }
+                        summary = summary.split('\n')[0].trim();
+                        if (summary.length > 200) summary = summary.slice(0, 200) + '...';
+                        throw { message: `Server error (HTTP ${response.status}): ${summary}`, status: response.status, body: text };
+                    });
+                }
+                return response.json();
+            })
             .then(data => {
                 if (data.success) {
                     window.location.reload();
@@ -1385,8 +1465,13 @@
                 }
             })
             .catch(error => {
-                console.error('Error:', error);
-                alert('Error updating booking status. Please try again.');
+                if (error && error.body) {
+                    console.error('Full server response for quick booking update:', error.body);
+                } else {
+                    console.error('Error:', error);
+                }
+                const userMessage = (error && error.message) ? error.message : 'Error updating booking status. Please try again.';
+                alert(userMessage);
             });
         }
         

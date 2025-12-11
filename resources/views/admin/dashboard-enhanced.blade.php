@@ -504,7 +504,24 @@
                     status: newStatus
                 })
             })
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    return response.text().then(text => {
+                        // Extract a concise summary from HTML or plain text responses
+                        let summary = text;
+                        if (/<[a-z][\s\S]*>/i.test(text)) {
+                            const titleMatch = text.match(/<title[^>]*>([^<]*)<\/title>/i);
+                            const h1Match = text.match(/<h1[^>]*>([^<]*)<\/h1>/i);
+                            summary = (titleMatch && titleMatch[1]) || (h1Match && h1Match[1]) || text.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+                        }
+                        summary = summary.split('\n')[0].trim();
+                        if (summary.length > 200) summary = summary.slice(0, 200) + '...';
+                        // Throw an object so the catch block can log full body while showing a concise message
+                        throw { message: `Server error (HTTP ${response.status}): ${summary}`, status: response.status, body: text };
+                    });
+                }
+                return response.json();
+            })
             .then(data => {
                 if (data.success) {
                     // Reload the page to show updated status
@@ -514,8 +531,14 @@
                 }
             })
             .catch(error => {
-                console.error('Error:', error);
-                alert('Error updating booking status. Please try again.');
+                // If we threw an object with a body, log the full response body for debugging
+                if (error && error.body) {
+                    console.error('Full server response for booking status update:', error.body);
+                } else {
+                    console.error('Error updating booking status:', error);
+                }
+                const userMessage = (error && error.message) ? error.message : 'Error updating booking status. Please try again.';
+                alert(userMessage);
             });
         }
 

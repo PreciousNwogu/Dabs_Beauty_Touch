@@ -27,21 +27,13 @@ try {
     }
 
     $base = $service ? (float)$service['base_price'] : 150.00;
-    $adjustments = [
-        'neck' => -20.00,
-        'shoulder' => -20.00,
-        'armpit' => -20.00,
-        'bra_strap' => -20.00,
-        'mid_back' => 0.00,
-        'waist' => 20.00,
-        'hip' => 20.00,
-        'tailbone' => 40.00,
-        'thigh' => 40.00,
-        'classic' => 40.00,
-    ];
-
+    // Compute adjustment using per-step $20 rule relative to mid_back
+    $ordered = ['neck','shoulder','armpit','bra_strap','mid_back','waist','hip','tailbone','classic'];
+    $midIndex = array_search('mid_back', $ordered, true);
     $length = 'neck';
-    $adjust = $adjustments[$length] ?? 0.00;
+    $idx = array_search($length, $ordered, true);
+    $d = ($idx !== false && $midIndex !== false) ? ($idx - $midIndex) : 0;
+    $adjust = $d * 20.00;
     $finalPrice = round($base + $adjust, 2);
 
     // Insert booking row
@@ -67,7 +59,8 @@ try {
     $bookingId = $db->lastInsertId();
 
     // Write result file with booking row and simulated email body
-    $bookingRow = $db->query("SELECT id,name,service,length,final_price,confirmation_code,created_at FROM bookings WHERE id = $bookingId")->fetch(PDO::FETCH_ASSOC);
+    // Select only columns that are guaranteed to exist in test DB
+    $bookingRow = $db->query("SELECT id,name,service,length,final_price,created_at FROM bookings WHERE id = $bookingId")->fetch(PDO::FETCH_ASSOC);
 
     $emailBody = "Subject: Booking Confirmation\n";
     $emailBody .= "Hello " . $bookingRow['name'] . "\n";

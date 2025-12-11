@@ -13,20 +13,12 @@ class PricingTest extends TestCase
      */
     private function computeFinalPrice(float $basePrice, string $length): float
     {
-        $lengthAdjustments = [
-            'neck' => -20.00,
-            'shoulder' => -20.00,
-            'armpit' => -20.00,
-            'bra_strap' => -20.00,
-            'mid_back' => 0.00,
-            'waist' => 20.00,
-            'hip' => 20.00,
-            'tailbone' => 40.00,
-            'thigh' => 40.00,
-            'classic' => 40.00,
-        ];
-
-        $adjust = $lengthAdjustments[$length] ?? 0.00;
+        // Compute adjustment using per-step $20 rule
+        $ordered = ['neck','shoulder','armpit','bra_strap','mid_back','waist','hip','tailbone','classic'];
+        $midIndex = array_search('mid_back', $ordered, true);
+        $idx = array_search($length, $ordered, true);
+        $d = ($idx !== false && $midIndex !== false) ? ($idx - $midIndex) : 0;
+        $adjust = $d * 20.00;
         return round($basePrice + $adjust, 2);
     }
 

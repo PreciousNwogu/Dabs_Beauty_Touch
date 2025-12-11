@@ -108,7 +108,7 @@
                     <div class="alert alert-success">
                         <i class="fas fa-info-circle me-2"></i>
                         Your booking has been confirmed! <br>
-                        All booking details (Booking ID, Confirmation Code and pricing) have been emailed to you. Please check your email for confirmation and follow-up from our admin.
+                        All booking details (Booking ID, Confirmation Code and pricing) have been emailed to you. Please check your email for confirmation.
                     </div>
                 </div>
 
@@ -129,7 +129,7 @@
                         <div class="text-center mt-4">
                             <small class="text-muted">
                                 <i class="fas fa-phone me-1"></i>
-                                Questions? Call us at <strong>(647) 834-8549</strong>
+                                Questions? Call us at <strong>(343) 254-8848</strong>
                             </small>
                         </div>
                 </div>
