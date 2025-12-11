@@ -214,9 +214,18 @@ class ScheduleController extends Controller
 
         $booking = Booking::findOrFail($data['booking_id']);
 
+        // Format the old date/time using application timezone for clarity
+        $oldTimeFormatted = null;
+        try {
+            if ($booking->appointment_date && $booking->appointment_time) {
+                $oldStart = Carbon::parse($booking->appointment_date->format('Y-m-d') . ' ' . $booking->appointment_time);
+                $oldTimeFormatted = $oldStart->format('g:i A');
+            }
+        } catch (\Exception $e) { $oldTimeFormatted = $booking->appointment_time; }
+
         $old = [
             'date' => $booking->appointment_date ? $booking->appointment_date->format('F j, Y') : null,
-            'time' => $booking->appointment_time
+            'time' => $oldTimeFormatted ?? $booking->appointment_time
         ];
 
         $start = Carbon::parse($data['start']);

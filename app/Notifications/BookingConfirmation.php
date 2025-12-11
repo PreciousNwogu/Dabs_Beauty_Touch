@@ -7,6 +7,7 @@ use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 use Illuminate\Support\Facades\Log;
 use App\Models\Booking;
+use Carbon\Carbon;
 
 class BookingConfirmation extends Notification
 {
@@ -39,9 +40,31 @@ class BookingConfirmation extends Notification
     {
         $b = $this->booking;
 
-        // Prefer persisted fields if available (safer for audit/consistency)
-        $basePrice = $b->base_price ?? null;
-        $adjust = $b->length_adjustment ?? null;
+        // Log recipient context for debugging deliveries
+        try {
+            $recipientEmail = null;
+            if (is_object($notifiable) && method_exists($notifiable, 'routeNotificationFor')) {
+                $recipientEmail = $notifiable->routeNotificationFor('mail');
+            } elseif (is_object($notifiable) && property_exists($notifiable, 'email')) {
+                $recipientEmail = $notifiable->email;
+            }
+            Log::info('BookingConfirmation->toMail invoked', [
+                'booking_id' => $b->id ?? null,
+                'recipient_via_notifiable' => $recipientEmail,
+                'booking_email_field' => $b->email ?? null,
+                'mail_from' => config('mail.from.address'),
+                'mail_driver' => config('mail.default')
+            ]);
+        } catch (\Throwable $e) {
+            Log::warning('Failed to log BookingConfirmation recipient context', ['error' => $e->getMessage()]);
+        }
+
+        // Prefer centralized pricing breakdown from the Booking model when available
+        $break = [];
+        try { $break = $this->booking->getPricingBreakdown(); } catch (\Throwable $e) { $break = []; }
+
+        $basePrice = $break['resolved_base'] ?? ($b->base_price ?? null);
+        $adjust = $break['length_adjust'] ?? ($b->length_adjustment ?? null);
 
         // If persisted basePrice missing, try service lookup
         if (is_null($basePrice)) {
@@ -275,7 +298,7 @@ class BookingConfirmation extends Notification
         // Prepare confirmation number (prefer explicit confirmation_code if set)
         $confirmationNumber = $b->confirmation_code ?? ('BK' . str_pad($b->id ?? 0, 6, '0', STR_PAD_LEFT));
 
-        return (new MailMessage)
+        $mail = (new MailMessage)
             ->subject($subject)
             ->view('emails.booking_confirmation', [
                 'booking' => $b,
@@ -288,7 +311,7 @@ class BookingConfirmation extends Notification
                 'final_price' => $final_price_to_pass,
                 'selector_base' => $baseConfigured ?? null,
                 'selector_adjust' => $adjustments ?? null,
-                'selector_addons' => $addons ?? null,
+                'selector_addons' => $addonsTotal ?? null,
                 'selector_friendly' => $selector_friendly,
                 'hideLengthFinish' => $hideLengthFinish,
                 // View-level flags
@@ -298,6 +321,10 @@ class BookingConfirmation extends Notification
                 'showHeader' => !$isRecipientOwner, // show the small "Booking Confirmation" header for admin emails only
                 'confirmation_number' => $confirmationNumber,
             ]);
+
+            // We intentionally do not attach .ics files to confirmation emails per configuration.
+
+        return $mail;
     }
 
     /**

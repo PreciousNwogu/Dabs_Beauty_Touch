@@ -127,22 +127,15 @@ class AdminBookingNotification extends Notification
         $break = [];
         try { $break = $b->getPricingBreakdown(); } catch (\Throwable $e) { $break = []; }
 
+        // Pass a single authoritative breakdown to the view so admin sees the same values
         return (new MailMessage)
             ->subject($subject)
             ->view('emails.admin_booking_notification', [
                 'booking' => $b,
                 'formattedId' => $formattedId,
+                'breakdown' => $break,
                 'selector' => $break['selector'] ?? $selector,
-                'computedTotal' => $break['computed_total'] ?? $computedTotal,
-                'selector_base' => $break['selector_base'] ?? ($baseConfigured ?? null),
-                'selector_adjust' => $break['selector_adjust'] ?? ($adjustments ?? null),
-                'selector_addons' => $break['selector_addons'] ?? ($addons ?? null),
                 'selector_friendly' => $break['selector_friendly'] ?? $selector_friendly,
-                'basePrice' => $break['resolved_base'] ?? null,
-                'length_adjust' => $break['length_adjust'] ?? null,
-                'addons_total' => $break['addons_total'] ?? null,
-                'adjustments_total' => $break['adjustments_total'] ?? null,
-                'final_price' => $break['final_price'] ?? null,
                 'hideLengthFinish' => $break['hide_length_finish'] ?? false,
             ]);
     }

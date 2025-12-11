@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
 use App\Notifications\BookingConfirmation;
+use App\Services\PriceCalculator;
 
 class AppointmentController extends Controller
 {
@@ -85,15 +86,63 @@ class AppointmentController extends Controller
         // Normalize length input: accept kb_length (kids selector), hair_length (client) and convert hyphens to underscores
         $kbLengthRaw = $request->input('kb_length');
         if ($kbLengthRaw) {
-            $normalizedKb = str_replace('-', '_', $kbLengthRaw);
+            $normalizedKb = str_replace(['-', ' '], '_', strtolower((string)$kbLengthRaw));
+            // map common synonyms to canonical keys
+            $synMap = [
+                'tail_bone' => 'tailbone',
+                'tail-bone' => 'tailbone',
+                'tail bone' => 'tailbone',
+                'tailbone' => 'tailbone',
+                'midback' => 'mid_back',
+                'mid_back' => 'mid_back',
+                'brastrap' => 'bra_strap',
+                'brastrap' => 'bra_strap',
+                'bra_strap' => 'bra_strap'
+            ];
+            if (isset($synMap[$normalizedKb])) {
+                $normalizedKb = $synMap[$normalizedKb];
+            }
             $request->merge(['kb_length' => $normalizedKb]);
         }
 
         $lengthRaw = $request->input('hair_length') ?? $request->input('length');
         if ($lengthRaw) {
-            $normalized = str_replace('-', '_', $lengthRaw);
+            $normalized = str_replace(['-', ' '], '_', strtolower((string)$lengthRaw));
+            $synMap = [
+                'tail_bone' => 'tailbone',
+                'tail-bone' => 'tailbone',
+                'tail bone' => 'tailbone',
+                'tailbone' => 'tailbone',
+                'midback' => 'mid_back',
+                'mid_back' => 'mid_back',
+                'brastrap' => 'bra_strap',
+                'brastrap' => 'bra_strap',
+                'bra_strap' => 'bra_strap'
+            ];
+            if (isset($synMap[$normalized])) {
+                $normalized = $synMap[$normalized];
+            }
             $request->merge(['length' => $normalized]);
         }
+
+        // Determine service type early so we can tailor validation (require length for braids)
+        $serviceTypeInput = $request->input('service_type') ?? $request->input('service');
+        $serviceTypeNormalized = strtolower(trim((string)$serviceTypeInput));
+        $isHairMask = (
+            $serviceTypeNormalized === 'hair-mask' ||
+            str_contains($serviceTypeNormalized, 'hair-mask') ||
+            str_contains($serviceTypeNormalized, 'hair mask') ||
+            str_contains($serviceTypeNormalized, 'hairmask') ||
+            str_contains($serviceTypeNormalized, 'mask/relax') ||
+            str_contains($serviceTypeNormalized, 'relaxing')
+        );
+
+        $isBraid = (
+            str_contains($serviceTypeNormalized, 'braid') ||
+            str_contains($serviceTypeNormalized, 'braids') ||
+            str_contains($serviceTypeNormalized, 'knotless') ||
+            str_contains($serviceTypeNormalized, 'knot')
+        );
 
         // Handle sample_picture validation separately to avoid empty file issues
         $validationRules = [
@@ -111,22 +160,15 @@ class AppointmentController extends Controller
             'message' => 'nullable|string|max:1000'
         ];
 
-        // If the user is booking Hair Mask/Relaxing, require a mask option instead of length
-        $serviceTypeInput = $request->input('service_type') ?? $request->input('service');
-        $serviceTypeNormalized = strtolower(trim((string)$serviceTypeInput));
-        $isHairMask = (
-            $serviceTypeNormalized === 'hair-mask' ||
-            str_contains($serviceTypeNormalized, 'hair-mask') ||
-            str_contains($serviceTypeNormalized, 'hair mask') ||
-            str_contains($serviceTypeNormalized, 'hairmask') ||
-            str_contains($serviceTypeNormalized, 'mask/relax') ||
-            str_contains($serviceTypeNormalized, 'relaxing')
-        );
-
+        // Tailor length rules based on service type
         if ($isHairMask) {
             // hair mask - length optional, require hair_mask_option
             $validationRules['length'] = 'nullable|string|in:neck,shoulder,armpit,bra_strap,mid_back,waist,hip,tailbone,classic';
             $validationRules['hair_mask_option'] = 'required|string|in:mask-only,mask-with-weave';
+        } elseif ($isBraid) {
+            // For braid/knotless services, require either kb_length or length (one of them)
+            $validationRules['length'] = 'required_without:kb_length|string|in:neck,shoulder,armpit,bra_strap,mid_back,waist,hip,tailbone,classic';
+            $validationRules['kb_length'] = 'required_without:length|string|in:neck,shoulder,armpit,bra_strap,mid_back,waist,hip,tailbone,classic';
         } else {
             $validationRules['length'] = 'required|string|in:neck,shoulder,armpit,bra_strap,mid_back,waist,hip,tailbone,classic';
         }
@@ -292,69 +334,78 @@ class AppointmentController extends Controller
                 Log::info('No file uploaded');
             }
 
-            // Compute final price based on selected length and per-service base price.
-            // Prefer kids selector length (`kb_length`) when present, otherwise use normalized `length`.
-            $length = $request->input('kb_length') ?? $request->input('length', 'mid_back');
-
-            // Lookup service base price if provided; fall back to 150.00
+            // Use the centralized PriceCalculator for all pricing logic and breakdowns
             $serviceInput = $request->input('service');
             $serviceModel = null;
+            $serviceNameForSave = $serviceInput;
             if (!empty($serviceInput)) {
-                // Try slug first, then name
                 $serviceModel = \App\Models\Service::where('slug', $serviceInput)->orWhere('name', $serviceInput)->first();
+                if ($serviceModel) $serviceNameForSave = $serviceModel->name;
             }
-            $basePrice = $serviceModel ? (float) $serviceModel->base_price : 150.00;
 
-            // If this is Hair Mask/Relaxing, compute addon based on mask option (+30 for weave)
-            $serviceType = $request->input('service_type') ?? $request->input('service');
-            $serviceTypeNormalized = strtolower(trim((string)$serviceType));
-            $isHairMask = (
-                $serviceTypeNormalized === 'hair-mask' ||
-                str_contains($serviceTypeNormalized, 'hair-mask') ||
-                str_contains($serviceTypeNormalized, 'hair mask') ||
-                str_contains($serviceTypeNormalized, 'hairmask') ||
-                str_contains($serviceTypeNormalized, 'mask/relax') ||
-                str_contains($serviceTypeNormalized, 'relaxing')
-            );
+            $calculator = new PriceCalculator();
+            $calcInput = [
+                'service_input' => $serviceInput,
+                'service_model' => $serviceModel,
+                'service_type' => $request->input('service_type') ?? $serviceInput,
+                'length' => $request->input('length'),
+                'kb_length' => $request->input('kb_length'),
+                'kb_extras' => $request->input('kb_extras'),
+                'hair_mask_option' => $request->input('hair_mask_option') ?? $request->input('selectedHairMaskOption'),
+            ];
 
-            Log::info('Hair-mask detection', [
-                'service_type_raw' => $serviceType,
-                'service_type_normalized' => $serviceTypeNormalized,
-                'hair_mask_option_raw' => $request->input('hair_mask_option', null),
-            ]);
+            $breakdown = $calculator->calculate($calcInput);
 
-            // Defensive rule: only apply `hair_mask_option` when this is actually a hair-mask service.
-            // If the client explicitly submitted a `hair_mask_option` but the service is NOT hair-mask,
-            // we will ignore it to prevent it from affecting unrelated services.
-            $explicitMaskOption = $request->input('hair_mask_option', null);
-            if ($explicitMaskOption !== null && $isHairMask) {
-                // prefer explicit service model price if available, otherwise default to $50
-                $basePrice = $serviceModel ? (float) $serviceModel->base_price : 50.00;
-                $addon = ($explicitMaskOption === 'mask-with-weave') ? 30.00 : 0.00;
-                $adjust = $addon; // persist as length_adjustment for email fidelity
-                $finalPrice = round($basePrice + $addon, 2);
-            } elseif ($isHairMask) {
-                // prefer explicit service model price if available, otherwise default to $50
-                $basePrice = $serviceModel ? (float) $serviceModel->base_price : 50.00;
-                $maskOption = $request->input('hair_mask_option', 'mask-only');
-                $addon = ($maskOption === 'mask-with-weave') ? 30.00 : 0.00;
-                $adjust = $addon; // persist as length_adjustment for email fidelity
-                $finalPrice = round($basePrice + $addon, 2);
-            } else {
-                // Two-step rule: every two steps away from mid_back changes price by $20.
-                $ordered = ['neck','shoulder','armpit','bra_strap','mid_back','waist','hip','tailbone','classic'];
-                $midIndex = array_search('mid_back', $ordered, true);
-                $idx = array_search($length, $ordered, true);
+            $basePrice = $breakdown['base_price'] ?? 0.00;
+            $adjust = $breakdown['length_adjustment'] ?? 0.00;
+            $finalPrice = $breakdown['final_price'] ?? ($basePrice + $adjust);
+            $priceWarning = null;
 
-                if ($idx === false || $midIndex === false) {
-                    $adjust = 0.00;
+            // Merge normalized hair_mask_option back to request for persistence if provided by calculator
+            if (!empty($breakdown['hair_mask_option_normalized'])) {
+                $request->merge(['hair_mask_option' => $breakdown['hair_mask_option_normalized']]);
+            }
+
+            // Attach kids breakdown values for later persistence
+            $kb_base_price = $breakdown['kb_base_price'] ?? null;
+            $kb_length_adjustment = $breakdown['kb_length_adjustment'] ?? null;
+            $kb_extras_total = $breakdown['kb_extras_total'] ?? null;
+            $kb_final_price = $breakdown['kb_final_price'] ?? null;
+
+            // Validate client-supplied final_price against the server calculation with tolerance
+            $tolerance = is_numeric(env('PRICE_TOLERANCE')) ? (float) env('PRICE_TOLERANCE') : 1.00;
+            $serverCalculatedFinal = $finalPrice;
+            if ($request->filled('final_price') && is_numeric($request->input('final_price'))) {
+                $clientFinal = round((float) $request->input('final_price'), 2);
+                $diff = abs($clientFinal - $serverCalculatedFinal);
+                if ($diff <= $tolerance) {
+                    Log::info('Client-provided final_price within tolerance; accepting client value', [
+                        'server_final' => $serverCalculatedFinal,
+                        'client_final' => $clientFinal,
+                        'difference' => $diff,
+                        'tolerance' => $tolerance,
+                        'service' => $serviceInput,
+                    ]);
+                    $finalPrice = $clientFinal;
                 } else {
-                    $d = $idx - $midIndex;
-                    // Per-step rule: each single step away from mid_back changes price by $20.
-                    // This makes waist = +20, bra_strap = -20, and two steps away = +/-40, etc.
-                    $adjust = ($d * 20.00);
+                    Log::error('Client final_price mismatch exceeds tolerance; overriding with server calculation', [
+                        'server_final' => $serverCalculatedFinal,
+                        'client_final' => $clientFinal,
+                        'difference' => $diff,
+                        'tolerance' => $tolerance,
+                        'service' => $serviceInput,
+                        'request_snapshot' => substr(json_encode(array_intersect_key($request->all(), array_flip(['service','service_type','length','kb_length','price','final_price','hair_mask_option']))), 0, 1000)
+                    ]);
+                    $finalPrice = $serverCalculatedFinal;
+                    if (!empty($breakdown['is_hair_mask'])) {
+                        $priceWarning = 'Client-submitted price did not match server calculation and was adjusted to the canonical price.';
+                    }
                 }
-                $finalPrice = round($basePrice + $adjust, 2);
+            }
+            // Ensure length variable is set for logging/persistence
+            $length = $request->input('kb_length') ?? $request->input('length', 'mid_back');
+            if (is_string($length)) {
+                $length = str_replace(['-', ' '], '_', strtolower($length));
             }
 
             // Log pricing calculation details for debugging
@@ -385,59 +436,86 @@ class AppointmentController extends Controller
                 }
             }
 
+            // Prepare kids-specific breakdown if this was a kids selector booking
+            $kb_base_price = null;
+            $kb_length_adjustment = null;
+            $kb_final_price = null;
+            $kb_extras_total = null;
+            $isKidsFlow = ($request->filled('kb_length') || ($serviceTypeNormalized && str_contains($serviceTypeNormalized, 'kids')));
+            if ($isKidsFlow) {
+                // Determine kids base price from service model or config fallback
+                $kb_base_price = $serviceModel ? (float) $serviceModel->base_price : (float) config('service_prices.kids_braids', 80);
+                // Normalize kb_length
+                $kb_length = $request->input('kb_length') ?? $request->input('length');
+                if (is_string($kb_length)) {
+                    $kb_length = str_replace(['-', ' '], '_', strtolower($kb_length));
+                }
+                // compute adjustment using same step rule as main flow
+                $ordered = ['neck','shoulder','armpit','bra_strap','mid_back','waist','hip','tailbone','classic'];
+                $midIndex = array_search('mid_back', $ordered, true);
+                $idx = array_search($kb_length, $ordered, true);
+                if ($idx === false || $midIndex === false) {
+                    $kb_length_adjustment = 0.00;
+                } else {
+                    $kb_length_adjustment = (($idx - $midIndex) * 20.00);
+                }
+                // Parse extras if provided (either numeric CSV or named extras)
+                $kb_extras_total = 0.00;
+                $kb_extras_raw = $request->input('kb_extras');
+                if (!empty($kb_extras_raw)) {
+                    if (is_string($kb_extras_raw) && preg_match('/^\d+(?:\.\d+)?(?:,\d+(?:\.\d+)?)*$/', $kb_extras_raw)) {
+                        $parts = array_map('floatval', explode(',', $kb_extras_raw));
+                        $kb_extras_total = array_sum($parts);
+                    } else {
+                        // named extras mapping
+                        $addonMap = ['kb_add_detangle'=>15,'kb_add_beads'=>10,'kb_add_beads_full'=>15,'kb_add_extension'=>20,'kb_add_rest'=>5];
+                        foreach (explode(',', $kb_extras_raw) as $it) {
+                            $it = trim($it);
+                            if (isset($addonMap[$it])) $kb_extras_total += $addonMap[$it];
+                        }
+                    }
+                }
+                $kb_final_price = round(($kb_base_price ?? 0) + ($kb_length_adjustment ?? 0) + ($kb_extras_total ?? 0), 2);
+                // If client submitted a final_price for kids flow, verify within tolerance and prefer server calc if mismatch large
+                if ($request->filled('final_price') && is_numeric($request->input('final_price'))) {
+                    $clientFinal = round((float) $request->input('final_price'), 2);
+                    $tolerance = is_numeric(env('PRICE_TOLERANCE')) ? (float) env('PRICE_TOLERANCE') : 1.00;
+                    if (abs($clientFinal - $kb_final_price) <= $tolerance) {
+                        $kb_final_price = $clientFinal;
+                    } else {
+                        Log::warning('Kids client final_price mismatch; using server calc', ['server' => $kb_final_price, 'client' => $clientFinal]);
+                    }
+                }
+            }
+
             // Create the booking and persist kb_* selector fields, length and final_price
             $booking = \App\Models\Booking::create([
                 'name' => $request->name,
                 'email' => $resolvedEmail ?: ($request->email ?: 'no-email@example.com'),
                 'phone' => $request->phone,
-                'service' => $request->service ?: 'General Service',
+                    // Save canonical service name if we resolved a Service model, otherwise store user-provided label
+                    'service' => $serviceNameForSave ?: ($request->service ?: 'General Service'),
                 'length' => $length,
                 'kb_braid_type' => $request->input('kb_braid_type'),
                 'kb_finish' => $request->input('kb_finish'),
                 'kb_length' => $request->input('kb_length') ?? null,
                 'kb_extras' => $request->input('kb_extras') ?? null,
+                'kb_base_price' => $kb_base_price,
+                'kb_length_adjustment' => $kb_length_adjustment,
+                'kb_final_price' => $kb_final_price,
                 'appointment_date' => $request->appointment_date,
-                'appointment_time' => $request->appointment_time,
+                // Persist appointment_time normalized to H:i (24h) format when possible
+                'appointment_time' => (function($val){ try { return \Carbon\Carbon::parse($val)->format('H:i'); } catch (\Exception $e) { return $val; } })($request->appointment_time),
                 'message' => $request->message,
                 'sample_picture' => $samplePicturePath,
                 // Persist base price and length adjustment for email fidelity
                 'base_price' => $basePrice,
                 'length_adjustment' => $adjust,
                 'hair_mask_option' => ($isHairMask ? $request->input('hair_mask_option') : null),
-                'final_price' => $finalPrice,
+                // For kids flow prefer kb_final_price as authoritative final price
+                'final_price' => ($kb_final_price !== null) ? $kb_final_price : $finalPrice,
                 'status' => 'pending'
             ]);
-                try {
-                    // Use the resolved email we selected earlier if available
-                    $notifyEmail = $resolvedEmail ?: ($booking->email && $booking->email !== 'no-email@example.com' ? $booking->email : null);
-                    Log::info('Resolved customer email for booking (pre-send)', ['booking_id' => $booking->id, 'resolved_email' => $resolvedEmail, 'booking_email_field' => $booking->email]);
-
-                    if (!empty($notifyEmail)) {
-                        // Log mailer config so we can confirm which SMTP is used for web requests
-                        Log::info('Mail configuration for booking confirmation (pre-send)', [
-                            'mail_default' => config('mail.default'),
-                            'mail_mailer_env' => env('MAIL_MAILER'),
-                            'mail_host' => config('mail.mailers.smtp.host') ?? env('MAIL_HOST'),
-                            'mail_port' => config('mail.mailers.smtp.port') ?? env('MAIL_PORT'),
-                            'mail_username' => env('MAIL_USERNAME'),
-                        ]);
-
-                        try {
-                            // Attempt immediate delivery via Notification sendNow
-                            Notification::route('mail', $notifyEmail)->sendNow(new BookingConfirmation($booking));
-                            Log::info('Booking confirmation notification sent (sendNow)', ['booking_id' => $booking->id, 'email' => $notifyEmail]);
-                        } catch (\Throwable $notifyErr) {
-                            Log::warning('Notification sendNow failed, attempting Mail fallback', ['booking_id' => $booking->id, 'email' => $notifyEmail, 'error' => $notifyErr->getMessage(), 'trace' => $notifyErr->getTraceAsString()]);
-                            try {
-                                \Illuminate\Support\Facades\Mail::to($notifyEmail)->send(new \App\Mail\BookingConfirmationMail($booking));
-                                Log::info('Booking confirmation sent via Mail::to()->send() fallback', ['booking_id' => $booking->id, 'email' => $notifyEmail]);
-                            } catch (\Throwable $mailErr) {
-                                Log::error('Failed to send booking confirmation via Mail fallback', ['booking_id' => $booking->id, 'email' => $notifyEmail, 'error' => $mailErr->getMessage(), 'trace' => $mailErr->getTraceAsString()]);
-                            }
-                        }
-                    } else {
-                        Log::info('No valid email provided; skipping booking confirmation notification', ['booking_id' => $booking->id, 'email' => $booking->email]);
-                    }
             $bookingId = 'BK' . str_pad($booking->id, 6, '0', STR_PAD_LEFT);
             $confirmationCode = 'CONF' . strtoupper(substr(md5($booking->id . time()), 0, 8));
             $booking->confirmation_code = $confirmationCode;
@@ -462,8 +540,15 @@ class AppointmentController extends Controller
                         'mail_username' => env('MAIL_USERNAME'),
                     ]);
 
-                    // Attempt immediate delivery via Notification sendNow, with Mail fallback
+                    // Attempt immediate delivery via Notification sendNow, with Mail fallback.
                     try {
+                        Log::info('Attempting to send booking confirmation to customer', [
+                            'booking_id' => $booking->id,
+                            'email' => $booking->email,
+                            'mail_from' => config('mail.from.address'),
+                            'mailer' => config('mail.default')
+                        ]);
+
                         Notification::route('mail', $booking->email)->sendNow(new BookingConfirmation($booking));
                         Log::info('Booking confirmation notification sent (sendNow)', ['booking_id' => $booking->id, 'email' => $booking->email]);
                     } catch (\Throwable $notifyErr) {
@@ -509,10 +594,10 @@ class AppointmentController extends Controller
                         'service' => $request->service ?: 'General Service',
                         'email_provided' => !empty($resolvedEmail) || !empty($request->email)
                     ]
-                ]);
+                ] + ($priceWarning ? ['price_warning' => $priceWarning] : []));
             } else {
                 // Return redirect with flash message for regular form submissions
-                return redirect()->route('home')->with([
+                $flash = [
                     'booking_success' => true,
                     'booking_details' => [
                         'booking_id' => $bookingId,
@@ -523,7 +608,9 @@ class AppointmentController extends Controller
                         'appointment_time' => date('g:i A', strtotime($request->appointment_time)),
                         'service' => $request->service ?: 'General Service'
                     ]
-                ]);
+                ];
+                if ($priceWarning) $flash['price_warning'] = $priceWarning;
+                return redirect()->route('home')->with($flash);
             }
 
         } catch (\Exception $e) {

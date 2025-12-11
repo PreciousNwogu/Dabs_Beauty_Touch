@@ -2747,8 +2747,8 @@
                     </div>
                     <p class="text-muted mb-3" style="font-size: 1rem;">We'll confirm your appointment once payment is received!</p>
                 </div>
-                <div class="modal-footer border-0 justify-content-center">
-                    <button type="button" class="btn btn-info px-4 py-2" onclick="closeSuccessModal()" style="background: linear-gradient(90deg, #17a2b8 0%, #20c997 100%); border: none; color: #fff; font-weight: bold; border-radius: 24px; width: 120px;">OK</button>
+                    <div class="modal-footer border-0 justify-content-center">
+                    <button type="button" id="successModalOk" class="btn btn-info px-4 py-2" onclick="closeSuccessModal()" tabindex="0" aria-label="Close success dialog" style="background: linear-gradient(90deg, #17a2b8 0%, #20c997 100%); border: none; color: #fff; font-weight: bold; border-radius: 24px; width: 120px; pointer-events: auto;">OK</button>
                 </div>
             </div>
         </div>
@@ -2793,7 +2793,7 @@
                     <p class="text-muted mb-3" style="font-size: 1rem;">Need urgent assistance? Feel free to contact us directly!</p>
                 </div>
                 <div class="modal-footer border-0 justify-content-center">
-                    <button type="button" class="btn btn-success px-4 py-2" onclick="closeOtherServicesSuccessModal()" style="background: linear-gradient(90deg, #28a745 0%, #20c997 100%); border: none; color: #fff; font-weight: bold; border-radius: 24px; width: 120px;">OK</button>
+                    <button type="button" id="otherServicesSuccessOk" class="btn btn-success px-4 py-2" onclick="closeOtherServicesSuccessModal()" tabindex="0" aria-label="Close success dialog" style="background: linear-gradient(90deg, #28a745 0%, #20c997 100%); border: none; color: #fff; font-weight: bold; border-radius: 24px; width: 120px; pointer-events: auto;">OK</button>
                 </div>
             </div>
         </div>
@@ -2817,6 +2817,7 @@
                         <input type="hidden" id="selectedService" name="service">
                         <input type="hidden" id="selectedServiceType" name="service_type">
                         <input type="hidden" id="selectedPrice" name="price">
+                        <input type="hidden" id="final_price_input" name="final_price" value="">
                         <input type="hidden" id="selectedHairMaskOption" name="hair_mask_option" value="mask-only">
 
                         <!-- Pricing Information (detailed boxes like screenshot) -->
@@ -4149,6 +4150,20 @@ console.log('=== LOADING BOOKING FUNCTIONS ===');
             }
 
             // Allow normal form submission to proceed (server is authoritative)
+
+            // Show processing state on the submit button to give user feedback
+            try {
+                const submitBtn = this.querySelector('#bookAppointmentBtn') || document.getElementById('bookAppointmentBtn');
+                if (submitBtn) {
+                    // Save original content so we can restore if needed
+                    if (!submitBtn.dataset.origHtml) submitBtn.dataset.origHtml = submitBtn.innerHTML;
+                    submitBtn.disabled = true;
+                    submitBtn.classList.add('disabled');
+                    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processing...';
+                }
+            } catch (err) {
+                console.warn('Failed to set processing state on submit button', err);
+            }
         });
     }); // End of DOMContentLoaded for form submission
 
@@ -4550,6 +4565,15 @@ document.addEventListener('DOMContentLoaded', function() {
 </style>
 
 <script>
+/* Accessible kids modal styles (moved out of JS) */
+.accessible-kids-modal .form-label { font-size: 1.02rem; color: #03253f; }
+.accessible-kids-modal .form-control { font-size: 1.03rem; padding: .65rem .8rem; border-radius: 8px; }
+.accessible-kids-modal .btn { min-height: 44px; padding: .6rem 1rem; font-size: 1rem; }
+.accessible-kids-modal .modal-header .btn { min-height: 38px; }
+.accessible-kids-modal .modal-title { font-size: 1.15rem; font-weight: 800; color: #ffffff; }
+.visually-hidden { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
+.accessible-kids-modal #kidsPricePreview { box-shadow: 0 6px 18px rgba(3,15,104,0.06); }
+.accessible-kids-modal [role="status"]:focus { outline: 3px solid #ffb703; }
 // Handle booking success modal
 document.addEventListener('DOMContentLoaded', function() {
     const successModal = document.getElementById('successModal');
@@ -4581,14 +4605,6 @@ document.addEventListener('DOMContentLoaded', function() {
         // Auto close modal after 5 seconds and clear session data
         setTimeout(function() {
             closeSuccessModal();
-        .accessible-kids-modal .form-label { font-size: 1.02rem; color: #03253f; }
-        .accessible-kids-modal .form-control { font-size: 1.03rem; padding: .65rem .8rem; border-radius: 8px; }
-        .accessible-kids-modal .btn { min-height: 44px; padding: .6rem 1rem; font-size: 1rem; }
-        .accessible-kids-modal .modal-header .btn { min-height: 38px; }
-        .accessible-kids-modal .modal-title { font-size: 1.15rem; font-weight: 800; color: #ffffff; }
-        .visually-hidden { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
-        .accessible-kids-modal #kidsPricePreview { box-shadow: 0 6px 18px rgba(3,15,104,0.06); }
-        .accessible-kids-modal [role="status"]:focus { outline: 3px solid #ffb703; }
             try {
                 clearSessionData();
             } catch (e) {
@@ -4633,6 +4649,10 @@ function closeSuccessModal() {
             if (window.history && window.history.replaceState) {
                 window.history.replaceState({}, document.title, window.location.pathname);
             }
+            // Redirect user to the main page after clearing session
+            try {
+                setTimeout(function(){ window.location.href = '/'; }, 250);
+            } catch(e) { console.warn('Redirect to home failed', e); }
         }).catch(function(error) {
             console.log('Session clear request failed:', error);
         });
@@ -4667,6 +4687,10 @@ function closeOtherServicesSuccessModal() {
             if (window.history && window.history.replaceState) {
                 window.history.replaceState({}, document.title, window.location.pathname);
             }
+            // Redirect user to the main page after clearing session
+            try {
+                setTimeout(function(){ window.location.href = '/'; }, 250);
+            } catch(e) { console.warn('Redirect to home failed', e); }
         }).catch(function(error) {
             console.log('Other Services session clear request failed:', error);
         });
@@ -4714,6 +4738,98 @@ document.addEventListener('DOMContentLoaded', function() {
 
             if (file) {
                 // Validate file type
+
+// Attempt to attach success modal buttons immediately (in case DOMContentLoaded already fired)
+(function attachSuccessButtonsNow() {
+    setTimeout(function() {
+        try {
+            const okButton = document.getElementById('successModalOk') || document.querySelector('#successModal .btn-info');
+            if (okButton && !okButton._attached) {
+                okButton.addEventListener('click', function(e) {
+                    e.preventDefault(); e.stopPropagation(); closeSuccessModal();
+                });
+                okButton._attached = true;
+                console.log('Immediate OK button listener attached');
+            }
+
+            const otherServicesOkButton = document.getElementById('otherServicesSuccessOk') || document.querySelector('#otherServicesSuccessModal .btn-success');
+            if (otherServicesOkButton && !otherServicesOkButton._attached) {
+                otherServicesOkButton.addEventListener('click', function(e) {
+                    e.preventDefault(); e.stopPropagation(); closeOtherServicesSuccessModal();
+                });
+                otherServicesOkButton._attached = true;
+                console.log('Immediate Other Services OK button listener attached');
+            }
+        } catch (err) {
+            console.warn('attachSuccessButtonsNow error', err);
+        }
+    }, 50);
+})();
+
+// Fallback document-level listener: catches clicks even if button listeners fail to attach
+document.addEventListener('click', function(e) {
+    try {
+        const ok = e.target.closest ? e.target.closest('#successModalOk') : null;
+        if (ok) {
+            e.preventDefault();
+            e.stopPropagation();
+            console.log('Document-level OK click detected');
+            if (typeof closeSuccessModal === 'function') closeSuccessModal();
+        }
+        const otherOk = e.target.closest ? e.target.closest('#otherServicesSuccessOk') : null;
+        if (otherOk) {
+            e.preventDefault();
+            e.stopPropagation();
+            console.log('Document-level Other Services OK click detected');
+            if (typeof closeOtherServicesSuccessModal === 'function') closeOtherServicesSuccessModal();
+        }
+    } catch (err) {
+        console.warn('Document-level success modal click handler error', err);
+    }
+});
+
+// Capture-phase fallback: in case some overlay stops propagation, listen in capture phase
+document.addEventListener('click', function(e){
+    try{
+        var target = e.target || window.event && window.event.srcElement;
+        // Walk up the DOM if necessary
+        while(target && target.nodeType === 3) target = target.parentNode; // text node fallback
+        var found = null;
+        var el = target;
+        while(el){
+            if(el.id === 'successModalOk') { found = el; break; }
+            el = el.parentElement;
+        }
+        if(found){
+            // Don't rely on stopPropagation here; just ensure modal closes
+            if(typeof closeSuccessModal === 'function') closeSuccessModal();
+        }
+        var otherFound = null;
+        el = target;
+        while(el){
+            if(el.id === 'otherServicesSuccessOk') { otherFound = el; break; }
+            el = el.parentElement;
+        }
+        if(otherFound){ if(typeof closeOtherServicesSuccessModal === 'function') closeOtherServicesSuccessModal(); }
+    }catch(err){ console.warn('Capture-phase success modal handler error', err); }
+}, true);
+
+// Keyboard support: Enter or Escape closes the modal when it's visible
+document.addEventListener('keydown', function(e) {
+    try {
+        const successModal = document.getElementById('successModal');
+        if (!successModal) return;
+        const isVisible = window.getComputedStyle(successModal).display !== 'none' && successModal.classList.contains('show');
+        if (!isVisible) return;
+        if (e.key === 'Enter' || e.key === 'Escape') {
+            console.log('Key close for success modal:', e.key);
+            e.preventDefault();
+            if (typeof closeSuccessModal === 'function') closeSuccessModal();
+        }
+    } catch (err) {
+        console.warn('Success modal key handler error', err);
+    }
+});
                 const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
                 if (!allowedTypes.includes(file.type)) {
                     alert('Please select a valid image file (JPG, PNG, or GIF)');
@@ -4775,6 +4891,7 @@ function clearImagePreview() {
                         <input type="hidden" id="kids_length_input" name="kb_length" value="">
                         <input type="hidden" id="kids_extras_input" name="kb_extras" value="">
                         <input type="hidden" id="kids_price_input" name="price" value="">
+                        <input type="hidden" id="kids_final_price_input" name="final_price" value="">
                         <input type="hidden" name="appointment_date" value="" />
                         <input type="hidden" name="appointment_time" value="" />
 
@@ -4831,7 +4948,10 @@ function clearImagePreview() {
                                     <div id="kidsModal_total" style="margin-top:6px;"><strong>Total: $--</strong></div>
                                 </div>
                                 <div class="d-grid mt-3">
-                                    <button type="submit" class="btn btn-warning" style="font-weight:600;">Confirm Booking</button>
+                                    <div class="d-flex gap-2">
+                                        <a href="{{ route('kids.selector') }}" class="btn btn-secondary" style="font-weight:600;">Back to selector</a>
+                                        <button type="submit" class="btn btn-warning" style="font-weight:600;">Confirm Booking</button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -4856,13 +4976,21 @@ function clearImagePreview() {
         'kids-braids': 80,
         'stitch-braids': 120,
         'hair-mask': 50,
+        'retouching': 50,
         'boho-braids': 150,
         'custom': 100
     };
 
     function lengthAdjustment(lengthValue) {
-        // Normalize incoming value (accept hyphen or underscore)
-        const key = (lengthValue || '').toString().replace(/-/g, '_');
+        // Normalize incoming value (accept hyphen, underscore, or compact forms like 'midback')
+        let key = (lengthValue || '').toString().toLowerCase().trim();
+        // unify separators
+        key = key.replace(/[-\s]+/g, '_');
+        // Handle common compact variants that miss the underscore
+        if (key === 'midback' || key === 'midback' ) key = 'mid_back';
+        if (key === 'brastrap' || key === 'brastrap') key = 'bra_strap';
+        // final sanity: replace any double-underscores
+        key = key.replace(/__+/g, '_');
         console.log('Length adjustment for:', lengthValue, '-> key:', key);
 
         // Ordered lengths from shortest -> longest (must match server)
@@ -5045,6 +5173,41 @@ function clearImagePreview() {
             hidden.value = base;
             console.log('Updated hidden price input to base price (client will not post adjusted final):', hidden.value);
         }
+        // Also store the computed final price in the form hidden input so server can use client-calculated final_price
+        try {
+            const finalInput = document.getElementById('final_price_input');
+            if (finalInput) {
+                finalInput.value = (typeof finalPrice === 'number') ? Number(finalPrice).toFixed(2) : finalPrice;
+                console.log('Wrote final_price_input =', finalInput.value);
+            } else {
+                // create hidden input in booking form if missing
+                const form = document.getElementById('bookingForm');
+                if (form) {
+                    const inp = document.createElement('input');
+                    inp.type = 'hidden'; inp.name = 'final_price'; inp.id = 'final_price_input';
+                    inp.value = (typeof finalPrice === 'number') ? Number(finalPrice).toFixed(2) : finalPrice;
+                    form.appendChild(inp);
+                    console.log('Inserted missing final_price_input with value', inp.value);
+                }
+            }
+        } catch (e) { console.warn('Could not set final_price_input', e); }
+
+        // Ensure a normalized 'length' hidden input is present so server receives canonical value
+        try {
+            const bookingForm = document.getElementById('bookingForm');
+            if (bookingForm) {
+                const lengthResolved = (typeof length === 'string') ? length.replace(/-/g, '_') : length;
+                let lengthInput = bookingForm.querySelector('input[name="length"][type="hidden"]');
+                if (!lengthInput) {
+                    lengthInput = document.createElement('input');
+                    lengthInput.type = 'hidden';
+                    lengthInput.name = 'length';
+                    bookingForm.appendChild(lengthInput);
+                }
+                lengthInput.value = lengthResolved;
+                console.log('Set hidden booking form length to', lengthResolved);
+            }
+        } catch (e) { console.warn('Could not ensure hidden length input', e); }
         return finalPrice;
     }
 
@@ -5084,6 +5247,14 @@ function clearImagePreview() {
             if (serviceDisplayEl) serviceDisplayEl.value = serviceName || '';
 
             const base = window.currentServiceInfo.basePrice;
+
+            // Ensure hidden selectedPrice reflects the authoritative base for this modal
+            try {
+                const selectedPriceEl = document.getElementById('selectedPrice');
+                if (selectedPriceEl) {
+                    selectedPriceEl.value = (typeof base === 'number') ? String(base) : (base || '');
+                }
+            } catch (e) { console.warn('Failed to set selectedPrice hidden input', e); }
 
             // If we have kids selector data and this is the kids-braids flow,
             // show a compact kids-only booking summary and hide the detailed info.

@@ -280,11 +280,55 @@ if(typeof window.showKidsBookingPanel !== 'function'){
 
                 // Try to populate visible preview pieces in the modal if present
                 const kb_total = document.getElementById('kidsModal_total');
-                if(kb_total){
-                    const total = sel && sel.price ? Number(sel.price).toFixed(0) : (document.getElementById('kb_total_price') ? document.getElementById('kb_total_price').textContent.replace('$','') : '');
-                    kb_total.innerHTML = '<strong>Total: $' + (total || '--') + '</strong>';
+                const kb_base = document.getElementById('kidsModal_base');
+                const kb_adjust = document.getElementById('kidsModal_adjustments');
+
+                // Compute breakdown: base, braid-type adj, length adj, finish adj, extras
+                try{
+                    const priceMapLocal = window.priceMap || {
+                        'kids-braids': 80
+                    };
+                    const base = Number(priceMapLocal['kids-braids'] || 80);
+                    // braid type adjustments
+                    const typeAdjMap = { 'protective': -20, 'cornrows': -40, 'knotless_small': 20, 'knotless_med': 0, 'box_small': 10, 'box_med': 0, 'stitch': 20 };
+                    const lengthAdjMap = { 'shoulder': 0, 'armpit': 10, 'mid_back': 20, 'waist': 30 };
+                    const finishAdjMap = { 'curled': -10, 'plain': 0 };
+
+                    const bt = (sel.kb_braid_type || sel.braid_type || '').toString();
+                    const ln = (sel.kb_length || sel.length || '').toString();
+                    const fi = (sel.kb_finish || sel.finish || '').toString();
+                    const exRaw = sel.extras || '';
+
+                    const typeAdj = (bt && typeAdjMap[bt]) ? Number(typeAdjMap[bt]) : 0;
+                    const lengthAdj = (ln && lengthAdjMap[ln]) ? Number(lengthAdjMap[ln]) : 0;
+                    const finishAdj = (fi && finishAdjMap[fi]) ? Number(finishAdjMap[fi]) : 0;
+
+                    // parse extras: either CSV of numeric values or known addon ids
+                    let extrasSum = 0;
+                    if(exRaw){
+                        try{
+                            if(typeof exRaw === 'string' && exRaw.match(/^\d+(?:\.\d+)?(?:,\d+(?:\.\d+)?)*$/)){
+                                extrasSum = exRaw.split(',').map(x=>Number(x)||0).reduce((a,b)=>a+b,0);
+                            } else {
+                                const addonMap = {'kb_add_detangle':15,'kb_add_beads':10,'kb_add_beads_full':15,'kb_add_extension':20,'kb_add_rest':5};
+                                exRaw.toString().split(',').forEach(function(it){ it = it.trim(); if(addonMap[it]) extrasSum += addonMap[it]; });
+                            }
+                        }catch(e){ extrasSum = 0; }
+                    }
+
+                    const adjustmentsTotal = Number(typeAdj || 0) + Number(lengthAdj || 0) + Number(finishAdj || 0) + Number(extrasSum || 0);
+                    const computedTotal = Number(base) + Number(adjustmentsTotal);
+
+                    if(kb_base) kb_base.innerHTML = 'Base: <strong>$' + Number(base).toFixed(0) + '</strong>';
+                    if(kb_adjust) kb_adjust.innerHTML = 'Adjustments: <strong>' + (adjustmentsTotal >= 0 ? '+' : '-') + '$' + Math.abs(Number(adjustmentsTotal)).toFixed(0) + '</strong>';
+                    if(kb_total) kb_total.innerHTML = '<strong>Total: $' + Number(computedTotal).toFixed(0) + '</strong>';
+                }catch(e){
+                    // fallback to previous behavior
+                    if(kb_total){
+                        const total = sel && sel.price ? Number(sel.price).toFixed(0) : (document.getElementById('kb_total_price') ? document.getElementById('kb_total_price').textContent.replace('$','') : '');
+                        kb_total.innerHTML = '<strong>Total: $' + (total || '--') + '</strong>';
+                    }
                 }
-                const kb_base = document.getElementById('kidsModal_base'); if(kb_base && typeof kb_base.innerHTML === 'string') { /* leave as-is or set by page scripts */ }
             }catch(e){ console.warn('populate kids modal fallback failed', e); }
 
             // Show modal (Bootstrap if available; fallback otherwise). Don't touch calendar.
@@ -302,6 +346,78 @@ if(typeof window.showKidsBookingPanel !== 'function'){
     };
 }
 
+</script>
+
+<!-- Recompute booking price globally when length or addons change (applies to main booking modal too) -->
+<script>
+document.addEventListener('DOMContentLoaded', function(){
+    function getSelectedLengthGlobal(){
+        const byName = document.querySelector('input[name="hair_length"]:checked') || document.querySelector('input[name="length"]:checked');
+        if(byName) return byName.value;
+        const alt = document.querySelector('input[name="kb_length"]:checked');
+        if(alt) return alt.value;
+        const any = Array.from(document.querySelectorAll('input[id^="length_"]')).find(i => i.checked);
+        return any ? any.value : null;
+    }
+
+    function getBaseGlobal(){
+        if(window.currentServiceInfo && window.currentServiceInfo.basePrice != null) return Number(window.currentServiceInfo.basePrice);
+        const hidden = document.getElementById('selectedPrice'); if(hidden && hidden.value) return Number(hidden.value);
+        const kbPrice = document.getElementById('kb_price_input'); if(kbPrice && kbPrice.value) return Number(kbPrice.value);
+        const disp = document.getElementById('priceDisplay'); if(disp){ const m = (disp.textContent||'').match(/\$\s*([0-9,.]+)/); if(m) return Number(m[1].replace(/,/g,'')); }
+        return null;
+    }
+
+    function computeAdjGlobal(length, serviceType){
+        let lt = (length||'').toString().toLowerCase().trim();
+        lt = lt.replace(/[-\s]+/g, '_');
+        if (lt === 'midback') lt = 'mid_back';
+        if (lt === 'brastrap') lt = 'bra_strap';
+        const exceptions = ['jumbo-knotless','kids-braids'];
+        if((lt==='neck' || lt==='shoulder') && (!serviceType || exceptions.indexOf(serviceType)===-1)) return -40;
+        if(lt==='armpit') return 10;
+        if(lt==='mid_back' || lt==='mid-back' || lt==='mid') return 0;
+        if(lt==='waist') return 30;
+        if(lt==='tailbone') return 40;
+        return 0;
+    }
+
+    function sumAddonsGlobal(){
+        let s=0; Array.from(document.querySelectorAll('input[type="checkbox"]')).forEach(cb=>{ if(cb.checked && !isNaN(Number(cb.value))) s+=Number(cb.value); }); return s;
+    }
+
+    function recomputeGlobal(){
+        try{
+            const base = getBaseGlobal(); if(base===null) return;
+            const len = getSelectedLengthGlobal();
+            const st = (window.currentServiceInfo && window.currentServiceInfo.serviceType) ? window.currentServiceInfo.serviceType : (document.getElementById('selectedServiceType')?document.getElementById('selectedServiceType').value:null);
+            const adj = computeAdjGlobal(len, st);
+            const addons = sumAddonsGlobal();
+            const final = Math.max(0, Number(base)+Number(adj)+Number(addons));
+            const disp = document.getElementById('priceDisplay'); if(disp) disp.textContent = '$'+Number(final).toFixed(0);
+            const sel = document.getElementById('selectedPrice'); if(sel) sel.value = Number(final).toFixed(2);
+            const finalInput = (document.querySelector('input[name="final_price"]') || (function(){ const f=document.getElementById('bookingForm')||document.querySelector('form'); if(!f) return null; const i=document.createElement('input'); i.type='hidden'; i.name='final_price'; f.appendChild(i); return i; })());
+            if(finalInput) finalInput.value = Number(final).toFixed(2);
+            // Also update explicit inputs by id if present so non-dynamic forms get the value
+            const finalById = document.getElementById('final_price_input'); if(finalById) finalById.value = Number(final).toFixed(2);
+            const kidsFinalById = document.getElementById('kids_final_price_input'); if(kidsFinalById) kidsFinalById.value = Number(final).toFixed(2);
+            const kbTotal = document.getElementById('kb_total_price'); if(kbTotal) kbTotal.textContent = '$'+Number(final).toFixed(0);
+        }catch(e){ console.warn('recomputeGlobal error', e); }
+    }
+
+    // attach
+    Array.from(document.querySelectorAll('input[name="hair_length"], input[name="length"], input[id^="length_"], input[name="kb_length"]')).forEach(i=>i.addEventListener('change', recomputeGlobal));
+    Array.from(document.querySelectorAll('#kb-addons input[type="checkbox"], .price-box input[type="checkbox"], input[type="checkbox"][id^="kb_add_"]')).forEach(c=>c.addEventListener('change', recomputeGlobal));
+
+    // integrate with existing updatePriceDisplay if present
+    if(typeof window.updatePriceDisplay === 'function'){
+        const prev = window.updatePriceDisplay;
+        window.updatePriceDisplay = function(base){ try{ prev(base); }catch(e){} recomputeGlobal(); };
+    } else window.updatePriceDisplay = recomputeGlobal;
+
+    // initial run
+    setTimeout(recomputeGlobal, 200);
+});
 </script>
 
 <script>

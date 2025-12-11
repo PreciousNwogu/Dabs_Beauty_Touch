@@ -303,6 +303,12 @@ class Booking extends Model
             }
         }
 
+        // If we resolved an adjustment value from persisted fields or computation,
+        // reflect it into the $lengthAdjust variable used for the returned breakdown.
+        if (!is_null($adjust)) {
+            $lengthAdjust = (float) $adjust;
+        }
+
         // Compute kids/selector-based adjustments if applicable
         try {
             $computedTotal = null;
@@ -346,7 +352,19 @@ class Booking extends Model
         try {
             $friendlyBraid = ['protective' => 'Protective style','cornrows' => 'Cornrows','knotless_small' => 'Knotless (small)','knotless_med' => 'Knotless (medium)','box_small' => 'Box (small)','box_med' => 'Box (medium)','stitch' => 'Stitch'];
             $friendlyFinish = ['none' => '—','sleek' => 'Sleek finish','natural' => 'Natural finish','curled' => 'With curl','plain' => 'Without curl'];
-            $friendlyLength = ['short' => 'Short','neck' => 'Neck','mid_back' => 'Mid Back','waist' => 'Waist','long' => 'Long'];
+            $friendlyLength = [
+                'short' => 'Short',
+                'neck' => 'Neck',
+                'shoulder' => 'Shoulder',
+                'armpit' => 'Armpit',
+                'bra_strap' => 'Bra strap',
+                'mid_back' => 'Mid Back',
+                'waist' => 'Waist',
+                'hip' => 'Hip',
+                'tailbone' => 'Tailbone',
+                'classic' => 'Classic',
+                'long' => 'Long'
+            ];
             $addonMap = ['kb_add_detangle' => 'Detangle', 'kb_add_beads' => 'Beads', 'kb_add_beads_full' => 'Beads (full)', 'kb_add_extension' => 'Extension', 'kb_add_rest' => 'Restyle'];
 
             $sel = $selector ?: [];

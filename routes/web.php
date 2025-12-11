@@ -743,10 +743,32 @@ Route::post('/bookings', function(Request $request) {
         }catch(
         Exception $e){ /* noop */ }
 
-        // Normalize incoming length (accept hair_length or length) and determine final price using Service model + length adjustments
-        $lengthRaw = $request->input('hair_length') ?? $request->input('length');
+        // If this is a kids-braids submission, ensure a length was provided (kb_length or length/hair_length)
+        if (!empty($bookingData['service_type']) && $bookingData['service_type'] === 'kids-braids') {
+            $providedLength = $bookingData['kb_length'] ?? $request->input('length') ?? $request->input('hair_length') ?? null;
+            if (empty($providedLength)) {
+                // Return early with a validation-like error so the user can correct the form
+                if ($request->wantsJson() || $request->header('X-Requested-With') === 'XMLHttpRequest') {
+                    return response()->json(['success' => false, 'message' => 'Please select a hair length for kids braids.'], 422);
+                }
+                return redirect()->route('home')->withErrors(['length' => 'Please select a hair length for kids braids'])->withInput();
+            }
+
+            // Normalize kb_length to canonical format server-side
+            $norm = strtolower(trim((string)$providedLength));
+            $norm = str_replace([' ', '-'], ['_', '_'], $norm);
+            $norm = str_replace(['tail_bone','tail bone','tail-bone','tailbone','tail_bone'], 'tailbone', $norm);
+            $norm = str_replace(['bra strap','bra-strap','bra_strap'], 'bra_strap', $norm);
+            $bookingData['kb_length'] = $norm;
+        }
+
+        // Normalize incoming length (accept hair_length or length or kb_length) and determine final price using Service model + length adjustments
+        $lengthRaw = $request->input('hair_length') ?? $request->input('length') ?? $bookingData['kb_length'] ?? null;
         if ($lengthRaw) {
-            $length = str_replace('-', '_', $lengthRaw);
+            $length = strtolower(trim((string)$lengthRaw));
+            $length = str_replace([' ', '-'], ['_', '_'], $length);
+            $length = str_replace(['tail_bone','tail bone','tail-bone','tailbone','tail_bone'], 'tailbone', $length);
+            $length = str_replace(['bra strap','bra-strap','bra_strap'], 'bra_strap', $length);
         } else {
             $length = $request->length ?: 'mid_back';
         }
@@ -1160,4 +1182,41 @@ Route::prefix('api')->group(function () {
     Route::get('/bookings/unavailable', function() {
         return response()->json(['unavailable' => []]);
     });
+});
+
+// Serve an .ics calendar file for a booking so users can download/import to calendars
+Route::get('/bookings/{id}/calendar.ics', function ($id) {
+    $booking = \App\Models\Booking::withTrashed()->findOrFail($id);
+    $tz = config('app.timezone') ?: 'UTC';
+    try {
+        $date = $booking->appointment_date ? $booking->appointment_date->format('Y-m-d') : null;
+        $time = $booking->appointment_time ?? null;
+        if (!$date || !$time) {
+            abort(404, 'Booking has no scheduled date/time');
+        }
+        $start = \Carbon\Carbon::parse($date . ' ' . $time, $tz)->toImmutable();
+        $duration = (int) ($booking->service_duration_minutes ?? 90);
+        $end = $start->addMinutes($duration);
+
+        $uid = 'booking-' . ($booking->id ?? '0') . '@' . request()->getHost();
+        $now = \Carbon\Carbon::now()->utc();
+        $dtstamp = $now->format('Ymd\THis\Z');
+        $dtstart = $start->utc()->format('Ymd\THis\Z');
+        $dtend = $end->utc()->format('Ymd\THis\Z');
+        $summary = addslashes($booking->service ?? 'Appointment');
+        $description = addslashes('Booking ' . ($booking->confirmation_code ?? ('BK' . str_pad($booking->id ?? 0, 6, '0', STR_PAD_LEFT))) . "\nCustomer: " . ($booking->name ?? '') . "\nPhone: " . ($booking->phone ?? ''));
+
+        $ics = "BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//Dabs Beauty Touch//EN\r\nBEGIN:VEVENT\r\n";
+        $ics .= "UID:{$uid}\r\nDTSTAMP:{$dtstamp}\r\nDTSTART:{$dtstart}\r\nDTEND:{$dtend}\r\n";
+        $ics .= "SUMMARY:{$summary}\r\nDESCRIPTION:{$description}\r\n";
+        $ics .= "END:VEVENT\r\nEND:VCALENDAR\r\n";
+
+        $filename = 'booking-' . ($booking->confirmation_code ?? ('BK' . str_pad($booking->id ?? 0, 6, '0', STR_PAD_LEFT))) . '.ics';
+        return response($ics, 200, [
+            'Content-Type' => 'text/calendar; charset=utf-8',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+        ]);
+    } catch (\Exception $e) {
+        abort(500, 'Could not generate calendar file');
+    }
 });
