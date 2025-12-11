@@ -191,6 +191,38 @@ Route::get('/calendar', function () {
     return view('calendar');
 })->name('calendar');
 
+// Kids Braids Selector page
+Route::get('/kids-selector', function () {
+    // Pass service prices to the selector page (from config or Service model)
+    $servicePrices = config('service_prices', []);
+    return view('kids-selector', compact('servicePrices'));
+})->name('kids.selector');
+
+// Handle kids selector submission (server-side) and redirect to home with flashed session
+Route::post('/kids-selector/submit', function (Request $request) {
+    $data = $request->validate([
+        'kb_braid_type' => 'required|string',
+        'kb_finish' => 'nullable|string',
+        'kb_length' => 'required|string',
+        'extras' => 'nullable|string',
+        'price' => 'required|numeric'
+    ]);
+
+    // Normalize payload
+    $payload = [
+        'service' => 'Kids Braids',
+        'service_type' => 'kids-braids',
+        'price' => (float) $data['price'],
+        'hair_length' => $data['kb_length'],
+        'braid_type' => $data['kb_braid_type'],
+        'finish' => $data['kb_finish'] ?? null,
+        'extras' => $data['extras'] ?? null,
+    ];
+
+    // Flash to session for one-time consumption on home page
+    return redirect()->route('home')->with('kids_selector', $payload);
+})->name('kids.selector.submit');
+
 // Admin authentication routes (unprotected but rate limited) - TEMPORARY SIMPLE VERSION
 Route::get('/admin/login', function () {
     return view('admin.login');
@@ -615,10 +647,22 @@ Route::post('/bookings', function(Request $request) {
             Log::info('No file uploaded');
         }
 
+        // Normalize phone server-side: allow leading + and digits, strip other characters
+        $rawPhone = $request->phone ?? '';
+        $normalizedPhone = preg_replace('/[^0-9+]/', '', $rawPhone);
+        // If there are multiple + signs, keep only the leading one
+        if (substr_count($normalizedPhone, '+') > 1) {
+            $normalizedPhone = preg_replace('/\++/', '+', $normalizedPhone);
+            if (strpos($normalizedPhone, '+') !== 0) {
+                // move single + to start
+                $normalizedPhone = '+' . str_replace('+', '', $normalizedPhone);
+            }
+        }
+
         $bookingData = [
             'name' => $request->name,
             'email' => $request->email ?: 'no-email@example.com',
-            'phone' => $request->phone,
+            'phone' => $normalizedPhone,
             'address' => $request->address,
             'service' => $request->service ?: 'General Service',
             'appointment_date' => $request->appointment_date,
@@ -629,10 +673,102 @@ Route::post('/bookings', function(Request $request) {
             'status' => 'pending',
         ];
 
-        // Normalize incoming length (accept hair_length or length) and determine final price using Service model + length adjustments
-        $lengthRaw = $request->input('hair_length') ?? $request->input('length');
+        // Capture kids selector fields if present and append to notes for email fidelity
+        try{
+            $selectorFields = [];
+            if($request->filled('kb_braid_type')) $selectorFields['braid_type'] = $request->input('kb_braid_type');
+            if($request->filled('kb_finish')) $selectorFields['finish'] = $request->input('kb_finish');
+            if($request->filled('kb_length')) $selectorFields['length'] = $request->input('kb_length');
+            if($request->filled('kb_extras')) $selectorFields['extras'] = $request->input('kb_extras');
+            if(!empty($selectorFields)){
+                $json = json_encode($selectorFields);
+                $bookingData['notes'] = trim(($bookingData['notes'] ?? '') . "\nSelector: " . $json);
+                // persist selector fields directly on booking for easier access
+
+                $bookingData['kb_braid_type'] = $selectorFields['braid_type'] ?? null;
+                $bookingData['kb_finish'] = $selectorFields['finish'] ?? null;
+                $bookingData['kb_length'] = $selectorFields['length'] ?? null;
+                $bookingData['kb_extras'] = $selectorFields['extras'] ?? null;
+
+                // Map the braid type to a human friendly service label and store as service for clarity
+                $braidMap = [
+                    'protective' => 'Protective style',
+                    'cornrows' => 'Cornrows',
+                    'knotless_small' => 'Knotless (small)',
+                    'knotless_med' => 'Knotless (medium)',
+                    'box_small' => 'Box (small)',
+                    'box_med' => 'Box (medium)',
+                    'stitch' => 'Stitch',
+                ];
+                if(!empty($selectorFields['braid_type'])){
+                    $human = $braidMap[$selectorFields['braid_type']] ?? ucwords(str_replace(['_','-'], ' ', $selectorFields['braid_type']));
+                    $bookingData['service'] = 'Kids Braids — ' . $human;
+                    $bookingData['service_type'] = 'kids-braids';
+                }
+
+                // Compute authoritative kids price using the same mapping as notifications
+                $baseConfigured = (float) (config('service_prices.kids_braids', 80));
+                $typeAdj = ['protective'=>-20,'cornrows'=>-40,'knotless_small'=>20,'knotless_med'=>0,'box_small'=>10,'box_med'=>0,'stitch'=>20];
+                $lengthAdj = ['shoulder'=>0,'armpit'=>10,'mid_back'=>20,'waist'=>30];
+                $finishAdj = ['curled'=>-10,'plain'=>0];
+                $addonMap = ['kb_add_detangle'=>15,'kb_add_beads'=>10,'kb_add_beads_full'=>15,'kb_add_extension'=>20,'kb_add_rest'=>5];
+
+                $adjustments = 0; $addons = 0;
+                $bt = $selectorFields['braid_type'] ?? null;
+                $ln = $selectorFields['length'] ?? null;
+                $fi = $selectorFields['finish'] ?? null;
+                $ex = $selectorFields['extras'] ?? null;
+
+                if($bt && isset($typeAdj[$bt])) $adjustments += $typeAdj[$bt];
+                if($ln && isset($lengthAdj[$ln])) $adjustments += $lengthAdj[$ln];
+                if($fi && isset($finishAdj[$fi])) $adjustments += $finishAdj[$fi];
+
+                if($ex){
+                    if(is_string($ex) && strpos($ex,'kb_add_')!==false){
+                        foreach(explode(',', $ex) as $it){ $it = trim($it); if(isset($addonMap[$it])) $addons += $addonMap[$it]; }
+                    } else if(is_string($ex) && preg_match('/^\d+(?:\.\d+)?(,\d+(?:\.\d+)?)*$/', $ex)){
+                        foreach(explode(',', $ex) as $n){ $addons += floatval($n); }
+                    }
+                }
+
+                $finalKidsPrice = round($baseConfigured + $adjustments + $addons, 2);
+                $bookingData['base_price'] = $baseConfigured;
+                $bookingData['length_adjustment'] = $adjustments;
+                $bookingData['final_price'] = $finalKidsPrice;
+                // Also persist selector-specific breakdown so we don't overwrite other services
+                $bookingData['kb_base_price'] = $baseConfigured;
+                $bookingData['kb_length_adjustment'] = $adjustments;
+                $bookingData['kb_final_price'] = $finalKidsPrice;
+            }
+        }catch(
+        Exception $e){ /* noop */ }
+
+        // If this is a kids-braids submission, ensure a length was provided (kb_length or length/hair_length)
+        if (!empty($bookingData['service_type']) && $bookingData['service_type'] === 'kids-braids') {
+            $providedLength = $bookingData['kb_length'] ?? $request->input('length') ?? $request->input('hair_length') ?? null;
+            if (empty($providedLength)) {
+                // Return early with a validation-like error so the user can correct the form
+                if ($request->wantsJson() || $request->header('X-Requested-With') === 'XMLHttpRequest') {
+                    return response()->json(['success' => false, 'message' => 'Please select a hair length for kids braids.'], 422);
+                }
+                return redirect()->route('home')->withErrors(['length' => 'Please select a hair length for kids braids'])->withInput();
+            }
+
+            // Normalize kb_length to canonical format server-side
+            $norm = strtolower(trim((string)$providedLength));
+            $norm = str_replace([' ', '-'], ['_', '_'], $norm);
+            $norm = str_replace(['tail_bone','tail bone','tail-bone','tailbone','tail_bone'], 'tailbone', $norm);
+            $norm = str_replace(['bra strap','bra-strap','bra_strap'], 'bra_strap', $norm);
+            $bookingData['kb_length'] = $norm;
+        }
+
+        // Normalize incoming length (accept hair_length or length or kb_length) and determine final price using Service model + length adjustments
+        $lengthRaw = $request->input('hair_length') ?? $request->input('length') ?? $bookingData['kb_length'] ?? null;
         if ($lengthRaw) {
-            $length = str_replace('-', '_', $lengthRaw);
+            $length = strtolower(trim((string)$lengthRaw));
+            $length = str_replace([' ', '-'], ['_', '_'], $length);
+            $length = str_replace(['tail_bone','tail bone','tail-bone','tailbone','tail_bone'], 'tailbone', $length);
+            $length = str_replace(['bra strap','bra-strap','bra_strap'], 'bra_strap', $length);
         } else {
             $length = $request->length ?: 'mid_back';
         }
@@ -1046,4 +1182,41 @@ Route::prefix('api')->group(function () {
     Route::get('/bookings/unavailable', function() {
         return response()->json(['unavailable' => []]);
     });
+});
+
+// Serve an .ics calendar file for a booking so users can download/import to calendars
+Route::get('/bookings/{id}/calendar.ics', function ($id) {
+    $booking = \App\Models\Booking::withTrashed()->findOrFail($id);
+    $tz = config('app.timezone') ?: 'UTC';
+    try {
+        $date = $booking->appointment_date ? $booking->appointment_date->format('Y-m-d') : null;
+        $time = $booking->appointment_time ?? null;
+        if (!$date || !$time) {
+            abort(404, 'Booking has no scheduled date/time');
+        }
+        $start = \Carbon\Carbon::parse($date . ' ' . $time, $tz)->toImmutable();
+        $duration = (int) ($booking->service_duration_minutes ?? 90);
+        $end = $start->addMinutes($duration);
+
+        $uid = 'booking-' . ($booking->id ?? '0') . '@' . request()->getHost();
+        $now = \Carbon\Carbon::now()->utc();
+        $dtstamp = $now->format('Ymd\THis\Z');
+        $dtstart = $start->utc()->format('Ymd\THis\Z');
+        $dtend = $end->utc()->format('Ymd\THis\Z');
+        $summary = addslashes($booking->service ?? 'Appointment');
+        $description = addslashes('Booking ' . ($booking->confirmation_code ?? ('BK' . str_pad($booking->id ?? 0, 6, '0', STR_PAD_LEFT))) . "\nCustomer: " . ($booking->name ?? '') . "\nPhone: " . ($booking->phone ?? ''));
+
+        $ics = "BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//Dabs Beauty Touch//EN\r\nBEGIN:VEVENT\r\n";
+        $ics .= "UID:{$uid}\r\nDTSTAMP:{$dtstamp}\r\nDTSTART:{$dtstart}\r\nDTEND:{$dtend}\r\n";
+        $ics .= "SUMMARY:{$summary}\r\nDESCRIPTION:{$description}\r\n";
+        $ics .= "END:VEVENT\r\nEND:VCALENDAR\r\n";
+
+        $filename = 'booking-' . ($booking->confirmation_code ?? ('BK' . str_pad($booking->id ?? 0, 6, '0', STR_PAD_LEFT))) . '.ics';
+        return response($ics, 200, [
+            'Content-Type' => 'text/calendar; charset=utf-8',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+        ]);
+    } catch (\Exception $e) {
+        abort(500, 'Could not generate calendar file');
+    }
 });

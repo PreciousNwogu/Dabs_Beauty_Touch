@@ -356,6 +356,7 @@
             <div class="form-body">
                 <form id="bookingForm">
                     @csrf
+                        <input type="hidden" id="final_price_input" name="final_price" value="">
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label for="name" class="form-label">Full Name *</label>

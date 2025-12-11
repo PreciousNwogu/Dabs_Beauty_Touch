@@ -7,6 +7,7 @@ use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Notification;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
+use Carbon\Carbon;
 
 class ServiceCompletedNotification extends Notification
 {
@@ -37,18 +38,31 @@ class ServiceCompletedNotification extends Notification
      */
     public function toMail(object $notifiable): MailMessage
     {
-        return (new MailMessage)
-                    ->subject('Service Completed - Dab\'s Beauty Touch')
-                    ->greeting('Hello ' . $this->booking->name . '!')
+        // Use application timezone for the completed time display
+        $tz = config('app.timezone') ?: 'UTC';
+        $completedAt = null;
+        try {
+            if ($this->booking->completed_at) {
+                $completedAt = Carbon::parse($this->booking->completed_at)->setTimezone($tz)->format('F j, Y g:i A');
+            }
+        } catch (\Exception $e) { $completedAt = $this->booking->completed_at?->format('F j, Y g:i A'); }
+
+        $mail = (new MailMessage)
+                    ->subject("Service Completed - Dab's Beauty Touch")
+                    ->greeting('Hello ' . ($this->booking->name ?? 'Customer') . '!')
                     ->line('Your beauty service has been completed successfully.')
-                    ->line('Service: ' . $this->booking->service)
-                    ->line('Completed on: ' . $this->booking->completed_at->format('F j, Y g:i A'))
-                    ->line('Duration: ' . $this->booking->getFormattedDuration())
-                        ->line('Final Price: $' . number_format($this->booking->final_price, 2))
+                    ->line('Service: ' . ($this->booking->service ?? '—'))
+                    ->line('Completed on: ' . ($completedAt ?? '—'))
+                    ->line('Duration: ' . ($this->booking->getFormattedDuration() ?? '—'))
+                    ->line('Final Price: $' . number_format($this->booking->final_price ?? 0, 2))
                     ->line('Thank you for choosing Dab\'s Beauty Touch!')
                     ->line('We hope you love your new look!')
                     ->action('Book Another Appointment', url('/'))
-                    ->line('Follow us on social media for styling tips and latest trends.');
+                    ->line('Follow us on social media for styling tips and latest trends.')
+                    ->line('Instagram: https://www.instagram.com/dabs_beauty_touch')
+                    ->line('WhatsApp: https://wa.me/13432548848');
+
+        return $mail;
     }
 
     /**
