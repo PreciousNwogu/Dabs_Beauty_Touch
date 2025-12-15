@@ -462,7 +462,11 @@ document.addEventListener('DOMContentLoaded', function(){
         if(window.currentServiceInfo && window.currentServiceInfo.basePrice != null) return Number(window.currentServiceInfo.basePrice);
         const hidden = document.getElementById('selectedPrice'); if(hidden && hidden.value) return Number(hidden.value);
         const kbPrice = document.getElementById('kb_price_input'); if(kbPrice && kbPrice.value) return Number(kbPrice.value);
+        // Fallback: parse visible priceDisplay element if present
         const disp = document.getElementById('priceDisplay'); if(disp){ const m = (disp.textContent||'').match(/\$\s*([0-9,.]+)/); if(m) return Number(m[1].replace(/,/g,'')); }
+        // Additional fallback: parse selector's base price element (kb_base_price) or kb_base
+        const kbBaseEl = document.getElementById('kb_base_price') || document.getElementById('kb_base');
+        if(kbBaseEl){ const mm = (kbBaseEl.textContent||kbBaseEl.innerText||'').match(/\$?\s*([0-9,.]+)/); if(mm) return Number(mm[1].replace(/,/g,'')); }
         return null;
     }
 
