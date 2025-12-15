@@ -4,14 +4,16 @@
       // Prefer the centralized breakdown if provided by the Notification
       $bd = $breakdown ?? [];
       $displayBase = $bd['resolved_base'] ?? $booking->base_price ?? 0;
-      $displayLengthAdjust = $bd['length_adjust'] ?? $booking->length_adjustment ?? 0;
-      $displayAddons = $bd['addons_total'] ?? null;
 
-      // If addons_total not provided, try to parse booking->kb_extras
+      // Determine length/type adjustments: prefer breakdown keys, then booking persisted fields
+      $displayLengthAdjust = $bd['length_adjust'] ?? $bd['selector_adjust'] ?? $booking->length_adjustment ?? $booking->kb_length_adjustment ?? 0;
+
+      // Determine addons from breakdown or booking extras
+      $displayAddons = $bd['addons_total'] ?? null;
       if((is_null($displayAddons) || $displayAddons == 0) && !empty($booking->kb_extras)){
         $ex = $booking->kb_extras;
         $sum = 0;
-        if(is_string($ex) && preg_match('/^\d+(?:\.\d+)?(,\d+(?:\.\d+)?)*$/', $ex)){
+        if(is_string($ex) && preg_match('/^\d+(?:\.\d+)?(?:,\d+(?:\.\d+)?)*$/', $ex)){
           foreach(explode(',', $ex) as $n) $sum += floatval($n);
         } else {
           $addonMap = ['kb_add_detangle'=>15,'kb_add_beads'=>10,'kb_add_beads_full'=>15,'kb_add_extension'=>20,'kb_add_rest'=>5];
@@ -21,14 +23,8 @@
       }
 
       $displayAdjustmentsTotal = ($displayLengthAdjust ?? 0) + ($displayAddons ?? 0);
-      $displayFinal = $bd['final_price'] ?? $booking->final_price ?? round($displayBase + $displayLengthAdjust + $displayAddons, 2);
+      $displayFinal = $bd['final_price'] ?? $booking->final_price ?? round($displayBase + $displayAdjustmentsTotal, 2);
     @endphp
-
-    <li><strong>Base price:</strong> {{ isset($displayBase) ? sprintf('$%.2f', $displayBase) : '—' }}</li>
-    <li><strong>Adjustment:</strong> {{ sprintf('$%.2f', $displayLengthAdjust) }}</li>
-    <li><strong>Add-ons:</strong> {{ sprintf('$%.2f', $displayAddons ?? 0) }}</li>
-    <li><strong>Final price:</strong> {{ isset($displayFinal) ? sprintf('$%.2f', $displayFinal) : '—' }}</li>
-      </div>
 
       <p class="muted">A new booking has been received. Details are shown below.</p>
 
@@ -62,20 +58,33 @@
             if(is_array($extrasVal)) $extrasVal = implode(', ', $extrasVal);
         }
 
-        // Determine authoritative pricing values - prefer breakdown
+        // Determine authoritative pricing values - prefer breakdown and selector-aware fields
         $bd = $breakdown ?? [];
         $basePrice = $bd['resolved_base'] ?? $booking->base_price ?? null;
-        $lengthAdjust = $bd['length_adjust'] ?? $booking->length_adjustment ?? 0;
+
+        // Prefer breakdown length adjustment, then selector-based, then persisted kb fields
+        $lengthAdjust = $bd['length_adjust'] ?? $bd['selector_adjust'] ?? $booking->length_adjustment ?? $booking->kb_length_adjustment ?? 0;
+
+        // Determine addons from breakdown or booking extras (numeric CSV or named ids)
         $addons = $bd['addons_total'] ?? null;
-        if((is_null($addons) || $addons == 0) && !empty($booking->kb_extras)){
-          if(is_string($booking->kb_extras) && preg_match('/^\d+(?:\.\d+)?(?:,\d+(?:\.\d+)?)*$/', $booking->kb_extras)){
-            $addons = array_sum(array_map('floatval', explode(',', $booking->kb_extras)));
-          } else {
-            $addons = 0;
+        if((is_null($addons) || $addons == 0)){
+          if(!empty($booking->kb_extras)){
+            if(is_string($booking->kb_extras) && preg_match('/^\d+(?:\.\d+)?(?:,\d+(?:\.\d+)?)*$/', $booking->kb_extras)){
+              $addons = array_sum(array_map('floatval', explode(',', $booking->kb_extras)));
+            } else {
+              $addonMap = ['kb_add_detangle'=>15,'kb_add_beads'=>10,'kb_add_beads_full'=>15,'kb_add_extension'=>20,'kb_add_rest'=>5];
+              $sum = 0;
+              foreach(explode(',', $booking->kb_extras) as $it){ $it = trim($it); if(isset($addonMap[$it])) $sum += $addonMap[$it]; }
+              $addons = $sum;
+            }
+          } elseif(isset($booking->kb_final_price) && isset($booking->kb_base_price)){
+            // Fallback: use persisted kids final/base delta minus kb length adjustment
+            $addons = round(($booking->kb_final_price - $booking->kb_base_price) - ($booking->kb_length_adjustment ?? 0), 2);
           }
         }
+
         $adjustmentsTotal = ($lengthAdjust ?? 0) + ($addons ?? 0);
-        $finalPrice = $bd['final_price'] ?? $booking->final_price ?? null;
+        $finalPrice = $bd['final_price'] ?? $booking->final_price ?? round(($basePrice ?? 0) + $adjustmentsTotal, 2);
       @endphp
 
       <h4 style="margin-top:16px;margin-bottom:8px;color:#0b3a66;">Details</h4>
@@ -101,6 +110,7 @@
         <tr style="background:#f8fafc;"><td style="font-weight:700;">Base price</td><td>{{ isset($basePrice) ? sprintf('$%.2f', $basePrice) : '—' }}</td></tr>
         <tr><td style="font-weight:700;">Adjustments / Add-ons</td><td>{{ sprintf('$%.2f', $adjustmentsTotal) }}</td></tr>
         <tr style="background:#f8fafc;font-size:18px;font-weight:800;"><td style="font-weight:800;">Final price</td><td>{{ isset($finalPrice) ? sprintf('$%.2f', $finalPrice) : '—' }}</td></tr>
+        {{-- Debugging visibility removed per request --}}
       </table>
 
       <p style="margin-top:14px;">Quick actions:</p>
@@ -109,10 +119,7 @@
       <div style="margin-top:18px;border-top:1px solid #eef2f6;padding-top:12px;font-size:13px;color:#6c757d;">
         <p style="margin:6px 0 8px 0;font-weight:700;color:#0b3a66;">Stay connected</p>
         <p style="margin:0;">Customer-facing profiles for reference:</p>
-        <p style="margin:8px 0 0 0;">
-          <a href="https://www.instagram.com/dabs_beauty_touch?igsh=MXYycGNraGxwem5tZw%3D%3D&utm_source=qr" style="margin-right:12px;color:#0b3a66;text-decoration:none;">Instagram</a>
-          <a href="https://wa.me/13432548848" style="color:#0b3a66;text-decoration:none;">WhatsApp</a>
-        </p>
+        {!! \App\Helpers\SocialLinks::render() !!}
       </div>
 
       <p style="margin-top:12px; font-size:13px; color:#6c757d;">This is an automated message for staff. Reply to the admin inbox for assistance.</p>

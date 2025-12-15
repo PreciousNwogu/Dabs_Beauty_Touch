@@ -23,10 +23,7 @@
 			<div style="margin-top:18px;border-top:1px solid #eef2f6;padding-top:12px;font-size:13px;color:#6c757d;">
 				<p style="margin:6px 0 8px 0;font-weight:700;color:#0b3a66;">Stay connected</p>
 				<p style="margin:0;">Follow us for updates and styling inspiration:</p>
-				<p style="margin:8px 0 0 0;">
-					<a href="https://www.instagram.com/dabs_beauty_touch?igsh=MXYycGNraGxwem5tZw%3D%3D&utm_source=qr" style="margin-right:12px;color:#0b3a66;text-decoration:none;">Instagram</a>
-					<a href="https://wa.me/13432548848" style="color:#0b3a66;text-decoration:none;">WhatsApp</a>
-				</p>
+				{!! \App\Helpers\SocialLinks::render() !!}
 			</div>
 		</div>
 	</body>

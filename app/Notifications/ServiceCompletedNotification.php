@@ -8,6 +8,7 @@ use Illuminate\Notifications\Notification;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Carbon\Carbon;
+use Illuminate\Support\HtmlString;
 
 class ServiceCompletedNotification extends Notification
 {
@@ -38,14 +39,23 @@ class ServiceCompletedNotification extends Notification
      */
     public function toMail(object $notifiable): MailMessage
     {
-        // Use application timezone for the completed time display
-        $tz = config('app.timezone') ?: 'UTC';
+        // Use Ontario timezone (America/Toronto) for completed time display
+        // This ensures completion emails show the correct local time for Ontario
+        $tz = 'America/Toronto';
         $completedAt = null;
-        try {
-            if ($this->booking->completed_at) {
-                $completedAt = Carbon::parse($this->booking->completed_at)->setTimezone($tz)->format('F j, Y g:i A');
+        if ($this->booking->completed_at) {
+            try {
+                // completed_at is cast to datetime on the model; use the Carbon instance
+                $completedAt = $this->booking->completed_at->setTimezone($tz)->format('F j, Y g:i A');
+            } catch (\Exception $e) {
+                // fallback to parsing if something unexpected is stored
+                try {
+                    $completedAt = Carbon::parse($this->booking->completed_at)->setTimezone($tz)->format('F j, Y g:i A');
+                } catch (\Exception $_) {
+                    $completedAt = null;
+                }
             }
-        } catch (\Exception $e) { $completedAt = $this->booking->completed_at?->format('F j, Y g:i A'); }
+        }
 
         $mail = (new MailMessage)
                     ->subject("Service Completed - Dab's Beauty Touch")
@@ -59,8 +69,7 @@ class ServiceCompletedNotification extends Notification
                     ->line('We hope you love your new look!')
                     ->action('Book Another Appointment', url('/'))
                     ->line('Follow us on social media for styling tips and latest trends.')
-                    ->line('Instagram: https://www.instagram.com/dabs_beauty_touch')
-                    ->line('WhatsApp: https://wa.me/13432548848');
+                    ->line(\App\Helpers\SocialLinks::render());
 
         return $mail;
     }

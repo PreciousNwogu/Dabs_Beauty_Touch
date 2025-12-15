@@ -205,11 +205,18 @@ class Booking extends Model
     public function getFormattedStatusHistory()
     {
         $history = $this->status_history ?: [];
-        return collect($history)->map(function ($entry) {
+        $tz = 'America/Toronto';
+        return collect($history)->map(function ($entry) use ($tz) {
+            try {
+                $ts = \Carbon\Carbon::parse($entry['timestamp'])->setTimezone($tz)->format('M j, Y g:i A');
+            } catch (\Exception $e) {
+                $ts = $entry['timestamp'];
+            }
+
             return [
                 'from' => ucfirst($entry['from']),
                 'to' => ucfirst($entry['to']),
-                'timestamp' => \Carbon\Carbon::parse($entry['timestamp'])->format('M j, Y g:i A'),
+                'timestamp' => $ts,
                 'updated_by' => $entry['updated_by'],
                 'notes' => $entry['notes']
             ];
@@ -365,7 +372,7 @@ class Booking extends Model
                 'classic' => 'Classic',
                 'long' => 'Long'
             ];
-            $addonMap = ['kb_add_detangle' => 'Detangle', 'kb_add_beads' => 'Beads', 'kb_add_beads_full' => 'Beads (full)', 'kb_add_extension' => 'Extension', 'kb_add_rest' => 'Restyle'];
+            $addonMap = ['kb_add_detangle' => 'Detangle', 'kb_add_beads' => 'Beads', 'kb_add_beads_full' => 'Beads (full)', 'kb_add_extension' => 'Extension', 'kb_add_rest' => 'Resting'];
 
             $sel = $selector ?: [];
             $bt = $sel['braid_type'] ?? $b->kb_braid_type ?? null;

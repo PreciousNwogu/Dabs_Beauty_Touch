@@ -2709,96 +2709,9 @@
     </section>
 
     <!-- Booking Modal -->
-    <!-- Success Modal -->
-    @if(session('booking_success'))
-    <div class="modal fade show d-block" id="successModal" tabindex="-1" style="background-color: rgba(0,0,0,0.5); z-index: 1050;">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content" style="border-radius: 16px; border: none;">
-                <div class="modal-header text-center border-0 pb-0" style="display: flex; flex-direction: column; align-items: center;">
-                    <div style="background: #28a745; border-radius: 8px; width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; margin-bottom: 10px;">
-                        <span style="font-size: 2.5rem; color: #fff;">&#10004;</span>
-                    </div>
-                    <h4 class="modal-title text-success mb-0" style="font-weight: bold; color: #218838; margin-top: 8px;">Appointment Booked<br>Successfully!</h4>
-                </div>
-                <div class="modal-body text-center px-4">
-                    <div class="row mb-3 justify-content-center" style="gap: 0.5rem;">
-                        <!-- Booking ID and confirmation code intentionally omitted from UI; available in confirmation email only -->
-                        <div class="col-12 text-center mt-2">
-                            <p class="mb-0" style="color: #6c757d;">Your booking was received — our admin will contact you to arrange the deposit and confirm details. For urgent enqueries, email <a href="mailto:info@dabsbeautytouch.com">info@dabsbeautytouch.com</a>.</p>
-                        </div>
-                    </div>
-                    <div class="alert alert-warning border-0 mb-3" style="background-color: #fff3cd; border-radius: 8px;">
-                        <div class="d-flex align-items-center justify-content-center">
-                            <span style="font-size: 1.3rem; margin-right: 8px;">&#9888;</span>
-                            <span style="font-size: 1.1rem;">Please contact us to arrange the $20 deposit payment.</span>
-                        </div>
-                    </div>
-                    <div class="row mb-3 justify-content-center" style="gap: 0.5rem;">
-                        <div class="col-auto text-start">
-                            <span style="font-size: 1.2rem; margin-right: 4px;">&#128222;</span>
-                            <span style="font-weight: bold; color: #001f3f;">Phone:</span>
-                            <a href="tel:+13432458848" style="color: #007bff; text-decoration: underline;">(+1)343-245-8848</a>
-                        </div>
-                        <div class="col-auto text-start">
-                            <span style="font-size: 1.2rem; margin-right: 4px;">&#128231;</span>
-                            <span style="font-weight: bold; color: #001f3f;">Email:</span>
-                            <a href="mailto:info@dabsbeautytouch.com" style="color: #007bff; text-decoration: underline;">info@dabsbeautytouch.com</a>
-                        </div>
-                    </div>
-                    <p class="text-muted mb-3" style="font-size: 1rem;">We'll confirm your appointment once payment is received!</p>
-                </div>
-                    <div class="modal-footer border-0 justify-content-center">
-                    <button type="button" id="successModalOk" class="btn btn-info px-4 py-2" onclick="closeSuccessModal()" tabindex="0" aria-label="Close success dialog" style="background: linear-gradient(90deg, #17a2b8 0%, #20c997 100%); border: none; color: #fff; font-weight: bold; border-radius: 24px; width: 120px; pointer-events: auto;">OK</button>
-                </div>
-            </div>
-        </div>
-    </div>
-    @endif
+    <!-- Primary success modal omitted: show deposit modal/banner instead when a booking completes -->
 
-    <!-- Other Services Success Modal -->
-    @if(session('success'))
-    <div class="modal fade show d-block" id="otherServicesSuccessModal" tabindex="-1" style="background-color: rgba(0,0,0,0.5); z-index: 1050;">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content" style="border-radius: 16px; border: none;">
-                <div class="modal-header text-center border-0 pb-0" style="display: flex; flex-direction: column; align-items: center;">
-                    <div style="background: #28a745; border-radius: 8px; width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; margin-bottom: 10px;">
-                        <span style="font-size: 2.5rem; color: #fff;">&#10004;</span>
-                    </div>
-                    <h4 class="modal-title text-success mb-0" style="font-weight: bold; color: #218838; margin-top: 8px;">Service Request Sent<br>Successfully!</h4>
-                </div>
-                <div class="modal-body text-center px-4">
-                    <div class="row mb-3 justify-content-center">
-                        <div class="col-12 text-center mt-2">
-                            <p class="mb-3" style="color: #6c757d; font-size: 1.1rem;">{{ session('success') }}</p>
-                            <div class="alert alert-info border-0 mb-3" style="background-color: #e3f2fd; border-radius: 8px;">
-                                <div class="d-flex align-items-center justify-content-center">
-                                    <span style="font-size: 1.3rem; margin-right: 8px;">ℹ️</span>
-                                    <span style="font-size: 1rem; color: #1976d2;">We'll review your request and contact you within 24 hours to discuss details and pricing.</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="row mb-3 justify-content-center" style="gap: 0.5rem;">
-                        <div class="col-auto text-start">
-                            <span style="font-size: 1.2rem; margin-right: 4px;">📞</span>
-                            <span style="font-weight: bold; color: #001f3f;">Phone:</span>
-                            <a href="tel:+13432458848" style="color: #007bff; text-decoration: underline;">(+1)343-245-8848</a>
-                        </div>
-                        <div class="col-auto text-start">
-                            <span style="font-size: 1.2rem; margin-right: 4px;">📧</span>
-                            <span style="font-weight: bold; color: #001f3f;">Email:</span>
-                            <a href="mailto:info@dabsbeautytouch.com" style="color: #007bff; text-decoration: underline;">info@dabsbeautytouch.com</a>
-                        </div>
-                    </div>
-                    <p class="text-muted mb-3" style="font-size: 1rem;">Need urgent assistance? Feel free to contact us directly!</p>
-                </div>
-                <div class="modal-footer border-0 justify-content-center">
-                    <button type="button" id="otherServicesSuccessOk" class="btn btn-success px-4 py-2" onclick="closeOtherServicesSuccessModal()" tabindex="0" aria-label="Close success dialog" style="background: linear-gradient(90deg, #28a745 0%, #20c997 100%); border: none; color: #fff; font-weight: bold; border-radius: 24px; width: 120px; pointer-events: auto;">OK</button>
-                </div>
-            </div>
-        </div>
-    </div>
-    @endif
+    <!-- Other Services Success Modal removed per request -->
 
                     <!-- Booking Modal (contains Single Booking Form) -->
                     <div class="modal fade" id="bookingModal" tabindex="-1" aria-labelledby="bookingModalLabel" aria-hidden="true">
@@ -3529,10 +3442,10 @@
     function contactForPayment() {
         // Close the deposit modal
         const depositModal = bootstrap.Modal.getInstance(document.getElementById('depositModal'));
-        depositModal.hide();
+        if(depositModal) depositModal.hide();
 
         // Show contact information
-    alert('Please contact us at:\n\nPhone: (+1)343-245-8848\nEmail: info@dabsbeautytouch.com\nWhatsApp: https://wa.me/13432548848\n\nWe will provide you with payment details and confirm your appointment once payment is received.');
+        alert('Please contact us at:\n\nPhone: (343) 254-8848\nEmail: info@dabsbeautytouch.com\nWhatsApp: https://wa.me/13432548848\n\nWe will provide you with payment details and confirm your appointment once payment is received.');
     }
 
     // Function to scroll to services section
@@ -3853,24 +3766,61 @@ console.log('=== LOADING BOOKING FUNCTIONS ===');
                     const f = sel.finish || sel.kb_finish || sel.finishType || '';
                     adjustments += (finishAdj[f] || 0);
 
-                    // try parse extras (accept JSON array, numeric CSV or names)
+                    // try parse extras (accept JSON array, numeric CSV, names or known selector addon ids)
                     try{
                         if(sel.extras){
+                            // map of known selector addon ids to numeric values
+                            const selectorAddonMap = {'kb_add_detangle':15,'kb_add_beads':10,'kb_add_beads_full':15,'kb_add_extension':20,'kb_add_rest':5};
+
                             if(typeof sel.extras === 'string' && sel.extras.trim().startsWith('[')){
                                 const parsed = JSON.parse(sel.extras);
                                 if(Array.isArray(parsed)){
-                                    parsed.forEach(it => { if(typeof it === 'number') addons += it; else if(typeof it === 'object' && it.value) addons += Number(it.value) || 0; else if(!isNaN(Number(it))) addons += Number(it); });
+                                    parsed.forEach(it => {
+                                        if(typeof it === 'number') addons += it;
+                                        else if(typeof it === 'object' && it.value) addons += Number(it.value) || 0;
+                                        else if(!isNaN(Number(it))) addons += Number(it);
+                                        else if(selectorAddonMap[it]) addons += selectorAddonMap[it];
+                                    });
                                 }
                             } else if(typeof sel.extras === 'string' && sel.extras.indexOf(',')>-1){
-                                sel.extras.split(',').forEach(t => { const n = Number(t.trim()); if(!isNaN(n)) addons += n; });
+                                sel.extras.split(',').forEach(t => {
+                                    const token = t.trim();
+                                    const n = Number(token);
+                                    if(!isNaN(n)) addons += n;
+                                    else if(selectorAddonMap[token]) addons += selectorAddonMap[token];
+                                });
+                            } else if(typeof sel.extras === 'string'){
+                                const token = sel.extras.trim();
+                                const n = Number(token);
+                                if(!isNaN(n)) addons += n;
+                                else if(selectorAddonMap[token]) addons += selectorAddonMap[token];
                             } else if(typeof sel.extras === 'number'){
                                 addons += Number(sel.extras);
                             }
                         }
                     }catch(e){ console.warn('Failed to parse selector extras', e); }
 
+                    // Fallback: if no extras were provided in selector payload, read checked addon boxes from the selector DOM
+                    try{
+                        if(!sel.extras || (addons === 0)){
+                            document.querySelectorAll('#kb-addons input[type="checkbox"]:checked').forEach(function(cb){
+                                try{
+                                    var n = Number(cb.value);
+                                    if(!isNaN(n) && n !== 0){ addons += n; }
+                                    else {
+                                        // map known addon ids to values
+                                        var addonMap = {'kb_add_detangle':15,'kb_add_beads':10,'kb_add_beads_full':15,'kb_add_extension':20,'kb_add_rest':5};
+                                        if(cb.id && addonMap[cb.id]) addons += addonMap[cb.id];
+                                    }
+                                }catch(e){}
+                            });
+                        }
+                    }catch(e){ /* noop */ }
+
                     // computed total
-                    total = base + adjustments + addons;
+                    // include addons into adjustments so modal mirrors selector summary
+                    const adjustmentsWithAddons = adjustments + addons;
+                    total = base + adjustmentsWithAddons;
 
                     // if payload included authoritative price, prefer it for total display
                     if(sel.price && !isNaN(Number(sel.price))){ total = Number(sel.price); }
@@ -3892,9 +3842,8 @@ console.log('=== LOADING BOOKING FUNCTIONS ===');
                     const iln = document.getElementById('kids_length_input'); if(iln) iln.value = ln;
                     const iex = document.getElementById('kids_extras_input'); if(iex) iex.value = ex;
                 }catch(e){ /* noop */ }
-                const kb = document.getElementById('kidsModal_base'); if(kb) kb.innerHTML = 'Base: <strong>$' + base + '</strong>';
-                const ka = document.getElementById('kidsModal_adjustments'); if(ka) ka.innerHTML = 'Adjustments: <strong>$' + (adjustments >=0 ? '+' : '-') + Math.abs(adjustments) + '</strong>';
-                const kadd = document.getElementById('kidsModal_addons'); if(kadd) kadd.innerHTML = 'Add-ons: <strong>$' + addons + '</strong>';
+                const kb = document.getElementById('kidsModal_base'); if(kb) kb.innerHTML = 'Base: <strong>$' + Number(base).toFixed(0) + '</strong>';
+                const ka = document.getElementById('kidsModal_adjustments'); if(ka) ka.innerHTML = 'Adjustments: <strong>' + ( (adjustments + addons) >= 0 ? '+' : '-') + '$' + Math.abs(Number(adjustments + addons)).toFixed(0) + '</strong>';
                 const kt = document.getElementById('kidsModal_total'); if(kt) kt.innerHTML = '<strong>Total: $' + (total ? Number(total).toFixed(0) : '--') + '</strong>';
             }catch(e){ console.warn('Kids price preview compute failed', e); }
 
@@ -4334,10 +4283,7 @@ console.log('=== LOADING BOOKING FUNCTIONS ===');
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body" style="padding: 30px;">
-                <div class="alert alert-success mb-4">
-                    <i class="bi bi-check-circle-fill me-2"></i>
-                    <strong>Booking Submitted Successfully!</strong> Your appointment is pending deposit confirmation.
-                </div>
+                <!-- Booking success message removed (handled by the primary success modal) -->
 
                 <div class="row">
                     <div class="col-lg-8">
@@ -4349,14 +4295,7 @@ console.log('=== LOADING BOOKING FUNCTIONS ===');
                         <div class="payment-methods mb-4">
                             <h5 style="color: #030f68; font-weight: 600; margin-bottom: 15px;">Payment Methods:</h5>
                             <div class="row g-3">
-                                <div class="col-md-6">
-                                    <div class="payment-option" style="border: 2px solid #e3e3e0; border-radius: 10px; padding: 15px; text-align: center; transition: all 0.3s ease;">
-                                        <i class="bi bi-phone" style="font-size: 2rem; color: #ff6600; margin-bottom: 10px;"></i>
-                                        <h6 style="color: #030f68; font-weight: 600;">Mobile Money</h6>
-                                        <p style="font-size: 0.9rem; color: #666; margin: 0;">MTN, Airtel, or Vodafone</p>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
+                                <div class="col-12">
                                     <div class="payment-option" style="border: 2px solid #e3e3e0; border-radius: 10px; padding: 15px; text-align: center; transition: all 0.3s ease;">
                                         <i class="bi bi-bank" style="font-size: 2rem; color: #ff6600; margin-bottom: 10px;"></i>
                                         <h6 style="color: #030f68; font-weight: 600;">Bank Transfer</h6>
@@ -4396,7 +4335,7 @@ console.log('=== LOADING BOOKING FUNCTIONS ===');
                                 <div class="mb-3">
                                     <i class="bi bi-telephone-fill text-success me-2"></i>
                                     <strong>Phone:</strong><br>
-                                    <a href="tel:+1234567890" style="color: #ff6600; text-decoration: none; font-weight: 600;">(123) 456-7890</a>
+                                    <a href="tel:+13432548848" style="color: #ff6600; text-decoration: none; font-weight: 600;">(343) 254-8848</a>
                                 </div>
                                 <div class="mb-3">
                                     <i class="bi bi-envelope-fill text-success me-2"></i>
@@ -4494,6 +4433,39 @@ console.log('=== LOADING BOOKING FUNCTIONS ===');
     </div>
 </div>
 
+@if(session('booking_success'))
+<script>
+document.addEventListener('DOMContentLoaded', function(){
+    try{
+        var dEl = document.getElementById('depositModal');
+        if(dEl && typeof bootstrap !== 'undefined' && bootstrap.Modal){
+            try{ new bootstrap.Modal(dEl).show(); }catch(e){ dEl.style.display='block'; dEl.classList.add('show'); document.body.classList.add('modal-open'); }
+        }
+        // transient booking success flag (top-center) for ~5 seconds
+        try{
+            var flag = document.createElement('div');
+            flag.id = 'bookingSuccessFlag';
+            flag.style.position = 'fixed';
+            flag.style.top = '20px';
+            flag.style.left = '50%';
+            flag.style.transform = 'translateX(-50%)';
+            flag.style.zIndex = '1060';
+            flag.style.background = '#28a745';
+            flag.style.color = '#fff';
+            flag.style.padding = '10px 18px';
+            flag.style.borderRadius = '8px';
+            flag.style.boxShadow = '0 6px 18px rgba(3,15,104,0.12)';
+            flag.style.fontWeight = '700';
+            flag.style.fontSize = '14px';
+            flag.textContent = 'Booking submitted successfully';
+            document.body.appendChild(flag);
+            setTimeout(function(){ try{ flag.style.transition='opacity 0.4s'; flag.style.opacity='0'; setTimeout(function(){ try{ if(flag && flag.parentNode) flag.parentNode.removeChild(flag); }catch(e){} },400); }catch(e){} }, 5000);
+        }catch(e){ /* noop */ }
+    }catch(e){ console.warn('Failed to auto-show depositModal', e); }
+});
+</script>
+@endif
+
 <!-- JavaScript to enhance booking success message visibility -->
 <script>
 document.addEventListener('DOMContentLoaded', function() {
@@ -4543,6 +4515,35 @@ document.addEventListener('DOMContentLoaded', function() {
         opacity: 1;
     }
 }
+
+// Persist current kids modal selector state and navigate back to selector page
+function backToKidsSelector(){
+    try{
+        var sel = {};
+        // collect current modal hidden inputs
+        var bt = document.getElementById('kids_braid_type_input'); if(bt) sel.kb_braid_type = bt.value;
+        var fin = document.getElementById('kids_finish_input'); if(fin) sel.kb_finish = fin.value;
+        var ln = document.getElementById('kids_length_input'); if(ln) sel.kb_length = ln.value;
+        var ex = document.getElementById('kids_extras_input'); if(ex) sel.kb_extras = ex.value;
+        var price = document.getElementById('kids_price_input'); if(price) sel.price = price.value;
+
+        // store to localStorage for selector page to read
+        try{ localStorage.setItem('kb_selector', JSON.stringify(sel)); }catch(e){ console.warn('Failed to persist kb_selector', e); }
+
+        // navigate to selector route
+        window.location.href = "{{ route('kids.selector') }}";
+    }catch(e){ console.warn('backToKidsSelector failed', e); window.location.href = "{{ route('kids.selector') }}"; }
+}
+// Also attach a safe click handler in case inline onclicks are blocked by overlays
+document.addEventListener('DOMContentLoaded', function(){
+    try{
+        const btn = document.getElementById('kidsBackToSelectorBtn');
+        if(btn && !btn._kb_attached){
+            btn.addEventListener('click', function(e){ e.preventDefault(); e.stopPropagation(); backToKidsSelector(); });
+            btn._kb_attached = true;
+        }
+    }catch(e){ console.warn('Failed to attach Back to selector listener', e); }
+});
 
 @keyframes pulse {
     0% {
@@ -4661,43 +4662,7 @@ function closeSuccessModal() {
     }
 }
 
-// Function to close Other Services success modal
-function closeOtherServicesSuccessModal() {
-    console.log('closeOtherServicesSuccessModal called');
-    const successModal = document.getElementById('otherServicesSuccessModal');
-    if (successModal) {
-        console.log('Other Services success modal found, hiding it');
-        successModal.style.display = 'none';
-
-        // Remove modal from DOM after animation
-        setTimeout(function() {
-            if (successModal.parentNode) {
-                successModal.parentNode.removeChild(successModal);
-            }
-        }, 300);
-
-        // Clear session data
-        fetch('/clear-session', {
-            method: 'GET',
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest'
-            }
-        }).then(function() {
-            console.log('Other Services session cleared successfully');
-            if (window.history && window.history.replaceState) {
-                window.history.replaceState({}, document.title, window.location.pathname);
-            }
-            // Redirect user to the main page after clearing session
-            try {
-                setTimeout(function(){ window.location.href = '/'; }, 250);
-            } catch(e) { console.warn('Redirect to home failed', e); }
-        }).catch(function(error) {
-            console.log('Other Services session clear request failed:', error);
-        });
-    } else {
-        console.log('Other Services success modal not found');
-    }
-}
+// Other Services success modal logic removed
 
 // Additional event listener for the OK button (backup in case onclick doesn't work)
 document.addEventListener('DOMContentLoaded', function() {
@@ -4715,16 +4680,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         // Also add event listener for Other Services success modal OK button
-        const otherServicesOkButton = document.querySelector('#otherServicesSuccessModal .btn-success');
-        if (otherServicesOkButton) {
-            console.log('Other Services OK button found, adding event listener');
-            otherServicesOkButton.addEventListener('click', function(e) {
-                e.preventDefault();
-                e.stopPropagation();
-                console.log('Other Services OK button clicked via event listener');
-                closeOtherServicesSuccessModal();
-            });
-        }
+        // Other Services OK listener removed (modal removed)
     }, 100);
 
     // Image preview functionality
@@ -4752,14 +4708,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 console.log('Immediate OK button listener attached');
             }
 
-            const otherServicesOkButton = document.getElementById('otherServicesSuccessOk') || document.querySelector('#otherServicesSuccessModal .btn-success');
-            if (otherServicesOkButton && !otherServicesOkButton._attached) {
-                otherServicesOkButton.addEventListener('click', function(e) {
-                    e.preventDefault(); e.stopPropagation(); closeOtherServicesSuccessModal();
-                });
-                otherServicesOkButton._attached = true;
-                console.log('Immediate Other Services OK button listener attached');
-            }
+            // Other Services OK immediate attachment removed (modal removed)
         } catch (err) {
             console.warn('attachSuccessButtonsNow error', err);
         }
@@ -4776,13 +4725,7 @@ document.addEventListener('click', function(e) {
             console.log('Document-level OK click detected');
             if (typeof closeSuccessModal === 'function') closeSuccessModal();
         }
-        const otherOk = e.target.closest ? e.target.closest('#otherServicesSuccessOk') : null;
-        if (otherOk) {
-            e.preventDefault();
-            e.stopPropagation();
-            console.log('Document-level Other Services OK click detected');
-            if (typeof closeOtherServicesSuccessModal === 'function') closeOtherServicesSuccessModal();
-        }
+        // Other Services document-level handler removed (modal removed)
     } catch (err) {
         console.warn('Document-level success modal click handler error', err);
     }
@@ -4806,11 +4749,7 @@ document.addEventListener('click', function(e){
         }
         var otherFound = null;
         el = target;
-        while(el){
-            if(el.id === 'otherServicesSuccessOk') { otherFound = el; break; }
-            el = el.parentElement;
-        }
-        if(otherFound){ if(typeof closeOtherServicesSuccessModal === 'function') closeOtherServicesSuccessModal(); }
+        // Other Services capture-phase handling removed (modal removed)
     }catch(err){ console.warn('Capture-phase success modal handler error', err); }
 }, true);
 
@@ -4943,13 +4882,13 @@ function clearImagePreview() {
                             <div class="col-md-5">
                                 <div style="background:#fff7e0;border-radius:10px;padding:14px;border-left:6px solid #ff6600;">
                                     <h6 style="color:#0b3a66;font-weight:700;margin-bottom:8px;">Price Summary</h6>
-                                    <div id="kidsModal_base">Base: <strong>$--</strong></div>
-                                    <div id="kidsModal_adjustments">Adjustments: <strong>$0</strong></div>
+                                        <div id="kidsModal_base">Base: <strong>$--</strong></div>
+                                    <div id="kidsModal_adjustments">Adjustments: <strong>+ $0</strong></div>
                                     <div id="kidsModal_total" style="margin-top:6px;"><strong>Total: $--</strong></div>
                                 </div>
                                 <div class="d-grid mt-3">
                                     <div class="d-flex gap-2">
-                                        <a href="{{ route('kids.selector') }}" class="btn btn-secondary" style="font-weight:600;">Back to selector</a>
+                                        <button type="button" id="kidsBackToSelectorBtn" class="btn btn-secondary" style="font-weight:600;" onclick="backToKidsSelector()">Back to selector</button>
                                         <button type="submit" class="btn btn-warning" style="font-weight:600;">Confirm Booking</button>
                                     </div>
                                 </div>
@@ -4965,6 +4904,70 @@ function clearImagePreview() {
 </html>
 
 <script>
+// Ensure Back-to-selector is reliably clickable and keep modal summary synced with selector
+document.addEventListener('DOMContentLoaded', function(){
+    try{
+        // robustly attach Back button handler (capture + keyboard)
+        const btn = document.getElementById('kidsBackToSelectorBtn');
+        if(btn){
+            try{ btn.style.pointerEvents = 'auto'; btn.tabIndex = 0; }catch(e){}
+            // remove any duplicate handlers then attach a reliable one
+            try{ btn.removeEventListener('click', backToKidsSelector); }catch(e){}
+            btn.addEventListener('click', function(e){ e.preventDefault(); e.stopPropagation(); try{ backToKidsSelector(); }catch(err){ window.location.href = "{{ route('kids.selector') }}"; } }, {capture:true});
+            btn.addEventListener('keydown', function(e){ if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); try{ backToKidsSelector(); }catch(err){ window.location.href = "{{ route('kids.selector') }}"; } } });
+        }
+
+        // copy selector price summary into modal when modal is shown (bootstrap event)
+        var modal = document.getElementById('kidsBookingModal');
+        function syncKidsModalFromSelector(){
+            try{
+                var selBaseEl = document.getElementById('kb_base_price');
+                var selAdjustEl = document.getElementById('kb_adjustments');
+                var selTotalEl = document.getElementById('kb_total_price');
+                var kb_base = document.getElementById('kidsModal_base');
+                var kb_adjust = document.getElementById('kidsModal_adjustments');
+                var kb_total = document.getElementById('kidsModal_total');
+                if(selBaseEl && selAdjustEl && selTotalEl && kb_base && kb_adjust && kb_total){
+                    kb_base.innerHTML = 'Base: <strong>' + (selBaseEl.textContent || selBaseEl.innerText || selBaseEl.innerHTML).replace(/^\$/,'') + '</strong>';
+                    kb_adjust.innerHTML = 'Adjustments: <strong>' + (selAdjustEl.textContent || selAdjustEl.innerText || selAdjustEl.innerHTML) + '</strong>';
+                    kb_total.innerHTML = '<strong>Total: ' + (selTotalEl.textContent || selTotalEl.innerText || selTotalEl.innerHTML) + '</strong>';
+                    // set hidden inputs
+                    var priceMatch = (selTotalEl.textContent||selTotalEl.innerText||'').match(/\$\s*([0-9,\.]+)/);
+                    if(priceMatch){
+                        var p = Number(priceMatch[1].replace(/,/g,''));
+                        try{ var kidsPriceInput = document.getElementById('kids_price_input'); if(kidsPriceInput) kidsPriceInput.value = p; }catch(e){}
+                        try{ var kidsFinalInput = document.getElementById('kids_final_price_input'); if(kidsFinalInput) kidsFinalInput.value = Number(p).toFixed(2); }catch(e){}
+                        // also copy selected addons (ids) into kids_extras_input so modal compute includes addons
+                        try{
+                            var extrasParts = [];
+                            document.querySelectorAll('#kb-addons input[type="checkbox"]').forEach(function(cb){ if(cb.checked) extrasParts.push(cb.id || cb.value); });
+                            if(extrasParts.length){ var kidsExtrasEl = document.getElementById('kids_extras_input'); if(kidsExtrasEl) kidsExtrasEl.value = extrasParts.join(','); }
+                        }catch(e){}
+                        // copy braid type / finish / length hidden mirrors if present
+                        try{
+                            var bt = (document.querySelector('input[name="kb_braid_type"]:checked') || {}).value || '';
+                            var fin = (document.querySelector('input[name="kb_finish"]:checked') || {}).value || '';
+                            var ln = (document.querySelector('input[name="kb_length"]:checked') || {}).value || '';
+                            var ibt = document.getElementById('kids_braid_type_input'); if(ibt) ibt.value = bt;
+                            var ifin = document.getElementById('kids_finish_input'); if(ifin) ifin.value = fin;
+                            var iln = document.getElementById('kids_length_input'); if(iln) iln.value = ln;
+                        }catch(e){}
+                    }
+                }
+            }catch(e){ /* noop */ }
+        }
+
+        if(modal){
+            try{
+                // Bootstrap 5 shown event
+                modal.addEventListener('shown.bs.modal', syncKidsModalFromSelector);
+            }catch(e){ /* ignore */ }
+            // also sync immediately in case modal is already visible
+            try{ syncKidsModalFromSelector(); }catch(e){}
+        }
+    }catch(e){ console.warn('KB modal attach failed', e); }
+});
+
 // Dynamic price preview and form wiring
 (function() {
     const priceMap = {
