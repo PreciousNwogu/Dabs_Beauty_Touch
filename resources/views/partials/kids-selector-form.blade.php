@@ -80,11 +80,11 @@
                         </div>
                         <div class="form-check">
                             <input class="form-check-input" type="checkbox" id="kb_add_beads" value="10">
-                            <label class="form-check-label" for="kb_add_beads">Beads (+$10)</label>
+                            <label class="form-check-label" for="kb_add_beads">Beading (+$10)</label>
                         </div>
                         <div class="form-check">
                             <input class="form-check-input" type="checkbox" id="kb_add_beads_full" value="15">
-                            <label class="form-check-label" for="kb_add_beads_full">Small eye beads full (+$15)</label>
+                            <label class="form-check-label" for="kb_add_beads_full">Small size beads (+$15)</label>
                         </div>
                         <div class="form-check">
                             <input class="form-check-input" type="checkbox" id="kb_add_extension" value="20">
@@ -168,14 +168,24 @@ document.addEventListener('DOMContentLoaded', function(){
     function evaluateBraidType(){
         const cur = document.querySelector('input[name="kb_braid_type"]:checked');
         const val = cur ? cur.value : '';
-        const shouldDisable = (val === 'protective' || val === 'cornrows');
+        // Disable finish & length for specific braid types
+        const disabledTypes = ['protective', 'cornrows'];
+        const shouldDisable = disabledTypes.indexOf(val) !== -1;
         setFinishAndLengthDisabled(shouldDisable);
+
+        // Ensure hidden mirror fields reflect any default selections immediately
+        try{ if(typeof syncHiddenMirrors === 'function') syncHiddenMirrors(); }catch(e){}
     }
 
-    // attach listeners to braid type radios
-    document.querySelectorAll('input[name="kb_braid_type"]').forEach(function(r){
+    // attach listeners to braid type radios (listen for both change and click for instant response)
+    const braidRadios = document.querySelectorAll('input[name="kb_braid_type"]');
+    braidRadios.forEach(function(r){
         r.addEventListener('change', evaluateBraidType);
+        r.addEventListener('click', evaluateBraidType);
     });
+    // also attach a container click handler as a fallback
+    const braidContainer = document.getElementById('kb-braid-types');
+    if(braidContainer) braidContainer.addEventListener('click', function(){ try{ evaluateBraidType(); }catch(e){} });
 
     // keep hidden mirrors in sync so server receives values even when radios are disabled
     function syncHiddenMirrors(){
@@ -243,6 +253,51 @@ document.addEventListener('DOMContentLoaded', function(){
 
     // run initial evaluation
     evaluateBraidType();
+
+    // If user came from kids modal Back button, restore selector state from localStorage
+    try{
+        const stored = localStorage.getItem('kb_selector');
+        if(stored){
+            const parsed = JSON.parse(stored);
+            if(parsed){
+                // restore braid type
+                if(parsed.kb_braid_type){
+                    const rb = document.querySelector('input[name="kb_braid_type"][value="'+parsed.kb_braid_type+'"]'); if(rb) rb.checked = true;
+                }
+                // restore finish
+                if(parsed.kb_finish){
+                    const rf = document.querySelector('input[name="kb_finish"][value="'+parsed.kb_finish+'"]'); if(rf) rf.checked = true;
+                }
+                // restore length
+                if(parsed.kb_length){
+                    const rl = document.querySelector('input[name="kb_length"][value="'+parsed.kb_length+'"]'); if(rl) rl.checked = true;
+                }
+                // restore addons (comma list of ids)
+                if(parsed.kb_extras){
+                    const parts = (parsed.kb_extras||'').toString().split(',').map(s=>s.trim()).filter(Boolean);
+                    parts.forEach(function(it){ try{ const cb = document.getElementById(it); if(cb && cb.type==='checkbox') cb.checked = true; }catch(e){} });
+                }
+                // restore price input if present
+                try{ const kp = document.getElementById('kb_price_input'); if(kp && parsed.price) kp.value = parsed.price; }catch(e){}
+
+                // update mirrors and price summary
+                try{ syncHiddenMirrors(); }catch(e){}
+                // ensure global service info reflects kids flow so recomputeGlobal uses kids exceptions
+                try{ window.currentServiceInfo = window.currentServiceInfo || {}; window.currentServiceInfo.serviceType = 'kids-braids'; if(parsed.price) window.currentServiceInfo.basePrice = Number(parsed.price); }catch(e){}
+                try{ if(typeof recomputeGlobal === 'function') recomputeGlobal(); }catch(e){}
+                try{ if(typeof compute === 'function') compute(); }catch(e){}
+
+                // Ensure finish/length hide/show state matches restored braid type
+                try{ if(typeof evaluateBraidType === 'function') evaluateBraidType(); }catch(e){}
+
+                // keep a global snapshot so other code can pick it up
+                try{ window.__kidsSelectorData = { kb_braid_type: parsed.kb_braid_type, kb_finish: parsed.kb_finish, kb_length: parsed.kb_length, extras: parsed.kb_extras, price: parsed.price }; }catch(e){}
+
+                // clear stored value after restore so it doesn't stale next time
+                try{ localStorage.removeItem('kb_selector'); }catch(e){}
+            }
+        }
+    }catch(e){ console.warn('Failed to restore kb_selector from localStorage', e); }
 });
 
 // Fallback: ensure `showKidsBookingPanel` exists so Continue opens the kids booking modal
@@ -283,6 +338,32 @@ if(typeof window.showKidsBookingPanel !== 'function'){
                 const kb_base = document.getElementById('kidsModal_base');
                 const kb_adjust = document.getElementById('kidsModal_adjustments');
 
+                // First, try to copy visible selector summary into modal (keeps selector/modal in sync)
+                var copiedFromSelector = false;
+                try{
+                    var selBaseEl = document.getElementById('kb_base_price');
+                    var selAdjustEl = document.getElementById('kb_adjustments');
+                    var selTotalEl = document.getElementById('kb_total_price');
+                    var kb_base = document.getElementById('kidsModal_base');
+                    var kb_adjust = document.getElementById('kidsModal_adjustments');
+                    var kb_total = document.getElementById('kidsModal_total');
+                    if(selBaseEl && selAdjustEl && selTotalEl && kb_base && kb_adjust && kb_total){
+                        // copy inner contents (selector displays simple values)
+                        kb_base.innerHTML = 'Base: <strong>' + (selBaseEl.textContent || selBaseEl.innerText || selBaseEl.innerHTML).replace(/^\$/,'') + '</strong>';
+                        // selector's adjustments may be plain text like "$75" or include sign; normalize
+                        kb_adjust.innerHTML = 'Adjustments: <strong>' + (selAdjustEl.textContent || selAdjustEl.innerText || selAdjustEl.innerHTML) + '</strong>';
+                        kb_total.innerHTML = '<strong>Total: ' + (selTotalEl.textContent || selTotalEl.innerText || selTotalEl.innerHTML) + '</strong>';
+                        // also write hidden price fields from selector total if possible
+                        var priceMatch = (selTotalEl.textContent||selTotalEl.innerText||'').match(/\$\s*([0-9,\.]+)/);
+                        if(priceMatch){
+                            var p = Number(priceMatch[1].replace(/,/g,''));
+                            try{ var kidsPriceInput = document.getElementById('kids_price_input'); if(kidsPriceInput) kidsPriceInput.value = p; }catch(e){}
+                            try{ var kidsFinalInput = document.getElementById('kids_final_price_input'); if(kidsFinalInput) kidsFinalInput.value = Number(p).toFixed(2); }catch(e){}
+                        }
+                        copiedFromSelector = true;
+                    }
+                }catch(e){ /* ignore copy failure and fall back to computing breakdown */ }
+
                 // Compute breakdown: base, braid-type adj, length adj, finish adj, extras
                 try{
                     const priceMapLocal = window.priceMap || {
@@ -297,7 +378,24 @@ if(typeof window.showKidsBookingPanel !== 'function'){
                     const bt = (sel.kb_braid_type || sel.braid_type || '').toString();
                     const ln = (sel.kb_length || sel.length || '').toString();
                     const fi = (sel.kb_finish || sel.finish || '').toString();
-                    const exRaw = sel.extras || '';
+                    // Determine extras from selector payload, modal hidden input, or checked addon boxes
+                    var exRaw = '';
+                    try{
+                        if(sel && sel.extras) exRaw = sel.extras;
+                        if(!exRaw){
+                            var kbExtrasEl = document.getElementById('kids_extras_input') || document.getElementById('kb_extras_input');
+                            if(kbExtrasEl && kbExtrasEl.value) exRaw = kbExtrasEl.value;
+                        }
+                        // As a last resort, build extras from checked addon checkboxes in selector area
+                        if(!exRaw){
+                            var parts = [];
+                            var addonChk = document.querySelectorAll('#kb-addons input[type="checkbox"]');
+                            if(addonChk && addonChk.length){
+                                addonChk.forEach(function(cb){ if(cb.checked){ parts.push(cb.id || cb.value); } });
+                                if(parts.length) exRaw = parts.join(',');
+                            }
+                        }
+                    }catch(e){ exRaw = (sel && sel.extras) ? sel.extras : ''; }
 
                     const typeAdj = (bt && typeAdjMap[bt]) ? Number(typeAdjMap[bt]) : 0;
                     const lengthAdj = (ln && lengthAdjMap[ln]) ? Number(lengthAdjMap[ln]) : 0;

@@ -59,35 +59,50 @@
             if(is_array($extrasVal)) $extrasVal = implode(', ', $extrasVal);
         }
 
-        // Compute authoritative pricing values
-        $basePrice = $booking->base_price ?? ($selector_base ?? null);
-        $lengthAdjust = $booking->length_adjustment ?? ($selector_adjust ?? 0);
-        // Determine addons total robustly: prefer selector_addons, then parse booking->kb_extras as CSV of numbers
-        $addons_total = null;
-        if (isset($selector_addons) && is_numeric($selector_addons)) {
-          $addons_total = (float) $selector_addons;
-        } elseif (!empty($booking->kb_extras)) {
-          if (is_string($booking->kb_extras) && preg_match('/^\d+(?:\.\d+)?(?:,\d+(?:\.\d+)?)*$/', $booking->kb_extras)) {
-            $addons_total = array_sum(array_map('floatval', explode(',', $booking->kb_extras)));
-          } else {
-            // named extras mapping (same as admin mapping)
-            $addonMap = ['kb_add_detangle'=>15,'kb_add_beads'=>10,'kb_add_beads_full'=>15,'kb_add_extension'=>20,'kb_add_rest'=>5];
-            $sum = 0;
-            foreach (explode(',', $booking->kb_extras) as $it) {
-              $it = trim($it);
-              if (isset($addonMap[$it])) $sum += $addonMap[$it];
+        // Map any internal addon codes to friendly labels (ensure Restyle -> Resting)
+        if(is_string($extrasVal) && preg_match('/[,\s]/', $extrasVal)){
+          $parts = array_map('trim', explode(',', $extrasVal));
+        } elseif(is_string($extrasVal) && strlen($extrasVal) > 0){
+          $parts = [trim($extrasVal)];
+        } else {
+          $parts = [];
+        }
+        if(!empty($parts)){
+          $friendly = ['kb_add_detangle'=>'Detangle','kb_add_beads'=>'Beads','kb_add_beads_full'=>'Full beads','kb_add_extension'=>'Extension','kb_add_rest'=>'Resting'];
+          $displayParts = [];
+          foreach($parts as $p){
+            if(isset($friendly[$p])) $displayParts[] = $friendly[$p]; else $displayParts[] = $p;
+          }
+          $extrasVal = implode(', ', $displayParts);
+        }
+
+        // Compute authoritative pricing values (mirror admin logic)
+        $bd = $breakdown ?? [];
+        $basePrice = $bd['resolved_base'] ?? $booking->base_price ?? ($selector_base ?? 0);
+        $lengthAdjust = $bd['length_adjust'] ?? $bd['selector_adjust'] ?? $booking->length_adjustment ?? $booking->kb_length_adjustment ?? ($selector_adjust ?? 0);
+
+        // Determine addons total from breakdown, selector_addons, numeric CSV, or named ids
+        $addons_total = $bd['addons_total'] ?? null;
+        if((is_null($addons_total) || $addons_total == 0)){
+          if(isset($selector_addons) && is_numeric($selector_addons)){
+            $addons_total = (float) $selector_addons;
+          } elseif(!empty($booking->kb_extras)){
+            if(is_string($booking->kb_extras) && preg_match('/^\d+(?:\.\d+)?(?:,\d+(?:\.\d+)?)*$/', $booking->kb_extras)){
+              $addons_total = array_sum(array_map('floatval', explode(',', $booking->kb_extras)));
+            } else {
+              $addonMap = ['kb_add_detangle'=>15,'kb_add_beads'=>10,'kb_add_beads_full'=>15,'kb_add_extension'=>20,'kb_add_rest'=>5];
+              $sum = 0;
+              foreach(explode(',', $booking->kb_extras) as $it){ $it = trim($it); if(isset($addonMap[$it])) $sum += $addonMap[$it]; }
+              $addons_total = $sum;
             }
-            $addons_total = $sum;
+          } elseif(isset($booking->kb_final_price) && isset($booking->kb_base_price)){
+            $addons_total = round(($booking->kb_final_price - $booking->kb_base_price) - ($booking->kb_length_adjustment ?? 0), 2);
           }
         }
 
-        // Use explicit breakdown values passed from the notification when available
-        $basePrice = $basePrice ?? ($booking->base_price ?? 0);
-        $lengthAdjust = $lengthAdjust ?? ($booking->length_adjustment ?? 0);
         $addons_total = $addons_total ?? 0;
         $adjustmentsTotal = ($lengthAdjust + (is_numeric($addons_total) ? $addons_total : 0));
-        // Prefer explicit final_price passed from the notification, then booking->final_price, then recomputed
-        $finalPrice = $final_price ?? $booking->final_price ?? round($basePrice + $lengthAdjust + (is_numeric($addons_total) ? $addons_total : 0), 2);
+        $finalPrice = $final_price ?? $booking->final_price ?? round(($basePrice ?? 0) + $adjustmentsTotal, 2);
       @endphp
 
       @if(!$hideLengthFinish)
@@ -112,7 +127,6 @@
     <table width="100%" cellpadding="6" style="border-collapse:collapse;">
       <tr style="background:#f8fafc;"><td style="font-weight:700;">Base price</td><td>{{ isset($basePrice) ? sprintf('$%.2f', $basePrice) : '—' }}</td></tr>
       <tr><td style="font-weight:700;">Adjustments / Add-ons</td><td>{{ sprintf('$%.2f', $adjustmentsTotal) }}</td></tr>
-      <tr><td style="font-weight:700;">Add-ons</td><td>{{ sprintf('$%.2f', $addons_total) }}</td></tr>
       <tr style="background:#f8fafc;font-size:18px;font-weight:800;"><td style="font-weight:800;">Final price</td><td>{{ isset($finalPrice) ? sprintf('$%.2f', $finalPrice) : '—' }}</td></tr>
     </table>
 
@@ -150,10 +164,7 @@
     <div style="margin-top:18px;border-top:1px solid #eef2f6;padding-top:12px;font-size:13px;color:#6c757d;">
       <p style="margin:6px 0 8px 0;font-weight:700;color:#0b3a66;">Stay connected</p>
       <p style="margin:0;">Follow us for updates and styling inspiration:</p>
-      <p style="margin:8px 0 0 0;">
-                    <a href="https://www.instagram.com/dabs_beauty_touch?igsh=MXYycGNraGxwem5tZw%3D%3D&utm_source=qr" style="margin-right:12px;color:#0b3a66;text-decoration:none;">Instagram</a>
-                    <a href="https://wa.me/13432548848" style="color:#0b3a66;text-decoration:none;">WhatsApp</a>
-      </p>
+      {!! \App\Helpers\SocialLinks::render() !!}
     </div>
 
     <p style="margin-top:12px;color:#6c757d;font-size:13px;">Thanks,<br/>Dabs Beauty Touch</p>

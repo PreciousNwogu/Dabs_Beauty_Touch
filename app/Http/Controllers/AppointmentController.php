@@ -521,10 +521,13 @@ class AppointmentController extends Controller
             $booking->confirmation_code = $confirmationCode;
             $booking->save();
 
+            // Log persisted booking details including what was stored for final_price
             Log::info('New appointment booked', [
                 'booking_id' => $bookingId,
                 'confirmation_code' => $confirmationCode,
-                'final_price' => $finalPrice,
+                'final_price_persisted' => $booking->final_price,
+                'server_calculated_final' => isset($serverCalculatedFinal) ? $serverCalculatedFinal : null,
+                'client_submitted_final' => $request->filled('final_price') ? $request->input('final_price') : null,
                 'length' => $booking->length
             ]);
 
@@ -788,8 +791,11 @@ class AppointmentController extends Controller
                         'notes' => $booking->notes,
                         'sample_picture' => $booking->sample_picture,
                         'confirmed_at' => $booking->confirmed_at,
+                        'confirmed_at_formatted' => $booking->confirmed_at ? $booking->confirmed_at->setTimezone('America/Toronto')->format('F j, Y g:i A') : null,
                         'completed_at' => $booking->completed_at,
+                        'completed_at_formatted' => $booking->completed_at ? $booking->completed_at->setTimezone('America/Toronto')->format('F j, Y g:i A') : null,
                         'cancelled_at' => $booking->cancelled_at,
+                        'cancelled_at_formatted' => $booking->cancelled_at ? $booking->cancelled_at->setTimezone('America/Toronto')->format('F j, Y g:i A') : null,
                         'completed_by' => $booking->completed_by,
                         'completion_notes' => $booking->completion_notes,
                         'service_duration_minutes' => $booking->service_duration_minutes,
