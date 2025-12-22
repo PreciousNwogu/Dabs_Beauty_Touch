@@ -5,11 +5,12 @@
       $bd = $breakdown ?? [];
       $displayBase = $bd['resolved_base'] ?? $booking->base_price ?? 0;
 
-      // Determine length/type adjustments: prefer breakdown keys, then booking persisted fields
-      $displayLengthAdjust = $bd['length_adjust'] ?? $bd['selector_adjust'] ?? $booking->length_adjustment ?? $booking->kb_length_adjustment ?? 0;
+      // For kids bookings, use adjustments_total from breakdown which includes type + length + finish
+      // Otherwise fall back to length_adjust or selector_adjust
+      $displayTypeLengthFinishAdjust = $bd['adjustments_total'] ?? $bd['selector_adjust'] ?? $bd['length_adjust'] ?? $booking->length_adjustment ?? $booking->kb_length_adjustment ?? 0;
 
       // Determine addons from breakdown or booking extras
-      $displayAddons = $bd['addons_total'] ?? null;
+      $displayAddons = $bd['addons_total'] ?? $bd['selector_addons'] ?? null;
       if((is_null($displayAddons) || $displayAddons == 0) && !empty($booking->kb_extras)){
         $ex = $booking->kb_extras;
         $sum = 0;
@@ -22,7 +23,8 @@
         $displayAddons = $sum;
       }
 
-      $displayAdjustmentsTotal = ($displayLengthAdjust ?? 0) + ($displayAddons ?? 0);
+      // Adjustments total = type + length + finish adjustments + addons (matches UI)
+      $displayAdjustmentsTotal = ($displayTypeLengthFinishAdjust ?? 0) + ($displayAddons ?? 0);
       $displayFinal = $bd['final_price'] ?? $booking->final_price ?? round($displayBase + $displayAdjustmentsTotal, 2);
     @endphp
 
@@ -62,11 +64,12 @@
         $bd = $breakdown ?? [];
         $basePrice = $bd['resolved_base'] ?? $booking->base_price ?? null;
 
-        // Prefer breakdown length adjustment, then selector-based, then persisted kb fields
-        $lengthAdjust = $bd['length_adjust'] ?? $bd['selector_adjust'] ?? $booking->length_adjustment ?? $booking->kb_length_adjustment ?? 0;
+        // For kids bookings, use adjustments_total from breakdown which includes type + length + finish
+        // Otherwise fall back to length_adjust or selector_adjust
+        $typeLengthFinishAdjust = $bd['adjustments_total'] ?? $bd['selector_adjust'] ?? $bd['length_adjust'] ?? $booking->length_adjustment ?? $booking->kb_length_adjustment ?? 0;
 
         // Determine addons from breakdown or booking extras (numeric CSV or named ids)
-        $addons = $bd['addons_total'] ?? null;
+        $addons = $bd['addons_total'] ?? $bd['selector_addons'] ?? null;
         if((is_null($addons) || $addons == 0)){
           if(!empty($booking->kb_extras)){
             if(is_string($booking->kb_extras) && preg_match('/^\d+(?:\.\d+)?(?:,\d+(?:\.\d+)?)*$/', $booking->kb_extras)){
@@ -83,7 +86,8 @@
           }
         }
 
-        $adjustmentsTotal = ($lengthAdjust ?? 0) + ($addons ?? 0);
+        // Adjustments total = type + length + finish adjustments + addons (matches UI)
+        $adjustmentsTotal = ($typeLengthFinishAdjust ?? 0) + ($addons ?? 0);
         $finalPrice = $bd['final_price'] ?? $booking->final_price ?? round(($basePrice ?? 0) + $adjustmentsTotal, 2);
       @endphp
 
