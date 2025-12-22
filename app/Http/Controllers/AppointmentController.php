@@ -10,6 +10,8 @@ use Illuminate\Support\Facades\Notification;
 use App\Notifications\BookingConfirmation;
 use App\Services\PriceCalculator;
 
+use Illuminate\Http\JsonResponse;
+
 class AppointmentController extends Controller
 {
     /**
@@ -445,20 +447,45 @@ class AppointmentController extends Controller
             if ($isKidsFlow) {
                 // Determine kids base price from service model or config fallback
                 $kb_base_price = $serviceModel ? (float) $serviceModel->base_price : (float) config('service_prices.kids_braids', 80);
-                // Normalize kb_length
+                
+                // Calculate all adjustments: type + length + finish (matching UI calculation)
+                $typeAdj = ['protective'=>-20,'cornrows'=>-40,'knotless_small'=>20,'knotless_med'=>0,'box_small'=>10,'box_med'=>0,'stitch'=>20];
+                $lengthAdj = ['shoulder'=>0,'armpit'=>10,'mid_back'=>20,'waist'=>30];
+                $finishAdj = ['curled'=>-10,'plain'=>0];
+                
+                $kb_braid_type = $request->input('kb_braid_type');
                 $kb_length = $request->input('kb_length') ?? $request->input('length');
+                $kb_finish = $request->input('kb_finish');
+                
+                // Normalize kb_length
                 if (is_string($kb_length)) {
                     $kb_length = str_replace(['-', ' '], '_', strtolower($kb_length));
                 }
-                // compute adjustment using same step rule as main flow
-                $ordered = ['neck','shoulder','armpit','bra_strap','mid_back','waist','hip','tailbone','classic'];
-                $midIndex = array_search('mid_back', $ordered, true);
-                $idx = array_search($kb_length, $ordered, true);
-                if ($idx === false || $midIndex === false) {
-                    $kb_length_adjustment = 0.00;
-                } else {
-                    $kb_length_adjustment = (($idx - $midIndex) * 20.00);
+                
+                // Calculate type adjustment
+                $typeAdjustment = 0.00;
+                if ($kb_braid_type && isset($typeAdj[$kb_braid_type])) {
+                    $typeAdjustment = (float) $typeAdj[$kb_braid_type];
                 }
+                
+                // Calculate length adjustment (using the selector mapping, not mid_back rule)
+                $lengthAdjustment = 0.00;
+                if ($kb_length && isset($lengthAdj[$kb_length])) {
+                    $lengthAdjustment = (float) $lengthAdj[$kb_length];
+                }
+                
+                // Calculate finish adjustment
+                $finishAdjustment = 0.00;
+                if ($kb_finish && isset($finishAdj[$kb_finish])) {
+                    $finishAdjustment = (float) $finishAdj[$kb_finish];
+                }
+                
+                // Total adjustments = type + length + finish
+                $kb_total_adjustments = $typeAdjustment + $lengthAdjustment + $finishAdjustment;
+                
+                // Store length adjustment separately for backwards compatibility (but it's actually total adjustments)
+                $kb_length_adjustment = $kb_total_adjustments;
+                
                 // Parse extras if provided (either numeric CSV or named extras)
                 $kb_extras_total = 0.00;
                 $kb_extras_raw = $request->input('kb_extras');
@@ -475,7 +502,9 @@ class AppointmentController extends Controller
                         }
                     }
                 }
-                $kb_final_price = round(($kb_base_price ?? 0) + ($kb_length_adjustment ?? 0) + ($kb_extras_total ?? 0), 2);
+                
+                // Final price = base + (type + length + finish adjustments) + addons
+                $kb_final_price = round(($kb_base_price ?? 0) + $kb_total_adjustments + ($kb_extras_total ?? 0), 2);
                 // If client submitted a final_price for kids flow, verify within tolerance and prefer server calc if mismatch large
                 if ($request->filled('final_price') && is_numeric($request->input('final_price'))) {
                     $clientFinal = round((float) $request->input('final_price'), 2);
@@ -503,6 +532,7 @@ class AppointmentController extends Controller
                 'kb_base_price' => $kb_base_price,
                 'kb_length_adjustment' => $kb_length_adjustment,
                 'kb_final_price' => $kb_final_price,
+                'kb_extras_total' => $kb_extras_total,
                 'appointment_date' => $request->appointment_date,
                 // Persist appointment_time normalized to H:i (24h) format when possible
                 'appointment_time' => (function($val){ try { return \Carbon\Carbon::parse($val)->format('H:i'); } catch (\Exception $e) { return $val; } })($request->appointment_time),
@@ -642,6 +672,25 @@ class AppointmentController extends Controller
                     'error_message' => 'We apologize, but there was an error processing your appointment. Please try again or contact us directly.'
                 ]);
             }
+        }
+    }
+
+    /**
+     * Return a server-side canonical price breakdown for given inputs.
+     */
+    public function previewPrice(Request $request): JsonResponse
+    {
+        try {
+            $payload = $request->only(['service','service_type','kb_length','length','kb_extras','kb_braid_type','hair_mask_option','selectedHairMaskOption']);
+            $calculator = new PriceCalculator();
+            $breakdown = $calculator->calculate($payload);
+            return response()->json([
+                'success' => true,
+                'breakdown' => $breakdown
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Price preview failed: ' . $e->getMessage());
+            return response()->json(['success' => false, 'message' => 'Failed to compute price'], 500);
         }
     }
 

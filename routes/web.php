@@ -223,6 +223,9 @@ Route::post('/kids-selector/submit', function (Request $request) {
     return redirect()->route('home')->with('kids_selector', $payload);
 })->name('kids.selector.submit');
 
+// Price preview API (server-side canonical breakdown)
+Route::post('/api/price/preview', [\App\Http\Controllers\AppointmentController::class, 'previewPrice'])->name('api.price.preview');
+
 // Admin authentication routes (unprotected but rate limited) - TEMPORARY SIMPLE VERSION
 Route::get('/admin/login', function () {
     return view('admin.login');

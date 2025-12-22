@@ -1832,6 +1832,24 @@
                         const dateLabel = document.getElementById('kidsSelectedDateLabel'); if(dateLabel) dateLabel.textContent = formattedDate;
                         const timeLabel = document.getElementById('kidsSelectedTimeLabel'); if(timeLabel) timeLabel.textContent = selectedCalendarTime.formattedTime;
                     }catch(e){ /* noop */ }
+
+                    // Clear validation errors for date and time when calendar updates them
+                    try{
+                        const dateErrorDiv = document.getElementById('kidsBookingDate_error');
+                        const timeErrorDiv = document.getElementById('kidsBookingTime_error');
+                        if(dateErrorDiv) {
+                            dateErrorDiv.style.display = 'none';
+                            dateErrorDiv.textContent = '';
+                            const dateField = document.getElementById('kidsBookingDate');
+                            if(dateField) dateField.classList.remove('is-invalid');
+                        }
+                        if(timeErrorDiv) {
+                            timeErrorDiv.style.display = 'none';
+                            timeErrorDiv.textContent = '';
+                            const timeField = document.getElementById('kidsBookingTime');
+                            if(timeField) timeField.classList.remove('is-invalid');
+                        }
+                    }catch(e){ /* noop */ }
                 }catch(e){ console.warn('Failed to populate kids booking inputs', e); }
 
                 // Close calendar modal
@@ -3842,9 +3860,14 @@ console.log('=== LOADING BOOKING FUNCTIONS ===');
                     const iln = document.getElementById('kids_length_input'); if(iln) iln.value = ln;
                     const iex = document.getElementById('kids_extras_input'); if(iex) iex.value = ex;
                 }catch(e){ /* noop */ }
-                const kb = document.getElementById('kidsModal_base'); if(kb) kb.innerHTML = 'Base: <strong>$' + Number(base).toFixed(0) + '</strong>';
-                const ka = document.getElementById('kidsModal_adjustments'); if(ka) ka.innerHTML = 'Adjustments: <strong>' + ( (adjustments + addons) >= 0 ? '+' : '-') + '$' + Math.abs(Number(adjustments + addons)).toFixed(0) + '</strong>';
-                const kt = document.getElementById('kidsModal_total'); if(kt) kt.innerHTML = '<strong>Total: $' + (total ? Number(total).toFixed(0) : '--') + '</strong>';
+                // Calculate adjustments total (length/type adjustments + addons) to match email format
+                const adjustmentsTotal = adjustments + addons;
+                const finalPrice = total;
+                
+                // Format with 2 decimal places to match email format
+                const kb = document.getElementById('kidsModal_base'); if(kb) kb.innerHTML = 'Base: <strong>$' + Number(base).toFixed(2) + '</strong>';
+                const ka = document.getElementById('kidsModal_adjustments'); if(ka) ka.innerHTML = 'Adjustments: <strong>' + (adjustmentsTotal >= 0 ? '+' : '-') + '$' + Math.abs(Number(adjustmentsTotal)).toFixed(2) + '</strong>';
+                const kt = document.getElementById('kidsModal_total'); if(kt) kt.innerHTML = '<strong>Total: $' + (finalPrice ? Number(finalPrice).toFixed(2) : '--') + '</strong>';
             }catch(e){ console.warn('Kids price preview compute failed', e); }
 
             // show modal
@@ -4526,6 +4549,21 @@ function backToKidsSelector(){
         var ln = document.getElementById('kids_length_input'); if(ln) sel.kb_length = ln.value;
         var ex = document.getElementById('kids_extras_input'); if(ex) sel.kb_extras = ex.value;
         var price = document.getElementById('kids_price_input'); if(price) sel.price = price.value;
+        
+        // Also try to get from global selector data if available (more complete)
+        try{
+            if(window.__kidsSelectorData){
+                if(!sel.kb_braid_type && window.__kidsSelectorData.kb_braid_type) sel.kb_braid_type = window.__kidsSelectorData.kb_braid_type;
+                if(!sel.kb_braid_type && window.__kidsSelectorData.braid_type) sel.kb_braid_type = window.__kidsSelectorData.braid_type;
+                if(!sel.kb_finish && window.__kidsSelectorData.kb_finish) sel.kb_finish = window.__kidsSelectorData.kb_finish;
+                if(!sel.kb_finish && window.__kidsSelectorData.finish) sel.kb_finish = window.__kidsSelectorData.finish;
+                if(!sel.kb_length && window.__kidsSelectorData.kb_length) sel.kb_length = window.__kidsSelectorData.kb_length;
+                if(!sel.kb_length && window.__kidsSelectorData.length) sel.kb_length = window.__kidsSelectorData.length;
+                if(!sel.kb_length && window.__kidsSelectorData.hair_length) sel.kb_length = window.__kidsSelectorData.hair_length;
+                if(!sel.kb_extras && window.__kidsSelectorData.extras) sel.kb_extras = window.__kidsSelectorData.extras;
+                if(!sel.price && window.__kidsSelectorData.price) sel.price = window.__kidsSelectorData.price;
+            }
+        }catch(e){ console.warn('Failed to merge global selector data', e); }
 
         // store to localStorage for selector page to read
         try{ localStorage.setItem('kb_selector', JSON.stringify(sel)); }catch(e){ console.warn('Failed to persist kb_selector', e); }
@@ -4839,6 +4877,7 @@ function clearImagePreview() {
                                 <div class="mb-3">
                                     <label class="form-label">Child's Name *</label>
                                     <input id="kids_name" name="name" type="text" class="form-control" required>
+                                    <div id="kids_name_error" class="text-danger small mt-1" style="display:none;"></div>
                                 </div>
                                 <div class="mb-3">
                                     <label class="form-label">Parent / Guardian Email</label>
@@ -4848,6 +4887,7 @@ function clearImagePreview() {
                                     <label class="form-label">Parent / Guardian Phone *</label>
                                     <input id="kids_phone" name="phone" type="tel" class="form-control" required pattern="[0-9+()\s\-]{7,}" placeholder="+1 555 555 5555">
                                     <div class="form-text small text-muted">Include country code, e.g. <code>+1</code></div>
+                                    <div id="kids_phone_error" class="text-danger small mt-1" style="display:none;"></div>
                                 </div>
                                 <div class="mb-3 d-flex gap-2 align-items-center">
                                     <div>
@@ -4860,12 +4900,14 @@ function clearImagePreview() {
                                     </div>
                                 </div>
                                 <div class="mb-3">
-                                    <label class="form-label">Date (opens calendar)</label>
+                                    <label class="form-label">Date (opens calendar) *</label>
                                     <input id="kidsBookingDate" type="text" class="form-control" readonly onclick="openCalendarModal(); return false;" />
+                                    <div id="kidsBookingDate_error" class="text-danger small mt-1" style="display:none;"></div>
                                 </div>
                                 <div class="mb-3">
-                                    <label class="form-label">Time</label>
+                                    <label class="form-label">Time *</label>
                                     <input id="kidsBookingTime" type="text" class="form-control" readonly />
+                                    <div id="kidsBookingTime_error" class="text-danger small mt-1" style="display:none;"></div>
                                 </div>
 
                                 <div class="mb-3">
@@ -4928,9 +4970,19 @@ document.addEventListener('DOMContentLoaded', function(){
                 var kb_adjust = document.getElementById('kidsModal_adjustments');
                 var kb_total = document.getElementById('kidsModal_total');
                 if(selBaseEl && selAdjustEl && selTotalEl && kb_base && kb_adjust && kb_total){
-                    kb_base.innerHTML = 'Base: <strong>' + (selBaseEl.textContent || selBaseEl.innerText || selBaseEl.innerHTML).replace(/^\$/,'') + '</strong>';
-                    kb_adjust.innerHTML = 'Adjustments: <strong>' + (selAdjustEl.textContent || selAdjustEl.innerText || selAdjustEl.innerHTML) + '</strong>';
-                    kb_total.innerHTML = '<strong>Total: ' + (selTotalEl.textContent || selTotalEl.innerText || selTotalEl.innerHTML) + '</strong>';
+                    // Parse and reformat values to ensure 2 decimal places to match email format
+                    var baseText = (selBaseEl.textContent || selBaseEl.innerText || selBaseEl.innerHTML).replace(/[^0-9.]/g, '');
+                    var adjustText = (selAdjustEl.textContent || selAdjustEl.innerText || selAdjustEl.innerHTML).replace(/[^0-9.\-+]/g, '');
+                    var totalText = (selTotalEl.textContent || selTotalEl.innerText || selTotalEl.innerHTML).replace(/[^0-9.]/g, '');
+                    
+                    var baseVal = parseFloat(baseText) || 0;
+                    var adjustVal = parseFloat(adjustText.replace(/[+\-]/g, '')) || 0;
+                    var adjustSign = (adjustText.indexOf('-') >= 0) ? '-' : '+';
+                    var totalVal = parseFloat(totalText) || 0;
+                    
+                    kb_base.innerHTML = 'Base: <strong>$' + baseVal.toFixed(2) + '</strong>';
+                    kb_adjust.innerHTML = 'Adjustments: <strong>' + adjustSign + '$' + adjustVal.toFixed(2) + '</strong>';
+                    kb_total.innerHTML = '<strong>Total: $' + totalVal.toFixed(2) + '</strong>';
                     // set hidden inputs
                     var priceMatch = (selTotalEl.textContent||selTotalEl.innerText||'').match(/\$\s*([0-9,\.]+)/);
                     if(priceMatch){
@@ -5274,9 +5326,10 @@ document.addEventListener('DOMContentLoaded', function(){
                     const kbs_adjustments = document.getElementById('kbs_adjustments');
                     const kbs_total = document.getElementById('kbs_total');
 
-                    if (kbs_base) kbs_base.innerHTML = 'Base: <strong>$' + (basePrice ? basePrice.toFixed(0) : '--') + '</strong>';
-                    if (kbs_adjustments) kbs_adjustments.innerHTML = 'Adjustments: <strong>' + (adjustments >= 0 ? '+' : '-') + '$' + Math.abs(adjustments).toFixed(0) + '</strong>';
-                    if (kbs_total) kbs_total.innerHTML = '<strong>Total: $' + (selPrice ? selPrice.toFixed(0) : '--') + '</strong>';
+                    // Format with 2 decimal places to match email format
+                    if (kbs_base) kbs_base.innerHTML = 'Base: <strong>$' + (basePrice ? basePrice.toFixed(2) : '--') + '</strong>';
+                    if (kbs_adjustments) kbs_adjustments.innerHTML = 'Adjustments: <strong>' + (adjustments >= 0 ? '+' : '-') + '$' + Math.abs(adjustments).toFixed(2) + '</strong>';
+                    if (kbs_total) kbs_total.innerHTML = '<strong>Total: $' + (selPrice ? selPrice.toFixed(2) : '--') + '</strong>';
 
                     // update visible price to the selector's total and ensure hidden base remains set via updatePriceDisplay
                     const priceDisplay = document.getElementById('priceDisplay');
@@ -5902,11 +5955,129 @@ document.addEventListener('DOMContentLoaded', function(){
 
         const kidsForm = document.getElementById('kidsBookingForm');
         if(kidsForm){
-            kidsForm.addEventListener('submit', function(){
+            // Function to show error message for a field
+            function showFieldError(fieldId, message) {
+                const field = document.getElementById(fieldId);
+                const errorDiv = document.getElementById(fieldId + '_error');
+                if(field && errorDiv) {
+                    errorDiv.textContent = message;
+                    errorDiv.style.display = 'block';
+                    field.classList.add('is-invalid');
+                    field.classList.remove('is-valid');
+                }
+            }
+
+            // Function to clear error message for a field
+            function clearFieldError(fieldId) {
+                const field = document.getElementById(fieldId);
+                const errorDiv = document.getElementById(fieldId + '_error');
+                if(field && errorDiv) {
+                    errorDiv.textContent = '';
+                    errorDiv.style.display = 'none';
+                    field.classList.remove('is-invalid');
+                }
+            }
+
+            // Clear errors when user starts typing/selecting
+            const requiredFields = ['kids_name', 'kids_phone', 'kidsBookingDate', 'kidsBookingTime'];
+            requiredFields.forEach(fieldId => {
+                const field = document.getElementById(fieldId);
+                if(field) {
+                    field.addEventListener('input', function() {
+                        clearFieldError(fieldId);
+                    });
+                    field.addEventListener('change', function() {
+                        clearFieldError(fieldId);
+                    });
+                }
+            });
+
+            // Validate kids booking form
+            function validateKidsBookingForm() {
+                let isValid = true;
+                const errors = [];
+
+                // Validate Child's Name
+                const nameField = document.getElementById('kids_name');
+                const nameValue = nameField ? nameField.value.trim() : '';
+                if(!nameValue) {
+                    showFieldError('kids_name', 'Please enter the child\'s name.');
+                    isValid = false;
+                    errors.push('Child\'s name');
+                } else {
+                    clearFieldError('kids_name');
+                }
+
+                // Validate Phone
+                const phoneField = document.getElementById('kids_phone');
+                const phoneValue = phoneField ? phoneField.value.trim() : '';
+                const phonePattern = phoneField ? new RegExp(phoneField.getAttribute('pattern') || '[0-9+()\\s\\-]{7,}') : null;
+                if(!phoneValue) {
+                    showFieldError('kids_phone', 'Please enter a parent/guardian phone number.');
+                    isValid = false;
+                    errors.push('Phone number');
+                } else if(phonePattern && !phonePattern.test(phoneValue)) {
+                    showFieldError('kids_phone', 'Please enter a valid phone number format.');
+                    isValid = false;
+                    errors.push('Phone number');
+                } else {
+                    clearFieldError('kids_phone');
+                }
+
+                // Validate Date
+                const dateField = document.getElementById('kidsBookingDate');
+                const dateValue = dateField ? dateField.value.trim() : '';
+                const appointmentDateField = document.querySelector('input[name="appointment_date"]');
+                const appointmentDateValue = appointmentDateField ? appointmentDateField.value.trim() : '';
+                if(!dateValue && !appointmentDateValue) {
+                    showFieldError('kidsBookingDate', 'Please select a date for the appointment.');
+                    isValid = false;
+                    errors.push('Date');
+                } else {
+                    clearFieldError('kidsBookingDate');
+                }
+
+                // Validate Time
+                const timeField = document.getElementById('kidsBookingTime');
+                const timeValue = timeField ? timeField.value.trim() : '';
+                const appointmentTimeField = document.querySelector('input[name="appointment_time"]');
+                const appointmentTimeValue = appointmentTimeField ? appointmentTimeField.value.trim() : '';
+                if(!timeValue && !appointmentTimeValue) {
+                    showFieldError('kidsBookingTime', 'Please select a time for the appointment.');
+                    isValid = false;
+                    errors.push('Time');
+                } else {
+                    clearFieldError('kidsBookingTime');
+                }
+
+                return { isValid, errors };
+            }
+
+            kidsForm.addEventListener('submit', function(e){
                 try{
+                    // Normalize phone number
                     const el = document.getElementById('kids_phone');
                     if(el) el.value = normalizePhoneForSubmit(el.value);
-                }catch(err){/* noop */}
+
+                    // Validate form
+                    const validation = validateKidsBookingForm();
+                    if(!validation.isValid) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        
+                        // Scroll to first error field
+                        const firstErrorField = document.querySelector('#kidsBookingForm .is-invalid');
+                        if(firstErrorField) {
+                            firstErrorField.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                            firstErrorField.focus();
+                        }
+                        return false;
+                    }
+                }catch(err){
+                    console.warn('Kids booking form validation error:', err);
+                    e.preventDefault();
+                    return false;
+                }
             });
         }
     });

@@ -251,9 +251,28 @@ class BookingConfirmation extends Notification
             $final_price_to_pass = round($resolvedBase + $lengthAdjust + $addonsTotal, 2);
         }
 
-        // Also compute an adjustments total (lengthAdjust + addonsTotal) for clarity in templates
-        $adjustmentsTotal = round($lengthAdjust, 2);
-        $addonsTotal = round($addonsTotal, 2);
+        // Use breakdown values if available (more authoritative for kids bookings)
+        $breakdownAdjustmentsTotal = $break['adjustments_total'] ?? null;
+        $breakdownAddonsTotal = $break['addons_total'] ?? null;
+        
+        // For kids bookings, adjustments_total from breakdown includes type + length + finish
+        // Otherwise, calculate from components
+        if (isset($breakdownAdjustmentsTotal) && is_numeric($breakdownAdjustmentsTotal)) {
+            $adjustmentsTotal = round((float)$breakdownAdjustmentsTotal, 2);
+        } elseif (isset($adjustments) && is_numeric($adjustments)) {
+            // Use computed adjustments (type + length + finish) for kids bookings
+            $adjustmentsTotal = round((float)$adjustments, 2);
+        } else {
+            // Fallback to lengthAdjust only (for non-kids bookings)
+            $adjustmentsTotal = round($lengthAdjust, 2);
+        }
+        
+        if (isset($breakdownAddonsTotal) && is_numeric($breakdownAddonsTotal)) {
+            $addonsTotal = round((float)$breakdownAddonsTotal, 2);
+        } else {
+            $addonsTotal = round($addonsTotal, 2);
+        }
+        
         $computed_total_final = $computed_total_final ?? $final_price_to_pass;
 
         // Compute hideLengthFinish once and pass to views so templates don't duplicate logic
@@ -302,6 +321,7 @@ class BookingConfirmation extends Notification
             ->subject($subject)
             ->view('emails.booking_confirmation', [
                 'booking' => $b,
+                'breakdown' => $break, // Pass full breakdown so view can use authoritative values
                 'basePrice' => $resolvedBase,
                 'length_adjust' => $lengthAdjust,
                 'addons_total' => $addonsTotal,
