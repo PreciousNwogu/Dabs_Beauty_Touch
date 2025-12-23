@@ -446,6 +446,18 @@
         let selectedTime = null;
         let selectedService = null;
 
+        // Helper: format a Date as local YYYY-MM-DD (avoids timezone shifts from toISOString())
+        function formatYMD(d){
+            try{
+                const yyyy = d.getFullYear();
+                const mm = String(d.getMonth() + 1).padStart(2, '0');
+                const dd = String(d.getDate()).padStart(2, '0');
+                return `${yyyy}-${mm}-${dd}`;
+            }catch(e){
+                try{ return d.toISOString().split('T')[0]; }catch(er){ return ''+d; }
+            }
+        }
+
         // Initialize calendar
         document.addEventListener('DOMContentLoaded', function() {
             renderCalendar();
@@ -477,7 +489,7 @@
                     for (let i = 0; i < 42; i++) {
                         const date = new Date(startDate);
                         date.setDate(startDate.getDate() + i);
-                        const dateString = date.toISOString().split('T')[0];
+                        const dateString = formatYMD(date);
 
                         const dayDiv = document.createElement('div');
                         dayDiv.className = 'col calendar-day';
@@ -556,7 +568,7 @@
                 day: 'numeric'
             });
 
-            fetch(`/bookings/slots?date=${date.toISOString().split('T')[0]}`)
+            fetch(`/bookings/slots?date=${formatYMD(date)}`)
                 .then(response => response.json())
                 .then(data => {
                     loading.style.display = 'none';
@@ -630,7 +642,7 @@
             e.preventDefault();
 
             const formData = new FormData(this);
-            formData.append('appointment_date', selectedDate.toISOString().split('T')[0]);
+            formData.append('appointment_date', formatYMD(selectedDate));
             formData.append('appointment_time', selectedTime.time);
 
             const submitBtn = this.querySelector('button[type="submit"]');

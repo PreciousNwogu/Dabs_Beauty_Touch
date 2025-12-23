@@ -32,7 +32,7 @@ class Schedule extends Model
         $type = $this->type ?? 'availability';
         $colors = [
             'availability' => ['bg' => '#cfe9ff', 'border' => '#9ec8ff'],
-            'blocked' => ['bg' => '#ffd6d6', 'border' => '#ff9c9c'],
+            'blocked' => ['bg' => '#dc3545', 'border' => '#a71e2a'],
         ];
 
         $chosen = $colors[$type] ?? $colors['availability'];
@@ -62,8 +62,8 @@ class Schedule extends Model
             // ensure blocked slots are not draggable and do not overlap other events
             $event['overlap'] = false;
             $event['display'] = 'auto';
-            // set a default text color for legibility
-            $event['textColor'] = '#000000';
+            // set a default text color for legibility (white for dark red background)
+            $event['textColor'] = '#ffffff';
         }
 
         return $event;

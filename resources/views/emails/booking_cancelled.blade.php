@@ -248,15 +248,6 @@
         </table>
       </div>
 
-      <!-- Notice Box -->
-      <div class="notice-box">
-        <h3>⚠️ Important Information</h3>
-        <p>
-          If you did not request this cancellation, please contact us immediately. We take the security of your 
-          bookings seriously and want to ensure your account is protected.
-        </p>
-      </div>
-
       <!-- Action Box -->
       <div class="action-box">
         <h3>💡 What's Next?</h3>
@@ -269,19 +260,10 @@
         </div>
       </div>
 
-      <!-- Contact Information -->
-      <div style="background: #f8fafc; border-radius: 8px; padding: 20px; margin: 24px 0;">
-        <h3 style="color: #0b3a66; font-size: 16px; font-weight: 700; margin: 0 0 12px 0;">Need Assistance?</h3>
-        <p style="color: #4a5568; font-size: 14px; margin: 0; line-height: 1.6;">
-          If you have any questions about this cancellation or would like to discuss rescheduling options, 
-          please don't hesitate to reach out to us. Our team is ready to assist you.
-        </p>
-      </div>
-
       <!-- Signature -->
       <div class="signature">
         <p style="margin: 0; color: #4a5568;">We apologize for any inconvenience,<br>
-        <strong style="color: #0b3a66;">The Dabs Beauty Touch Team</strong></p>
+        <strong style="color: #0b3a66;">Dabs Beauty Touch</strong></p>
       </div>
     </div>
 

@@ -310,21 +310,41 @@
         .fc-event.blocked-range,
         .fc-daygrid-event.blocked-range,
         .fc-timegrid-event.blocked-range {
-            background-color: rgba(255,150,150,0.9) !important;
-            border-color: rgba(255,120,120,1) !important;
-            color: #000 !important;
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%) !important;
+            background-color: #dc3545 !important;
+            border-color: #a71e2a !important;
+            border-width: 2px !important;
+            color: #ffffff !important;
             opacity: 1 !important;
+            font-weight: 600 !important;
         }
 
         /* Make multi-day/all-day blocked bars fuller so the title is readable */
         .fc-daygrid-event.blocked-range .fc-event-main,
         .fc-event.blocked-range .fc-event-main {
-            padding: 2px 6px !important;
-            font-weight: 600;
+            padding: 4px 8px !important;
+            font-weight: 700 !important;
+            color: #ffffff !important;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+        }
+
+        /* Ensure blocked events stand out in all views */
+        .fc-timegrid-event.blocked-range {
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%) !important;
+            border-left: 4px solid #a71e2a !important;
         }
 
         /* Prevent pointer interactions (admins already have separate manage UI) */
-        .fc-event.blocked-range { pointer-events: auto; }
+        .fc-event.blocked-range { 
+            pointer-events: auto; 
+            box-shadow: 0 2px 4px rgba(220, 53, 69, 0.3);
+        }
+        
+        /* Hover effect for blocked events */
+        .fc-event.blocked-range:hover {
+            background: linear-gradient(135deg, #c82333 0%, #a71e2a 100%) !important;
+            box-shadow: 0 3px 6px rgba(220, 53, 69, 0.4);
+        }
     </style>
 </head>
 <body>
@@ -422,99 +442,115 @@
 
                     <!-- Block Dates Modal -->
                     <div class="modal fade" id="blockModal" tabindex="-1">
-                        <div class="modal-dialog">
-                            <div class="modal-content">
-                                <div class="modal-header">
-                                    <h5 class="modal-title">Block Dates / Range</h5>
-                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        <div class="modal-dialog modal-dialog-centered">
+                            <div class="modal-content" style="border-radius: 12px; overflow: hidden; box-shadow: 0 10px 40px rgba(0,0,0,0.2);">
+                                <div class="modal-header" style="background: linear-gradient(135deg, #dc3545 0%, #c82333 100%); color: white; border-bottom: none; padding: 20px 24px;">
+                                    <div class="d-flex align-items-center">
+                                        <i class="bi bi-slash-circle-fill me-2" style="font-size: 1.5rem;"></i>
+                                        <h5 class="modal-title mb-0" style="font-weight: 700;">Block Dates / Range</h5>
+                                    </div>
+                                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                                 </div>
-                                <div class="modal-body">
-                                    <div class="mb-3">
-                                        <label class="form-label">Title (optional)</label>
-                                        <input id="blockTitle" type="text" class="form-control" placeholder="e.g., Closed for holidays">
+                                <div class="modal-body" style="padding: 24px;">
+                                    <div class="alert alert-info d-flex align-items-start mb-4" style="background: #e7f3ff; border-left: 4px solid #0ea5e9; border-radius: 6px;">
+                                        <i class="bi bi-info-circle-fill me-2" style="color: #0ea5e9; font-size: 1.2rem;"></i>
+                                        <div>
+                                            <strong>Note:</strong> Blocked dates will prevent all bookings on the selected date range. Users will see these dates as unavailable on the booking calendar.
+                                        </div>
                                     </div>
-                                    <div class="mb-3 form-check">
-                                        <input type="checkbox" class="form-check-input" id="blockAllDay" checked>
-                                        <label class="form-check-label" for="blockAllDay">All day / whole-day block</label>
+
+                                    <div class="mb-4">
+                                        <label class="form-label fw-semibold mb-2">
+                                            <i class="bi bi-tag me-1"></i>Title / Reason
+                                            <span class="text-muted small">(optional)</span>
+                                        </label>
+                                        <input id="blockTitle" type="text" class="form-control form-control-lg" placeholder="e.g., Closed for holidays, Staff training, Maintenance">
+                                        <small class="form-text text-muted">This will be displayed to users when they try to book on blocked dates.</small>
                                     </div>
-                                    <div class="mb-3">
-                                        <label class="form-label">Start</label>
-                                        <input id="blockStart" type="datetime-local" class="form-control">
+
+                                    <div class="mb-4">
+                                        <div class="form-check form-switch">
+                                            <input type="checkbox" class="form-check-input" id="blockAllDay" checked style="width: 3rem; height: 1.5rem;">
+                                            <label class="form-check-label fw-semibold" for="blockAllDay">
+                                                <i class="bi bi-calendar-day me-1"></i>All Day Block
+                                            </label>
+                                        </div>
+                                        <small class="form-text text-muted d-block mt-1">When enabled, the entire day(s) will be blocked. When disabled, you can specify exact start and end times.</small>
                                     </div>
-                                    <div class="mb-3">
-                                        <label class="form-label">End</label>
-                                        <input id="blockEnd" type="datetime-local" class="form-control">
+
+                                    <div class="row g-3">
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-semibold mb-2">
+                                                <i class="bi bi-calendar-event me-1"></i>Start Date & Time
+                                                <span class="text-danger">*</span>
+                                            </label>
+                                            <input id="blockStart" type="datetime-local" class="form-control form-control-lg" required>
+                                            <small class="form-text text-muted">When the block period begins</small>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-semibold mb-2">
+                                                <i class="bi bi-calendar-x me-1"></i>End Date & Time
+                                                <span class="text-danger">*</span>
+                                            </label>
+                                            <input id="blockEnd" type="datetime-local" class="form-control form-control-lg" required>
+                                            <small class="form-text text-muted">When the block period ends</small>
+                                        </div>
+                                    </div>
+
+                                    <div id="blockPreview" class="mt-4 p-3 rounded" style="background: #fff7e0; border-left: 4px solid #ff6600; display: none;">
+                                        <div class="d-flex align-items-center mb-2">
+                                            <i class="bi bi-eye me-2" style="color: #ff6600;"></i>
+                                            <strong style="color: #0b3a66;">Preview</strong>
+                                        </div>
+                                        <div id="blockPreviewContent" class="text-muted small"></div>
                                     </div>
                                 </div>
-                                <div class="modal-footer">
-                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                                    <button type="button" id="submitBlock" class="btn btn-danger">Create Block</button>
+                                <div class="modal-footer" style="background: #f8f9fa; border-top: 1px solid #dee2e6; padding: 16px 24px;">
+                                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                                        <i class="bi bi-x-circle me-1"></i>Cancel
+                                    </button>
+                                    <button type="button" id="submitBlock" class="btn btn-danger btn-lg px-4" style="font-weight: 600;">
+                                        <i class="bi bi-slash-circle me-2"></i>Create Block
+                                    </button>
                                 </div>
                             </div>
                         </div>
+                    </div>
 
                                 <!-- Manage Blocks Modal -->
                                 <div class="modal fade" id="manageBlocksModal" tabindex="-1">
-                                    <div class="modal-dialog modal-lg">
-                                        <div class="modal-content">
-                                            <div class="modal-header">
-                                                <h5 class="modal-title">Manage Blocked Dates</h5>
-                                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                    <div class="modal-dialog modal-lg modal-dialog-centered">
+                                        <div class="modal-content" style="border-radius: 12px; overflow: hidden; box-shadow: 0 10px 40px rgba(0,0,0,0.2);">
+                                            <div class="modal-header" style="background: linear-gradient(135deg, #6c757d 0%, #495057 100%); color: white; border-bottom: none; padding: 20px 24px;">
+                                                <div class="d-flex align-items-center">
+                                                    <i class="bi bi-list-ul me-2" style="font-size: 1.5rem;"></i>
+                                                    <h5 class="modal-title mb-0" style="font-weight: 700;">Manage Blocked Dates</h5>
+                                                </div>
+                                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                                             </div>
-                                            <div class="modal-body">
-                                                <div id="blocksList" class="list-group">
-                                                    <div class="text-muted">Loading blocked ranges...</div>
+                                            <div class="modal-body" style="padding: 24px; max-height: 500px; overflow-y: auto;">
+                                                <div class="alert alert-info d-flex align-items-start mb-4" style="background: #e7f3ff; border-left: 4px solid #0ea5e9; border-radius: 6px;">
+                                                    <i class="bi bi-info-circle-fill me-2" style="color: #0ea5e9; font-size: 1.2rem;"></i>
+                                                    <div>
+                                                        <strong>Manage your blocked date ranges:</strong> View all active blocked periods and remove them if needed.
+                                                    </div>
+                                                </div>
+                                                <div id="blocksList" class="list-group" style="border-radius: 8px; overflow: hidden;">
+                                                    <div class="text-center text-muted py-4">
+                                                        <div class="spinner-border spinner-border-sm me-2" role="status"></div>
+                                                        Loading blocked ranges...
+                                                    </div>
                                                 </div>
                                             </div>
-                                            <div class="modal-footer">
-                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                            <div class="modal-footer" style="background: #f8f9fa; border-top: 1px solid #dee2e6; padding: 16px 24px;">
+                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                                    <i class="bi bi-x-circle me-1"></i>Close
+                                                </button>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
 
-            // Debug Events modal wiring
-            const openDebugBtn = document.getElementById('openDebugEvents');
-            if (openDebugBtn) {
-                openDebugBtn.addEventListener('click', () => {
-                    const modalEl = document.getElementById('debugEventsModal');
-                    if (modalEl) {
-                        const modal = new bootstrap.Modal(modalEl);
-                        modal.show();
-                    }
-                });
-            }
-
-            const loadEventsBtn = document.getElementById('loadEventsBtn');
-            if (loadEventsBtn) {
-                loadEventsBtn.addEventListener('click', async () => {
-                    const outPre = document.getElementById('debugEventsOutput');
-                    const summary = document.getElementById('debugEventsSummary');
-                    if (outPre) outPre.textContent = 'Loading...';
-                    if (summary) summary.textContent = 'Fetching events...';
-
-                    try {
-                        const calendarEl = document.getElementById('adminCalendar');
-                        const eventsUrl = (calendarEl && calendarEl.dataset && calendarEl.dataset.eventsUrl) ? calendarEl.dataset.eventsUrl : '/schedules/events';
-                        const resp = await fetch(eventsUrl);
-                        const data = await resp.json();
-
-                        // Pretty-print JSON
-                        if (outPre) outPre.textContent = JSON.stringify(data, null, 2);
-
-                        // compute summary
-                        const total = Array.isArray(data) ? data.length : (data?.length || 0);
-                        const blocked = (Array.isArray(data) ? data : (data?.filter ? data : [])).filter(i => i.extendedProps && i.extendedProps.type === 'blocked');
-                        const blockedCount = blocked.length || 0;
-                        if (summary) summary.textContent = `Events loaded: ${total} | Blocked events: ${blockedCount}`;
-
-                    } catch (e) {
-                        if (outPre) outPre.textContent = 'Failed to load events: ' + (e.message || e);
-                        if (summary) summary.textContent = 'Failed to fetch events.';
-                        console.error('Debug events fetch failed', e);
-                    }
-                });
-            }
                     </div>
         </div>
 
@@ -534,9 +570,6 @@
                                 <button id="openManageBlocks" class="btn btn-outline-secondary btn-sm">
                                     <i class="bi bi-list-ul me-1"></i>Manage Blocks
                                 </button>
-                                <button id="openDebugEvents" class="btn btn-outline-info btn-sm">
-                                    <i class="bi bi-bug me-1"></i>Debug Events
-                                </button>
                             </div>
                         </div>
                         <div class="appointment-body">
@@ -546,25 +579,6 @@
                 </div>
             </div>
 
-            <!-- Debug Events Modal -->
-            <div class="modal fade" id="debugEventsModal" tabindex="-1">
-                <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title">Calendar Events Debug</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                        </div>
-                        <div class="modal-body">
-                            <div id="debugEventsSummary" class="mb-3 text-muted">Click "Load Events" to fetch calendar events.</div>
-                            <pre id="debugEventsOutput" style="max-height:400px; overflow:auto; background:#f8f9fa; padding:12px; border-radius:6px;">No data loaded.</pre>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" id="loadEventsBtn" class="btn btn-primary">Load Events</button>
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
 
             <!-- Filters -->
         <div class="filter-section">

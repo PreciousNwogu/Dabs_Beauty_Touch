@@ -288,6 +288,31 @@ class AppointmentController extends Controller
                 }
             }
 
+            // Check if this date is blocked
+            $appointmentDate = \Carbon\Carbon::parse($request->appointment_date)->startOfDay();
+            $blockedSchedule = \App\Models\Schedule::where('type', 'blocked')
+                ->where('start', '<=', $appointmentDate)
+                ->where('end', '>', $appointmentDate)
+                ->first();
+
+            if ($blockedSchedule) {
+                $isApiRequest = $request->expectsJson() || $request->is('api/*') || $request->header('X-Requested-With') === 'XMLHttpRequest';
+                $blockedTitle = $blockedSchedule->title ?? 'Blocked';
+
+                if ($isApiRequest) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => "This date is blocked: \"{$blockedTitle}\". Please select a different date."
+                    ], 422);
+                } else {
+                    return redirect()->route('home')
+                        ->with([
+                            'booking_error' => true,
+                            'error_message' => "This date is blocked: \"{$blockedTitle}\". Please select a different date."
+                        ]);
+                }
+            }
+
             // Handle sample picture upload if provided
             $samplePicturePath = null;
             if ($request->hasFile('sample_picture')) {

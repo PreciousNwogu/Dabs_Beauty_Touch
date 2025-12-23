@@ -446,9 +446,49 @@ class Booking extends Model
         $addonsTotal = round($addonsTotal, 2);
         $computed_total_final = $computed_total_final ?? $final_price_to_pass;
 
-        // hide length/finish for some braid types
+        // hide length/finish for some braid types and services that don't require length adjustments
+        $serviceName = strtolower((string)($b->service ?? ''));
         $rawBraid = strtolower((string)($selector['braid_type'] ?? $b->kb_braid_type ?? $b->service ?? ''));
-        $hideLengthFinish = (stripos($rawBraid, 'protect') !== false || stripos($rawBraid, 'cornrow') !== false || preg_match('/protective|cornrows|cornrow/i', $rawBraid));
+        
+        // Services that don't show length in notifications
+        $noLengthServices = [
+            'weaving crotchet',
+            'single crotchet',
+            'natural hair twist',
+            'weaving no-extension',
+            'weaving-no-extension',
+            'weaving_crotchet',
+            'single_crotchet',
+            'natural_hair_twist',
+            'hair mask',
+            'hair-mask',
+            'hair_mask',
+            'mask/relax',
+            'mask/relaxing',
+            'relaxing',
+            'retouching',
+            'retouch'
+        ];
+        
+        // Check if this is a hair mask/relaxing/retouching service
+        $isHairMaskService = (
+            stripos($serviceName, 'hair mask') !== false ||
+            stripos($serviceName, 'hair-mask') !== false ||
+            stripos($serviceName, 'mask/relax') !== false ||
+            stripos($serviceName, 'relaxing') !== false ||
+            stripos($serviceName, 'retouching') !== false ||
+            stripos($serviceName, 'retouch') !== false ||
+            !empty($b->hair_mask_option)
+        );
+        
+        $hideLengthFinish = (
+            stripos($rawBraid, 'protect') !== false ||
+            stripos($rawBraid, 'cornrow') !== false ||
+            preg_match('/protective|cornrows|cornrow/i', $rawBraid) ||
+            in_array($serviceName, $noLengthServices, true) ||
+            in_array(str_replace([' ', '-'], ['_', '_'], $serviceName), $noLengthServices, true) ||
+            $isHairMaskService
+        );
 
         return [
             'resolved_base' => $resolvedBase,

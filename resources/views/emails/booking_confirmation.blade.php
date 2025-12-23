@@ -18,67 +18,60 @@
       max-width: 600px; 
       margin: 0 auto; 
       background: #ffffff;
+      border-radius: 8px;
+      overflow: hidden;
     }
     .header {
-      background: linear-gradient(135deg, #0b3a66 0%, #1e5a8a 100%);
-      padding: 32px 24px;
+      background: linear-gradient(135deg, #1a237e 0%, #283593 100%);
+      padding: 24px;
       text-align: center;
-      border-radius: 8px 8px 0 0;
     }
     .header h1 {
       color: #ffffff;
       font-size: 28px;
-      font-weight: 700;
+      font-weight: 900;
       margin: 0;
-      letter-spacing: -0.5px;
+      text-shadow: 0 2px 6px rgba(0, 0, 0, 0.5), 0 0 20px rgba(255, 255, 255, 0.3);
+      letter-spacing: 0.5px;
+      filter: brightness(1.1);
     }
     .header-badge {
       display: inline-block;
-      background: rgba(255, 255, 255, 0.2);
+      background: rgba(255, 255, 255, 0.35);
       color: #ffffff;
-      padding: 6px 16px;
-      border-radius: 20px;
+      padding: 6px 14px;
+      border-radius: 16px;
       font-size: 13px;
-      font-weight: 600;
-      margin-top: 12px;
+      font-weight: 700;
+      margin-top: 8px;
       text-transform: uppercase;
-      letter-spacing: 0.5px;
+      border: 1px solid rgba(255, 255, 255, 0.5);
+      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4), 0 0 10px rgba(255, 255, 255, 0.2);
+      filter: brightness(1.15);
     }
     .content {
-      padding: 32px 24px;
+      padding: 24px;
     }
     .greeting {
-      font-size: 18px;
+      font-size: 16px;
       color: #1a202c;
       font-weight: 600;
-      margin: 0 0 16px 0;
+      margin: 0 0 12px 0;
     }
     .message {
-      font-size: 16px;
+      font-size: 15px;
       color: #4a5568;
-      margin: 0 0 24px 0;
-      line-height: 1.7;
+      margin: 0 0 20px 0;
     }
     .info-card {
       background: #f8fafc;
-      border: 1px solid #e2e8f0;
-      border-radius: 8px;
-      padding: 20px;
-      margin: 24px 0;
-    }
-    .info-card h3 {
-      color: #0b3a66;
-      font-size: 16px;
-      font-weight: 700;
-      margin: 0 0 16px 0;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      font-size: 13px;
+      border-radius: 6px;
+      padding: 16px;
+      margin: 16px 0;
     }
     .info-table {
       width: 100%;
       border-collapse: collapse;
-      margin: 0;
     }
     .info-table tr {
       border-bottom: 1px solid #e2e8f0;
@@ -87,187 +80,132 @@
       border-bottom: none;
     }
     .info-table td {
-      padding: 12px 0;
-      font-size: 15px;
+      padding: 10px 0;
+      font-size: 14px;
     }
     .info-table td:first-child {
       color: #718096;
       font-weight: 600;
       width: 40%;
-      vertical-align: top;
     }
     .info-table td:last-child {
       color: #1a202c;
       font-weight: 500;
     }
-    .price-summary {
-      background: linear-gradient(135deg, #fff7e0 0%, #ffe6cc 100%);
-      border-left: 4px solid #ff6600;
+    .price-box {
+      background: linear-gradient(135deg, #1565c0 0%, #1976d2 100%);
+      border-left: 4px solid #ffb366;
       border-radius: 8px;
       padding: 20px;
-      margin: 24px 0;
-    }
-    .price-summary h3 {
-      color: #0b3a66;
-      font-size: 16px;
-      font-weight: 700;
-      margin: 0 0 16px 0;
+      margin: 20px 0;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
     }
     .price-row {
       display: flex;
       justify-content: space-between;
-      padding: 10px 0;
-      border-bottom: 1px solid rgba(11, 58, 102, 0.1);
+      padding: 12px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.3);
     }
     .price-row:last-child {
       border-bottom: none;
-      font-size: 18px;
-      font-weight: 700;
-      color: #0b3a66;
-      padding-top: 16px;
-      margin-top: 8px;
-      border-top: 2px solid rgba(11, 58, 102, 0.2);
+      font-size: 22px;
+      font-weight: 800;
+      color: #ffffff;
+      padding-top: 14px;
+      margin-top: 10px;
+      border-top: 2px solid rgba(255, 255, 255, 0.5);
     }
     .price-label {
-      color: #4a5568;
-      font-weight: 500;
+      color: #ffffff;
+      font-weight: 700;
+      font-size: 17px;
+      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+      letter-spacing: 0.3px;
     }
     .price-value {
-      color: #1a202c;
-      font-weight: 600;
+      color: #ffffff;
+      font-weight: 800;
+      font-size: 19px;
+      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+      letter-spacing: 0.3px;
     }
     .price-row:last-child .price-label,
     .price-row:last-child .price-value {
-      color: #0b3a66;
-      font-size: 18px;
-    }
-    .calendar-section {
-      background: #f0f9ff;
-      border: 1px solid #bae6fd;
-      border-radius: 8px;
-      padding: 20px;
-      margin: 24px 0;
-    }
-    .calendar-section h3 {
-      color: #0b3a66;
-      font-size: 16px;
-      font-weight: 700;
-      margin: 0 0 12px 0;
-    }
-    .calendar-section p {
-      color: #4a5568;
-      font-size: 14px;
-      margin: 0 0 16px 0;
+      color: #ffffff;
+      font-size: 26px;
+      font-weight: 900;
+      text-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
+      letter-spacing: 0.5px;
     }
     .btn {
       display: inline-block;
-      padding: 14px 28px;
+      padding: 12px 24px;
       background: #ff6600;
       color: #ffffff;
       text-decoration: none;
       border-radius: 6px;
       font-weight: 600;
-      font-size: 15px;
+      font-size: 14px;
       text-align: center;
       margin: 8px 8px 8px 0;
-      transition: background 0.2s;
-    }
-    .btn:hover {
-      background: #e55a00;
     }
     .btn-secondary {
       background: #0b3a66;
     }
-    .btn-secondary:hover {
-      background: #0a2d4d;
+    .reminder {
+      background: #f0f9ff;
+      border-left: 4px solid #0ea5e9;
+      border-radius: 6px;
+      padding: 12px;
+      margin: 16px 0;
+      font-size: 14px;
+      color: #0c4a6e;
     }
     .footer {
       background: #f8fafc;
       border-top: 1px solid #e2e8f0;
-      padding: 24px;
+      padding: 20px;
       text-align: center;
-      border-radius: 0 0 8px 8px;
-    }
-    .footer h4 {
-      color: #0b3a66;
-      font-size: 14px;
-      font-weight: 700;
-      margin: 0 0 12px 0;
     }
     .footer p {
       color: #718096;
-      font-size: 13px;
+      font-size: 12px;
       margin: 8px 0;
-      line-height: 1.6;
-    }
-    .signature {
-      color: #4a5568;
-      font-size: 14px;
-      margin-top: 24px;
-      padding-top: 24px;
-      border-top: 1px solid #e2e8f0;
     }
     @media only screen and (max-width: 600px) {
-      .content { padding: 24px 16px; }
-      .header { padding: 24px 16px; }
-      .header h1 { font-size: 24px; }
+      .content { padding: 20px; }
+      .header { padding: 20px; }
       .btn { display: block; margin: 8px 0; }
     }
   </style>
 </head>
 <body>
   <div class="email-container">
-    <!-- Header -->
     <div class="header">
       <h1>Dabs Beauty Touch</h1>
-      <div class="header-badge">✓ Booking Confirmed</div>
+      <div class="header-badge">✓ Confirmed</div>
     </div>
 
-    <!-- Content -->
     <div class="content">
-      <p class="greeting">Hello {{ $booking->name ?? 'Valued Customer' }},</p>
-      
-      <p class="message">
-        Thank you for choosing Dabs Beauty Touch! We're delighted to confirm that your booking has been successfully processed. 
-        We look forward to providing you with exceptional service.
-      </p>
+      <p class="greeting">Hi {{ $booking->name ?? 'Customer' }},</p>
+      <p class="message">Your booking is confirmed. We look forward to seeing you!</p>
 
-      <!-- Booking Details Card -->
       <div class="info-card">
-        <h3>Booking Details</h3>
         <table class="info-table">
           <tr>
             <td>Booking ID</td>
             <td><strong>BK{{ str_pad($booking->id ?? 0, 6, '0', STR_PAD_LEFT) }}</strong></td>
           </tr>
           <tr>
-            <td>Confirmation Code</td>
-            <td><strong>{{ $confirmation_number ?? ($booking->confirmation_code ?? '—') }}</strong></td>
-          </tr>
-          @if(isset($showContactInfo) && $showContactInfo)
-          <tr>
-            <td>Name</td>
-            <td>{{ $booking->name ?? 'N/A' }}</td>
-          </tr>
-          <tr>
-            <td>Email</td>
-            <td>{{ $booking->email ?? 'N/A' }}</td>
-          </tr>
-          <tr>
-            <td>Phone</td>
-            <td>{{ $booking->phone ?? 'N/A' }}</td>
-          </tr>
-          @endif
-          <tr>
             <td>Service</td>
             <td><strong>{{ $booking->service ?? 'N/A' }}</strong></td>
           </tr>
           <tr>
-            <td>Appointment Date</td>
+            <td>Date</td>
             <td>
               <strong>
                 @if($booking->appointment_date)
-                  {{ \Carbon\Carbon::parse($booking->appointment_date)->format('l, F j, Y') }}
+                  {{ \Carbon\Carbon::parse($booking->appointment_date)->format('F j, Y') }}
                 @else
                   N/A
                 @endif
@@ -275,7 +213,7 @@
             </td>
           </tr>
           <tr>
-            <td>Appointment Time</td>
+            <td>Time</td>
             <td>
               <strong>
                 @if($booking->appointment_time)
@@ -288,14 +226,12 @@
           </tr>
 
           @php
-            // Prefer selector passed from notification; fallback to parsing notes
             $selector = $selector ?? null;
             if(!$selector && preg_match('/Selector:\s*(\{.*\})/s', $booking->notes ?? '', $m)){
               $selector = json_decode($m[1], true);
             }
-
             $sf = $selector_friendly ?? null;
-            $braidType = $sf['braid_type'] ?? $selector['braid_type'] ?? ($booking->kb_braid_type ?? ($booking->service ?? null));
+            $braidType = $sf['braid_type'] ?? $selector['braid_type'] ?? ($booking->kb_braid_type ?? null);
             $finishVal = $sf['finish'] ?? $selector['finish'] ?? ($booking->kb_finish ?? null);
             $lengthVal = $sf['length'] ?? $selector['length'] ?? ($booking->kb_length ?? ($booking->length ?? null));
             $hideLengthFinish = $hideLengthFinish ?? false;
@@ -306,8 +242,6 @@
                 $extrasVal = $selector['extras'] ?? ($booking->kb_extras ?? null);
                 if(is_array($extrasVal)) $extrasVal = implode(', ', $extrasVal);
             }
-
-            // Map any internal addon codes to friendly labels
             if(is_string($extrasVal) && preg_match('/[,\s]/', $extrasVal)){
               $parts = array_map('trim', explode(',', $extrasVal));
             } elseif(is_string($extrasVal) && strlen($extrasVal) > 0){
@@ -327,14 +261,8 @@
 
           @if(!$hideLengthFinish && isset($lengthVal))
           <tr>
-            <td>Hair Length</td>
-            <td>
-              @if(!empty($booking->hair_mask_option))
-                N/A
-              @else
-                {{ ucwords(str_replace('_',' ',$lengthVal)) }}
-              @endif
-            </td>
+            <td>Length</td>
+            <td>{{ ucwords(str_replace('_',' ',$lengthVal)) }}</td>
           </tr>
           @endif
           @if(isset($braidType) && $braidType)
@@ -358,7 +286,6 @@
         </table>
       </div>
 
-      <!-- Price Summary -->
       @php
         $bd = $breakdown ?? [];
         $basePrice = $bd['resolved_base'] ?? $booking->base_price ?? ($selector_base ?? 0);
@@ -381,27 +308,53 @@
           }
         }
         $addons_total = $addons_total ?? 0;
+        
+        // Check for hair mask weaving addon (use passed value from notification if available)
+        $weavingAddon = $weaving_addon ?? 0.00;
+        $hasWeavingAddon = false;
+        if ($weavingAddon > 0) {
+          $hasWeavingAddon = true;
+        } elseif (!empty($booking->hair_mask_option)) {
+          $maskOptionNormalized = strtolower(trim(str_replace(['_', ' '], '-', (string)$booking->hair_mask_option)));
+          if (str_contains($maskOptionNormalized, 'weave') || str_contains($maskOptionNormalized, 'weav')) {
+            $weavingAddon = 30.00;
+            $hasWeavingAddon = true;
+            // If length_adjustment contains the weaving addon, subtract it to get pure length adjustment
+            if ($typeLengthFinishAdjust > 0 && $typeLengthFinishAdjust == $weavingAddon) {
+              $typeLengthFinishAdjust = 0.00;
+            }
+          }
+        }
+        
+        // Calculate adjustments total (excluding weaving addon which is shown separately)
         $adjustmentsTotal = ($typeLengthFinishAdjust ?? 0) + (is_numeric($addons_total) ? $addons_total : 0);
-        $finalPrice = $final_price ?? $booking->final_price ?? round(($basePrice ?? 0) + $adjustmentsTotal, 2);
+        // Final price should match what's stored in the database (which includes weaving addon)
+        $finalPrice = $final_price ?? $booking->final_price ?? round(($basePrice ?? 0) + $adjustmentsTotal + $weavingAddon, 2);
       @endphp
 
-      <div class="price-summary">
-        <h3>Price Summary</h3>
+      <div class="price-box">
         <div class="price-row">
-          <span class="price-label">Base Price</span>
+          <span class="price-label">Base</span>
           <span class="price-value">{{ isset($basePrice) ? sprintf('$%.2f', $basePrice) : '—' }}</span>
         </div>
+        @if($hasWeavingAddon)
         <div class="price-row">
-          <span class="price-label">Adjustments / Add-ons</span>
-          <span class="price-value">{{ sprintf('$%.2f', $adjustmentsTotal) }}</span>
+          <span class="price-label">Weaving Add-on</span>
+          <span class="price-value">{{ sprintf('$%.2f', $weavingAddon) }}</span>
         </div>
+        @endif
+        @if(($typeLengthFinishAdjust ?? 0) > 0 || (is_numeric($addons_total) && $addons_total > 0))
         <div class="price-row">
-          <span class="price-label">Total Amount</span>
+          <span class="price-label">Adjustments</span>
+          <span class="price-value">{{ sprintf('$%.2f', ($typeLengthFinishAdjust ?? 0) + (is_numeric($addons_total) ? $addons_total : 0)) }}</span>
+        </div>
+        @endif
+        <div class="price-row">
+          <span class="price-label">Total</span>
           <span class="price-value">{{ isset($finalPrice) ? sprintf('$%.2f', $finalPrice) : '—' }}</span>
         </div>
       </div>
 
-      <!-- Calendar Section -->
       @php
         $date = isset($booking->appointment_date) ? $booking->appointment_date->format('Y-m-d') : null;
         $time = $booking->appointment_time ?? null;
@@ -420,42 +373,27 @@
       @endphp
 
       @if($gcal)
-      <div class="calendar-section">
-        <h3>📅 Add to Your Calendar</h3>
-        <p>Don't forget your appointment! Add it to your calendar to receive reminders.</p>
-        <a href="{{ $gcal }}" class="btn btn-secondary">Add to Google Calendar</a>
+      <div style="text-align: center; margin: 20px 0;">
+        <a href="{{ $gcal }}" class="btn btn-secondary">Add to Calendar</a>
       </div>
       @endif
 
-      <!-- Action Buttons -->
-      <div style="text-align: center; margin: 32px 0;">
-        <a href="{{ url('/bookings/confirm/' . ($booking->id ?? '') . '/' . ($booking->confirmation_code ?? '')) }}" class="btn">View Booking Details</a>
-      </div>
-
-      <!-- Important Notes -->
-      <div style="background: #fef3c7; border-left: 4px solid #f59e0b; padding: 16px; border-radius: 6px; margin: 24px 0;">
-        <p style="margin: 0; color: #92400e; font-size: 14px; line-height: 1.6;">
-          <strong>Important:</strong> Please arrive 10 minutes before your scheduled appointment time. 
-          If you need to make any changes or have questions, please contact us as soon as possible.
-        </p>
+      <div class="reminder">
+        <strong>Reminder:</strong> Please arrive on time for your appointment.
       </div>
 
       <!-- Signature -->
       <div class="signature">
         <p style="margin: 0; color: #4a5568;">Best regards,<br>
-        <strong style="color: #0b3a66;">The Dabs Beauty Touch Team</strong></p>
+        <strong style="color: #0b3a66;"> Dabs Beauty Touch</strong></p>
       </div>
     </div>
 
-    <!-- Footer -->
     <div class="footer">
       <h4>Stay Connected</h4>
       <p>Follow us for updates, styling inspiration, and special offers:</p>
       {!! \App\Helpers\SocialLinks::render() !!}
-      <p style="margin-top: 20px; font-size: 12px; color: #a0aec0;">
-        This is an automated confirmation email. Please do not reply directly to this message.<br>
-        If you have any questions, please contact us through our website or phone.
-      </p>
+      <p style="margin-top: 16px;">Thanks,<br><strong>Dabs Beauty Touch</strong></p>
     </div>
   </div>
 @php

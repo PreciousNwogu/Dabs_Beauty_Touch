@@ -299,10 +299,10 @@ Route::prefix('admin')->name('admin.')->group(function () {
             $query->where('service', 'LIKE', '%' . request('service') . '%');
         }
 
-        // Paginate bookings (10 per page)
+        // Paginate bookings (50 per page to show more bookings)
         $bookings = $query->orderBy('appointment_date', 'desc')
             ->orderBy('appointment_time', 'desc')
-            ->paginate(10);
+            ->paginate(50);
 
         $stats = [
             'total_bookings' => \App\Models\Booking::count(),
@@ -779,52 +779,100 @@ Route::post('/bookings', function(Request $request) {
             $serviceInput = $request->service;
             $serviceModel = null;
             if ($serviceInput) {
-                // Try slug first
+                // Try slug first (exact match)
                 $serviceModel = Service::where('slug', $serviceInput)->first();
                 if (!$serviceModel) {
-                    // Try by name
+                    // Try by name (exact match)
                     $serviceModel = Service::where('name', $serviceInput)->first();
+                }
+                if (!$serviceModel) {
+                    // Try by name case-insensitive
+                    $serviceModel = Service::whereRaw('LOWER(name) = ?', [strtolower($serviceInput)])->first();
+                }
+                if (!$serviceModel) {
+                    // Try by slug (convert service name to slug format for lookup)
+                    $slugFromName = strtolower(str_replace([' ', '-'], '-', $serviceInput));
+                    $serviceModel = Service::where('slug', $slugFromName)->first();
                 }
             }
 
             // Determine authoritative base price from Service model (ignore client-provided price)
-            $base = $serviceModel ? (float) $serviceModel->base_price : 150.00;
+            // If not found in database, try config file as fallback
+            if ($serviceModel) {
+                $base = (float) $serviceModel->base_price;
+            } else {
+                // Try to find in config by slug (convert service name to slug format)
+                // Convert spaces and hyphens to underscores for config lookup
+                $serviceSlug = strtolower(str_replace([' ', '-'], '_', $serviceInput ?? ''));
+                $base = (float) (config("service_prices.{$serviceSlug}", 150.00));
+            }
 
             // If client explicitly provided a hair_mask_option, prefer that
             $explicitMaskOption = $request->input('hair_mask_option', null);
             $serviceTypeInput = $request->input('service_type') ?? $request->input('service');
             $serviceTypeNormalized = strtolower(trim((string)$serviceTypeInput));
+            $serviceNameNormalized = strtolower(trim((string)($request->input('service') ?? $request->input('service_display') ?? '')));
             $isHairMask = (
                 $serviceTypeNormalized === 'hair-mask' ||
                 str_contains($serviceTypeNormalized, 'hair-mask') ||
                 str_contains($serviceTypeNormalized, 'hair mask') ||
                 str_contains($serviceTypeNormalized, 'hairmask') ||
                 str_contains($serviceTypeNormalized, 'mask/relax') ||
-                str_contains($serviceTypeNormalized, 'relaxing')
+                str_contains($serviceTypeNormalized, 'relaxing') ||
+                str_contains($serviceTypeNormalized, 'retouching') ||
+                str_contains($serviceTypeNormalized, 'retouch') ||
+                str_contains($serviceNameNormalized, 'hair mask') ||
+                str_contains($serviceNameNormalized, 'mask/relax') ||
+                str_contains($serviceNameNormalized, 'relaxing') ||
+                str_contains($serviceNameNormalized, 'retouching') ||
+                str_contains($serviceNameNormalized, 'retouch')
             );
 
             if ($explicitMaskOption !== null && $isHairMask) {
                 // Treat as hair mask when explicit option present and service is hair-mask
                 $base = $serviceModel ? (float) $serviceModel->base_price : 50.00;
-                $addon = ($explicitMaskOption === 'mask-with-weave') ? 30.00 : 0.00;
+                // Normalize mask option value (handle variations like 'mask-with-weave', 'mask_with_weave', etc.)
+                $maskOptionNormalized = strtolower(trim(str_replace(['_', ' '], '-', (string)$explicitMaskOption)));
+                $addon = (str_contains($maskOptionNormalized, 'weave') || str_contains($maskOptionNormalized, 'weav')) ? 30.00 : 0.00;
                 $adjust = $addon;
                 $finalPrice = round($base + $addon, 2);
             } elseif ($isHairMask) {
                 // service_type indicates hair mask; use hair-mask defaults
                 $base = $serviceModel ? (float) $serviceModel->base_price : 50.00;
                 $maskOption = $request->input('hair_mask_option', 'mask-only');
-                $addon = ($maskOption === 'mask-with-weave') ? 30.00 : 0.00;
+                // Normalize mask option value (handle variations)
+                $maskOptionNormalized = strtolower(trim(str_replace(['_', ' '], '-', (string)$maskOption)));
+                $addon = (str_contains($maskOptionNormalized, 'weave') || str_contains($maskOptionNormalized, 'weav')) ? 30.00 : 0.00;
                 $adjust = $addon;
                 $finalPrice = round($base + $addon, 2);
             } else {
-                // Compute adjustment using same per-step $20 rule as controller
-                $ordered = ['neck','shoulder','armpit','bra_strap','mid_back','waist','hip','tailbone','classic'];
-                $midIndex = array_search('mid_back', $ordered, true);
-                $idx = array_search($length, $ordered, true);
-                $d = ($idx !== false && $midIndex !== false) ? ($idx - $midIndex) : 0;
-                $adjust = $d * 20.00;
+                // Check if this is a popular service (no length adjustments)
+                $popularServices = [
+                    'Weaving Crotchet',
+                    'Single Crotchet',
+                    'Natural Hair Twist',
+                    'Weaving No-Extension',
+                    'Kinky Twist',
+                    'Twist Braids'
+                ];
+                $isPopularService = in_array($serviceInput, $popularServices, true);
+                
+                if ($isPopularService) {
+                    // Popular services: no length adjustments, use base price only (mid-back length)
+                    $adjust = 0.00;
+                    $finalPrice = round($base, 2);
+                    // Ensure length is set to mid_back for popular services
+                    $length = 'mid_back';
+                } else {
+                    // Compute adjustment using same per-step $20 rule as controller
+                    $ordered = ['neck','shoulder','armpit','bra_strap','mid_back','waist','hip','tailbone','classic'];
+                    $midIndex = array_search('mid_back', $ordered, true);
+                    $idx = array_search($length, $ordered, true);
+                    $d = ($idx !== false && $midIndex !== false) ? ($idx - $midIndex) : 0;
+                    $adjust = $d * 20.00;
 
-                $finalPrice = round($base + $adjust, 2);
+                    $finalPrice = round($base + $adjust, 2);
+                }
             }
 
             // Persist breakdown for email fidelity and audit

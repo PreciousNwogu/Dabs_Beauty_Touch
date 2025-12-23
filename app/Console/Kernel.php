@@ -10,6 +10,7 @@ class Kernel extends ConsoleKernel
     protected $commands = [
         \App\Console\Commands\SendTestMail::class,
         \App\Console\Commands\PreviewEmail::class,
+        \App\Console\Commands\CancelBookingsRange::class,
     ];
 
     protected function schedule(Schedule $schedule)

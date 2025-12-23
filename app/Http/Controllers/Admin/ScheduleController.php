@@ -65,8 +65,11 @@ class ScheduleController extends Controller
             }
         }
 
-        // Bookings (pending/confirmed) shown as events
-        $bookings = Booking::whereIn('status', ['pending', 'confirmed'])->get();
+        // Bookings shown as events - include ALL bookings regardless of status
+        $bookings = Booking::whereNotNull('appointment_date')
+            ->whereNotNull('appointment_time')
+            ->get();
+        
         foreach ($bookings as $b) {
             try {
                 // Compose start from appointment_date + appointment_time
@@ -77,9 +80,18 @@ class ScheduleController extends Controller
                 // Default duration 1 hour
                 $end = (clone $start)->addHour();
 
+                // Determine background color based on status
+                $backgroundColor = match($b->status) {
+                    'confirmed' => '#d1ffd6',  // Light green
+                    'pending' => '#fff3cd',     // Light yellow
+                    'completed' => '#cfe2ff',   // Light blue
+                    'cancelled' => '#f8d7da',   // Light red
+                    default => '#e9ecef'        // Light gray
+                };
+
                 $events[] = [
                     'id' => 'booking-' . $b->id,
-                    'title' => ($b->name ? $b->name . ' — ' : '') . ($b->service ?: 'Service'),
+                    'title' => ($b->name ? $b->name . ' — ' : '') . ($b->service ?: 'Service') . ' (' . ucfirst($b->status) . ')',
                     'start' => $start->toIso8601String(),
                     'end' => $end->toIso8601String(),
                     'extendedProps' => [
@@ -87,7 +99,7 @@ class ScheduleController extends Controller
                         'status' => $b->status,
                     ],
                     'editable' => $b->status === 'confirmed' || $b->status === 'pending',
-                    'backgroundColor' => $b->status === 'confirmed' ? '#d1ffd6' : '#fff3cd',
+                    'backgroundColor' => $backgroundColor,
                     'borderColor' => '#888'
                 ];
             } catch (\Exception $e) {
@@ -282,13 +294,23 @@ class ScheduleController extends Controller
 
         foreach ($blocked as $slot) {
             try {
-                $s = Carbon::parse($slot->start)->startOfDay();
-                $e = Carbon::parse($slot->end)->startOfDay();
+                // Parse dates and extract date-only parts to avoid timezone conversion issues
+                // This ensures we only block the selected date(s), not the day before
+                $sParsed = Carbon::parse($slot->start);
+                $sDateOnly = $sParsed->toDateString(); // Gets YYYY-MM-DD format
+                $s = Carbon::createFromFormat('Y-m-d H:i:s', $sDateOnly . ' 00:00:00', 'UTC')->startOfDay();
+                
+                // End date: use the date part only (exclusive boundary - represents start of day after last blocked day)
+                $eParsed = Carbon::parse($slot->end);
+                $eDateOnly = $eParsed->toDateString(); // Gets YYYY-MM-DD format
+                $e = Carbon::createFromFormat('Y-m-d H:i:s', $eDateOnly . ' 00:00:00', 'UTC')->startOfDay();
 
                 // overlap window clipped to requested month
                 $iterStart = $s->copy()->max($start);
                 $iterEnd = $e->copy()->min($end);
 
+                // Iterate through dates: from iterStart (inclusive) to iterEnd (exclusive)
+                // This ensures we only block the selected date(s), not the day before
                 for ($d = $iterStart->copy(); $d->lt($iterEnd); $d->addDay()) {
                     $dates[] = [
                         'date' => $d->toDateString(),
