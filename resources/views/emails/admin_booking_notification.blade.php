@@ -23,8 +23,21 @@
         $displayAddons = $sum;
       }
 
-      // Adjustments total = type + length + finish adjustments + addons (matches UI)
-      $displayAdjustmentsTotal = ($displayTypeLengthFinishAdjust ?? 0) + ($displayAddons ?? 0);
+      // Check for hair mask weaving addon
+      $displayWeavingAddon = 0.00;
+      if (!empty($booking->hair_mask_option)) {
+        $maskOptionNormalized = strtolower(trim(str_replace(['_', ' '], '-', (string)$booking->hair_mask_option)));
+        if (str_contains($maskOptionNormalized, 'weave') || str_contains($maskOptionNormalized, 'weav')) {
+          $displayWeavingAddon = 30.00;
+          // If length_adjustment contains the weaving addon, subtract it to get pure length adjustment
+          if ($displayTypeLengthFinishAdjust > 0 && $displayTypeLengthFinishAdjust == $displayWeavingAddon) {
+            $displayTypeLengthFinishAdjust = 0.00;
+          }
+        }
+      }
+
+      // Adjustments total = type + length + finish adjustments + addons + weaving addon (matches UI)
+      $displayAdjustmentsTotal = ($displayTypeLengthFinishAdjust ?? 0) + ($displayAddons ?? 0) + $displayWeavingAddon;
       $displayFinal = $bd['final_price'] ?? $booking->final_price ?? round($displayBase + $displayAdjustmentsTotal, 2);
     @endphp
 
@@ -86,8 +99,23 @@
           }
         }
 
-        // Adjustments total = type + length + finish adjustments + addons (matches UI)
-        $adjustmentsTotal = ($typeLengthFinishAdjust ?? 0) + ($addons ?? 0);
+        // Check for hair mask weaving addon
+        $weavingAddon = 0.00;
+        $hasWeavingAddon = false;
+        if (!empty($booking->hair_mask_option)) {
+          $maskOptionNormalized = strtolower(trim(str_replace(['_', ' '], '-', (string)$booking->hair_mask_option)));
+          if (str_contains($maskOptionNormalized, 'weave') || str_contains($maskOptionNormalized, 'weav')) {
+            $weavingAddon = 30.00;
+            $hasWeavingAddon = true;
+            // If length_adjustment contains the weaving addon, subtract it to get pure length adjustment
+            if ($typeLengthFinishAdjust > 0 && $typeLengthFinishAdjust == $weavingAddon) {
+              $typeLengthFinishAdjust = 0.00;
+            }
+          }
+        }
+
+        // Adjustments total = type + length + finish adjustments + addons + weaving addon (matches UI)
+        $adjustmentsTotal = ($typeLengthFinishAdjust ?? 0) + ($addons ?? 0) + $weavingAddon;
         $finalPrice = $bd['final_price'] ?? $booking->final_price ?? round(($basePrice ?? 0) + $adjustmentsTotal, 2);
       @endphp
 
@@ -112,7 +140,12 @@
       <h4 style="margin-top:12px;margin-bottom:8px;color:#0b3a66;">Price Summary</h4>
       <table width="100%" cellpadding="6" style="border-collapse:collapse;">
         <tr style="background:#f8fafc;"><td style="font-weight:700;">Base price</td><td>{{ isset($basePrice) ? sprintf('$%.2f', $basePrice) : '—' }}</td></tr>
-        <tr><td style="font-weight:700;">Adjustments / Add-ons</td><td>{{ sprintf('$%.2f', $adjustmentsTotal) }}</td></tr>
+        @if($hasWeavingAddon)
+        <tr><td style="font-weight:700;">Weaving Add-on</td><td>{{ sprintf('$%.2f', $weavingAddon) }}</td></tr>
+        @endif
+        @if(($typeLengthFinishAdjust ?? 0) > 0 || ($addons ?? 0) > 0)
+        <tr style="{{ $hasWeavingAddon ? 'background:#f8fafc;' : '' }}"><td style="font-weight:700;">Adjustments / Add-ons</td><td>{{ sprintf('$%.2f', ($typeLengthFinishAdjust ?? 0) + ($addons ?? 0)) }}</td></tr>
+        @endif
         <tr style="background:#f8fafc;font-size:18px;font-weight:800;"><td style="font-weight:800;">Final price</td><td>{{ isset($finalPrice) ? sprintf('$%.2f', $finalPrice) : '—' }}</td></tr>
         {{-- Debugging visibility removed per request --}}
       </table>

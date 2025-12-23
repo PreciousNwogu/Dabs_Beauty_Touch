@@ -345,7 +345,7 @@
         <h3>⚠️ Important Notice</h3>
         <p>
           <strong>If you did not request this change, please contact us immediately.</strong> 
-          We take the security of your bookings seriously and want to ensure your account is protected.
+          We take the security of your bookings seriously and want to ensure your booking is protected.
         </p>
       </div>
 
@@ -381,15 +381,14 @@
       <!-- Important Notes -->
       <div style="background: #f0f9ff; border-left: 4px solid #0ea5e9; padding: 16px; border-radius: 6px; margin: 24px 0;">
         <p style="margin: 0; color: #0c4a6e; font-size: 14px; line-height: 1.6;">
-          <strong>Reminder:</strong> Please arrive 10 minutes before your new scheduled appointment time. 
-          If you need to make any further changes or have questions, please contact us as soon as possible.
+          <strong>Reminder:</strong> Please arrive on time for your appointment.
         </p>
       </div>
 
       <!-- Signature -->
       <div class="signature">
         <p style="margin: 0; color: #4a5568;">Best regards,<br>
-        <strong style="color: #0b3a66;">The Dabs Beauty Touch Team</strong></p>
+        <strong style="color: #0b3a66;"> Dabs Beauty Touch </strong></p>
       </div>
     </div>
 
@@ -398,10 +397,10 @@
       <h4>Stay Connected</h4>
       <p>Follow us for updates, styling inspiration, and special offers:</p>
       {!! \App\Helpers\SocialLinks::render() !!}
-      <p style="margin-top: 20px; font-size: 12px; color: #a0aec0;">
+      <!-- <p style="margin-top: 20px; font-size: 12px; color: #a0aec0;">
         This is an automated notification email. Please do not reply directly to this message.<br>
         If you have any questions, please contact us through our website or phone.
-      </p>
+      </p> -->
     </div>
   </div>
 @php
@@ -410,4 +409,7 @@
 @endphp
 </body>
 </html>
+
+
+
 
