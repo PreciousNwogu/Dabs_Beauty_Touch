@@ -1040,11 +1040,33 @@ Route::post('/custom-service', function(Request $request) {
         'appointment_date' => 'nullable|date',
         'appointment_time' => 'nullable|string',
         'message' => 'nullable|string|max:2000',
+        'service_category' => 'nullable|string|max:255',
+        'braid_size' => 'nullable|string|max:255',
+        'hair_length' => 'nullable|string|max:255',
+        'budget_range' => 'nullable|string|max:255',
+        'urgency' => 'nullable|string|max:255',
+        'style_preferences' => 'nullable|array',
+        'special_requirements' => 'nullable|string|max:2000',
+        'reference_image' => 'nullable|file|image|max:5120', // 5MB max
     ];
 
     $data = $request->validate($rules);
 
     try {
+        // Handle file upload for reference image
+        $referenceImagePath = null;
+        if ($request->hasFile('reference_image')) {
+            $file = $request->file('reference_image');
+            $filename = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
+            $referenceImagePath = $file->storeAs('custom-service-images', $filename, 'public');
+        }
+
+        // Convert style_preferences array to JSON string
+        $stylePreferences = null;
+        if (!empty($data['style_preferences']) && is_array($data['style_preferences'])) {
+            $stylePreferences = json_encode($data['style_preferences']);
+        }
+
         // Persist request to database
         $modelData = [
             'name' => $data['name'],
@@ -1054,6 +1076,14 @@ Route::post('/custom-service', function(Request $request) {
             'appointment_date' => $data['appointment_date'] ?? null,
             'appointment_time' => $data['appointment_time'] ?? null,
             'message' => $data['message'] ?? null,
+            'service_category' => $data['service_category'] ?? null,
+            'braid_size' => $data['braid_size'] ?? null,
+            'hair_length' => $data['hair_length'] ?? null,
+            'budget_range' => $data['budget_range'] ?? null,
+            'urgency' => $data['urgency'] ?? null,
+            'style_preferences' => $stylePreferences,
+            'special_requirements' => $data['special_requirements'] ?? null,
+            'reference_image' => $referenceImagePath,
         ];
 
         // Log incoming submission and DB config for debugging
@@ -1067,11 +1097,12 @@ Route::post('/custom-service', function(Request $request) {
 
         $record = \App\Models\CustomServiceRequest::create($modelData);
 
-        // Build payload for notification including record id
+        // Build payload for notification including record id and all custom service details
         $payload = array_merge($modelData, [
             'id' => $record->id ?? null,
             'ip' => $request->ip(),
             'user_agent' => $request->userAgent(),
+            'style_preferences_array' => !empty($data['style_preferences']) ? $data['style_preferences'] : [],
         ]);
 
         // Log creation result
@@ -1086,14 +1117,45 @@ Route::post('/custom-service', function(Request $request) {
         ]);
 
         // Send notification to admin
-        $adminEmail = config('mail.admin_address') ?: env('ADMIN_EMAIL') ?: 'admin@example.com';
-        \Illuminate\Support\Facades\Notification::route('mail', $adminEmail)
-            ->notify(new \App\Notifications\CustomServiceRequest(array_merge($payload, ['is_admin' => true])));
+        try {
+            $adminEmail = config('mail.admin_address') ?: env('ADMIN_EMAIL') ?: 'admin@example.com';
+            \Illuminate\Support\Facades\Log::info('Sending admin notification for custom service request', [
+                'admin_email' => $adminEmail,
+                'request_id' => $record->id ?? null,
+            ]);
+            
+            // Send notification (will be queued if queue is configured, otherwise sends immediately)
+            \Illuminate\Support\Facades\Notification::route('mail', $adminEmail)
+                ->notify(new \App\Notifications\CustomServiceRequest(array_merge($payload, ['is_admin' => true])));
+            
+            \Illuminate\Support\Facades\Log::info('Admin notification sent for custom service request', [
+                'admin_email' => $adminEmail,
+                'request_id' => $record->id ?? null,
+            ]);
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Failed to send admin notification for custom service request', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'request_id' => $record->id ?? null,
+            ]);
+        }
 
         // Send a simple confirmation to the user if email provided
         if (!empty($record->email)) {
-            \Illuminate\Support\Facades\Notification::route('mail', $record->email)
-                ->notify(new \App\Notifications\UserCustomServiceConfirmation($payload));
+            try {
+                \Illuminate\Support\Facades\Notification::route('mail', $record->email)
+                    ->notify(new \App\Notifications\UserCustomServiceConfirmation($payload));
+                \Illuminate\Support\Facades\Log::info('User confirmation email sent for custom service request', [
+                    'user_email' => $record->email,
+                    'request_id' => $record->id ?? null,
+                ]);
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\Log::error('Failed to send user confirmation email for custom service request', [
+                    'error' => $e->getMessage(),
+                    'user_email' => $record->email,
+                    'request_id' => $record->id ?? null,
+                ]);
+            }
         }
 
         if ($request->wantsJson() || $request->ajax()) {

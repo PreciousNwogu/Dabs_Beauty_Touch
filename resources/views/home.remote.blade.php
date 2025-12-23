@@ -1284,15 +1284,99 @@
             transform: translateY(0);
         }
 
-        #customServiceInput {
+        #customServiceInput, #customSpecialRequirements, #customReferenceImage {
             border-radius: 8px;
             border: 2px solid #e9ecef;
-            transition: border-color 0.3s ease;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
         }
 
-        #customServiceInput:focus {
+        #customServiceInput:focus, #customSpecialRequirements:focus {
             border-color: #030f68;
             box-shadow: 0 0 0 0.2rem rgba(3, 15, 104, 0.1);
+            outline: none;
+        }
+
+        /* Radio button group containers */
+        .radio-group-container {
+            background-color: #fff;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            padding: 12px;
+            min-height: 50px;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+            margin-bottom: 0;
+        }
+
+        .radio-group-container:hover {
+            border-color: #ced4da;
+        }
+
+        /* Highlight container when radio is checked */
+        .radio-group-container.radio-selected {
+            border-color: #030f68;
+            box-shadow: 0 0 0 0.2rem rgba(3, 15, 104, 0.1);
+            background-color: #f8f9ff;
+        }
+
+        /* Ensure proper spacing between form groups */
+        #customServiceForm .col-md-6 {
+            margin-bottom: 1rem;
+        }
+
+        #customServiceForm .form-label {
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        #customServiceForm .form-check-input {
+            border-radius: 4px;
+            border: 2px solid #dee2e6;
+            transition: all 0.2s ease;
+        }
+
+        #customServiceForm .form-check-input:checked {
+            background-color: #030f68;
+            border-color: #030f68;
+        }
+
+        #customServiceForm .form-check-input:focus {
+            box-shadow: 0 0 0 0.2rem rgba(3, 15, 104, 0.25);
+        }
+
+        #customServiceForm .form-check-label {
+            cursor: pointer;
+            user-select: none;
+        }
+
+
+        #customServiceForm .form-label {
+            color: #0b3a66;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        /* Contact Information Modal Styling */
+        #customServiceRequestModal .form-control:focus {
+            border-color: #030f68 !important;
+            box-shadow: 0 0 0 0.2rem rgba(3, 15, 104, 0.25) !important;
+            outline: none !important;
+        }
+
+        #customServiceRequestModal .form-label {
+            color: #030f68;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        #customServiceRequestModal .form-text {
+            font-size: 0.875rem;
+            margin-top: 4px;
+            color: #6c757d;
+        }
+
+        #customServiceForm .form-select-lg, #customServiceForm .form-control-lg {
+            font-size: 1rem;
+            padding: 0.75rem 1rem;
         }
 
         /* Service Display Field Styles */
@@ -3125,6 +3209,73 @@
         </div>
     </div>
 
+    <!-- Custom Service Request Modal -->
+    <div class="modal fade" id="customServiceRequestModal" tabindex="-1" aria-labelledby="customServiceRequestModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content" style="border-radius: 12px;">
+                <div class="modal-header" style="background: linear-gradient(135deg, #030f68 0%, #4a8bc2 100%); color: white; border-radius: 12px 12px 0 0;">
+                    <h5 class="modal-title" id="customServiceRequestModalLabel">
+                        <i class="bi bi-person-lines-fill me-2"></i>Contact Information
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <form id="customServiceRequestForm">
+                        <div class="row g-3">
+                            <!-- Name Field - Full Width -->
+                            <div class="col-12">
+                                <label for="csrName" class="form-label fw-semibold">
+                                    <i class="bi bi-person me-1"></i>Your Name <span class="text-danger">*</span>
+                                </label>
+                                <input type="text" class="form-control form-control-lg" id="csrName" name="name" placeholder="Enter your full name" maxlength="255" required style="border-radius: 8px; border: 2px solid #e9ecef; transition: border-color 0.3s ease;">
+                                <small class="form-text text-muted">
+                                    <i class="bi bi-info-circle me-1"></i>Please enter your first and last name
+                                </small>
+                            </div>
+                            
+                            <!-- Phone Number - Full Width on Mobile, Half on Desktop -->
+                            <div class="col-12 col-md-6">
+                                <label for="csrPhone" class="form-label fw-semibold">
+                                    <i class="bi bi-phone me-1"></i>Phone Number <span class="text-danger">*</span>
+                                </label>
+                                <input type="tel" class="form-control form-control-lg" id="csrPhone" name="phone" placeholder="Enter your phone number" maxlength="20" required style="border-radius: 8px; border: 2px solid #e9ecef; transition: border-color 0.3s ease;">
+                                <small class="form-text text-muted">
+                                    <i class="bi bi-info-circle me-1"></i>Include area code
+                                </small>
+                            </div>
+                            
+                            <!-- Email - Full Width on Mobile, Half on Desktop -->
+                            <div class="col-12 col-md-6">
+                                <label for="csrEmail" class="form-label fw-semibold">
+                                    <i class="bi bi-envelope me-1"></i>Email Address <span class="text-muted">(Optional)</span>
+                                </label>
+                                <input type="email" class="form-control form-control-lg" id="csrEmail" name="email" placeholder="Enter your email address" maxlength="255" style="border-radius: 8px; border: 2px solid #e9ecef; transition: border-color 0.3s ease;">
+                                <small class="form-text text-muted">
+                                    <i class="bi bi-info-circle me-1"></i>We'll send confirmation to this email
+                                </small>
+                            </div>
+                            
+                            <!-- Information Box -->
+                            <div class="col-12">
+                                <div class="alert alert-info mb-0" style="border-radius: 8px; border-left: 4px solid #030f68;">
+                                    <i class="bi bi-info-circle me-2"></i>
+                                    <strong>What happens next?</strong><br>
+                                    We'll review your custom service request and contact you within 24-48 hours to discuss pricing and availability.
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer" style="border-top: none;">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary btn-lg" onclick="submitCustomServiceRequestFromModal()" style="border-radius: 8px; font-weight: 600;">
+                        <i class="bi bi-send me-2"></i>Submit Request
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Service Selection Modal -->
     <div class="modal fade" id="serviceSelectionModal" tabindex="-1" aria-labelledby="serviceSelectionModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg">
@@ -3184,7 +3335,7 @@
                                     <div>
                                         <strong style="color: #0b3a66;">Note:</strong>
                                         <p class="mb-0" style="color: #0b3a66; font-size: 0.9rem;">
-                                            All popular services are priced for <strong>mid-back length</strong>. Prices may differ for longer or shorter lengths. Final pricing will be confirmed during booking.
+                                            <strong>Kinky twist</strong> and <strong>twist braid</strong> prices shown are for <strong>mid-back length</strong>. Prices may differ for longer or shorter lengths. Final pricing will be confirmed during booking.
                                         </p>
                                     </div>
                                 </div>
@@ -3195,7 +3346,7 @@
                         <div class="col-12 mt-4">
                             <div class="border-top pt-4">
                                 <h6 class="fw-bold mb-3">
-                                    <i class="bi bi-stars me-2" style="color: #ff6600;"></i>Custom Service
+                                    <i class="bi bi-stars me-2" style="color: #ff6600;"></i>Custom Service Request
                                 </h6>
                                 <div class="alert alert-warning mb-3" style="background: #fff7e0; border-left: 4px solid #ff6600; border-radius: 8px;">
                                     <div class="d-flex align-items-start">
@@ -3211,19 +3362,293 @@
                                         </div>
                                     </div>
                                 </div>
-                                <div class="form-group">
-                                    <label for="customServiceInput" class="form-label fw-semibold">
-                                        <i class="bi bi-pencil-square me-1"></i>Enter Your Desired Service
-                                    </label>
-                                    <input type="text" class="form-control form-control-lg" id="customServiceInput" placeholder="e.g., Goddess Braids, Box Braids, Passion Twists, Feed-in Braids, etc." maxlength="255" style="border-radius: 8px;">
-                                    <small class="form-text text-muted d-block mt-2">
-                                        <i class="bi bi-lightbulb me-1"></i>
-                                        <strong>Tip:</strong> Be as specific as possible. Include details like braid size, style, or any special requests in the booking form message field.
-                                    </small>
-                                </div>
-                                <button type="button" class="btn btn-success btn-lg mt-3 w-100" onclick="selectCustomService()" style="border-radius: 8px; font-weight: 600;">
-                                    <i class="bi bi-check-circle me-2"></i>Select Custom Service
-                                </button>
+
+                                <!-- Enhanced Custom Service Form -->
+                                <form id="customServiceForm">
+                                    <div class="row g-3">
+                                        <!-- Service Name -->
+                                        <div class="col-12">
+                                            <label for="customServiceInput" class="form-label fw-semibold">
+                                                <i class="bi bi-pencil-square me-1"></i>Service Name <span class="text-danger">*</span>
+                                            </label>
+                                            <input type="text" class="form-control form-control-lg" id="customServiceInput" name="service_name" placeholder="e.g., Goddess Braids, Box Braids, Passion Twists, Feed-in Braids, etc." maxlength="255" required style="border-radius: 8px;">
+                                            <small class="form-text text-muted d-block mt-1">
+                                                <i class="bi bi-lightbulb me-1"></i>
+                                                Be specific about the style you want
+                                            </small>
+                            </div>
+
+                                        <!-- Service Category -->
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label fw-semibold">
+                                                <i class="bi bi-tags me-1"></i>Service Category
+                                            </label>
+                                            <div class="radio-group-container">
+                                                <div class="form-check mb-2">
+                                                    <input class="form-check-input" type="radio" name="service_category" id="cat_braids" value="braids">
+                                                    <label class="form-check-label" for="cat_braids">Braids</label>
+                                                </div>
+                                                <div class="form-check mb-2">
+                                                    <input class="form-check-input" type="radio" name="service_category" id="cat_twists" value="twists">
+                                                    <label class="form-check-label" for="cat_twists">Twists</label>
+                                                </div>
+                                                <div class="form-check mb-2">
+                                                    <input class="form-check-input" type="radio" name="service_category" id="cat_locs" value="locs">
+                                                    <label class="form-check-label" for="cat_locs">Locs/Dreadlocks</label>
+                                                </div>
+                                                <div class="form-check mb-2">
+                                                    <input class="form-check-input" type="radio" name="service_category" id="cat_weave" value="weave">
+                                                    <label class="form-check-label" for="cat_weave">Weave/Extensions</label>
+                                                </div>
+                                                <div class="form-check mb-2">
+                                                    <input class="form-check-input" type="radio" name="service_category" id="cat_natural" value="natural">
+                                                    <label class="form-check-label" for="cat_natural">Natural Hair Styling</label>
+                                                </div>
+                                                <div class="form-check mb-2">
+                                                    <input class="form-check-input" type="radio" name="service_category" id="cat_color" value="color">
+                                                    <label class="form-check-label" for="cat_color">Hair Coloring</label>
+                                                </div>
+                                                <div class="form-check mb-2">
+                                                    <input class="form-check-input" type="radio" name="service_category" id="cat_treatment" value="treatment">
+                                                    <label class="form-check-label" for="cat_treatment">Hair Treatment</label>
+                                                </div>
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="radio" name="service_category" id="cat_other" value="other">
+                                                    <label class="form-check-label" for="cat_other">Other</label>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Braid Size Preference -->
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label fw-semibold">
+                                                <i class="bi bi-rulers me-1"></i>Braid/Twist Size
+                                            </label>
+                                            <div class="radio-group-container">
+                                                <div class="form-check mb-2">
+                                                    <input class="form-check-input" type="radio" name="braid_size" id="size_micro" value="micro">
+                                                    <label class="form-check-label" for="size_micro">Micro (Very Small)</label>
+                                                </div>
+                                                <div class="form-check mb-2">
+                                                    <input class="form-check-input" type="radio" name="braid_size" id="size_small" value="small">
+                                                    <label class="form-check-label" for="size_small">Small</label>
+                                                </div>
+                                                <div class="form-check mb-2">
+                                                    <input class="form-check-input" type="radio" name="braid_size" id="size_medium" value="medium">
+                                                    <label class="form-check-label" for="size_medium">Medium</label>
+                                                </div>
+                                                <div class="form-check mb-2">
+                                                    <input class="form-check-input" type="radio" name="braid_size" id="size_large" value="large">
+                                                    <label class="form-check-label" for="size_large">Large</label>
+                                                </div>
+                                                <div class="form-check mb-2">
+                                                    <input class="form-check-input" type="radio" name="braid_size" id="size_jumbo" value="jumbo">
+                                                    <label class="form-check-label" for="size_jumbo">Jumbo (Very Large)</label>
+                                                </div>
+                                                <div class="form-check mb-2">
+                                                    <input class="form-check-input" type="radio" name="braid_size" id="size_mixed" value="mixed">
+                                                    <label class="form-check-label" for="size_mixed">Mixed Sizes</label>
+                                                </div>
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="radio" name="braid_size" id="size_na" value="not-applicable">
+                                                    <label class="form-check-label" for="size_na">Not Applicable</label>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Hair Length -->
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label fw-semibold">
+                                                <i class="bi bi-scissors me-1"></i>Current Hair Length
+                                            </label>
+                                            <div class="radio-group-container" style="max-height: 250px; overflow-y: auto;">
+                                                <div class="form-check mb-2">
+                                                    <input class="form-check-input" type="radio" name="hair_length" id="len_neck" value="neck">
+                                                    <label class="form-check-label" for="len_neck">Neck Length</label>
+                                                </div>
+                                                <div class="form-check mb-2">
+                                                    <input class="form-check-input" type="radio" name="hair_length" id="len_shoulder" value="shoulder">
+                                                    <label class="form-check-label" for="len_shoulder">Shoulder Length</label>
+                                                </div>
+                                                <div class="form-check mb-2">
+                                                    <input class="form-check-input" type="radio" name="hair_length" id="len_armpit" value="armpit">
+                                                    <label class="form-check-label" for="len_armpit">Armpit Length</label>
+                                                </div>
+                                                <div class="form-check mb-2">
+                                                    <input class="form-check-input" type="radio" name="hair_length" id="len_bra_strap" value="bra_strap">
+                                                    <label class="form-check-label" for="len_bra_strap">Bra Strap Length</label>
+                                                </div>
+                                                <div class="form-check mb-2">
+                                                    <input class="form-check-input" type="radio" name="hair_length" id="len_mid_back" value="mid_back">
+                                                    <label class="form-check-label" for="len_mid_back">Mid-Back Length</label>
+                                                </div>
+                                                <div class="form-check mb-2">
+                                                    <input class="form-check-input" type="radio" name="hair_length" id="len_waist" value="waist">
+                                                    <label class="form-check-label" for="len_waist">Waist Length</label>
+                                                </div>
+                                                <div class="form-check mb-2">
+                                                    <input class="form-check-input" type="radio" name="hair_length" id="len_hip" value="hip">
+                                                    <label class="form-check-label" for="len_hip">Hip Length</label>
+                                                </div>
+                                                <div class="form-check mb-2">
+                                                    <input class="form-check-input" type="radio" name="hair_length" id="len_tailbone" value="tailbone">
+                                                    <label class="form-check-label" for="len_tailbone">Tailbone Length</label>
+                                                </div>
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="radio" name="hair_length" id="len_classic" value="classic">
+                                                    <label class="form-check-label" for="len_classic">Classic Length</label>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Estimated Budget Range -->
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label fw-semibold">
+                                                <i class="bi bi-currency-dollar me-1"></i>Estimated Budget Range
+                                            </label>
+                                            <div class="radio-group-container">
+                                                <div class="form-check mb-2">
+                                                    <input class="form-check-input" type="radio" name="budget_range" id="budget_under100" value="under-100">
+                                                    <label class="form-check-label" for="budget_under100">Under $100</label>
+                                                </div>
+                                                <div class="form-check mb-2">
+                                                    <input class="form-check-input" type="radio" name="budget_range" id="budget_100_150" value="100-150">
+                                                    <label class="form-check-label" for="budget_100_150">$100 - $150</label>
+                                                </div>
+                                                <div class="form-check mb-2">
+                                                    <input class="form-check-input" type="radio" name="budget_range" id="budget_150_200" value="150-200">
+                                                    <label class="form-check-label" for="budget_150_200">$150 - $200</label>
+                                                </div>
+                                                <div class="form-check mb-2">
+                                                    <input class="form-check-input" type="radio" name="budget_range" id="budget_200_250" value="200-250">
+                                                    <label class="form-check-label" for="budget_200_250">$200 - $250</label>
+                                                </div>
+                                                <div class="form-check mb-2">
+                                                    <input class="form-check-input" type="radio" name="budget_range" id="budget_250_300" value="250-300">
+                                                    <label class="form-check-label" for="budget_250_300">$250 - $300</label>
+                                                </div>
+                                                <div class="form-check mb-2">
+                                                    <input class="form-check-input" type="radio" name="budget_range" id="budget_300_400" value="300-400">
+                                                    <label class="form-check-label" for="budget_300_400">$300 - $400</label>
+                                                </div>
+                                                <div class="form-check mb-2">
+                                                    <input class="form-check-input" type="radio" name="budget_range" id="budget_400_500" value="400-500">
+                                                    <label class="form-check-label" for="budget_400_500">$400 - $500</label>
+                                                </div>
+                                                <div class="form-check mb-2">
+                                                    <input class="form-check-input" type="radio" name="budget_range" id="budget_over500" value="over-500">
+                                                    <label class="form-check-label" for="budget_over500">Over $500</label>
+                                                </div>
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="radio" name="budget_range" id="budget_flexible" value="flexible">
+                                                    <label class="form-check-label" for="budget_flexible">Flexible</label>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Style Preferences -->
+                                        <div class="col-12">
+                                            <label class="form-label fw-semibold">
+                                                <i class="bi bi-palette me-1"></i>Style Preferences (Select all that apply)
+                                            </label>
+                                            <div class="row g-2">
+                                                <div class="col-md-4">
+                                                    <div class="form-check">
+                                                        <input class="form-check-input" type="checkbox" id="prefProtective" name="style_preferences[]" value="protective">
+                                                        <label class="form-check-label" for="prefProtective">Protective Style</label>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <div class="form-check">
+                                                        <input class="form-check-input" type="checkbox" id="prefLowMaintenance" name="style_preferences[]" value="low-maintenance">
+                                                        <label class="form-check-label" for="prefLowMaintenance">Low Maintenance</label>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <div class="form-check">
+                                                        <input class="form-check-input" type="checkbox" id="prefLongLasting" name="style_preferences[]" value="long-lasting">
+                                                        <label class="form-check-label" for="prefLongLasting">Long Lasting</label>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <div class="form-check">
+                                                        <input class="form-check-input" type="checkbox" id="prefWithExtensions" name="style_preferences[]" value="with-extensions">
+                                                        <label class="form-check-label" for="prefWithExtensions">With Extensions</label>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <div class="form-check">
+                                                        <input class="form-check-input" type="checkbox" id="prefWithBeads" name="style_preferences[]" value="with-beads">
+                                                        <label class="form-check-label" for="prefWithBeads">With Beads/Accessories</label>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <div class="form-check">
+                                                        <input class="form-check-input" type="checkbox" id="prefWithColor" name="style_preferences[]" value="with-color">
+                                                        <label class="form-check-label" for="prefWithColor">With Color/Highlights</label>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Special Requirements -->
+                                        <div class="col-12">
+                                            <label for="customSpecialRequirements" class="form-label fw-semibold">
+                                                <i class="bi bi-clipboard-check me-1"></i>Special Requirements or Notes
+                                            </label>
+                                            <textarea class="form-control" id="customSpecialRequirements" name="special_requirements" rows="3" placeholder="Any specific requirements, allergies, previous service history, or additional details..." style="border-radius: 8px;"></textarea>
+                                            <small class="form-text text-muted d-block mt-1">
+                                                Include any important information that will help us provide the best service
+                                </small>
+                            </div>
+
+                                        <!-- Urgency/Timeline -->
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label fw-semibold">
+                                                <i class="bi bi-clock me-1"></i>When do you need this service?
+                                            </label>
+                                            <div class="radio-group-container">
+                                                <div class="form-check mb-2">
+                                                    <input class="form-check-input" type="radio" name="urgency" id="urgent_asap" value="asap">
+                                                    <label class="form-check-label" for="urgent_asap">As Soon As Possible</label>
+                                                </div>
+                                                <div class="form-check mb-2">
+                                                    <input class="form-check-input" type="radio" name="urgency" id="urgent_week" value="within-week">
+                                                    <label class="form-check-label" for="urgent_week">Within a Week</label>
+                                                </div>
+                                                <div class="form-check mb-2">
+                                                    <input class="form-check-input" type="radio" name="urgency" id="urgent_month" value="within-month">
+                                                    <label class="form-check-label" for="urgent_month">Within a Month</label>
+                                                </div>
+                                                <div class="form-check mb-2">
+                                                    <input class="form-check-input" type="radio" name="urgency" id="urgent_flexible" value="flexible">
+                                                    <label class="form-check-label" for="urgent_flexible">Flexible</label>
+                                                </div>
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="radio" name="urgency" id="urgent_specific" value="specific-date">
+                                                    <label class="form-check-label" for="urgent_specific">I have a specific date in mind</label>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Reference Image Upload -->
+                                        <div class="col-md-6">
+                                            <label for="customReferenceImage" class="form-label fw-semibold">
+                                                <i class="bi bi-image me-1"></i>Reference Image (Optional)
+                                            </label>
+                                            <input type="file" class="form-control form-control-lg" id="customReferenceImage" name="reference_image" accept="image/*" style="border-radius: 8px;">
+                                            <small class="form-text text-muted d-block mt-1">
+                                                Upload a photo of the style you want (max 5MB)
+                                            </small>
+                                        </div>
+                                    </div>
+
+                                    <div class="mt-4">
+                                        <button type="button" class="btn btn-primary btn-lg w-100" onclick="openCustomServiceRequestModal()" style="border-radius: 8px; font-weight: 600;">
+                                            <i class="bi bi-send me-2"></i>Submit Request
+                                        </button>
+                                    </div>
+                                </form>
                             </div>
                         </div>
                     </div>
@@ -3827,9 +4252,19 @@ console.log('=== LOADING BOOKING FUNCTIONS ===');
     }
 
     // Function to open service selection modal
-    function openServiceSelectionModal() {
-        const serviceModal = new bootstrap.Modal(document.getElementById('serviceSelectionModal'));
+    window.openServiceSelectionModal = function() {
+        const modalEl = document.getElementById('serviceSelectionModal');
+        if (!modalEl) {
+            console.error('Service selection modal not found');
+            return;
+        }
+        const serviceModal = new bootstrap.Modal(modalEl);
         serviceModal.show();
+    };
+    
+    // Also define as regular function for backward compatibility
+    function openServiceSelectionModal() {
+        window.openServiceSelectionModal();
     }
 
     // Close booking/kids modal and open service selection modal
@@ -4046,7 +4481,7 @@ console.log('=== LOADING BOOKING FUNCTIONS ===');
     };
 
     // Function to select a quick service
-    function selectQuickService(serviceName) {
+    window.selectQuickService = function(serviceName) {
         const selectedServiceInput = document.getElementById('selectedService');
         const serviceDisplayInput = document.getElementById('serviceDisplay');
 
@@ -4126,6 +4561,13 @@ console.log('=== LOADING BOOKING FUNCTIONS ===');
         // Mark that user came from service selection modal
         window.cameFromServiceSelection = true;
 
+        // Open the booking modal
+        const bookingModalEl = document.getElementById('bookingModal');
+        if (bookingModalEl) {
+            const bookingModal = bootstrap.Modal.getInstance(bookingModalEl) || new bootstrap.Modal(bookingModalEl);
+            bookingModal.show();
+        }
+
         // Show back button in booking modal
         const backBtn = document.getElementById('backToServiceSelectionBtn');
         if (backBtn) {
@@ -4133,9 +4575,26 @@ console.log('=== LOADING BOOKING FUNCTIONS ===');
         }
 
         // Update booking modal title
-        document.getElementById('bookingModalLabel').textContent = `Book ${serviceName}`;
+        const bookingModalLabel = document.getElementById('bookingModalLabel');
+        if (bookingModalLabel) {
+            bookingModalLabel.textContent = `Book ${serviceName}`;
+        }
 
         console.log('Quick service selected:', serviceName, 'Base price:', basePrice);
+    };
+    
+    // Also define as regular function for backward compatibility
+    function selectQuickService(serviceName) {
+        if (window.selectQuickService) {
+            window.selectQuickService(serviceName);
+        }
+    };
+    
+    // Also define as regular function for backward compatibility
+    function selectQuickService(serviceName) {
+        if (window.selectQuickService) {
+            window.selectQuickService(serviceName);
+        }
     }
 
     // Function to select a custom service
@@ -4147,6 +4606,26 @@ console.log('=== LOADING BOOKING FUNCTIONS ===');
             alert('Please enter a service name');
             return;
         }
+
+        // Collect all custom service form data
+        const customForm = document.getElementById('customServiceForm');
+        const formData = new FormData(customForm);
+        
+        // Build custom service details object
+        const customServiceDetails = {
+            service_name: customService,
+            service_category: document.querySelector('input[name="service_category"]:checked')?.value || '',
+            braid_size: document.querySelector('input[name="braid_size"]:checked')?.value || '',
+            hair_length: document.querySelector('input[name="hair_length"]:checked')?.value || '',
+            budget_range: document.querySelector('input[name="budget_range"]:checked')?.value || '',
+            urgency: document.querySelector('input[name="urgency"]:checked')?.value || '',
+            special_requirements: document.getElementById('customSpecialRequirements')?.value || '',
+            style_preferences: Array.from(document.querySelectorAll('input[name="style_preferences[]"]:checked')).map(cb => cb.value),
+            reference_image: document.getElementById('customReferenceImage')?.files[0] || null
+        };
+
+        // Store custom service details globally for later use in booking form
+        window.customServiceDetails = customServiceDetails;
 
         const selectedServiceInput = document.getElementById('selectedService');
         const serviceDisplayInput = document.getElementById('serviceDisplay');
@@ -4177,11 +4656,20 @@ console.log('=== LOADING BOOKING FUNCTIONS ===');
             lengthRadios[i].disabled = false;
         }
 
+        // If custom form has a hair length selected, set it as default
+        if (customServiceDetails.hair_length) {
+            const lengthRadio = document.querySelector(`input[name="hair_length"][value="${customServiceDetails.hair_length}"]`);
+            if (lengthRadio) {
+                lengthRadio.checked = true;
+            }
+        }
+
         // Update window.currentServiceInfo - custom services are not popular services
         window.currentServiceInfo = window.currentServiceInfo || {};
         window.currentServiceInfo.serviceName = customService;
         window.currentServiceInfo.serviceType = 'custom';
         window.currentServiceInfo.isPopularService = false;
+        window.currentServiceInfo.customDetails = customServiceDetails;
 
         // Mark that user came from service selection modal
         window.cameFromServiceSelection = true;
@@ -4201,11 +4689,233 @@ console.log('=== LOADING BOOKING FUNCTIONS ===');
         // Update booking modal title
         document.getElementById('bookingModalLabel').textContent = `Book ${customService}`;
 
-        // Clear the custom input
-        customInput.value = '';
+        // Pre-fill booking form message with custom service details if message field exists
+        const messageField = document.getElementById('message');
+        if (messageField && window.customServiceDetails) {
+            let messageText = `Custom Service Request:\n\n`;
+            messageText += `Service: ${customService}\n`;
+            if (customServiceDetails.service_category) {
+                messageText += `Category: ${customServiceDetails.service_category}\n`;
+            }
+            if (customServiceDetails.braid_size) {
+                messageText += `Braid/Twist Size: ${customServiceDetails.braid_size}\n`;
+            }
+            if (customServiceDetails.hair_length) {
+                messageText += `Hair Length: ${customServiceDetails.hair_length}\n`;
+            }
+            if (customServiceDetails.budget_range) {
+                messageText += `Budget Range: ${customServiceDetails.budget_range}\n`;
+            }
+            if (customServiceDetails.urgency) {
+                messageText += `Timeline: ${customServiceDetails.urgency}\n`;
+            }
+            if (customServiceDetails.style_preferences && customServiceDetails.style_preferences.length > 0) {
+                messageText += `Style Preferences: ${customServiceDetails.style_preferences.join(', ')}\n`;
+            }
+            if (customServiceDetails.special_requirements) {
+                messageText += `\nSpecial Requirements:\n${customServiceDetails.special_requirements}\n`;
+            }
+            messageField.value = messageText;
+        }
 
         console.log('Custom service selected:', customService);
+        console.log('Custom service details:', customServiceDetails);
     }
+
+    // Function to open custom service request modal
+    function openCustomServiceRequestModal() {
+        const customInput = document.getElementById('customServiceInput');
+        const customService = customInput.value.trim();
+
+        if (!customService) {
+            alert('Please enter a service name');
+            return;
+        }
+
+        // Store custom service details globally for submission
+        const customForm = document.getElementById('customServiceForm');
+        if (!customForm) {
+            alert('Custom service form not found');
+            return;
+        }
+
+        // Build custom service details object
+        const customServiceDetails = {
+            service_name: customService,
+            service_category: document.querySelector('input[name="service_category"]:checked')?.value || '',
+            braid_size: document.querySelector('input[name="braid_size"]:checked')?.value || '',
+            hair_length: document.querySelector('input[name="hair_length"]:checked')?.value || '',
+            budget_range: document.querySelector('input[name="budget_range"]:checked')?.value || '',
+            urgency: document.querySelector('input[name="urgency"]:checked')?.value || '',
+            special_requirements: document.getElementById('customSpecialRequirements')?.value || '',
+            style_preferences: Array.from(document.querySelectorAll('input[name="style_preferences[]"]:checked')).map(cb => cb.value),
+            reference_image: document.getElementById('customReferenceImage')?.files[0] || null
+        };
+
+        // Store globally for submission
+        window.customServiceRequestDetails = customServiceDetails;
+
+        // Open the custom service request modal
+        const modalEl = document.getElementById('customServiceRequestModal');
+        if (modalEl) {
+            const modal = new bootstrap.Modal(modalEl);
+            modal.show();
+            
+            // Focus on name field when modal opens
+            setTimeout(() => {
+                const nameField = document.getElementById('csrName');
+                if (nameField) nameField.focus();
+            }, 300);
+        }
+    }
+
+    // Function to submit custom service request from the modal
+    function submitCustomServiceRequestFromModal() {
+        // Validate contact info
+        const contactName = document.getElementById('csrName')?.value?.trim();
+        const contactEmail = document.getElementById('csrEmail')?.value?.trim();
+        const contactPhone = document.getElementById('csrPhone')?.value?.trim();
+
+        if (!contactName || !contactPhone) {
+            alert('Please fill in your name and phone number.');
+            if (!contactName) {
+                document.getElementById('csrName')?.focus();
+            } else {
+                document.getElementById('csrPhone')?.focus();
+            }
+            return;
+        }
+
+        // Get custom service details from global storage
+        if (!window.customServiceRequestDetails) {
+            alert('Custom service details not found. Please try again.');
+            return;
+        }
+
+        const details = window.customServiceRequestDetails;
+
+        // Build form data object
+        const formData = new FormData();
+        
+        // Add required contact fields
+        formData.append('name', contactName);
+        formData.append('email', contactEmail || '');
+        formData.append('phone', contactPhone);
+        formData.append('service', details.service_name);
+        // No appointment date/time for custom service requests
+        
+        // Add custom service details
+        if (details.service_category) formData.append('service_category', details.service_category);
+        if (details.braid_size) formData.append('braid_size', details.braid_size);
+        if (details.hair_length) formData.append('hair_length', details.hair_length);
+        if (details.budget_range) formData.append('budget_range', details.budget_range);
+        if (details.urgency) formData.append('urgency', details.urgency);
+        if (details.special_requirements) formData.append('special_requirements', details.special_requirements);
+        if (details.style_preferences && details.style_preferences.length > 0) {
+            details.style_preferences.forEach(pref => formData.append('style_preferences[]', pref));
+        }
+        if (details.reference_image) formData.append('reference_image', details.reference_image);
+
+        // Build message with all details
+        let messageText = `Custom Service Request:\n\n`;
+        messageText += `Service: ${details.service_name}\n`;
+        if (details.service_category) messageText += `Category: ${details.service_category}\n`;
+        if (details.braid_size) messageText += `Braid/Twist Size: ${details.braid_size}\n`;
+        if (details.hair_length) messageText += `Hair Length: ${details.hair_length}\n`;
+        if (details.budget_range) messageText += `Budget Range: ${details.budget_range}\n`;
+        if (details.urgency) messageText += `Timeline: ${details.urgency}\n`;
+        if (details.style_preferences && details.style_preferences.length > 0) {
+            messageText += `Style Preferences: ${details.style_preferences.join(', ')}\n`;
+        }
+        if (details.special_requirements) {
+            messageText += `\nSpecial Requirements:\n${details.special_requirements}\n`;
+        }
+        formData.append('message', messageText);
+
+        // Add CSRF token
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || 
+                         document.querySelector('input[name="_token"]')?.value;
+        if (csrfToken) {
+            formData.append('_token', csrfToken);
+        }
+
+        // Show loading state
+        const submitBtn = document.querySelector('button[onclick="submitCustomServiceRequestFromModal()"]');
+        const originalText = submitBtn?.innerHTML;
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Submitting...';
+        }
+
+        // Submit to custom-service endpoint
+        fetch('/custom-service', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Your custom service request has been submitted successfully! We will contact you within 24-48 hours.');
+                // Close all modals
+                const requestModal = bootstrap.Modal.getInstance(document.getElementById('customServiceRequestModal'));
+                if (requestModal) requestModal.hide();
+                const serviceModal = bootstrap.Modal.getInstance(document.getElementById('serviceSelectionModal'));
+                if (serviceModal) serviceModal.hide();
+                // Reset forms
+                const customForm = document.getElementById('customServiceForm');
+                if (customForm) customForm.reset();
+                const requestForm = document.getElementById('customServiceRequestForm');
+                if (requestForm) requestForm.reset();
+                // Clear stored details
+                window.customServiceRequestDetails = null;
+            } else {
+                alert('Failed to submit request: ' + (data.message || 'Unknown error'));
+            }
+        })
+        .catch(error => {
+            console.error('Error submitting custom service request:', error);
+            alert('An error occurred while submitting your request. Please try again.');
+        })
+        .finally(() => {
+            // Restore button state
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                if (originalText) submitBtn.innerHTML = originalText;
+            }
+        });
+    }
+
+    // Add visual feedback for radio button groups in custom service form
+    document.addEventListener('DOMContentLoaded', function() {
+        const customForm = document.getElementById('customServiceForm');
+        if (customForm) {
+            // Add event listeners to all radio buttons
+            const radioGroups = ['service_category', 'braid_size', 'hair_length', 'budget_range', 'urgency'];
+            
+            radioGroups.forEach(groupName => {
+                const radios = customForm.querySelectorAll(`input[name="${groupName}"]`);
+                radios.forEach(radio => {
+                    radio.addEventListener('change', function() {
+                        // Find the parent radio-group-container
+                        const container = this.closest('.radio-group-container');
+                        if (container) {
+                            // Remove highlight from all containers in this group
+                            const allRadios = customForm.querySelectorAll(`input[name="${groupName}"]`);
+                            allRadios.forEach(r => {
+                                const c = r.closest('.radio-group-container');
+                                if (c) c.classList.remove('radio-selected');
+                            });
+                            // Add highlight to selected container
+                            container.classList.add('radio-selected');
+                        }
+                    });
+                });
+            });
+        }
+    });
 
     // Function to clear the booking form
     function clearBookingForm() {
@@ -4357,6 +5067,45 @@ console.log('=== LOADING BOOKING FUNCTIONS ===');
                 if (maskRadio && hiddenMask) hiddenMask.value = maskRadio.value;
             } else {
                 if (selectedHairLength) selectedLengthInput.value = selectedHairLength.replace(/-/g, '_');
+            }
+
+            // Include custom service details if available
+            if (window.customServiceDetails) {
+                const messageField = document.getElementById('message');
+                if (messageField) {
+                    let existingMessage = messageField.value.trim();
+                    let customDetailsText = '';
+                    
+                    // Build custom service details text
+                    const details = window.customServiceDetails;
+                    if (details.service_category || details.braid_size || details.budget_range || 
+                        details.urgency || details.style_preferences?.length > 0 || details.special_requirements) {
+                        customDetailsText = '\n\n--- Custom Service Details ---\n';
+                        if (details.service_category) {
+                            customDetailsText += `Category: ${details.service_category}\n`;
+                        }
+                        if (details.braid_size) {
+                            customDetailsText += `Braid/Twist Size: ${details.braid_size}\n`;
+                        }
+                        if (details.budget_range) {
+                            customDetailsText += `Budget Range: ${details.budget_range}\n`;
+                        }
+                        if (details.urgency) {
+                            customDetailsText += `Timeline: ${details.urgency}\n`;
+                        }
+                        if (details.style_preferences && details.style_preferences.length > 0) {
+                            customDetailsText += `Style Preferences: ${details.style_preferences.join(', ')}\n`;
+                        }
+                        if (details.special_requirements) {
+                            customDetailsText += `\nSpecial Requirements:\n${details.special_requirements}\n`;
+                        }
+                        
+                        // Append to existing message if it doesn't already contain custom details
+                        if (!existingMessage.includes('--- Custom Service Details ---')) {
+                            messageField.value = existingMessage + customDetailsText;
+                        }
+                    }
+                }
             }
 
             // Allow normal form submission to proceed (server is authoritative)
@@ -5456,24 +6205,24 @@ document.addEventListener('DOMContentLoaded', function(){
         let adj = 0;
         
         if (!isPopularService) {
-            // default flow for braided services uses length adjustment
-            // collect diagnostics about the hair_length radios to help debug empty selections
-            const radios = document.getElementsByName('hair_length');
-            let checkedVal = '';
-            let checkedIndex = -1;
-            const radiosSnapshot = [];
-            for (let i = 0; i < radios.length; i++) {
-                try {
-                    const v = radios[i].value || '';
-                    const c = !!radios[i].checked;
-                    radiosSnapshot.push({ idx: i, value: v, checked: c, id: radios[i].id || null });
-                    if (c) { checkedVal = v; checkedIndex = i; break; }
-                } catch(e) {
-                    radiosSnapshot.push({ idx: i, value: '', checked: false, id: null });
-                }
+        // default flow for braided services uses length adjustment
+        // collect diagnostics about the hair_length radios to help debug empty selections
+        const radios = document.getElementsByName('hair_length');
+        let checkedVal = '';
+        let checkedIndex = -1;
+        const radiosSnapshot = [];
+        for (let i = 0; i < radios.length; i++) {
+            try {
+                const v = radios[i].value || '';
+                const c = !!radios[i].checked;
+                radiosSnapshot.push({ idx: i, value: v, checked: c, id: radios[i].id || null });
+                if (c) { checkedVal = v; checkedIndex = i; break; }
+            } catch(e) {
+                radiosSnapshot.push({ idx: i, value: '', checked: false, id: null });
             }
+        }
             length = checkedVal || getSelectedLength();
-            console.log('Radios snapshot:', radiosSnapshot, 'resolved length:', length, 'checkedIndex:', checkedIndex);
+        console.log('Radios snapshot:', radiosSnapshot, 'resolved length:', length, 'checkedIndex:', checkedIndex);
             adj = lengthAdjustment(length);
             finalPrice = base + adj;
         } else {

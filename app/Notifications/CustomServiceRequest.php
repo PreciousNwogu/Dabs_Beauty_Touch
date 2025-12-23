@@ -30,20 +30,56 @@ class CustomServiceRequest extends Notification implements ShouldQueue
         $isAdmin = $r['is_admin'] ?? false;
 
         if ($isAdmin) {
-            // Admin notification
-            return (new MailMessage)
+            // Admin notification with enhanced details
+            $mail = (new MailMessage)
                 ->subject('New Custom Service Request - ' . config('app.name'))
                 ->greeting('New Custom Service Request')
-                ->line('A customer has submitted a custom service request:')
+                ->line('A customer has submitted a custom service request with detailed information:')
                 ->line('**Name:** ' . ($r['name'] ?? 'N/A'))
                 ->line('**Email:** ' . ($r['email'] ?? 'No email provided'))
                 ->line('**Phone:** ' . ($r['phone'] ?? 'N/A'))
                 ->line('**Requested Service:** ' . ($r['service'] ?? 'Custom Service'))
                 ->line('**Preferred Date:** ' . ($r['appointment_date'] ?? 'Not specified'))
-                ->line('**Preferred Time:** ' . ($r['appointment_time'] ?? 'Not specified'))
-                ->when(!empty($r['message']), function ($mail) use ($r) {
-                    return $mail->line('**Message:** ' . $r['message']);
-                })
+                ->line('**Preferred Time:** ' . ($r['appointment_time'] ?? 'Not specified'));
+
+            // Add custom service details if available
+            if (!empty($r['service_category'])) {
+                $mail->line('**Service Category:** ' . ucwords(str_replace(['_', '-'], ' ', $r['service_category'])));
+            }
+            if (!empty($r['braid_size'])) {
+                $mail->line('**Braid/Twist Size:** ' . ucwords(str_replace(['_', '-'], ' ', $r['braid_size'])));
+            }
+            if (!empty($r['hair_length'])) {
+                $mail->line('**Hair Length:** ' . ucwords(str_replace(['_', '-'], ' ', $r['hair_length'])));
+            }
+            if (!empty($r['budget_range'])) {
+                $budgetDisplay = str_replace(['_', '-'], [' ', ' - '], $r['budget_range']);
+                $mail->line('**Budget Range:** ' . ucwords($budgetDisplay));
+            }
+            if (!empty($r['urgency'])) {
+                $urgencyDisplay = str_replace(['_', '-'], ' ', $r['urgency']);
+                $mail->line('**Timeline/Urgency:** ' . ucwords($urgencyDisplay));
+            }
+            if (!empty($r['style_preferences'])) {
+                $preferences = is_string($r['style_preferences']) ? json_decode($r['style_preferences'], true) : ($r['style_preferences_array'] ?? []);
+                if (is_array($preferences) && !empty($preferences)) {
+                    $preferencesDisplay = array_map(function($p) {
+                        return ucwords(str_replace(['_', '-'], ' ', $p));
+                    }, $preferences);
+                    $mail->line('**Style Preferences:** ' . implode(', ', $preferencesDisplay));
+                }
+            }
+            if (!empty($r['special_requirements'])) {
+                $mail->line('**Special Requirements:** ' . $r['special_requirements']);
+            }
+            if (!empty($r['reference_image'])) {
+                $mail->line('**Reference Image:** ' . (asset('storage/' . $r['reference_image'])));
+            }
+            if (!empty($r['message'])) {
+                $mail->line('**Additional Message:** ' . $r['message']);
+            }
+
+            return $mail
                 ->line('**Request ID:** #' . ($r['id'] ?? 'N/A'))
                 ->action('View Request', url('/admin/custom-requests/' . ($r['id'] ?? '')))
                 ->line('Please review and respond to this request as soon as possible.')
