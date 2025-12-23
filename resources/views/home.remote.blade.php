@@ -316,7 +316,7 @@
         /* Services Section Mobile Styles */
         @media (max-width: 768px) {
             .services-section {
-                padding: 60px 0;
+                padding: 50px 0;
             }
 
             .services-section .container {
@@ -326,11 +326,23 @@
             .services-section h2 {
                 font-size: 2rem;
                 text-align: center;
+                margin-bottom: 1.5rem;
             }
 
             .services-section .lead {
                 font-size: 1.1rem;
                 text-align: center;
+                margin-bottom: 2rem;
+            }
+
+            .services-section .row {
+                margin-left: -6px;
+                margin-right: -6px;
+            }
+
+            .services-section .row > * {
+                padding-left: 6px;
+                padding-right: 6px;
             }
         }
 
@@ -456,44 +468,121 @@
             margin-top: 10px;
         }
 
-        /* Service Card Mobile Improvements */
+        /* Service Card Mobile Improvements - Two Column Layout */
         @media (max-width: 768px) {
             .service-card {
-                margin-bottom: 20px;
-                padding: 24px 16px 20px 16px;
+                margin-bottom: 16px;
+                padding: 20px 12px 18px 12px;
+                border-radius: 14px;
+                box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+            }
+
+            .service-card:hover {
+                transform: translateY(-2px) scale(1.01);
             }
 
             .service-card img {
-                width: 180px;
-                height: 180px;
+                width: 100%;
+                max-width: 140px;
+                height: 140px;
+                margin-bottom: 12px;
+                border: 3px solid #fff;
             }
 
             .service-card h4 {
-                font-size: 1.3rem;
+                font-size: 1.1rem;
+                margin-bottom: 8px;
+                line-height: 1.3;
             }
 
             .service-card p {
-                font-size: 1rem;
-                margin-bottom: 6px;
+                font-size: 0.85rem;
+                margin-bottom: 8px;
+                line-height: 1.4;
+                display: -webkit-box;
+                -webkit-line-clamp: 3;
+                -webkit-box-orient: vertical;
+                overflow: hidden;
+            }
+
+            .service-card .price {
+                font-size: 0.95rem;
+                margin-top: 8px;
+                margin-bottom: 10px;
+            }
+
+            .service-card .btn {
+                width: 100%;
+                padding: 8px 16px;
+                font-size: 0.9rem;
+                font-weight: 600;
+                border-radius: 6px;
             }
         }
 
         @media (max-width: 576px) {
             .service-card {
-                padding: 20px 14px 18px 14px;
+                padding: 18px 10px 16px 10px;
+                margin-bottom: 12px;
+                border-radius: 12px;
             }
 
             .service-card img {
-                width: 160px;
-                height: 160px;
+                max-width: 120px;
+                height: 120px;
+                margin-bottom: 10px;
             }
 
             .service-card h4 {
-                font-size: 1.2rem;
+                font-size: 1rem;
+                margin-bottom: 6px;
             }
 
             .service-card p {
+                font-size: 0.8rem;
+                margin-bottom: 6px;
+                -webkit-line-clamp: 2;
+            }
+
+            .service-card .price {
+                font-size: 0.9rem;
+                margin-top: 6px;
+                margin-bottom: 8px;
+            }
+
+            .service-card .btn {
+                padding: 7px 14px;
+                font-size: 0.85rem;
+            }
+        }
+
+        @media (max-width: 400px) {
+            .service-card {
+                padding: 16px 8px 14px 8px;
+            }
+
+            .service-card img {
+                max-width: 100px;
+                height: 100px;
+                margin-bottom: 8px;
+            }
+
+            .service-card h4 {
                 font-size: 0.95rem;
+            }
+
+            .service-card p {
+                font-size: 0.75rem;
+                -webkit-line-clamp: 2;
+            }
+
+            .service-card .price {
+                font-size: 0.85rem;
+            }
+
+            .service-card .btn {
+                padding: 6px 12px;
+                font-size: 0.8rem;
             }
         }
 
@@ -2764,7 +2853,7 @@
                         <!-- length guide removed from services section (moved into booking form) -->
 
                         <div class="row g-4">
-                <div class="col-lg-4 col-md-6">
+                <div class="col-lg-4 col-md-6 col-6">
                     <div class="service-card h-100" onclick="openBookingModal('Small Knotless Braids', 'small-knotless')">
                         <img src="{{ asset('images/small braid.jpg') }}" alt="Small Knotless Braids">
                         <h4>Small Knotless Braids</h4>
@@ -2773,7 +2862,7 @@
                         <button class="btn btn-warning mt-3">Book Now</button>
                     </div>
                 </div>
-                <div class="col-lg-4 col-md-6">
+                <div class="col-lg-4 col-md-6 col-6">
                     <div class="service-card h-100" onclick="openBookingModal('Smedium Knotless Braids', 'smedium-knotless')">
                         <img src="{{ asset('images/webbraids2.jpg') }}" alt="Smedium Knotless Braids">
                         <h4>Smedium Knotless Braids</h4>
@@ -2782,7 +2871,7 @@
                         <button class="btn btn-warning mt-3">Book Now</button>
                     </div>
                 </div>
-                <div class="col-lg-4 col-md-6">
+                <div class="col-lg-4 col-md-6 col-6">
                     <div class="service-card h-100" onclick="openBookingModal('Wig Installation', 'wig-installation')">
                         <img src="{{ asset('images/wig installation.jpg') }}" alt="Smedium Knotless Braids">
                         <h4>Wig Installation</h4>
@@ -2791,7 +2880,7 @@
                         <button class="btn btn-warning mt-3">Book Now</button>
                     </div>
                 </div>
-                <div class="col-lg-4 col-md-6">
+                <div class="col-lg-4 col-md-6 col-6">
                     <div class="service-card h-100" onclick="openBookingModal('Medium Knotless Braids', 'medium-knotless')">
                         <img src="{{ asset('images/large braid.jpg') }}" alt="Medium Knotless Braids">
                         <h4>Medium Knotless Braids</h4>
@@ -2800,7 +2889,7 @@
                         <button class="btn btn-warning mt-3">Book Now</button>
                     </div>
                 </div>
-                <div class="col-lg-4 col-md-6">
+                <div class="col-lg-4 col-md-6 col-6">
                     <div class="service-card h-100" onclick="openBookingModal('Jumbo Knotless Braids', 'jumbo-knotless')">
                         <img src="{{ asset('images/jumbo braid.jpg') }}" alt="Jumbo Knotless Braids">
                         <h4>Jumbo Knotless Braids</h4>
@@ -2809,7 +2898,7 @@
                         <button class="btn btn-warning mt-3">Book Now</button>
                     </div>
                 </div>
-                <div class="col-lg-4 col-md-6">
+                <div class="col-lg-4 col-md-6 col-6">
                     <div class="service-card h-100" onclick="window.location='{{ route('kids.selector') }}'">
                         <img src="{{ asset('images/kids hair style.webp') }}" alt="Kids Braids">
                         <h4>Kids Braids(3-8yrs)</h4>
@@ -2818,7 +2907,7 @@
                         <button class="btn btn-warning mt-3">Book Now</button>
                     </div>
                 </div>
-                <div class="col-lg-4 col-md-6">
+                <div class="col-lg-4 col-md-6 col-6">
                     <div class="service-card h-100" onclick="openBookingModal('8 Rows Stitch Braids', 'stitch-braids')">
                         <img src="{{ asset('images/stitch braid.jpg') }}" alt="8 Rows Stitch Braids">
                         <h4>8 Rows Stitch Braids</h4>
@@ -2827,7 +2916,7 @@
                         <button class="btn btn-warning mt-3">Book Now</button>
                     </div>
                 </div>
-                <div class="col-lg-4 col-md-6">
+                <div class="col-lg-4 col-md-6 col-6">
                     <div class="service-card h-100" onclick="openBookingModal('Hair Mask/Relaxing', 'hair-mask')">
                         <img src="{{ asset('images/hair_mask.png') }}" alt="Hair Mask/Relaxing">
                         <h4>Hair Mask/Relaxing</h4>
@@ -2836,7 +2925,7 @@
                         <button class="btn btn-warning mt-3">Book Now</button>
                     </div>
                 </div>
-                <div class="col-lg-4 col-md-6">
+                <div class="col-lg-4 col-md-6 col-6">
                     <div class="service-card h-100" onclick="openBookingModal('Smedium Boho Braids', 'boho-braids')">
                         <img src="{{ asset('images/boho braid.jpg') }}" alt="Smedium Boho Braids">
                         <h4>Smedium Boho Braids</h4>
