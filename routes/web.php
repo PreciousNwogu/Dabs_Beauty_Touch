@@ -87,6 +87,10 @@ Route::get('/test-upload', function () {
     return view('test-upload');
 });
 
+// Public endpoints for blocked dates (used by booking calendar)
+Route::get('/schedules/blocked-dates', [\App\Http\Controllers\Admin\ScheduleController::class, 'blockedDates'])->name('schedules.blocked-dates');
+Route::get('/schedules/blocked-list', [\App\Http\Controllers\Admin\ScheduleController::class, 'blockedList'])->name('schedules.blocked-list');
+
 // Test database route
 Route::get('/test-db', function () {
     try {
@@ -535,10 +539,62 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::put('/schedules/{id}', [\App\Http\Controllers\Admin\ScheduleController::class, 'update'])->name('schedules.update');
     Route::delete('/schedules/{id}', [\App\Http\Controllers\Admin\ScheduleController::class, 'destroy'])->name('schedules.destroy');
     Route::post('/schedules/reschedule', [\App\Http\Controllers\Admin\ScheduleController::class, 'reschedule'])->name('schedules.reschedule');
-    // Public endpoint used by the booking calendar to mark blocked days
-    Route::get('/schedules/blocked-dates', [\App\Http\Controllers\Admin\ScheduleController::class, 'blockedDates'])->name('schedules.blocked-dates');
-    // Public endpoint: list upcoming blocked ranges for users
-    Route::get('/schedules/blocked-list', [\App\Http\Controllers\Admin\ScheduleController::class, 'blockedList'])->name('schedules.blocked-list');
+    
+    // Temporary route to unblock all January dates (GET for easy browser access)
+    Route::get('/schedules/unblock-january', function(Request $request) {
+        try {
+            $year = $request->input('year', date('Y')); // Default to current year
+            $janStart = \Carbon\Carbon::create($year, 1, 1)->startOfDay();
+            $janEnd = \Carbon\Carbon::create($year, 1, 31)->endOfDay();
+            
+            // Find all blocked schedules that overlap with January
+            $blockedSchedules = \App\Models\Schedule::where('type', 'blocked')
+                ->where(function($query) use ($janStart, $janEnd) {
+                    $query->where(function($q) use ($janStart, $janEnd) {
+                        // Schedule starts before or during January and ends after January starts
+                        $q->where('start', '<=', $janEnd)
+                          ->where('end', '>', $janStart);
+                    });
+                })
+                ->get();
+            
+            if ($blockedSchedules->isEmpty()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => "No blocked schedules found for January {$year}",
+                    'deleted_count' => 0
+                ]);
+            }
+            
+            $deletedCount = 0;
+            $deletedTitles = [];
+            
+            foreach ($blockedSchedules as $schedule) {
+                $deletedTitles[] = $schedule->title ?? 'Untitled';
+                $schedule->delete();
+                $deletedCount++;
+            }
+            
+            \Illuminate\Support\Facades\Log::info('Unblocked January dates', [
+                'year' => $year,
+                'deleted_count' => $deletedCount,
+                'deleted_schedules' => $deletedTitles
+            ]);
+            
+            return response()->json([
+                'success' => true,
+                'message' => "Unblocked {$deletedCount} schedule(s) for January {$year}",
+                'deleted_count' => $deletedCount,
+                'deleted_schedules' => $deletedTitles
+            ]);
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Failed to unblock January: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to unblock January: ' . $e->getMessage()
+            ], 500);
+        }
+    })->name('schedules.unblock-january');
 
 });
 
@@ -892,6 +948,38 @@ Route::post('/bookings', function(Request $request) {
         }
 
         Log::info('=== BOOKING DATA PREPARED ===', $bookingData);
+
+        // Check if this date is blocked before creating booking
+        if (!empty($bookingData['appointment_date'])) {
+            try {
+                $appointmentDate = \Carbon\Carbon::parse($bookingData['appointment_date'])->startOfDay();
+                $blockedSchedule = \App\Models\Schedule::where('type', 'blocked')
+                    ->where('start', '<=', $appointmentDate)
+                    ->where('end', '>', $appointmentDate)
+                    ->first();
+
+                if ($blockedSchedule) {
+                    $blockedTitle = $blockedSchedule->title ?? 'Blocked';
+                    $isApiRequest = $request->wantsJson() || $request->header('X-Requested-With') === 'XMLHttpRequest';
+
+                    if ($isApiRequest) {
+                        return response()->json([
+                            'success' => false,
+                            'message' => "This date is blocked: \"{$blockedTitle}\". Please select a different date."
+                        ], 422);
+                    } else {
+                        return redirect()->route('home')
+                            ->with([
+                                'booking_error' => true,
+                                'error_message' => "This date is blocked: \"{$blockedTitle}\". Please select a different date."
+                            ]);
+                    }
+                }
+            } catch (\Exception $e) {
+                Log::warning('Failed to check blocked date for booking: ' . $e->getMessage());
+                // Continue with booking creation if date check fails
+            }
+        }
 
         // Create the booking
         Log::info('=== CREATING BOOKING ===', ['data' => $bookingData]);
