@@ -32,8 +32,18 @@ class ScheduleController extends Controller
             // FullCalendar will render the title on each date.
             if (($slot->type ?? '') === 'blocked' && $slot->start && $slot->end) {
                 try {
-                    $start = Carbon::parse($slot->start)->startOfDay();
-                    $end = Carbon::parse($slot->end)->startOfDay();
+                    // Parse the stored datetime and extract date part in UTC to avoid timezone conversion
+                    // The datetime is stored in UTC, so we parse it as UTC and extract the date
+                    $startParsed = Carbon::parse($slot->start)->utc();
+                    $endParsed = Carbon::parse($slot->end)->utc();
+                    
+                    // Get date strings in UTC
+                    $startDateStr = $startParsed->format('Y-m-d');
+                    $endDateStr = $endParsed->format('Y-m-d');
+                    
+                    // Create UTC dates from the date strings to ensure no timezone shift
+                    $start = Carbon::createFromFormat('Y-m-d H:i:s', $startDateStr . ' 00:00:00', 'UTC')->startOfDay();
+                    $end = Carbon::createFromFormat('Y-m-d H:i:s', $endDateStr . ' 00:00:00', 'UTC')->startOfDay();
 
                     // iterate day-by-day (end is exclusive)
                     for ($d = $start->copy(); $d->lt($end); $d->addDay()) {
@@ -113,51 +123,103 @@ class ScheduleController extends Controller
 
     public function store(Request $request)
     {
-        $data = $request->validate([
-            'title' => 'nullable|string|max:255',
-            'start' => 'required|date',
-            'end' => 'required|date|after:start',
-            'staff_id' => 'nullable|integer',
-            'type' => 'nullable|string',
-        ]);
+        try {
+            $data = $request->validate([
+                'title' => 'nullable|string|max:255',
+                'start' => 'required|date',
+                'end' => 'required|date|after:start',
+                'staff_id' => 'nullable|integer',
+                'type' => 'nullable|string',
+            ]);
 
-        // If creating a blocked range, validate it does not overlap existing bookings
-        if (($data['type'] ?? '') === 'blocked') {
-            try {
-                $s = Carbon::parse($data['start'])->startOfDay();
-                $e = Carbon::parse($data['end'])->startOfDay();
+            // If creating a blocked range, validate it does not overlap existing bookings
+            if (($data['type'] ?? '') === 'blocked') {
+                try {
+                    // Extract date directly from ISO string to avoid timezone conversion issues
+                    // ISO format: "2025-12-31T00:00:00.000Z" - extract YYYY-MM-DD part
+                    $startIso = $data['start'];
+                    $endIso = $data['end'];
+                    
+                    // Extract date part from ISO string (before the 'T')
+                    preg_match('/^(\d{4}-\d{2}-\d{2})T/', $startIso, $startMatch);
+                    preg_match('/^(\d{4}-\d{2}-\d{2})T/', $endIso, $endMatch);
+                    
+                    if (!$startMatch || !$endMatch) {
+                        throw new \Exception('Invalid date format in ISO string');
+                    }
+                    
+                    $startDateStr = $startMatch[1]; // e.g., "2025-12-31"
+                    $endDateStr = $endMatch[1];     // e.g., "2026-01-01"
+                    
+                    // Parse the date components
+                    list($startYear, $startMonth, $startDay) = explode('-', $startDateStr);
+                    list($endYear, $endMonth, $endDay) = explode('-', $endDateStr);
+                    
+                    // Create UTC dates directly from the date components (no timezone conversion)
+                    $s = Carbon::createFromFormat('Y-m-d H:i:s', $startDateStr . ' 00:00:00', 'UTC')->startOfDay();
+                    $e = Carbon::createFromFormat('Y-m-d H:i:s', $endDateStr . ' 00:00:00', 'UTC')->startOfDay();
+                    
+                    // Update the data array with normalized UTC dates to ensure correct storage
+                    $data['start'] = $s->toIso8601String();
+                    $data['end'] = $e->toIso8601String();
+                    
+                    Log::info('Blocked range date normalization', [
+                        'original_start' => $startIso,
+                        'original_end' => $endIso,
+                        'extracted_start_date' => $startDateStr,
+                        'extracted_end_date' => $endDateStr,
+                        'normalized_start' => $data['start'],
+                        'normalized_end' => $data['end']
+                    ]);
 
-                // Find any pending/confirmed bookings that fall within [s, e)
-                $conflicts = Booking::whereIn('status', ['pending', 'confirmed'])
-                    ->whereDate('appointment_date', '>=', $s->toDateString())
-                    ->whereDate('appointment_date', '<', $e->toDateString())
-                    ->get();
+                    // Find any pending/confirmed bookings that fall within [s, e)
+                    $conflicts = Booking::whereIn('status', ['pending', 'confirmed'])
+                        ->whereDate('appointment_date', '>=', $s->toDateString())
+                        ->whereDate('appointment_date', '<', $e->toDateString())
+                        ->get();
 
-                if ($conflicts->isNotEmpty()) {
-                    $list = $conflicts->map(function ($b) {
-                        return [
-                            'id' => $b->id,
-                            'name' => $b->name,
-                            'date' => $b->appointment_date?->toDateString(),
-                            'time' => $b->appointment_time,
-                        ];
-                    });
+                    if ($conflicts->isNotEmpty()) {
+                        $list = $conflicts->map(function ($b) {
+                            return [
+                                'id' => $b->id,
+                                'name' => $b->name,
+                                'date' => $b->appointment_date?->toDateString(),
+                                'time' => $b->appointment_time,
+                            ];
+                        });
 
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'Blocked range overlaps existing pending/confirmed bookings',
-                        'conflicts' => $list,
-                    ], 422);
+                        return response()->json([
+                            'success' => false,
+                            'message' => 'Blocked range overlaps existing pending/confirmed bookings',
+                            'conflicts' => $list,
+                        ], 422);
+                    }
+                } catch (\Exception $e) {
+                    // If parsing fails, continue and let creation happen (but log)
+                    Log::warning('Failed to validate blocked range against bookings: ' . $e->getMessage());
                 }
-            } catch (\Exception $e) {
-                // If parsing fails, continue and let creation happen (but log)
-                Log::warning('Failed to validate blocked range against bookings: ' . $e->getMessage());
             }
+
+            $slot = Schedule::create($data);
+
+            return response()->json(['success' => true, 'slot' => $slot]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => $e->errors()
+            ], 422);
+        } catch (\Exception $e) {
+            Log::error('Failed to create schedule slot: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString(),
+                'request_data' => $request->all()
+            ]);
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to create blocked range: ' . $e->getMessage()
+            ], 500);
         }
-
-        $slot = Schedule::create($data);
-
-        return response()->json(['success' => true, 'slot' => $slot]);
     }
 
     public function update(Request $request, $id)
@@ -294,32 +356,57 @@ class ScheduleController extends Controller
 
         foreach ($blocked as $slot) {
             try {
-                // Parse dates and extract date-only parts to avoid timezone conversion issues
-                // This ensures we only block the selected date(s), not the day before
-                $sParsed = Carbon::parse($slot->start);
-                $sDateOnly = $sParsed->toDateString(); // Gets YYYY-MM-DD format
-                $s = Carbon::createFromFormat('Y-m-d H:i:s', $sDateOnly . ' 00:00:00', 'UTC')->startOfDay();
-                
+                // Parse dates using the application timezone and extract date-only parts
+                // Avoid forcing UTC here because that can shift local-midnight values back one day.
+                $appTz = config('app.timezone') ?: date_default_timezone_get();
+                $sParsed = Carbon::parse($slot->start)->setTimezone($appTz);
+                $sDateOnly = $sParsed->format('Y-m-d'); // YYYY-MM-DD in app timezone
+                $s = Carbon::createFromFormat('Y-m-d H:i:s', $sDateOnly . ' 00:00:00', $appTz)->startOfDay();
+
                 // End date: use the date part only (exclusive boundary - represents start of day after last blocked day)
-                $eParsed = Carbon::parse($slot->end);
-                $eDateOnly = $eParsed->toDateString(); // Gets YYYY-MM-DD format
-                $e = Carbon::createFromFormat('Y-m-d H:i:s', $eDateOnly . ' 00:00:00', 'UTC')->startOfDay();
+                $eParsed = Carbon::parse($slot->end)->setTimezone($appTz);
+                $eDateOnly = $eParsed->format('Y-m-d'); // YYYY-MM-DD in app timezone
+                $e = Carbon::createFromFormat('Y-m-d H:i:s', $eDateOnly . ' 00:00:00', $appTz)->startOfDay();
 
                 // overlap window clipped to requested month
                 $iterStart = $s->copy()->max($start);
                 $iterEnd = $e->copy()->min($end);
 
+                // Log for debugging
+                Log::debug('Processing blocked slot', [
+                    'slot_id' => $slot->id,
+                    'slot_start' => $slot->start,
+                    'slot_end' => $slot->end,
+                    'parsed_start' => $s->toDateString(),
+                    'parsed_end' => $e->toDateString(),
+                    'requested_month_start' => $start->toDateString(),
+                    'requested_month_end' => $end->toDateString(),
+                    'iter_start' => $iterStart->toDateString(),
+                    'iter_end' => $iterEnd->toDateString(),
+                ]);
+
                 // Iterate through dates: from iterStart (inclusive) to iterEnd (exclusive)
                 // This ensures we only block the selected date(s), not the day before
-                for ($d = $iterStart->copy(); $d->lt($iterEnd); $d->addDay()) {
+                for ($d = $iterStart->copy(); $d->lt($iterEnd->copy()); $d->addDay()) {
+                    // Ensure date is formatted consistently as YYYY-MM-DD in UTC
+                    $dateStr = $d->format('Y-m-d');
                     $dates[] = [
-                        'date' => $d->toDateString(),
+                        'date' => $dateStr,
                         'title' => $slot->title ?? 'Blocked',
                         'slot_id' => $slot->id,
                     ];
+                    Log::debug('Added blocked date', [
+                        'date' => $dateStr,
+                        'title' => $slot->title ?? 'Blocked',
+                        'slot_id' => $slot->id,
+                    ]);
                 }
             } catch (\Exception $e) {
-                // ignore malformed slots
+                // Log error instead of silently ignoring
+                Log::warning('Failed to process blocked slot', [
+                    'slot_id' => $slot->id ?? 'unknown',
+                    'error' => $e->getMessage(),
+                ]);
                 continue;
             }
         }
@@ -333,6 +420,16 @@ class ScheduleController extends Controller
         }
 
         $out = array_values($unique);
+        
+        // Log final result for debugging
+        Log::debug('Blocked dates API response', [
+            'year' => $year,
+            'month' => $month,
+            'requested_range' => $start->toDateString() . ' to ' . $end->toDateString(),
+            'total_blocked_slots' => $blocked->count(),
+            'dates_found' => count($out),
+            'dates' => array_column($out, 'date'),
+        ]);
 
         return response()->json(['success' => true, 'blocked_dates' => $out]);
     }

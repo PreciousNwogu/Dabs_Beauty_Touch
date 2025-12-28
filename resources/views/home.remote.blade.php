@@ -182,13 +182,13 @@
 
         /* About Section Styles */
         .about-section {
-            padding: 80px 0;
+            padding: 50px 0;
             background-color: #f8f9fa;
         }
 
         @media (max-width: 768px) {
             .about-section {
-                padding: 60px 0;
+                padding: 40px 0;
             }
 
             .about-section .card {
@@ -244,13 +244,13 @@
 
         /* Contact Section Styles */
         .contact-section {
-            padding: 80px 0;
+            padding: 50px 0;
             background-color: #fff;
         }
 
         @media (max-width: 768px) {
             .contact-section {
-                padding: 60px 0;
+                padding: 40px 0;
             }
 
             .contact-section .card {
@@ -309,14 +309,14 @@
         }
 
         .services-section {
-            padding: 80px 0;
+            padding: 50px 0;
             background-color: #f8f9fa;
         }
 
         /* Services Section Mobile Styles */
         @media (max-width: 768px) {
             .services-section {
-                padding: 50px 0;
+                padding: 40px 0;
             }
 
             .services-section .container {
@@ -589,7 +589,7 @@
         /* Image Slider Mobile Improvements */
         @media (max-width: 768px) {
             .image-slider-section {
-                padding: 60px 0 !important;
+                padding: 40px 0 !important;
             }
 
             .carousel-inner .row {
@@ -1601,15 +1601,20 @@
 
         // Helper: format a Date as local YYYY-MM-DD (avoids timezone shifts from toISOString())
         function formatYMD(d){
-            try{
-                const yyyy = d.getFullYear();
-                const mm = String(d.getMonth() + 1).padStart(2, '0');
-                const dd = String(d.getDate()).padStart(2, '0');
-                return `${yyyy}-${mm}-${dd}`;
-            }catch(e){
-                // fallback to ISO split if something unexpected
-                try{ return d.toISOString().split('T')[0]; }catch(er){ return ''+d; }
+            // Extract date components directly to avoid timezone conversion
+            if (!d || !(d instanceof Date)) {
+                try {
+                    // Try to parse if it's a string or other format
+                    d = new Date(d);
+                    if (isNaN(d.getTime())) return '';
+                } catch(e) {
+                    return '';
+                }
             }
+            const year = d.getFullYear();
+            const month = String(d.getMonth() + 1).padStart(2, '0');
+            const day = String(d.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
         }
     let bookedDatesCache = []; // Cache for booked dates
     let blockedDatesCache = []; // Cache for admin blocked dates (objects {date,title,slot_id})
@@ -1676,7 +1681,9 @@
         // Fetch real booked dates from API
         function fetchRealBookedDates() {
             const year = calendarCurrentDate.getFullYear();
-            const month = calendarCurrentDate.getMonth() + 1;
+            const month = calendarCurrentDate.getMonth() + 1; // 1-based month for API
+            
+            console.log(`📅 Fetching blocked dates for ${year}-${month}`);
 
             const bookedPromise = fetch('/api/booked-dates').then(r => r.json()).catch(e => { console.error('Booked-dates fetch failed', e); return null; });
             const blockedPromise = fetch(`/schedules/blocked-dates?year=${year}&month=${month}`).then(r => r.json()).catch(e => { console.error('Blocked-dates fetch failed', e); return null; });
@@ -1690,13 +1697,16 @@
 
                 if (blockedResp && blockedResp.success) {
                     blockedDatesCache = blockedResp.blocked_dates || [];
-                    console.log('Blocked dates from API:', blockedDatesCache);
-                    console.log('Blocked dates count:', blockedDatesCache.length);
+                    console.log('✅ Blocked dates from API:', blockedDatesCache);
+                    console.log('📊 Blocked dates count:', blockedDatesCache.length);
                     if (blockedDatesCache.length > 0) {
-                        console.log('Sample blocked date:', blockedDatesCache[0]);
+                        console.log('📋 All blocked dates:', blockedDatesCache.map(b => `${b.date} (${b.title || 'Blocked'})`).join(', '));
+                        console.log('📋 Sample blocked date:', blockedDatesCache[0]);
+                    } else {
+                        console.log('⚠️ No blocked dates returned for this month');
                     }
                 } else {
-                    console.warn('Blocked dates API response:', blockedResp);
+                    console.warn('❌ Blocked dates API response failed:', blockedResp);
                 }
 
                 // Re-render calendar with combined data
@@ -1782,6 +1792,11 @@
                 const date = new Date(startDate);
                 date.setDate(startDate.getDate() + i);
                 const dateString = formatYMD(date);
+                
+                // Ensure dateString is in YYYY-MM-DD format for consistent matching
+                if (!/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
+                    console.warn('Invalid dateString format:', dateString, 'from date:', date);
+                }
 
                 const dayDiv = document.createElement('div');
                 dayDiv.className = 'col calendar-day';
@@ -1801,14 +1816,25 @@
                     // Check blocked first
                     const blockedIndex = (blockedDatesCache || []).reduce((acc, b) => { 
                         if (b && b.date) {
-                            acc[b.date] = b; 
+                            // Normalize date string to YYYY-MM-DD format for consistent matching
+                            const normalizedDate = b.date.trim();
+                            if (/^\d{4}-\d{2}-\d{2}$/.test(normalizedDate)) {
+                                acc[normalizedDate] = b;
+                            } else {
+                                console.warn('⚠️ Invalid blocked date format:', b.date, 'from blocked date object:', b);
+                            }
                         }
                         return acc; 
                     }, {});
                     
-                    // Debug: log blocked index for first few dates
-                    if (i < 5 && Object.keys(blockedIndex).length > 0) {
-                        console.log(`Date ${dateString} blocked check:`, blockedIndex[dateString] ? 'BLOCKED' : 'not blocked', 'Blocked index keys:', Object.keys(blockedIndex).slice(0, 5));
+                    // Debug: log blocked dates
+                    if (blockedIndex[dateString]) {
+                        console.log(`⛔ Date ${dateString} is BLOCKED:`, blockedIndex[dateString]);
+                    }
+                    // Log all blocked dates once at the start
+                    if (i === 0 && Object.keys(blockedIndex).length > 0) {
+                        console.log('📋 All blocked dates in cache:', Object.keys(blockedIndex).sort());
+                        console.log('📋 Blocked dates full details:', blockedDatesCache);
                     }
 
                     if (bookedDatesCache.includes(dateString)) {
@@ -2112,12 +2138,14 @@
 
         window.previousMonth = function() {
             calendarCurrentDate.setMonth(calendarCurrentDate.getMonth() - 1);
+            console.log('⬅️ Previous month clicked, new date:', calendarCurrentDate);
             // Fetch blocked dates for the new month
             fetchRealBookedDates();
         };
 
         window.nextMonth = function() {
             calendarCurrentDate.setMonth(calendarCurrentDate.getMonth() + 1);
+            console.log('➡️ Next month clicked, new date:', calendarCurrentDate);
             // Fetch blocked dates for the new month
             fetchRealBookedDates();
         };
@@ -2158,7 +2186,7 @@
     </section>
 
     <!-- Image Slider Section -->
-    <section class="image-slider-section" style="padding: 80px 0; background: linear-gradient(135deg, #f8f9fa 0%, #e3eafc 100%);">
+    <section class="image-slider-section" style="padding: 50px 0; background: linear-gradient(135deg, #f8f9fa 0%, #e3eafc 100%);">
         <div class="container">
             <div class="text-center mb-5">
                 <h2 class="section-title" style="font-size: 2.5rem; font-weight: 700; color: #030f68;">Customer Transformations</h2>
@@ -2592,7 +2620,7 @@
     </section>
 
     <!-- Terms and Conditions Section -->
-    <section id="terms" class="section section-xl" style="padding: 80px 0; background-color: #f8f9fa;">
+    <section id="terms" class="section section-xl" style="padding: 50px 0; background-color: #f8f9fa;">
         <div class="container">
             <div class="row justify-content-center">
                 <div class="col-lg-10">
@@ -2787,7 +2815,7 @@
     </section>
 
     <!-- Reviews Section -->
-    <div class="section section-lg bg-gray-150" style="padding: 80px 0; background: #f8f9fa;">
+    <div class="section section-lg bg-gray-150" style="padding: 50px 0; background: #f8f9fa;">
         <div class="text-center mb-5">
             <p class="subtitle" style="font-size:1.5rem; color:#ff6600; font-weight:600;">Our customers love DBT</p>
             <div class="subtitle-box" style="display:inline-block; margin-bottom:18px;">
@@ -2824,7 +2852,7 @@
 
     <!-- About Section -->
     <section id="about" class="about-section">
-        <div class="container" style="padding-top: 60px; padding-bottom: 60px;">
+        <div class="container" style="padding-top: 40px; padding-bottom: 40px;">
             <div class="row justify-content-center align-items-center">
                 <div class="col-lg-10">
                     <div class="card flex-row shadow-lg border-0" style="border-radius: 24px; overflow: hidden; background: #fff;">
@@ -2845,7 +2873,7 @@
 
     <!-- Services Section -->
     <section id="services" class="services-section">
-        <div class="container" style="padding-top: 60px; padding-bottom: 60px;">
+        <div class="container" style="padding-top: 40px; padding-bottom: 40px;">
             <div class="text-center mb-5">
                 <h2 class="section-title" style="font-weight: 700;">Our Services</h2>
                 <p class="lead">Professional hair braiding and styling services</p>
@@ -3771,7 +3799,7 @@
             }catch(e){ console.warn('moveKidsModal failed', e); }
         })();
     </script>
-    <div class="section section-xl" style="padding: 80px 0; background-color: #fff;">
+    <div class="section section-xl" style="padding: 50px 0; background-color: #fff;">
         <div class="container">
             <div class="row justify-content-center">
                 <div class="col-lg-10">
@@ -3920,7 +3948,7 @@
     </div>
     <!-- Contact Section -->
     <section id="contact" class="contact-section">
-        <div class="container" style="padding-top: 60px; padding-bottom: 60px;">
+        <div class="container" style="padding-top: 40px; padding-bottom: 40px;">
             <div class="row justify-content-center align-items-center">
                 <div class="col-lg-10">
                     <div class="card flex-row shadow-lg border-0" style="border-radius: 24px; overflow: hidden; background: #fff;">

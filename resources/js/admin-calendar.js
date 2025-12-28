@@ -24,6 +24,7 @@ document.addEventListener('DOMContentLoaded', () => {
         nowIndicator: true,
         editable: true,
         selectable: true,
+        timeZone: 'UTC', // Use UTC to avoid timezone conversion issues with blocked dates
         events: eventsUrl,
         eventDrop: function(info) {
             const id = info.event.id;
@@ -222,19 +223,29 @@ document.addEventListener('DOMContentLoaded', () => {
                 return; 
             }
 
-            let start = new Date(startInput);
-            let end = new Date(endInput);
+            // Parse datetime-local input directly to avoid timezone conversion issues
+            // datetime-local format: "YYYY-MM-DDTHH:mm" (no timezone, local time)
+            let start, end;
             
             if (allDay) {
-                // For all-day blocks, normalize to full days using local date components
-                // This ensures we only block the selected date(s) without timezone issues
-                const startYear = start.getFullYear();
-                const startMonth = start.getMonth();
-                const startDate = start.getDate();
+                // For all-day blocks, parse the date part directly from the input string
+                // Format: "YYYY-MM-DDTHH:mm" - we only care about the date part
+                const startMatch = startInput.match(/^(\d{4})-(\d{2})-(\d{2})/);
+                const endMatch = endInput.match(/^(\d{4})-(\d{2})-(\d{2})/);
                 
-                const endYear = end.getFullYear();
-                const endMonth = end.getMonth();
-                const endDate = end.getDate();
+                if (!startMatch || !endMatch) {
+                    alert('⚠️ Invalid date format. Please select valid dates.');
+                    return;
+                }
+                
+                // Extract date components directly from the string (no timezone conversion)
+                const startYear = parseInt(startMatch[1], 10);
+                const startMonth = parseInt(startMatch[2], 10) - 1; // JavaScript months are 0-indexed
+                const startDate = parseInt(startMatch[3], 10);
+                
+                const endYear = parseInt(endMatch[1], 10);
+                const endMonth = parseInt(endMatch[2], 10) - 1; // JavaScript months are 0-indexed
+                const endDate = parseInt(endMatch[3], 10);
                 
                 // Check if same date selected (single day block)
                 const isSameDate = startYear === endYear && 
@@ -242,16 +253,29 @@ document.addEventListener('DOMContentLoaded', () => {
                                    startDate === endDate;
                 
                 if (isSameDate) {
-                    // Single date: start at 00:00 of selected date, end at 00:00 of next day
-                    start = new Date(startYear, startMonth, startDate, 0, 0, 0, 0);
-                    end = new Date(startYear, startMonth, startDate + 1, 0, 0, 0, 0);
+                    // Single date: start at 00:00 UTC of selected date, end at 00:00 UTC of next day
+                    start = new Date(Date.UTC(startYear, startMonth, startDate, 0, 0, 0, 0));
+                    end = new Date(Date.UTC(startYear, startMonth, startDate + 1, 0, 0, 0, 0));
                 } else {
-                    // Date range: start at 00:00 of start date, end at 00:00 of day after end date
-                    start = new Date(startYear, startMonth, startDate, 0, 0, 0, 0);
-                    end = new Date(endYear, endMonth, endDate + 1, 0, 0, 0, 0);
+                    // Date range: start at 00:00 UTC of start date, end at 00:00 UTC of day after end date
+                    // End date is exclusive, so we add 1 day to include the end date itself
+                    start = new Date(Date.UTC(startYear, startMonth, startDate, 0, 0, 0, 0));
+                    end = new Date(Date.UTC(endYear, endMonth, endDate + 1, 0, 0, 0, 0));
                 }
+                
+                console.log('All-day block dates:', {
+                    input: { start: startInput, end: endInput },
+                    parsed: { 
+                        start: `${startYear}-${String(startMonth + 1).padStart(2, '0')}-${String(startDate).padStart(2, '0')}`,
+                        end: `${endYear}-${String(endMonth + 1).padStart(2, '0')}-${String(endDate).padStart(2, '0')}`
+                    },
+                    utc: { start: start.toISOString(), end: end.toISOString() }
+                });
             } else {
-                // For time-specific blocks, ensure end is after start
+                // For time-specific blocks, parse the full datetime
+                start = new Date(startInput);
+                end = new Date(endInput);
+                
                 if (end <= start) {
                     alert('⚠️ End date must be after start date');
                     return;
@@ -263,14 +287,51 @@ document.addEventListener('DOMContentLoaded', () => {
             submitBlockBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Creating...';
 
             try {
+                console.log('Creating blocked range:', { 
+                    title, 
+                    allDay,
+                    input: { start: startInput, end: endInput },
+                    parsed: { start: start.toISOString(), end: end.toISOString() },
+                    storeUrl, 
+                    csrf: csrf ? 'present' : 'missing' 
+                });
+                
                 const res = await fetch(storeUrl, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrf },
+                    headers: { 
+                        'Content-Type': 'application/json', 
+                        'X-CSRF-TOKEN': csrf,
+                        'Accept': 'application/json'
+                    },
                     body: JSON.stringify({ title, start: start.toISOString(), end: end.toISOString(), type: 'blocked' })
                 });
+                
+                console.log('Response status:', res.status, res.statusText);
+                console.log('Response headers:', Object.fromEntries(res.headers.entries()));
+                
+                // Check if response is ok
+                if (!res.ok) {
+                    const errorText = await res.text();
+                    console.error('Server error response:', errorText);
+                    let errorMessage = 'Failed to create blocked range';
+                    try {
+                        const errorData = JSON.parse(errorText);
+                        errorMessage = errorData.message || errorData.error || errorMessage;
+                        if (errorData.conflicts && Array.isArray(errorData.conflicts)) {
+                            errorMessage += '\n\nConflicts with existing bookings:\n' + 
+                                errorData.conflicts.map(c => `- ${c.name} on ${c.date} at ${c.time}`).join('\n');
+                        }
+                    } catch (e) {
+                        errorMessage += ` (${res.status} ${res.statusText})`;
+                    }
+                    alert('❌ ' + errorMessage);
+                    return;
+                }
+                
                 const data = await res.json();
+                console.log('Block created response:', data);
+                
                 if (data.success) {
-                    console.log('Block created response:', data);
                     // close modal
                     try { window._blockModalInstance?.hide(); } catch (e) {}
                     // refresh calendar and jump to the start of the block to make it visible
@@ -290,11 +351,22 @@ document.addEventListener('DOMContentLoaded', () => {
                     setTimeout(() => alertDiv.remove(), 5000);
                 } else {
                     console.warn('Failed to create block:', data);
-                    alert('❌ Failed to create block: ' + (data.message || 'Unknown error'));
+                    let errorMessage = data.message || 'Unknown error';
+                    if (data.conflicts && Array.isArray(data.conflicts)) {
+                        errorMessage += '\n\nConflicts with existing bookings:\n' + 
+                            data.conflicts.map(c => `- ${c.name} on ${c.date} at ${c.time}`).join('\n');
+                    }
+                    alert('❌ Failed to create block: ' + errorMessage);
                 }
             } catch (err) {
-                console.error('Block create error', err);
-                alert('❌ Error creating blocked range. Please check the console for details.');
+                console.error('Block create error:', err);
+                console.error('Error details:', {
+                    message: err.message,
+                    stack: err.stack,
+                    storeUrl,
+                    csrf: csrf ? 'present' : 'missing'
+                });
+                alert('❌ Error creating blocked range: ' + (err.message || 'Network or server error. Please check the console for details.'));
             } finally {
                 submitBlockBtn.disabled = false;
                 submitBlockBtn.innerHTML = '<i class="bi bi-slash-circle me-2"></i>Create Block';
