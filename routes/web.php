@@ -532,6 +532,91 @@ Route::prefix('admin')->name('admin.')->group(function () {
         }
     })->name('bookings.search');
 
+    Route::post('/bookings/search-complete', function(Request $request) {
+        try {
+            $query = \App\Models\Booking::query();
+
+            // Only show bookings that can be completed (pending or confirmed)
+            $query->whereIn('status', ['pending', 'confirmed']);
+
+            // Search by ID (from query params or JSON body)
+            $bookingId = $request->input('booking_id') ?? $request->booking_id;
+            if ($bookingId) {
+                $query->where('id', $bookingId);
+            }
+
+            // Search by customer name
+            $customerName = $request->input('customer_name') ?? $request->customer_name;
+            if ($customerName) {
+                $query->where('name', 'LIKE', '%' . $customerName . '%');
+            }
+
+            // Search by date
+            $date = $request->input('date') ?? $request->date;
+            if ($date) {
+                $query->whereDate('appointment_date', $date);
+            }
+
+            // Search by service name
+            $service = $request->input('service') ?? $request->service;
+            if ($service) {
+                $query->where('service', 'LIKE', '%' . $service . '%');
+            }
+
+            // If no search criteria provided, return empty result
+            if (!$bookingId && !$customerName && !$date && !$service) {
+                return response()->json([
+                    'success' => true,
+                    'bookings' => [],
+                    'count' => 0
+                ]);
+            }
+
+            $bookings = $query->orderBy('appointment_date', 'desc')
+                             ->orderBy('appointment_time', 'desc')
+                             ->get();
+
+            $formattedBookings = $bookings->map(function($booking) {
+                $formattedDate = null;
+                if ($booking->appointment_date) {
+                    try {
+                        $formattedDate = is_string($booking->appointment_date)
+                            ? date('M j, Y', strtotime($booking->appointment_date))
+                            : $booking->appointment_date->format('M j, Y');
+                    } catch (\Exception $e) {
+                        $formattedDate = $booking->appointment_date;
+                    }
+                }
+
+                return [
+                    'id' => $booking->id,
+                    'name' => $booking->name,
+                    'email' => $booking->email,
+                    'phone' => $booking->phone,
+                    'service' => $booking->service,
+                    'appointment_date' => $formattedDate,
+                    'appointment_date_raw' => $booking->appointment_date ? (is_string($booking->appointment_date) ? $booking->appointment_date : $booking->appointment_date->format('Y-m-d')) : null,
+                    'appointment_time' => $booking->appointment_time,
+                    'status' => $booking->status,
+                    'final_price' => $booking->final_price
+                ];
+            });
+
+            return response()->json([
+                'success' => true,
+                'bookings' => $formattedBookings,
+                'count' => $formattedBookings->count()
+            ]);
+
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Error searching bookings for completion: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Error searching for bookings: ' . $e->getMessage()
+            ], 500);
+        }
+    })->name('bookings.search-complete');
+
     // Admin schedule management (FullCalendar events)
     Route::get('/schedules', [\App\Http\Controllers\Admin\ScheduleController::class, 'index'])->name('schedules.index');
     Route::get('/schedules/events', [\App\Http\Controllers\Admin\ScheduleController::class, 'events'])->name('schedules.events');

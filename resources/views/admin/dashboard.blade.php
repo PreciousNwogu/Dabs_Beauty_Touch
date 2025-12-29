@@ -246,16 +246,289 @@
             border-color: #007bff;
         }
 
+        /* Mobile Responsive Styles */
         @media (max-width: 768px) {
+            .dashboard-container {
+                margin: 10px 0;
+                border-radius: 15px;
+            }
+
+            .dashboard-header {
+                padding: 20px 15px;
+            }
+
+            .dashboard-header h1 {
+                font-size: 1.5rem;
+            }
+
+            .stats-card {
+                padding: 20px 15px;
+                margin: 10px 0;
+            }
+
+            .stats-number {
+                font-size: 2rem;
+            }
+
+            .stats-label {
+                font-size: 1rem;
+            }
+
             .btn-group-vertical {
                 display: flex;
                 flex-direction: column;
             }
+
+            .btn-group-vertical .btn {
+                margin-bottom: 5px;
+            }
+
             .table-responsive {
                 font-size: 0.875rem;
+                -webkit-overflow-scrolling: touch;
             }
+
             .modal-xl {
                 max-width: 95%;
+            }
+
+            .modal-dialog {
+                margin: 10px;
+                max-width: calc(100% - 20px);
+            }
+
+            .modal-lg {
+                max-width: calc(100% - 20px);
+            }
+
+            .modal-xl {
+                max-width: calc(100% - 20px);
+            }
+
+            .modal-body {
+                padding: 15px;
+            }
+
+            .modal-header {
+                padding: 15px;
+            }
+
+            .appointment-card {
+                margin: 10px 0;
+            }
+
+            .appointment-header {
+                padding: 15px;
+                flex-direction: column;
+                align-items: flex-start !important;
+            }
+
+            .appointment-header .btn-group {
+                width: 100%;
+                margin-top: 10px;
+            }
+
+            .appointment-header .btn-group .btn {
+                flex: 1;
+            }
+
+            .filter-section {
+                padding: 15px;
+            }
+
+            .filter-section .row {
+                margin: 0;
+            }
+
+            .filter-section .col-md-3,
+            .filter-section .col-md-4,
+            .filter-section .col-md-2,
+            .filter-section .col-md-1 {
+                margin-bottom: 15px;
+            }
+
+            /* Hide table on mobile, show card layout */
+            .table-mobile-hide {
+                display: none;
+            }
+
+            /* Mobile card layout for appointments */
+            .appointment-mobile-card {
+                display: block;
+                background: white;
+                border-radius: 12px;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+                padding: 15px;
+                margin-bottom: 15px;
+            }
+
+            .appointment-mobile-card .card-header-mobile {
+                border-bottom: 2px solid #e9ecef;
+                padding-bottom: 10px;
+                margin-bottom: 15px;
+            }
+
+            .appointment-mobile-card .card-header-mobile .booking-id {
+                font-size: 1.2rem;
+                font-weight: bold;
+                color: #030f68;
+                margin-bottom: 5px;
+            }
+
+            .appointment-mobile-card .card-row {
+                display: flex;
+                justify-content: space-between;
+                padding: 8px 0;
+                border-bottom: 1px solid #f0f0f0;
+            }
+
+            .appointment-mobile-card .card-row:last-child {
+                border-bottom: none;
+            }
+
+            .appointment-mobile-card .card-label {
+                font-weight: 600;
+                color: #666;
+                font-size: 0.9rem;
+            }
+
+            .appointment-mobile-card .card-value {
+                color: #333;
+                text-align: right;
+                flex: 1;
+                margin-left: 10px;
+            }
+
+            .appointment-mobile-card .card-actions {
+                margin-top: 15px;
+                display: flex;
+                gap: 8px;
+                flex-wrap: wrap;
+            }
+
+            .appointment-mobile-card .card-actions .btn {
+                flex: 1;
+                min-width: 100px;
+            }
+
+            /* Calendar mobile styles */
+            .calendar-responsive {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+
+            #adminCalendar {
+                min-height: 500px !important;
+            }
+
+            .fc-toolbar {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .fc-toolbar-chunk {
+                display: flex;
+                justify-content: center;
+                flex-wrap: wrap;
+            }
+
+            .fc-button {
+                padding: 0.4rem 0.8rem;
+                font-size: 0.875rem;
+                min-height: 44px;
+            }
+
+            .fc-header-toolbar {
+                margin-bottom: 1em;
+            }
+
+            .fc-dayGridMonth-view,
+            .fc-timeGridWeek-view,
+            .fc-timeGridDay-view {
+                font-size: 0.875rem;
+            }
+
+            .fc-event {
+                font-size: 0.75rem;
+                padding: 2px 4px;
+            }
+
+            .fc-col-header-cell {
+                font-size: 0.875rem;
+                padding: 8px 4px;
+            }
+
+            .fc-daygrid-day-frame {
+                min-height: 60px;
+            }
+
+            /* Navbar mobile improvements */
+            .navbar-brand {
+                font-size: 1rem;
+            }
+
+            .navbar-brand img {
+                height: 30px;
+            }
+
+            .navbar-collapse {
+                background: rgba(255, 255, 255, 0.98);
+                margin-top: 10px;
+                border-radius: 8px;
+                padding: 10px;
+                box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            }
+
+            /* Touch-friendly buttons */
+            .btn {
+                min-height: 44px;
+                padding: 10px 15px;
+            }
+
+            .btn-sm {
+                min-height: 38px;
+                padding: 8px 12px;
+            }
+
+            /* Container padding on mobile */
+            .container {
+                padding-left: 15px;
+                padding-right: 15px;
+            }
+
+            body > .container {
+                margin-top: 80px !important;
+            }
+
+            /* Pagination mobile */
+            .pagination {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+
+            .pagination .page-link {
+                padding: 0.5rem 0.75rem;
+                font-size: 0.875rem;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .dashboard-header h1 {
+                font-size: 1.25rem;
+            }
+
+            .stats-number {
+                font-size: 1.75rem;
+            }
+
+            .appointment-mobile-card .card-actions .btn {
+                min-width: 80px;
+                font-size: 0.875rem;
+            }
+
+            .fc-button {
+                padding: 0.3rem 0.6rem;
+                font-size: 0.75rem;
             }
         }
 
@@ -297,6 +570,16 @@
             display: flex;
             align-items: center;
             height: 38px;
+            font-size: 0.875rem;
+        }
+
+        @media (max-width: 768px) {
+            .pagination-info {
+                height: auto;
+                margin-bottom: 10px;
+                justify-content: center;
+                text-align: center;
+            }
         }
     </style>
     <!-- FullCalendar CSS (loaded from CDN to avoid deep-import issues during Vite analysis) -->
@@ -391,26 +674,26 @@
             </div>
 
             <!-- Statistics -->
-            <div class="row p-4">
-                <div class="col-md-3">
+            <div class="row p-4 p-md-4 p-3">
+                <div class="col-6 col-md-3">
                     <div class="stats-card">
                         <div class="stats-number">{{ $stats['total_bookings'] }}</div>
                         <div class="stats-label">Total Appointments</div>
                     </div>
                 </div>
-                <div class="col-md-3">
+                <div class="col-6 col-md-3">
                     <div class="stats-card">
                         <div class="stats-number">{{ $stats['today_bookings'] }}</div>
                         <div class="stats-label">Today's Appointments</div>
                     </div>
                 </div>
-                <div class="col-md-3">
+                <div class="col-6 col-md-3">
                     <div class="stats-card">
                         <div class="stats-number">{{ $stats['pending_bookings'] }}</div>
                         <div class="stats-label">Pending</div>
                     </div>
                 </div>
-                <div class="col-md-3">
+                <div class="col-6 col-md-3">
                     <div class="stats-card">
                         <div class="stats-number">{{ $stats['confirmed_bookings'] }}</div>
                         <div class="stats-label">Confirmed</div>
@@ -419,20 +702,20 @@
             </div>
 
             <!-- Revenue Stats -->
-            <div class="row mb-4">
-                <div class="col-md-4">
+            <div class="row mb-4 px-4 px-md-4 px-3">
+                <div class="col-12 col-md-4 mb-3 mb-md-0">
                     <div class="stats-card bg-success text-white">
                         <div class="stats-number">$<span>{{ number_format($stats['today_revenue'], 2) }}</span></div>
                         <div class="stats-label">Today's Revenue</div>
                     </div>
                 </div>
-                <div class="col-md-4">
+                <div class="col-12 col-md-4 mb-3 mb-md-0">
                     <div class="stats-card bg-primary text-white">
                         <div class="stats-number">$<span>{{ number_format($stats['monthly_revenue'], 2) }}</span></div>
                         <div class="stats-label">This Month</div>
                     </div>
                 </div>
-                <div class="col-md-4">
+                <div class="col-12 col-md-4">
                     <div class="stats-card bg-info text-white">
                         <div class="stats-number">{{ $stats['completed_bookings'] }}</div>
                         <div class="stats-label">Completed</div>
@@ -442,7 +725,7 @@
 
                     <!-- Block Dates Modal -->
                     <div class="modal fade" id="blockModal" tabindex="-1">
-                        <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
                             <div class="modal-content" style="border-radius: 12px; overflow: hidden; box-shadow: 0 10px 40px rgba(0,0,0,0.2);">
                                 <div class="modal-header" style="background: linear-gradient(135deg, #dc3545 0%, #c82333 100%); color: white; border-bottom: none; padding: 20px 24px;">
                                     <div class="d-flex align-items-center">
@@ -559,7 +842,7 @@
 
                                 <!-- Manage Blocks Modal -->
                                 <div class="modal fade" id="manageBlocksModal" tabindex="-1">
-                                    <div class="modal-dialog modal-lg modal-dialog-centered">
+                                    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
                                         <div class="modal-content" style="border-radius: 12px; overflow: hidden; box-shadow: 0 10px 40px rgba(0,0,0,0.2);">
                                             <div class="modal-header" style="background: linear-gradient(135deg, #6c757d 0%, #495057 100%); color: white; border-bottom: none; padding: 20px 24px;">
                                                 <div class="d-flex align-items-center">
@@ -610,10 +893,13 @@
                                 <button id="openManageBlocks" class="btn btn-outline-secondary btn-sm">
                                     <i class="bi bi-list-ul me-1"></i>Manage Blocks
                                 </button>
+                                <button id="openCompleteServicesModal" class="btn btn-outline-success btn-sm">
+                                    <i class="bi bi-award me-1"></i>Complete Services
+                                </button>
                             </div>
                         </div>
                         <div class="appointment-body">
-                            <div id="adminCalendar" data-events-url="{{ route('admin.schedules.events') }}" data-reschedule-url="{{ route('admin.schedules.reschedule') }}" data-store-url="{{ route('admin.schedules.store') }}" style="max-width: 100%; min-height: 650px;"></div>
+                            <div id="adminCalendar" data-events-url="{{ route('admin.schedules.events') }}" data-reschedule-url="{{ route('admin.schedules.reschedule') }}" data-store-url="{{ route('admin.schedules.store') }}" style="max-width: 100%; min-height: 650px;" class="calendar-responsive"></div>
                         </div>
                     </div>
                 </div>
@@ -621,9 +907,9 @@
 
 
             <!-- Filters -->
-        <div class="filter-section">
-            <div class="row align-items-center">
-                <div class="col-md-3">
+        <div class="filter-section px-4 px-md-4 px-3 py-3">
+            <div class="row align-items-end">
+                <div class="col-12 col-md-3 mb-3 mb-md-0">
                     <label for="statusFilter" class="form-label">Status Filter</label>
                     <select class="form-select" id="statusFilter">
                         <option value="">All Statuses</option>
@@ -633,11 +919,11 @@
                         <option value="cancelled">Cancelled</option>
                     </select>
                 </div>
-                <div class="col-md-3">
+                <div class="col-12 col-md-3 mb-3 mb-md-0">
                     <label for="dateFilter" class="form-label">Date Filter</label>
                     <input type="date" class="form-control" id="dateFilter">
                 </div>
-                <div class="col-md-3">
+                <div class="col-12 col-md-3 mb-3 mb-md-0">
                     <label for="serviceFilter" class="form-label">Service Filter</label>
                     <select class="form-select" id="serviceFilter">
                         <option value="">All Services</option>
@@ -652,20 +938,21 @@
                         <option value="Smedium Boho Braids">Smedium Boho Braids</option>
                     </select>
                 </div>
-                <div class="col-md-2">
-                    <label class="form-label">&nbsp;</label>
+                <div class="col-6 col-md-2 mb-3 mb-md-0">
+                    <label class="form-label d-none d-md-block">&nbsp;</label>
                     <button class="btn btn-primary w-100" type="button" onclick="applyFilters()">
-                        <i class="bi bi-search me-2"></i>Filter
+                        <i class="bi bi-search me-2"></i><span class="d-none d-md-inline">Filter</span><span class="d-md-none">Filter</span>
                     </button>
                 </div>
-                <div class="col-md-1">
-                    <label class="form-label">&nbsp;</label>
+                <div class="col-6 col-md-1 mb-3 mb-md-0">
+                    <label class="form-label d-none d-md-block">&nbsp;</label>
                     <button class="btn btn-outline-secondary w-100" type="button" onclick="clearFilters()" title="Clear all filters">
-                        <i class="bi bi-x-circle"></i>
+                        <i class="bi bi-x-circle d-md-none"></i><span class="d-none d-md-inline"><i class="bi bi-x-circle"></i></span>
                     </button>
                 </div>
 
-                <div class="table-responsive mt-4">
+                <!-- Desktop Table View -->
+                <div class="table-responsive mt-4 table-mobile-hide d-none d-md-block">
                     <table class="table table-hover">
                         <thead>
                             <tr>
@@ -786,17 +1073,132 @@
                                 @endforeach
                             @else
                                 <tr>
-                                    <td colspan="9" class="text-center">No appointments found.</td>
+                                    <td colspan="10" class="text-center">No appointments found.</td>
                                 </tr>
                             @endif
                         </tbody>
                     </table>
                 </div>
 
+                <!-- Mobile Card View -->
+                <div class="d-md-none mt-4 px-3" id="appointmentsMobileCards">
+                    @if($bookings->count() > 0)
+                        @foreach($bookings as $booking)
+                            <div class="appointment-mobile-card">
+                                <div class="card-header-mobile">
+                                    <div class="booking-id">Booking #{{ $booking->id }}</div>
+                                    @if($booking->confirmation_code)
+                                        <small class="text-muted">Conf: {{ $booking->confirmation_code }}</small>
+                                    @endif
+                                    <div class="mt-2">
+                                        <span class="status-badge status-{{ $booking->status }}">
+                                            {{ ucfirst($booking->status) }}
+                                        </span>
+                                    </div>
+                                </div>
+                                
+                                <div class="card-row">
+                                    <span class="card-label">Customer:</span>
+                                    <span class="card-value"><strong>{{ $booking->name }}</strong></span>
+                                </div>
+                                
+                                @if($booking->email)
+                                <div class="card-row">
+                                    <span class="card-label">Email:</span>
+                                    <span class="card-value">{{ $booking->email }}</span>
+                                </div>
+                                @endif
+                                
+                                <div class="card-row">
+                                    <span class="card-label">Phone:</span>
+                                    <span class="card-value">{{ $booking->phone }}</span>
+                                </div>
+                                
+                                @if($booking->address)
+                                <div class="card-row">
+                                    <span class="card-label">Address:</span>
+                                    <span class="card-value">{{ $booking->address }}</span>
+                                </div>
+                                @endif
+                                
+                                <div class="card-row">
+                                    <span class="card-label">Service:</span>
+                                    <span class="card-value">{{ $booking->service ?: 'General Service' }}</span>
+                                </div>
+                                
+                                @if($booking->length)
+                                <div class="card-row">
+                                    <span class="card-label">Length:</span>
+                                    <span class="card-value">{{ $booking->length }}</span>
+                                </div>
+                                @endif
+                                
+                                @if(isset($booking->final_price))
+                                <div class="card-row">
+                                    <span class="card-label">Price:</span>
+                                    <span class="card-value"><strong>${{ number_format($booking->final_price, 2) }}</strong></span>
+                                </div>
+                                @endif
+                                
+                                @if($booking->appointment_date)
+                                <div class="card-row">
+                                    <span class="card-label">Date:</span>
+                                    <span class="card-value">{{ $booking->appointment_date->format('M d, Y') }} ({{ $booking->appointment_date->format('l') }})</span>
+                                </div>
+                                @endif
+                                
+                                <div class="card-row">
+                                    <span class="card-label">Time:</span>
+                                    <span class="card-value">{{ $booking->appointment_time }}</span>
+                                </div>
+                                
+                                @if($booking->sample_picture)
+                                <div class="card-row">
+                                    <span class="card-label">Sample:</span>
+                                    <span class="card-value">
+                                        <img src="{{ asset('storage/' . $booking->sample_picture) }}"
+                                             alt="Sample"
+                                             class="sample-image"
+                                             onclick="viewImageModal('{{ asset('storage/' . $booking->sample_picture) }}', '{{ $booking->name }}')"
+                                             title="Click to view full size"
+                                             style="width: 60px; height: 60px;">
+                                    </span>
+                                </div>
+                                @endif
+                                
+                                <div class="card-actions">
+                                    <button class="btn btn-outline-info btn-sm" onclick="viewBookingDetails({{ $booking->id }})">
+                                        <i class="bi bi-eye"></i> View
+                                    </button>
+                                    @if($booking->status === 'pending')
+                                        <button class="btn btn-success btn-sm" onclick="updateStatusQuick({{ $booking->id }}, 'confirmed')">
+                                            <i class="bi bi-check"></i> Confirm
+                                        </button>
+                                        <button class="btn btn-danger btn-sm" onclick="updateStatusQuick({{ $booking->id }}, 'cancelled')">
+                                            <i class="bi bi-x"></i> Cancel
+                                        </button>
+                                    @elseif($booking->status === 'confirmed')
+                                        <button class="btn btn-info btn-sm" onclick="updateStatusQuick({{ $booking->id }}, 'completed')">
+                                            <i class="bi bi-award"></i> Complete
+                                        </button>
+                                        <button class="btn btn-danger btn-sm" onclick="updateStatusQuick({{ $booking->id }}, 'cancelled')">
+                                            <i class="bi bi-x"></i> Cancel
+                                        </button>
+                                    @endif
+                                </div>
+                            </div>
+                        @endforeach
+                    @else
+                        <div class="text-center py-5">
+                            <p class="text-muted">No appointments found.</p>
+                        </div>
+                    @endif
+                </div>
+
                 <!-- Pagination -->
                 @if($bookings->hasPages())
-                <div class="d-flex justify-content-between align-items-center mt-4">
-                    <div class="pagination-info">
+                <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mt-4 px-3 px-md-0">
+                    <div class="pagination-info mb-3 mb-md-0">
                         <small class="text-muted">
                             Showing {{ $bookings->firstItem() }} to {{ $bookings->lastItem() }} of {{ $bookings->total() }} bookings
                         </small>
@@ -839,7 +1241,7 @@
 
     <!-- Booking Details Modal -->
     <div class="modal fade" id="detailsModal" tabindex="-1">
-        <div class="modal-dialog modal-lg">
+        <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title">Booking Details</h5>
@@ -893,7 +1295,7 @@
 
     <!-- Status Update Modal -->
     <div class="modal fade" id="statusModal" tabindex="-1">
-        <div class="modal-dialog">
+        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title">Update Appointment Status</h5>
@@ -960,9 +1362,164 @@
         </div>
     </div>
 
+    <!-- Complete Services Modal -->
+    <div class="modal fade" id="completeServicesModal" tabindex="-1">
+        <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header" style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white; border-bottom: none;">
+                    <h5 class="modal-title">
+                        <i class="bi bi-award me-2"></i>Complete Services
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Search Form -->
+                    <div class="card mb-4" style="border: 2px solid #28a745;">
+                        <div class="card-body">
+                            <h6 class="card-title mb-3">
+                                <i class="bi bi-search me-2"></i>Search Bookings
+                            </h6>
+                            <form id="completeServicesSearchForm">
+                                <div class="row g-3">
+                                    <div class="col-12 col-md-6">
+                                        <label for="searchBookingId" class="form-label">Booking ID</label>
+                                        <input type="number" class="form-control" id="searchBookingId" placeholder="e.g., 123">
+                                    </div>
+                                    <div class="col-12 col-md-6">
+                                        <label for="searchCustomerName" class="form-label">Customer Name</label>
+                                        <input type="text" class="form-control" id="searchCustomerName" placeholder="e.g., John Doe">
+                                    </div>
+                                    <div class="col-12 col-md-6">
+                                        <label for="searchDate" class="form-label">Appointment Date</label>
+                                        <input type="date" class="form-control" id="searchDate">
+                                    </div>
+                                    <div class="col-12 col-md-6">
+                                        <label for="searchService" class="form-label">Service Name</label>
+                                        <input type="text" class="form-control" id="searchService" placeholder="e.g., Small Knotless Braids">
+                                    </div>
+                                    <div class="col-12">
+                                        <button type="submit" class="btn btn-success w-100">
+                                            <i class="bi bi-search me-2"></i>Search
+                                        </button>
+                                    </div>
+                                    <div class="col-12">
+                                        <button type="button" class="btn btn-outline-secondary w-100" onclick="clearCompleteServicesSearch()">
+                                            <i class="bi bi-x-circle me-2"></i>Clear Search
+                                        </button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- Search Results -->
+                    <div id="completeServicesResults" style="display: none;">
+                        <h6 class="mb-3">
+                            <i class="bi bi-list-ul me-2"></i>Search Results
+                            <span id="resultsCount" class="badge bg-success ms-2"></span>
+                        </h6>
+                        <div id="completeServicesResultsList" class="list-group">
+                            <!-- Results will be populated here -->
+                        </div>
+                    </div>
+
+                    <!-- Empty State -->
+                    <div id="completeServicesEmpty" class="text-center py-5">
+                        <i class="bi bi-search" style="font-size: 3rem; color: #dee2e6;"></i>
+                        <p class="text-muted mt-3">Use the search form above to find bookings to complete</p>
+                    </div>
+
+                    <!-- Loading State -->
+                    <div id="completeServicesLoading" style="display: none;" class="text-center py-5">
+                        <div class="spinner-border text-success" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p class="text-muted mt-3">Searching bookings...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Complete Service Detail Modal -->
+    <div class="modal fade" id="completeServiceDetailModal" tabindex="-1">
+        <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header" style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white; border-bottom: none;">
+                    <h5 class="modal-title">
+                        <i class="bi bi-award me-2"></i>Complete Service - Booking #<span id="completeBookingId"></span>
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="completeServiceForm">
+                        <input type="hidden" id="completeBookingIdInput" name="booking_id">
+                        
+                        <!-- Booking Info -->
+                        <div class="card mb-3">
+                            <div class="card-body">
+                                <h6 class="card-title">Booking Information</h6>
+                                <div class="row">
+                                    <div class="col-md-6 mb-2">
+                                        <strong>Customer:</strong> <span id="completeCustomerName"></span>
+                                    </div>
+                                    <div class="col-md-6 mb-2">
+                                        <strong>Service:</strong> <span id="completeServiceName"></span>
+                                    </div>
+                                    <div class="col-md-6 mb-2">
+                                        <strong>Date:</strong> <span id="completeAppointmentDate"></span>
+                                    </div>
+                                    <div class="col-md-6 mb-2">
+                                        <strong>Time:</strong> <span id="completeAppointmentTime"></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Completion Fields -->
+                        <div class="mb-3">
+                            <label for="completeStaffMember" class="form-label">Completed By (Staff Member) *</label>
+                            <input type="text" class="form-control" id="completeStaffMember" name="completed_by" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="completeServiceDuration" class="form-label">Service Duration (minutes) *</label>
+                            <input type="number" class="form-control" id="completeServiceDuration" name="service_duration_minutes" min="1" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="completeFinalPrice" class="form-label">Final Price ($) *</label>
+                            <input type="number" class="form-control" id="completeFinalPrice" name="final_price" step="0.01" min="0" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="completePaymentStatus" class="form-label">Payment Status</label>
+                            <select class="form-select" id="completePaymentStatus" name="payment_status">
+                                <option value="pending">Pending</option>
+                                <option value="paid">Paid</option>
+                                <option value="partial">Partial</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="completeNotes" class="form-label">Completion Notes</label>
+                            <textarea class="form-control" id="completeNotes" name="completion_notes" rows="3" placeholder="Optional notes about the service completion..."></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-success" id="submitCompleteService">
+                        <i class="bi bi-award me-2"></i>Complete Service
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Image View Modal -->
     <div class="modal fade" id="imageModal" tabindex="-1">
-        <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="imageModalTitle">Sample Image</h5>
@@ -1006,9 +1563,17 @@
                 newSortOrder = 'desc';
             }
 
-            // Show loading state
+            // Show loading state for both desktop and mobile views
             const tableBody = document.getElementById('appointmentsTable');
-            tableBody.innerHTML = '<tr><td colspan="9" class="text-center"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div></td></tr>';
+            const mobileCards = document.getElementById('appointmentsMobileCards');
+            
+            if (tableBody) {
+                tableBody.innerHTML = '<tr><td colspan="10" class="text-center"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div></td></tr>';
+            }
+            
+            if (mobileCards) {
+                mobileCards.innerHTML = '<div class="text-center py-5"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div></div>';
+            }
 
             // Build query parameters
             const params = new URLSearchParams(window.location.search);
@@ -1028,10 +1593,17 @@
                     const tempDiv = document.createElement('div');
                     tempDiv.innerHTML = html;
 
-                    // Extract the table body content
+                    // Extract the table body content (desktop view)
                     const newTableBody = tempDiv.querySelector('#appointmentsTable');
-                    if (newTableBody) {
+                    if (newTableBody && tableBody) {
                         tableBody.innerHTML = newTableBody.innerHTML;
+                    }
+
+                    // Extract the mobile cards content
+                    const mobileCards = document.getElementById('appointmentsMobileCards');
+                    const newMobileCards = tempDiv.querySelector('#appointmentsMobileCards');
+                    if (newMobileCards && mobileCards) {
+                        mobileCards.innerHTML = newMobileCards.innerHTML;
                     }
 
                     // Update sorting indicators in headers
@@ -1076,9 +1648,17 @@
             const dateFilter = document.getElementById('dateFilter').value;
             const serviceFilter = document.getElementById('serviceFilter').value;
 
-            // Show loading state
+            // Show loading state for both desktop and mobile views
             const tableBody = document.getElementById('appointmentsTable');
-            tableBody.innerHTML = '<tr><td colspan="9" class="text-center"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div></td></tr>';
+            const mobileCards = document.getElementById('appointmentsMobileCards');
+            
+            if (tableBody) {
+                tableBody.innerHTML = '<tr><td colspan="10" class="text-center"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div></td></tr>';
+            }
+            
+            if (mobileCards) {
+                mobileCards.innerHTML = '<div class="text-center py-5"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div></div>';
+            }
 
             // Build query parameters
             const params = new URLSearchParams();
@@ -1105,10 +1685,16 @@
                     const tempDiv = document.createElement('div');
                     tempDiv.innerHTML = html;
 
-                    // Extract the table body content
+                    // Extract the table body content (desktop view)
                     const newTableBody = tempDiv.querySelector('#appointmentsTable');
-                    if (newTableBody) {
+                    if (newTableBody && tableBody) {
                         tableBody.innerHTML = newTableBody.innerHTML;
+                    }
+
+                    // Extract the mobile cards content
+                    const newMobileCards = tempDiv.querySelector('#appointmentsMobileCards');
+                    if (newMobileCards && mobileCards) {
+                        mobileCards.innerHTML = newMobileCards.innerHTML;
                     }
 
                     // Update pagination info if it exists
@@ -1134,9 +1720,17 @@
             document.getElementById('dateFilter').value = '';
             document.getElementById('serviceFilter').value = '';
 
-            // Show loading state
+            // Show loading state for both desktop and mobile views
             const tableBody = document.getElementById('appointmentsTable');
-            tableBody.innerHTML = '<tr><td colspan="9" class="text-center"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div></td></tr>';
+            const mobileCards = document.getElementById('appointmentsMobileCards');
+            
+            if (tableBody) {
+                tableBody.innerHTML = '<tr><td colspan="10" class="text-center"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div></td></tr>';
+            }
+            
+            if (mobileCards) {
+                mobileCards.innerHTML = '<div class="text-center py-5"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div></div>';
+            }
 
             // Build query parameters with only sorting
             const params = new URLSearchParams();
@@ -1158,10 +1752,16 @@
                     const tempDiv = document.createElement('div');
                     tempDiv.innerHTML = html;
 
-                    // Extract the table body content
+                    // Extract the table body content (desktop view)
                     const newTableBody = tempDiv.querySelector('#appointmentsTable');
-                    if (newTableBody) {
+                    if (newTableBody && tableBody) {
                         tableBody.innerHTML = newTableBody.innerHTML;
+                    }
+
+                    // Extract the mobile cards content
+                    const newMobileCards = tempDiv.querySelector('#appointmentsMobileCards');
+                    if (newMobileCards && mobileCards) {
+                        mobileCards.innerHTML = newMobileCards.innerHTML;
                     }
 
                     // Update pagination info if it exists
@@ -1529,6 +2129,197 @@
             });
         }
         
+        // Complete Services Modal functionality
+        const openCompleteServicesModalBtn = document.getElementById('openCompleteServicesModal');
+        if (openCompleteServicesModalBtn) {
+            openCompleteServicesModalBtn.addEventListener('click', function() {
+                const modal = new bootstrap.Modal(document.getElementById('completeServicesModal'));
+                modal.show();
+                // Clear previous search results
+                clearCompleteServicesSearch();
+            });
+        }
+
+        // Complete Services Search Form
+        const completeServicesSearchForm = document.getElementById('completeServicesSearchForm');
+        if (completeServicesSearchForm) {
+            completeServicesSearchForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                searchCompleteServices();
+            });
+        }
+
+        function searchCompleteServices() {
+            const bookingId = document.getElementById('searchBookingId').value;
+            const customerName = document.getElementById('searchCustomerName').value;
+            const date = document.getElementById('searchDate').value;
+            const service = document.getElementById('searchService').value;
+
+            // Show loading state
+            document.getElementById('completeServicesLoading').style.display = 'block';
+            document.getElementById('completeServicesResults').style.display = 'none';
+            document.getElementById('completeServicesEmpty').style.display = 'none';
+
+            // Build search params
+            const params = new URLSearchParams();
+            if (bookingId) params.append('booking_id', bookingId);
+            if (customerName) params.append('customer_name', customerName);
+            if (date) params.append('date', date);
+            if (service) params.append('service', service);
+
+            fetch('/admin/bookings/search-complete?' + params.toString(), {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('completeServicesLoading').style.display = 'none';
+
+                if (data.success && data.bookings && data.bookings.length > 0) {
+                    displayCompleteServicesResults(data.bookings);
+                } else {
+                    document.getElementById('completeServicesEmpty').style.display = 'block';
+                    document.getElementById('completeServicesEmpty').innerHTML = `
+                        <i class="bi bi-search" style="font-size: 3rem; color: #dee2e6;"></i>
+                        <p class="text-muted mt-3">No bookings found matching your search criteria</p>
+                    `;
+                }
+            })
+            .catch(error => {
+                console.error('Error searching bookings:', error);
+                document.getElementById('completeServicesLoading').style.display = 'none';
+                document.getElementById('completeServicesEmpty').style.display = 'block';
+                document.getElementById('completeServicesEmpty').innerHTML = `
+                    <i class="bi bi-exclamation-triangle" style="font-size: 3rem; color: #dc3545;"></i>
+                    <p class="text-danger mt-3">Error searching bookings. Please try again.</p>
+                `;
+            });
+        }
+
+        function displayCompleteServicesResults(bookings) {
+            const resultsList = document.getElementById('completeServicesResultsList');
+            const resultsCount = document.getElementById('resultsCount');
+            
+            resultsCount.textContent = bookings.length;
+            document.getElementById('completeServicesResults').style.display = 'block';
+            document.getElementById('completeServicesEmpty').style.display = 'none';
+
+            resultsList.innerHTML = bookings.map(booking => `
+                <div class="list-group-item">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div class="flex-grow-1">
+                            <h6 class="mb-1">
+                                Booking #${booking.id} - ${booking.name}
+                                <span class="badge bg-${booking.status === 'confirmed' ? 'primary' : 'warning'} ms-2">${booking.status}</span>
+                            </h6>
+                            <p class="mb-1">
+                                <strong>Service:</strong> ${booking.service || 'N/A'}<br>
+                                <strong>Date:</strong> ${booking.appointment_date || 'N/A'}<br>
+                                <strong>Time:</strong> ${booking.appointment_time || 'N/A'}<br>
+                                <strong>Phone:</strong> ${booking.phone || 'N/A'}
+                            </p>
+                        </div>
+                        <button class="btn btn-success btn-sm" onclick="openCompleteServiceDetail(${booking.id}, '${booking.name.replace(/'/g, "\\'")}', '${(booking.service || '').replace(/'/g, "\\'")}', '${booking.appointment_date_raw || ''}', '${booking.appointment_time || ''}')">
+                            <i class="bi bi-award me-1"></i>Complete
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function clearCompleteServicesSearch() {
+            document.getElementById('searchBookingId').value = '';
+            document.getElementById('searchCustomerName').value = '';
+            document.getElementById('searchDate').value = '';
+            document.getElementById('searchService').value = '';
+            document.getElementById('completeServicesResults').style.display = 'none';
+            document.getElementById('completeServicesLoading').style.display = 'none';
+            document.getElementById('completeServicesEmpty').style.display = 'block';
+            document.getElementById('completeServicesEmpty').innerHTML = `
+                <i class="bi bi-search" style="font-size: 3rem; color: #dee2e6;"></i>
+                <p class="text-muted mt-3">Use the search form above to find bookings to complete</p>
+            `;
+        }
+
+        function openCompleteServiceDetail(bookingId, customerName, serviceName, appointmentDate, appointmentTime) {
+            document.getElementById('completeBookingId').textContent = bookingId;
+            document.getElementById('completeBookingIdInput').value = bookingId;
+            document.getElementById('completeCustomerName').textContent = customerName;
+            document.getElementById('completeServiceName').textContent = serviceName;
+            document.getElementById('completeAppointmentDate').textContent = appointmentDate || 'N/A';
+            document.getElementById('completeAppointmentTime').textContent = appointmentTime || 'N/A';
+
+            // Clear form
+            document.getElementById('completeStaffMember').value = '';
+            document.getElementById('completeServiceDuration').value = '';
+            document.getElementById('completeFinalPrice').value = '';
+            document.getElementById('completePaymentStatus').value = 'pending';
+            document.getElementById('completeNotes').value = '';
+
+            // Close search modal and open detail modal
+            const searchModal = bootstrap.Modal.getInstance(document.getElementById('completeServicesModal'));
+            if (searchModal) searchModal.hide();
+
+            const detailModal = new bootstrap.Modal(document.getElementById('completeServiceDetailModal'));
+            detailModal.show();
+        }
+
+        // Submit Complete Service Form
+        const submitCompleteServiceBtn = document.getElementById('submitCompleteService');
+        if (submitCompleteServiceBtn) {
+            submitCompleteServiceBtn.addEventListener('click', function() {
+                const form = document.getElementById('completeServiceForm');
+                if (!form.checkValidity()) {
+                    form.reportValidity();
+                    return;
+                }
+
+                const formData = {
+                    booking_id: document.getElementById('completeBookingIdInput').value,
+                    status: 'completed',
+                    completed_by: document.getElementById('completeStaffMember').value,
+                    service_duration_minutes: parseInt(document.getElementById('completeServiceDuration').value),
+                    final_price: parseFloat(document.getElementById('completeFinalPrice').value),
+                    payment_status: document.getElementById('completePaymentStatus').value,
+                    completion_notes: document.getElementById('completeNotes').value
+                };
+
+                submitCompleteServiceBtn.disabled = true;
+                submitCompleteServiceBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Completing...';
+
+                fetch('{{ route("admin.bookings.update-status") }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                    },
+                    body: JSON.stringify(formData)
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('Service completed successfully!');
+                        const modal = bootstrap.Modal.getInstance(document.getElementById('completeServiceDetailModal'));
+                        if (modal) modal.hide();
+                        window.location.reload();
+                    } else {
+                        alert('Error completing service: ' + (data.message || 'Unknown error'));
+                    }
+                })
+                .catch(error => {
+                    console.error('Error completing service:', error);
+                    alert('Error completing service. Please try again.');
+                })
+                .finally(() => {
+                    submitCompleteServiceBtn.disabled = false;
+                    submitCompleteServiceBtn.innerHTML = '<i class="bi bi-award me-2"></i>Complete Service';
+                });
+            });
+        }
+
         // FullCalendar is bundled via Vite (resources/js/admin-calendar.js). See Vite build for the asset.
     </script>
     @vite(['resources/css/app.css', 'resources/js/admin-calendar.js'])
