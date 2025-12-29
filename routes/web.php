@@ -1268,9 +1268,7 @@ Route::post('/custom-service', function(Request $request) {
 })->name('custom-service.store');
 
 // Booking routes (public)
-Route::get('/bookings/slots', function(Request $request) {
-    return response()->json(['slots' => []]);
-})->name('bookings.slots');
+Route::get('/bookings/slots', [App\Http\Controllers\AppointmentController::class, 'getAvailableTimeSlots'])->name('bookings.slots');
 
 Route::get('/bookings/calendar', function(Request $request) {
     return response()->json(['calendar' => []]);

@@ -823,14 +823,24 @@
                         console.log(`🔴 Marked ${dateString} as BOOKED`);
 
                     } else if (blockedIndex[dateString]) {
-                        // Mark as blocked-range and show title text
-                        dayElement.classList.add('blocked-range');
-                        dayElement.title = blockedIndex[dateString].title || 'Blocked';
-                        const textDiv = document.createElement('div');
-                        textDiv.className = 'blocked-text';
-                        textDiv.textContent = blockedIndex[dateString].title || 'Blocked';
-                        dayElement.appendChild(textDiv);
-                        console.log(`⛔ Marked ${dateString} as BLOCKED (${blockedIndex[dateString].title})`);
+                        const blockedInfo = blockedIndex[dateString];
+                        const isFullDay = blockedInfo.full_day === true || blockedInfo.full_day === 1;
+                        
+                        if (isFullDay) {
+                            // Mark as blocked-range and show title text
+                            dayElement.classList.add('blocked-range');
+                            dayElement.title = blockedInfo.title || 'Blocked';
+                            const textDiv = document.createElement('div');
+                            textDiv.className = 'blocked-text';
+                            textDiv.textContent = blockedInfo.title || 'Blocked';
+                            dayElement.appendChild(textDiv);
+                            console.log(`⛔ Marked ${dateString} as FULLY BLOCKED (${blockedInfo.title})`);
+                        } else {
+                            // Time-specific block: mark as available
+                            dayElement.classList.add('available');
+                            dayElement.title = (blockedInfo.title || 'Blocked') + ' - Some times blocked, click to see available times';
+                            console.log(`🟡 Marked ${dateString} as AVAILABLE with time-specific blocks`);
+                        }
 
                     } else {
                         // Available
