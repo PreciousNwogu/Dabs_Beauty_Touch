@@ -1856,39 +1856,49 @@
                         // Don't add click event for booked dates
 
                     } else if (blockedIndex[dateString]) {
-                        // Blocked day: show dark styling and small title text
-                        dayDiv.classList.add('blocked-range');
-                        dayDiv.title = (blockedIndex[dateString].title || 'Blocked') + ' - This date is not available for booking';
+                        const blockedInfo = blockedIndex[dateString];
+                        const isFullDay = blockedInfo.full_day === true || blockedInfo.full_day === 1;
                         
-                        // Force inline styles to ensure visibility
-                        dayDiv.style.background = 'linear-gradient(180deg, #dc3545 0%, #c82333 100%)';
-                        dayDiv.style.backgroundColor = '#dc3545';
-                        dayDiv.style.borderColor = '#a71e2a';
-                        dayDiv.style.borderWidth = '2px';
-                        dayDiv.style.borderStyle = 'solid';
-                        dayDiv.style.color = '#ffffff';
-                        dayDiv.style.cursor = 'not-allowed';
-                        dayDiv.style.opacity = '1';
-                        dayDiv.style.pointerEvents = 'none';
-                        dayDiv.style.fontWeight = '600';
-                        dayDiv.style.position = 'relative';
-                        
-                        const textDiv = document.createElement('div');
-                        textDiv.className = 'blocked-text';
-                        textDiv.textContent = blockedIndex[dateString].title || 'Blocked';
-                        textDiv.style.color = '#ffffff';
-                        textDiv.style.fontSize = '0.65rem';
-                        textDiv.style.marginTop = '4px';
-                        textDiv.style.lineHeight = '1.1';
-                        dayDiv.innerHTML = date.getDate() + '<div class="blocked-text" style="color:#ffffff;font-size:0.65rem;margin-top:4px;line-height:1.1;">' + (blockedIndex[dateString].title || 'Blocked') + '</div>';
-                        console.log(`⛔ Marked ${dateString} as BLOCKED (${blockedIndex[dateString].title})`);
-                        // Don't add click event for blocked dates
+                        if (isFullDay) {
+                            // Full day blocked: show dark styling and small title text
+                            dayDiv.classList.add('blocked-range');
+                            dayDiv.title = (blockedInfo.title || 'Blocked') + ' - This date is not available for booking';
+                            
+                            // Force inline styles to ensure visibility
+                            dayDiv.style.background = 'linear-gradient(180deg, #dc3545 0%, #c82333 100%)';
+                            dayDiv.style.backgroundColor = '#dc3545';
+                            dayDiv.style.borderColor = '#a71e2a';
+                            dayDiv.style.borderWidth = '2px';
+                            dayDiv.style.borderStyle = 'solid';
+                            dayDiv.style.color = '#ffffff';
+                            dayDiv.style.cursor = 'not-allowed';
+                            dayDiv.style.opacity = '1';
+                            dayDiv.style.pointerEvents = 'none';
+                            dayDiv.style.fontWeight = '600';
+                            dayDiv.style.position = 'relative';
+                            
+                            dayDiv.innerHTML = date.getDate() + '<div class="blocked-text" style="color:#ffffff;font-size:0.65rem;margin-top:4px;line-height:1.1;">' + (blockedInfo.title || 'Blocked') + '</div>';
+                            console.log(`⛔ Marked ${dateString} as FULLY BLOCKED (${blockedInfo.title})`);
+                            // Don't add click event for fully blocked dates
+                        } else {
+                            // Time-specific block: date is available but some times are blocked
+                            dayDiv.classList.add('available');
+                            dayDiv.style.backgroundColor = '#d4edda';
+                            dayDiv.style.borderColor = '#c3e6cb';
+                            // Add a visual indicator that some times are blocked
+                            const blockedTimes = blockedInfo.start_time && blockedInfo.end_time 
+                                ? `${blockedInfo.start_time}-${blockedInfo.end_time}` 
+                                : 'some times';
+                            dayDiv.title = (blockedInfo.title || 'Blocked') + ` (${blockedTimes} blocked) - Click to see available times`;
+                            dayDiv.onclick = (e) => selectCalendarDate(date, e);
+                            console.log(`🟡 Date ${dateString} marked as AVAILABLE with time-specific blocks (${blockedInfo.start_time}-${blockedInfo.end_time})`);
+                        }
 
                     } else {
                         dayDiv.classList.add('available');
                         dayDiv.style.backgroundColor = '#d4edda';
                         dayDiv.style.borderColor = '#c3e6cb';
-                        dayDiv.onclick = () => selectCalendarDate(date);
+                        dayDiv.onclick = (e) => selectCalendarDate(date, e);
                         console.log(`🟢 Date ${dateString} marked as AVAILABLE (green)`);
                     }
                 }
@@ -1901,16 +1911,27 @@
             const dateString = formatYMD(date);
             
             // Check if the clicked day is booked
-            if (event.target.classList.contains('booked')) {
+            if (event && event.target && event.target.classList.contains('booked')) {
                 alert('This date is already booked with a pending or confirmed appointment. Please select another date.');
                 return;
             }
             
-            // Check if the clicked day is blocked
+            // Check if the clicked day is fully blocked (not time-specific)
             const blockedIndex = (blockedDatesCache || []).reduce((acc, b) => { acc[b.date] = b; return acc; }, {});
-            if (blockedIndex[dateString] || event.target.classList.contains('blocked-range')) {
-                const blockedTitle = blockedIndex[dateString]?.title || 'Blocked';
-                alert(`This date is blocked: "${blockedTitle}". Please select another date.`);
+            if (blockedIndex[dateString]) {
+                const blockedInfo = blockedIndex[dateString];
+                const isFullDay = blockedInfo.full_day === true || blockedInfo.full_day === 1;
+                
+                if (isFullDay) {
+                    const blockedTitle = blockedInfo.title || 'Blocked';
+                    alert(`This date is blocked: "${blockedTitle}". Please select another date.`);
+                    return;
+                }
+                // If it's a time-specific block, continue - user can still select the date
+            }
+            
+            if (event && event.target && event.target.classList.contains('blocked-range')) {
+                alert('This date is blocked. Please select another date.');
                 return;
             }
 

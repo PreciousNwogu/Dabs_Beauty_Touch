@@ -133,6 +133,22 @@ document.addEventListener('DOMContentLoaded', () => {
         openBlockBtn.addEventListener('click', () => {
             const modalEl = document.getElementById('blockModal');
             if (modalEl) {
+                // Reset form
+                const blockTitle = document.getElementById('blockTitle');
+                const blockStart = document.getElementById('blockStart');
+                const blockEnd = document.getElementById('blockEnd');
+                const blockAllDay = document.getElementById('blockAllDay');
+                const blockPreview = document.getElementById('blockPreview');
+                
+                if (blockTitle) blockTitle.value = '';
+                if (blockStart) blockStart.value = '';
+                if (blockEnd) blockEnd.value = '';
+                if (blockAllDay) blockAllDay.checked = true;
+                if (blockPreview) blockPreview.style.display = 'none';
+                
+                // Initialize mode
+                updateBlockMode();
+                
                 // store instance so we can reliably hide it later
                 window._blockModalInstance = new bootstrap.Modal(modalEl);
                 window._blockModalInstance.show();
@@ -162,36 +178,140 @@ document.addEventListener('DOMContentLoaded', () => {
                 const end = new Date(endVal);
                 
                 if (end <= start) {
-                    previewContent.innerHTML = '<span class="text-danger">⚠️ End date must be after start date</span>';
+                    previewContent.innerHTML = '<div class="alert alert-danger mb-0"><i class="bi bi-exclamation-triangle me-2"></i><strong>Error:</strong> End date must be after start date</div>';
                     previewDiv.style.display = 'block';
+                    previewDiv.style.borderColor = '#dc3545';
                     previewDiv.style.borderLeftColor = '#dc3545';
                     return;
                 }
 
+                // Format dates
                 const startFormatted = start.toLocaleDateString('en-US', { 
                     weekday: 'short', 
                     year: 'numeric', 
                     month: 'short', 
                     day: 'numeric',
-                    ...(allDay ? {} : { hour: '2-digit', minute: '2-digit' })
+                    ...(allDay ? {} : { hour: '2-digit', minute: '2-digit', hour12: true })
                 });
                 const endFormatted = end.toLocaleDateString('en-US', { 
                     weekday: 'short', 
                     year: 'numeric', 
                     month: 'short', 
                     day: 'numeric',
-                    ...(allDay ? {} : { hour: '2-digit', minute: '2-digit' })
+                    ...(allDay ? {} : { hour: '2-digit', minute: '2-digit', hour12: true })
                 });
 
+                // Calculate duration
                 const daysDiff = Math.ceil((end - start) / (1000 * 60 * 60 * 24));
+                const hoursDiff = Math.ceil((end - start) / (1000 * 60 * 60));
                 const daysText = daysDiff === 1 ? '1 day' : `${daysDiff} days`;
+                const hoursText = hoursDiff < 24 ? `${hoursDiff} hours` : daysText;
 
-                previewContent.innerHTML = `
-                    <div><strong>${titleVal}</strong></div>
-                    <div class="mt-1">📅 ${startFormatted} → ${endFormatted}</div>
-                    <div class="mt-1 text-muted">Duration: ${daysText}</div>
+                // Default available time slots
+                const defaultSlots = ['09:00', '10:00', '11:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00'];
+                
+                let previewHTML = `
+                    <div class="mb-3">
+                        <strong class="text-dark" style="font-size: 1.05rem;">${titleVal}</strong>
+                    </div>
+                    <div class="mb-3 p-3 rounded" style="background: white; border: 1px solid #dee2e6;">
+                        <div class="d-flex align-items-center mb-2">
+                            <i class="bi bi-calendar3 me-2 text-primary"></i>
+                            <strong>Period:</strong>
+                        </div>
+                        <div class="ms-4">
+                            <div><strong>Start:</strong> ${startFormatted}</div>
+                            <div class="mt-1"><strong>End:</strong> ${endFormatted}</div>
+                            <div class="mt-2 text-muted"><i class="bi bi-clock me-1"></i>Duration: ${allDay ? daysText : hoursText}</div>
+                        </div>
+                    </div>
                 `;
+
+                // Add time slot analysis for time-specific blocks
+                if (!allDay) {
+                    const startHour = start.getHours();
+                    const startMin = start.getMinutes();
+                    const endHour = end.getHours();
+                    const endMin = end.getMinutes();
+                    
+                    // Check if block is on the same day
+                    const startDate = start.toDateString();
+                    const endDate = end.toDateString();
+                    const isSameDay = startDate === endDate;
+                    
+                    // Determine which slots will be blocked
+                    const blockedSlots = [];
+                    const availableSlots = [];
+                    
+                    if (isSameDay) {
+                        // For same-day blocks, check each slot
+                        defaultSlots.forEach(slot => {
+                            const [slotHour, slotMin] = slot.split(':').map(Number);
+                            const slotTime = slotHour * 60 + slotMin;
+                            const blockStartTime = startHour * 60 + startMin;
+                            const blockEndTime = endHour * 60 + endMin;
+                            
+                            // Check if slot falls within block range (slot time is at the start of the hour)
+                            if (slotTime >= blockStartTime && slotTime < blockEndTime) {
+                                blockedSlots.push(slot);
+                            } else {
+                                availableSlots.push(slot);
+                            }
+                        });
+                    } else {
+                        // For multi-day time blocks, all slots on affected days would be blocked
+                        // This is a simplified view - in reality, it depends on the specific days
+                        defaultSlots.forEach(slot => {
+                            blockedSlots.push(slot);
+                        });
+                    }
+                    
+                    previewHTML += `
+                        <div class="p-3 rounded" style="background: white; border: 1px solid #dee2e6;">
+                            <div class="d-flex align-items-center mb-2">
+                                <i class="bi bi-clock-history me-2" style="color: #dc3545;"></i>
+                                <strong>Time Slot Impact:</strong>
+                            </div>
+                            <div class="ms-4">
+                                ${blockedSlots.length > 0 ? `
+                                    <div class="mb-2">
+                                        <span class="badge bg-danger me-1"><i class="bi bi-x-circle me-1"></i>Blocked Slots (${blockedSlots.length}):</span>
+                                        <span class="text-muted">${blockedSlots.map(s => {
+                                            const [h, m] = s.split(':');
+                                            const hour12 = h == 0 ? 12 : (h > 12 ? h - 12 : h);
+                                            const ampm = h < 12 ? 'AM' : 'PM';
+                                            return `${hour12}:${m} ${ampm}`;
+                                        }).join(', ')}</span>
+                                    </div>
+                                ` : ''}
+                                ${availableSlots.length > 0 ? `
+                                    <div>
+                                        <span class="badge bg-success me-1"><i class="bi bi-check-circle me-1"></i>Available Slots (${availableSlots.length}):</span>
+                                        <span class="text-muted">${availableSlots.map(s => {
+                                            const [h, m] = s.split(':');
+                                            const hour12 = h == 0 ? 12 : (h > 12 ? h - 12 : h);
+                                            const ampm = h < 12 ? 'AM' : 'PM';
+                                            return `${hour12}:${m} ${ampm}`;
+                                        }).join(', ')}</span>
+                                    </div>
+                                ` : '<div class="text-warning"><i class="bi bi-exclamation-triangle me-1"></i>All time slots will be blocked</div>'}
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    previewHTML += `
+                        <div class="p-3 rounded" style="background: white; border: 1px solid #dee2e6;">
+                            <div class="d-flex align-items-center">
+                                <i class="bi bi-lock-fill me-2" style="color: #dc3545;"></i>
+                                <strong>All time slots will be blocked for the selected day(s)</strong>
+                            </div>
+                        </div>
+                    `;
+                }
+
+                previewContent.innerHTML = previewHTML;
                 previewDiv.style.display = 'block';
+                previewDiv.style.borderColor = '#ff6600';
                 previewDiv.style.borderLeftColor = '#ff6600';
             } catch (e) {
                 previewDiv.style.display = 'none';
@@ -201,14 +321,61 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
+    // Update label and help text based on all-day toggle
+    const updateBlockMode = () => {
+        const allDayCheck = document.getElementById('blockAllDay');
+        const startLabel = document.getElementById('startLabel');
+        const endLabel = document.getElementById('endLabel');
+        const startHelpText = document.getElementById('startHelpText');
+        const endHelpText = document.getElementById('endHelpText');
+        const allDayHelpText = document.getElementById('allDayHelpText');
+        const timeSpecificHelpText = document.getElementById('timeSpecificHelpText');
+        const blockStart = document.getElementById('blockStart');
+        const blockEnd = document.getElementById('blockEnd');
+
+        if (!allDayCheck) return;
+
+        const isAllDay = allDayCheck.checked;
+
+        // Toggle help text visibility
+        if (allDayHelpText) allDayHelpText.style.display = isAllDay ? 'block' : 'none';
+        if (timeSpecificHelpText) timeSpecificHelpText.style.display = isAllDay ? 'none' : 'block';
+
+        // Update labels
+        if (startLabel) startLabel.textContent = isAllDay ? 'Start Date' : 'Start Date & Time';
+        if (endLabel) endLabel.textContent = isAllDay ? 'End Date' : 'End Date & Time';
+
+        // Update help text
+        if (startHelpText) startHelpText.textContent = isAllDay 
+            ? 'Select the first day to block' 
+            : 'Select the date and time when blocking begins';
+        if (endHelpText) endHelpText.textContent = isAllDay 
+            ? 'Select the last day to block (inclusive)' 
+            : 'Select the date and time when blocking ends';
+
+        // Update input type hint (datetime-local already supports both, but we can update placeholder)
+        if (blockStart && blockEnd) {
+            // Trigger preview update
+            updateBlockPreview();
+        }
+    };
+
     // Attach preview updates to inputs
     ['blockStart', 'blockEnd', 'blockTitle', 'blockAllDay'].forEach(id => {
         const el = document.getElementById(id);
         if (el) {
             el.addEventListener('input', updateBlockPreview);
-            el.addEventListener('change', updateBlockPreview);
+            el.addEventListener('change', () => {
+                if (id === 'blockAllDay') {
+                    updateBlockMode();
+                }
+                updateBlockPreview();
+            });
         }
     });
+
+    // Initialize block mode on page load
+    updateBlockMode();
 
     const submitBlockBtn = document.getElementById('submitBlock');
     if (submitBlockBtn) {
@@ -272,12 +439,58 @@ document.addEventListener('DOMContentLoaded', () => {
                     utc: { start: start.toISOString(), end: end.toISOString() }
                 });
             } else {
-                // For time-specific blocks, parse the full datetime
-                start = new Date(startInput);
-                end = new Date(endInput);
+                // For time-specific blocks, parse the datetime-local input
+                // datetime-local format: "YYYY-MM-DDTHH:mm" (local time, no timezone)
+                // We need to extract the date and time components and construct UTC dates
+                // that represent the same local time
+                console.log('TIME-SPECIFIC BLOCK - Input values:', { startInput, endInput, allDay });
+                
+                const startMatch = startInput.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/);
+                const endMatch = endInput.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/);
+                
+                if (!startMatch || !endMatch) {
+                    console.error('Regex match failed:', { startMatch, endMatch });
+                    alert('⚠️ Please enter valid dates and times');
+                    return;
+                }
+                
+                // Extract components (1-indexed: year, month, day, hour, minute)
+                const startYear = parseInt(startMatch[1], 10);
+                const startMonth = parseInt(startMatch[2], 10) - 1; // JavaScript months are 0-indexed
+                const startDay = parseInt(startMatch[3], 10);
+                const startHour = parseInt(startMatch[4], 10);
+                const startMin = parseInt(startMatch[5], 10);
+                
+                const endYear = parseInt(endMatch[1], 10);
+                const endMonth = parseInt(endMatch[2], 10) - 1;
+                const endDay = parseInt(endMatch[3], 10);
+                const endHour = parseInt(endMatch[4], 10);
+                const endMin = parseInt(endMatch[5], 10);
+                
+                console.log('Extracted components:', {
+                    start: { year: startYear, month: startMonth, day: startDay, hour: startHour, min: startMin },
+                    end: { year: endYear, month: endMonth, day: endDay, hour: endHour, min: endMin }
+                });
+                
+                // Create UTC dates from the local time components
+                // This preserves the local time values as UTC (no timezone conversion)
+                start = new Date(Date.UTC(startYear, startMonth, startDay, startHour, startMin, 0, 0));
+                end = new Date(Date.UTC(endYear, endMonth, endDay, endHour, endMin, 0, 0));
+                
+                console.log('Created UTC dates:', {
+                    start: start.toISOString(),
+                    end: end.toISOString(),
+                    startUTC: `${startHour}:${String(startMin).padStart(2, '0')} UTC`,
+                    endUTC: `${endHour}:${String(endMin).padStart(2, '0')} UTC`
+                });
+                
+                if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+                    alert('⚠️ Please enter valid dates and times');
+                    return;
+                }
                 
                 if (end <= start) {
-                    alert('⚠️ End date must be after start date');
+                    alert('⚠️ End date/time must be after start date/time');
                     return;
                 }
             }
@@ -373,6 +586,76 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
+
+    // Quick example fillers
+    window.fillBlockExample = function(exampleType) {
+        const allDayCheck = document.getElementById('blockAllDay');
+        const blockStart = document.getElementById('blockStart');
+        const blockEnd = document.getElementById('blockEnd');
+        const blockTitle = document.getElementById('blockTitle');
+
+        if (!blockStart || !blockEnd) return;
+
+        const today = new Date();
+        const tomorrow = new Date(today);
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        const nextWeek = new Date(today);
+        nextWeek.setDate(nextWeek.getDate() + 7);
+
+        // Helper to format datetime-local value
+        const formatDateTimeLocal = (date) => {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            const hours = String(date.getHours()).padStart(2, '0');
+            const minutes = String(date.getMinutes()).padStart(2, '0');
+            return `${year}-${month}-${day}T${hours}:${minutes}`;
+        };
+
+        switch(exampleType) {
+            case 'fullday-single':
+                if (allDayCheck) allDayCheck.checked = true;
+                updateBlockMode();
+                blockStart.value = formatDateTimeLocal(new Date(today.getFullYear(), today.getMonth(), today.getDate(), 0, 0));
+                blockEnd.value = formatDateTimeLocal(new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59));
+                if (blockTitle) blockTitle.value = 'Holiday - Closed';
+                break;
+
+            case 'fullday-range':
+                if (allDayCheck) allDayCheck.checked = true;
+                updateBlockMode();
+                blockStart.value = formatDateTimeLocal(new Date(today.getFullYear(), today.getMonth(), today.getDate(), 0, 0));
+                blockEnd.value = formatDateTimeLocal(new Date(tomorrow.getFullYear(), tomorrow.getMonth(), tomorrow.getDate(), 23, 59));
+                if (blockTitle) blockTitle.value = 'Weekend Closure';
+                break;
+
+            case 'time-morning':
+                if (allDayCheck) allDayCheck.checked = false;
+                updateBlockMode();
+                blockStart.value = formatDateTimeLocal(new Date(today.getFullYear(), today.getMonth(), today.getDate(), 0, 0));
+                blockEnd.value = formatDateTimeLocal(new Date(today.getFullYear(), today.getMonth(), today.getDate(), 14, 0));
+                if (blockTitle) blockTitle.value = 'Morning Blocked - Open from 3 PM';
+                break;
+
+            case 'time-afternoon':
+                if (allDayCheck) allDayCheck.checked = false;
+                updateBlockMode();
+                blockStart.value = formatDateTimeLocal(new Date(today.getFullYear(), today.getMonth(), today.getDate(), 14, 0));
+                blockEnd.value = formatDateTimeLocal(new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59));
+                if (blockTitle) blockTitle.value = 'Afternoon Blocked - Open till 1 PM';
+                break;
+
+            case 'time-lunch':
+                if (allDayCheck) allDayCheck.checked = false;
+                updateBlockMode();
+                blockStart.value = formatDateTimeLocal(new Date(today.getFullYear(), today.getMonth(), today.getDate(), 12, 0));
+                blockEnd.value = formatDateTimeLocal(new Date(today.getFullYear(), today.getMonth(), today.getDate(), 13, 0));
+                if (blockTitle) blockTitle.value = 'Lunch Break';
+                break;
+        }
+
+        updateBlockPreview();
+    };
 
         // Manage blocks modal - list and unblock
         const openManageBtn = document.getElementById('openManageBlocks');

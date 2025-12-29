@@ -455,7 +455,7 @@
                                     <div class="alert alert-info d-flex align-items-start mb-4" style="background: #e7f3ff; border-left: 4px solid #0ea5e9; border-radius: 6px;">
                                         <i class="bi bi-info-circle-fill me-2" style="color: #0ea5e9; font-size: 1.2rem;"></i>
                                         <div>
-                                            <strong>Note:</strong> Blocked dates will prevent all bookings on the selected date range. Users will see these dates as unavailable on the booking calendar.
+                                            <strong>Note:</strong> Blocked dates will prevent bookings during the selected period. Users will see these dates/times as unavailable on the booking calendar.
                                         </div>
                                     </div>
 
@@ -469,38 +469,78 @@
                                     </div>
 
                                     <div class="mb-4">
-                                        <div class="form-check form-switch">
+                                        <div class="form-check form-switch mb-2">
                                             <input type="checkbox" class="form-check-input" id="blockAllDay" checked style="width: 3rem; height: 1.5rem;">
                                             <label class="form-check-label fw-semibold" for="blockAllDay">
                                                 <i class="bi bi-calendar-day me-1"></i>All Day Block
                                             </label>
                                         </div>
-                                        <small class="form-text text-muted d-block mt-1">When enabled, the entire day(s) will be blocked. When disabled, you can specify exact start and end times.</small>
+                                        <div id="allDayHelpText" class="form-text text-muted">
+                                            <i class="bi bi-check-circle me-1 text-success"></i><strong>Full Day:</strong> Blocks the entire day(s). Perfect for holidays, training days, or complete closures.
+                                            <br><small class="text-muted mt-1 d-block">💡 <strong>Tip:</strong> For multi-day blocks, select start and end dates. The entire range will be blocked.</small>
+                                        </div>
+                                        <div id="timeSpecificHelpText" class="form-text text-muted" style="display: none;">
+                                            <i class="bi bi-clock me-1 text-warning"></i><strong>Time-Specific:</strong> Blocks only specific hours. Keep the rest of the day available for bookings.
+                                            <br><small class="text-muted mt-1 d-block">
+                                                💡 <strong>Examples:</strong><br>
+                                                • Block mornings (00:00 - 14:00) → Open from 3 PM (15:00)<br>
+                                                • Block afternoons (14:00 - 23:59) → Open till 1 PM (13:00)<br>
+                                                • Block lunch (12:00 - 13:00) → Morning & afternoon open
+                                            </small>
+                                            <br><small class="text-muted mt-1 d-block">
+                                                📋 <strong>Available Time Slots:</strong> 9 AM, 10 AM, 11 AM, 1 PM, 2 PM, 3 PM, 4 PM, 5 PM, 6 PM (12 PM lunch excluded)
+                                            </small>
+                                        </div>
                                     </div>
 
                                     <div class="row g-3">
                                         <div class="col-md-6">
                                             <label class="form-label fw-semibold mb-2">
-                                                <i class="bi bi-calendar-event me-1"></i>Start Date & Time
+                                                <i class="bi bi-calendar-event me-1"></i><span id="startLabel">Start Date</span>
                                                 <span class="text-danger">*</span>
                                             </label>
                                             <input id="blockStart" type="datetime-local" class="form-control form-control-lg" required>
-                                            <small class="form-text text-muted">When the block period begins</small>
+                                            <small id="startHelpText" class="form-text text-muted">Select the first day to block</small>
                                         </div>
                                         <div class="col-md-6">
                                             <label class="form-label fw-semibold mb-2">
-                                                <i class="bi bi-calendar-x me-1"></i>End Date & Time
+                                                <i class="bi bi-calendar-x me-1"></i><span id="endLabel">End Date</span>
                                                 <span class="text-danger">*</span>
                                             </label>
                                             <input id="blockEnd" type="datetime-local" class="form-control form-control-lg" required>
-                                            <small class="form-text text-muted">When the block period ends</small>
+                                            <small id="endHelpText" class="form-text text-muted">Select the last day to block (inclusive)</small>
                                         </div>
                                     </div>
 
-                                    <div id="blockPreview" class="mt-4 p-3 rounded" style="background: #fff7e0; border-left: 4px solid #ff6600; display: none;">
+                                    <!-- Quick Examples Section -->
+                                    <div class="mt-4 mb-3">
                                         <div class="d-flex align-items-center mb-2">
-                                            <i class="bi bi-eye me-2" style="color: #ff6600;"></i>
-                                            <strong style="color: #0b3a66;">Preview</strong>
+                                            <i class="bi bi-lightbulb me-2" style="color: #ffc107;"></i>
+                                            <strong class="text-muted small">Quick Examples:</strong>
+                                        </div>
+                                        <div class="d-flex flex-wrap gap-2">
+                                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="fillBlockExample('fullday-single')">
+                                                <i class="bi bi-calendar-day me-1"></i>Single Day
+                                            </button>
+                                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="fillBlockExample('fullday-range')">
+                                                <i class="bi bi-calendar-range me-1"></i>Date Range
+                                            </button>
+                                            <button type="button" class="btn btn-sm btn-outline-warning" onclick="fillBlockExample('time-morning')">
+                                                <i class="bi bi-sunrise me-1"></i>Block Till 2 PM
+                                            </button>
+                                            <button type="button" class="btn btn-sm btn-outline-warning" onclick="fillBlockExample('time-afternoon')">
+                                                <i class="bi bi-sunset me-1"></i>Block From 2 PM
+                                            </button>
+                                            <button type="button" class="btn btn-sm btn-outline-warning" onclick="fillBlockExample('time-lunch')">
+                                                <i class="bi bi-egg-fried me-1"></i>Lunch Block
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <div id="blockPreview" class="mt-4 p-4 rounded" style="background: #f8f9fa; border: 2px solid #ff6600; border-left: 6px solid #ff6600; display: none;">
+                                        <div class="d-flex align-items-center mb-3">
+                                            <i class="bi bi-eye-fill me-2" style="color: #ff6600; font-size: 1.3rem;"></i>
+                                            <strong style="color: #0b3a66; font-size: 1.1rem;">Block Preview</strong>
                                         </div>
                                         <div id="blockPreviewContent" class="text-muted small"></div>
                                     </div>

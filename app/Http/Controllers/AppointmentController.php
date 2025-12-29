@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
 use App\Notifications\BookingConfirmation;
 use App\Services\PriceCalculator;
+use Carbon\Carbon;
 
 use Illuminate\Http\JsonResponse;
 
@@ -1318,6 +1319,201 @@ class AppointmentController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Error retrieving booked time slots'
+            ], 500);
+        }
+    }
+
+    /**
+     * Get available time slots for a specific date, filtering out booked and blocked slots
+     */
+    public function getAvailableTimeSlots(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'date' => 'required|date|after_or_equal:today',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        try {
+            $date = $request->date;
+            $dateCarbon = \Carbon\Carbon::parse($date)->startOfDay();
+
+            // Check if the entire date is blocked (all-day block)
+            $appTz = config('app.timezone') ?: date_default_timezone_get();
+            $dateStr = $dateCarbon->format('Y-m-d');
+            $startOfDay = Carbon::createFromFormat('Y-m-d H:i:s', $dateStr . ' 00:00:00', $appTz)->startOfDay();
+            $endOfDay = Carbon::createFromFormat('Y-m-d H:i:s', $dateStr . ' 23:59:59', $appTz)->endOfDay();
+            
+            $blockedSchedules = \App\Models\Schedule::where('type', 'blocked')
+                ->where('start', '<', $endOfDay)
+                ->where('end', '>', $startOfDay)
+                ->get();
+
+            // Check if there's a full-day block
+            foreach ($blockedSchedules as $blockedSchedule) {
+                $startParsed = Carbon::parse($blockedSchedule->start)->utc();
+                $endParsed = Carbon::parse($blockedSchedule->end)->utc();
+                
+                // Check if it's an all-day block
+                $isAllDay = $startParsed->format('H:i:s') === '00:00:00' && 
+                           $endParsed->format('H:i:s') === '00:00:00';
+                
+                if ($isAllDay) {
+                    // Check if this date falls within the all-day block range
+                    $blockStartDate = $startParsed->format('Y-m-d');
+                    $blockEndDate = $endParsed->format('Y-m-d');
+                    
+                    if ($dateStr >= $blockStartDate && $dateStr < $blockEndDate) {
+                        return response()->json([
+                            'success' => true,
+                            'slots' => [],
+                            'message' => $blockedSchedule->title ?? 'This date is blocked',
+                            'date' => $date
+                        ]);
+                    }
+                }
+            }
+
+            // Default available time slots (9 AM to 6 PM, excluding 12-1 PM lunch break)
+            $defaultSlots = ['09:00', '10:00', '11:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00'];
+
+            // Get booked time slots
+            $bookedTimeSlots = \App\Models\Booking::where('appointment_date', $date)
+                ->whereNotIn('status', ['completed', 'cancelled'])
+                ->whereNotNull('appointment_time')
+                ->pluck('appointment_time')
+                ->map(function($time) {
+                    return \Carbon\Carbon::parse($time)->format('H:i');
+                })
+                ->toArray();
+
+            // Get blocked time ranges for this date
+            $blockedTimeRanges = [];
+            $dateStr = $dateCarbon->format('Y-m-d');
+            $startOfDay = Carbon::createFromFormat('Y-m-d H:i:s', $dateStr . ' 00:00:00', $appTz)->startOfDay();
+            $endOfDay = Carbon::createFromFormat('Y-m-d H:i:s', $dateStr . ' 23:59:59', $appTz)->endOfDay();
+            
+            $blockedSchedules = \App\Models\Schedule::where('type', 'blocked')
+                ->where('start', '<', $endOfDay)
+                ->where('end', '>', $startOfDay)
+                ->get();
+
+            foreach ($blockedSchedules as $block) {
+                // Parse from UTC (as stored) first
+                $startParsedUTC = Carbon::parse($block->start)->utc();
+                $endParsedUTC = Carbon::parse($block->end)->utc();
+                
+                // Check if it's an all-day block
+                $isAllDay = $startParsedUTC->format('H:i:s') === '00:00:00' && 
+                           $endParsedUTC->format('H:i:s') === '00:00:00';
+                
+                if (!$isAllDay) {
+                    // For time-specific blocks stored with old code, the UTC times need to be converted
+                    // to app timezone to get the actual local times
+                    $startParsed = $startParsedUTC->copy()->setTimezone($appTz);
+                    $endParsed = $endParsedUTC->copy()->setTimezone($appTz);
+                    
+                    // Check if this block overlaps with the requested date
+                    $blockStartDate = $startParsed->format('Y-m-d');
+                    $blockEndDate = $endParsed->format('Y-m-d');
+                    
+                    // Check if the requested date falls within the block's date range
+                    if ($dateStr >= $blockStartDate && $dateStr <= $blockEndDate) {
+                        // Get the intersection with the requested date
+                        $dayStart = $dateCarbon->copy()->setTimezone($appTz)->startOfDay();
+                        $dayEnd = $dateCarbon->copy()->setTimezone($appTz)->endOfDay();
+                        
+                        $blockStart = $startParsed->copy();
+                        if ($blockStart->lt($dayStart)) $blockStart = $dayStart->copy();
+                        
+                        $blockEnd = $endParsed->copy();
+                        if ($blockEnd->gt($dayEnd)) $blockEnd = $dayEnd->copy();
+                        
+                        if ($blockStart->lt($blockEnd)) {
+                            $blockedTimeRanges[] = [
+                                'start' => $blockStart->format('H:i'),
+                                'end' => $blockEnd->format('H:i'),
+                            ];
+                            
+                            Log::debug('Added blocked time range', [
+                                'block_id' => $block->id,
+                                'stored_utc_start' => $startParsedUTC->format('Y-m-d H:i:s'),
+                                'stored_utc_end' => $endParsedUTC->format('Y-m-d H:i:s'),
+                                'converted_start' => $startParsed->format('Y-m-d H:i:s'),
+                                'converted_end' => $endParsed->format('Y-m-d H:i:s'),
+                                'blocked_start' => $blockStart->format('H:i'),
+                                'blocked_end' => $blockEnd->format('H:i'),
+                                'date' => $date,
+                                'app_timezone' => $appTz,
+                            ]);
+                        }
+                    }
+                }
+            }
+
+            // Log blocked time ranges for debugging
+            Log::debug('Blocked time ranges for date', [
+                'date' => $date,
+                'blocked_ranges' => $blockedTimeRanges,
+            ]);
+
+            // Filter out blocked and booked slots
+            $availableSlots = [];
+            foreach ($defaultSlots as $slotTime) {
+                $isBooked = in_array($slotTime, $bookedTimeSlots);
+                
+                // Check if slot falls within any blocked time range
+                $isBlocked = false;
+                foreach ($blockedTimeRanges as $range) {
+                    // Parse times in the same timezone for comparison
+                    $slotDateTime = Carbon::createFromFormat('Y-m-d H:i', $date . ' ' . $slotTime, $appTz);
+                    $rangeStart = Carbon::createFromFormat('Y-m-d H:i', $date . ' ' . $range['start'], $appTz);
+                    $rangeEnd = Carbon::createFromFormat('Y-m-d H:i', $date . ' ' . $range['end'], $appTz);
+                    
+                    // Check if slot time falls within the blocked range
+                    // For 1-hour slots starting at the slot time, check if the slot time is >= start and <= end (inclusive)
+                    // If block is 06:00 to 14:00, slots 06:00 through 14:00 should be blocked
+                    if ($slotDateTime->gte($rangeStart) && $slotDateTime->lte($rangeEnd)) {
+                        $isBlocked = true;
+                        Log::debug('Slot blocked', [
+                            'slot_time' => $slotTime,
+                            'range_start' => $range['start'],
+                            'range_end' => $range['end'],
+                        ]);
+                        break;
+                    }
+                }
+                
+                if (!$isBooked && !$isBlocked) {
+                    $hour = (int)substr($slotTime, 0, 2);
+                    $minute = substr($slotTime, 3, 2);
+                    $formattedTime = date('g:i A', mktime($hour, $minute, 0));
+                    
+                    $availableSlots[] = [
+                        'time' => $slotTime,
+                        'available' => true,
+                        'formatted_time' => $formattedTime,
+                    ];
+                }
+            }
+
+            return response()->json([
+                'success' => true,
+                'slots' => $availableSlots,
+                'date' => $date
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error getting available time slots: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString()
+            ]);
+            return response()->json([
+                'success' => false,
+                'message' => 'Error retrieving available time slots'
             ], 500);
         }
     }
