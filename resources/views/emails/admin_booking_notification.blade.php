@@ -49,6 +49,20 @@
         <tr style="background:#f8fafc;"><td style="font-weight:700;">Email</td><td>{{ $booking->email ?? 'N/A' }}</td></tr>
         <tr><td style="font-weight:700;">Phone</td><td>{{ $booking->phone ?? 'N/A' }}</td></tr>
         <tr style="background:#f8fafc;"><td style="font-weight:700;">Service</td><td>{{ $booking->service ?? 'N/A' }}</td></tr>
+        <tr><td style="font-weight:700;">Appointment Date</td><td>
+          @if($booking->appointment_date)
+            {{ \Carbon\Carbon::parse($booking->appointment_date)->format('F j, Y') }}
+          @else
+            N/A
+          @endif
+        </td></tr>
+        <tr style="background:#f8fafc;"><td style="font-weight:700;">Appointment Time</td><td>
+          @if($booking->appointment_time)
+            {{ \Carbon\Carbon::parse($booking->appointment_time)->format('g:i A') }}
+          @else
+            N/A
+          @endif
+        </td></tr>
       </table>
 
       @php
@@ -151,7 +165,7 @@
       </table>
 
       <p style="margin-top:14px;">Quick actions:</p>
-      <a class="cta" href="{{ url('/admin/bookings/' . ($booking->id ?? '')) }}">Open booking in admin</a>
+      <a class="cta" href="{{ route('admin.bookings.show', ['id' => $booking->id ?? '']) }}">Open booking in admin</a>
 
       <div style="margin-top:18px;border-top:1px solid #eef2f6;padding-top:12px;font-size:13px;color:#6c757d;">
         <p style="margin:6px 0 8px 0;font-weight:700;color:#0b3a66;">Stay connected</p>
