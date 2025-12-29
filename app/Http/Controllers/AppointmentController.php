@@ -8,6 +8,10 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
 use App\Notifications\BookingConfirmation;
+use App\Services\PriceCalculator;
+use Carbon\Carbon;
+
+use Illuminate\Http\JsonResponse;
 
 class AppointmentController extends Controller
 {
@@ -85,15 +89,63 @@ class AppointmentController extends Controller
         // Normalize length input: accept kb_length (kids selector), hair_length (client) and convert hyphens to underscores
         $kbLengthRaw = $request->input('kb_length');
         if ($kbLengthRaw) {
-            $normalizedKb = str_replace('-', '_', $kbLengthRaw);
+            $normalizedKb = str_replace(['-', ' '], '_', strtolower((string)$kbLengthRaw));
+            // map common synonyms to canonical keys
+            $synMap = [
+                'tail_bone' => 'tailbone',
+                'tail-bone' => 'tailbone',
+                'tail bone' => 'tailbone',
+                'tailbone' => 'tailbone',
+                'midback' => 'mid_back',
+                'mid_back' => 'mid_back',
+                'brastrap' => 'bra_strap',
+                'brastrap' => 'bra_strap',
+                'bra_strap' => 'bra_strap'
+            ];
+            if (isset($synMap[$normalizedKb])) {
+                $normalizedKb = $synMap[$normalizedKb];
+            }
             $request->merge(['kb_length' => $normalizedKb]);
         }
 
         $lengthRaw = $request->input('hair_length') ?? $request->input('length');
         if ($lengthRaw) {
-            $normalized = str_replace('-', '_', $lengthRaw);
+            $normalized = str_replace(['-', ' '], '_', strtolower((string)$lengthRaw));
+            $synMap = [
+                'tail_bone' => 'tailbone',
+                'tail-bone' => 'tailbone',
+                'tail bone' => 'tailbone',
+                'tailbone' => 'tailbone',
+                'midback' => 'mid_back',
+                'mid_back' => 'mid_back',
+                'brastrap' => 'bra_strap',
+                'brastrap' => 'bra_strap',
+                'bra_strap' => 'bra_strap'
+            ];
+            if (isset($synMap[$normalized])) {
+                $normalized = $synMap[$normalized];
+            }
             $request->merge(['length' => $normalized]);
         }
+
+        // Determine service type early so we can tailor validation (require length for braids)
+        $serviceTypeInput = $request->input('service_type') ?? $request->input('service');
+        $serviceTypeNormalized = strtolower(trim((string)$serviceTypeInput));
+        $isHairMask = (
+            $serviceTypeNormalized === 'hair-mask' ||
+            str_contains($serviceTypeNormalized, 'hair-mask') ||
+            str_contains($serviceTypeNormalized, 'hair mask') ||
+            str_contains($serviceTypeNormalized, 'hairmask') ||
+            str_contains($serviceTypeNormalized, 'mask/relax') ||
+            str_contains($serviceTypeNormalized, 'relaxing')
+        );
+
+        $isBraid = (
+            str_contains($serviceTypeNormalized, 'braid') ||
+            str_contains($serviceTypeNormalized, 'braids') ||
+            str_contains($serviceTypeNormalized, 'knotless') ||
+            str_contains($serviceTypeNormalized, 'knot')
+        );
 
         // Handle sample_picture validation separately to avoid empty file issues
         $validationRules = [
@@ -111,22 +163,15 @@ class AppointmentController extends Controller
             'message' => 'nullable|string|max:1000'
         ];
 
-        // If the user is booking Hair Mask/Relaxing, require a mask option instead of length
-        $serviceTypeInput = $request->input('service_type') ?? $request->input('service');
-        $serviceTypeNormalized = strtolower(trim((string)$serviceTypeInput));
-        $isHairMask = (
-            $serviceTypeNormalized === 'hair-mask' ||
-            str_contains($serviceTypeNormalized, 'hair-mask') ||
-            str_contains($serviceTypeNormalized, 'hair mask') ||
-            str_contains($serviceTypeNormalized, 'hairmask') ||
-            str_contains($serviceTypeNormalized, 'mask/relax') ||
-            str_contains($serviceTypeNormalized, 'relaxing')
-        );
-
+        // Tailor length rules based on service type
         if ($isHairMask) {
             // hair mask - length optional, require hair_mask_option
             $validationRules['length'] = 'nullable|string|in:neck,shoulder,armpit,bra_strap,mid_back,waist,hip,tailbone,classic';
             $validationRules['hair_mask_option'] = 'required|string|in:mask-only,mask-with-weave';
+        } elseif ($isBraid) {
+            // For braid/knotless services, require either kb_length or length (one of them)
+            $validationRules['length'] = 'required_without:kb_length|string|in:neck,shoulder,armpit,bra_strap,mid_back,waist,hip,tailbone,classic';
+            $validationRules['kb_length'] = 'required_without:length|string|in:neck,shoulder,armpit,bra_strap,mid_back,waist,hip,tailbone,classic';
         } else {
             $validationRules['length'] = 'required|string|in:neck,shoulder,armpit,bra_strap,mid_back,waist,hip,tailbone,classic';
         }
@@ -244,6 +289,31 @@ class AppointmentController extends Controller
                 }
             }
 
+            // Check if this date is blocked
+            $appointmentDate = \Carbon\Carbon::parse($request->appointment_date)->startOfDay();
+            $blockedSchedule = \App\Models\Schedule::where('type', 'blocked')
+                ->where('start', '<=', $appointmentDate)
+                ->where('end', '>', $appointmentDate)
+                ->first();
+
+            if ($blockedSchedule) {
+                $isApiRequest = $request->expectsJson() || $request->is('api/*') || $request->header('X-Requested-With') === 'XMLHttpRequest';
+                $blockedTitle = $blockedSchedule->title ?? 'Blocked';
+
+                if ($isApiRequest) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => "This date is blocked: \"{$blockedTitle}\". Please select a different date."
+                    ], 422);
+                } else {
+                    return redirect()->route('home')
+                        ->with([
+                            'booking_error' => true,
+                            'error_message' => "This date is blocked: \"{$blockedTitle}\". Please select a different date."
+                        ]);
+                }
+            }
+
             // Handle sample picture upload if provided
             $samplePicturePath = null;
             if ($request->hasFile('sample_picture')) {
@@ -292,69 +362,78 @@ class AppointmentController extends Controller
                 Log::info('No file uploaded');
             }
 
-            // Compute final price based on selected length and per-service base price.
-            // Prefer kids selector length (`kb_length`) when present, otherwise use normalized `length`.
-            $length = $request->input('kb_length') ?? $request->input('length', 'mid_back');
-
-            // Lookup service base price if provided; fall back to 150.00
+            // Use the centralized PriceCalculator for all pricing logic and breakdowns
             $serviceInput = $request->input('service');
             $serviceModel = null;
+            $serviceNameForSave = $serviceInput;
             if (!empty($serviceInput)) {
-                // Try slug first, then name
                 $serviceModel = \App\Models\Service::where('slug', $serviceInput)->orWhere('name', $serviceInput)->first();
+                if ($serviceModel) $serviceNameForSave = $serviceModel->name;
             }
-            $basePrice = $serviceModel ? (float) $serviceModel->base_price : 150.00;
 
-            // If this is Hair Mask/Relaxing, compute addon based on mask option (+30 for weave)
-            $serviceType = $request->input('service_type') ?? $request->input('service');
-            $serviceTypeNormalized = strtolower(trim((string)$serviceType));
-            $isHairMask = (
-                $serviceTypeNormalized === 'hair-mask' ||
-                str_contains($serviceTypeNormalized, 'hair-mask') ||
-                str_contains($serviceTypeNormalized, 'hair mask') ||
-                str_contains($serviceTypeNormalized, 'hairmask') ||
-                str_contains($serviceTypeNormalized, 'mask/relax') ||
-                str_contains($serviceTypeNormalized, 'relaxing')
-            );
+            $calculator = new PriceCalculator();
+            $calcInput = [
+                'service_input' => $serviceInput,
+                'service_model' => $serviceModel,
+                'service_type' => $request->input('service_type') ?? $serviceInput,
+                'length' => $request->input('length'),
+                'kb_length' => $request->input('kb_length'),
+                'kb_extras' => $request->input('kb_extras'),
+                'hair_mask_option' => $request->input('hair_mask_option') ?? $request->input('selectedHairMaskOption'),
+            ];
 
-            Log::info('Hair-mask detection', [
-                'service_type_raw' => $serviceType,
-                'service_type_normalized' => $serviceTypeNormalized,
-                'hair_mask_option_raw' => $request->input('hair_mask_option', null),
-            ]);
+            $breakdown = $calculator->calculate($calcInput);
 
-            // Defensive rule: only apply `hair_mask_option` when this is actually a hair-mask service.
-            // If the client explicitly submitted a `hair_mask_option` but the service is NOT hair-mask,
-            // we will ignore it to prevent it from affecting unrelated services.
-            $explicitMaskOption = $request->input('hair_mask_option', null);
-            if ($explicitMaskOption !== null && $isHairMask) {
-                // prefer explicit service model price if available, otherwise default to $50
-                $basePrice = $serviceModel ? (float) $serviceModel->base_price : 50.00;
-                $addon = ($explicitMaskOption === 'mask-with-weave') ? 30.00 : 0.00;
-                $adjust = $addon; // persist as length_adjustment for email fidelity
-                $finalPrice = round($basePrice + $addon, 2);
-            } elseif ($isHairMask) {
-                // prefer explicit service model price if available, otherwise default to $50
-                $basePrice = $serviceModel ? (float) $serviceModel->base_price : 50.00;
-                $maskOption = $request->input('hair_mask_option', 'mask-only');
-                $addon = ($maskOption === 'mask-with-weave') ? 30.00 : 0.00;
-                $adjust = $addon; // persist as length_adjustment for email fidelity
-                $finalPrice = round($basePrice + $addon, 2);
-            } else {
-                // Two-step rule: every two steps away from mid_back changes price by $20.
-                $ordered = ['neck','shoulder','armpit','bra_strap','mid_back','waist','hip','tailbone','classic'];
-                $midIndex = array_search('mid_back', $ordered, true);
-                $idx = array_search($length, $ordered, true);
+            $basePrice = $breakdown['base_price'] ?? 0.00;
+            $adjust = $breakdown['length_adjustment'] ?? 0.00;
+            $finalPrice = $breakdown['final_price'] ?? ($basePrice + $adjust);
+            $priceWarning = null;
 
-                if ($idx === false || $midIndex === false) {
-                    $adjust = 0.00;
+            // Merge normalized hair_mask_option back to request for persistence if provided by calculator
+            if (!empty($breakdown['hair_mask_option_normalized'])) {
+                $request->merge(['hair_mask_option' => $breakdown['hair_mask_option_normalized']]);
+            }
+
+            // Attach kids breakdown values for later persistence
+            $kb_base_price = $breakdown['kb_base_price'] ?? null;
+            $kb_length_adjustment = $breakdown['kb_length_adjustment'] ?? null;
+            $kb_extras_total = $breakdown['kb_extras_total'] ?? null;
+            $kb_final_price = $breakdown['kb_final_price'] ?? null;
+
+            // Validate client-supplied final_price against the server calculation with tolerance
+            $tolerance = is_numeric(env('PRICE_TOLERANCE')) ? (float) env('PRICE_TOLERANCE') : 1.00;
+            $serverCalculatedFinal = $finalPrice;
+            if ($request->filled('final_price') && is_numeric($request->input('final_price'))) {
+                $clientFinal = round((float) $request->input('final_price'), 2);
+                $diff = abs($clientFinal - $serverCalculatedFinal);
+                if ($diff <= $tolerance) {
+                    Log::info('Client-provided final_price within tolerance; accepting client value', [
+                        'server_final' => $serverCalculatedFinal,
+                        'client_final' => $clientFinal,
+                        'difference' => $diff,
+                        'tolerance' => $tolerance,
+                        'service' => $serviceInput,
+                    ]);
+                    $finalPrice = $clientFinal;
                 } else {
-                    $d = $idx - $midIndex;
-                    // Per-step rule: each single step away from mid_back changes price by $20.
-                    // This makes waist = +20, bra_strap = -20, and two steps away = +/-40, etc.
-                    $adjust = ($d * 20.00);
+                    Log::error('Client final_price mismatch exceeds tolerance; overriding with server calculation', [
+                        'server_final' => $serverCalculatedFinal,
+                        'client_final' => $clientFinal,
+                        'difference' => $diff,
+                        'tolerance' => $tolerance,
+                        'service' => $serviceInput,
+                        'request_snapshot' => substr(json_encode(array_intersect_key($request->all(), array_flip(['service','service_type','length','kb_length','price','final_price','hair_mask_option']))), 0, 1000)
+                    ]);
+                    $finalPrice = $serverCalculatedFinal;
+                    if (!empty($breakdown['is_hair_mask'])) {
+                        $priceWarning = 'Client-submitted price did not match server calculation and was adjusted to the canonical price.';
+                    }
                 }
-                $finalPrice = round($basePrice + $adjust, 2);
+            }
+            // Ensure length variable is set for logging/persistence
+            $length = $request->input('kb_length') ?? $request->input('length', 'mid_back');
+            if (is_string($length)) {
+                $length = str_replace(['-', ' '], '_', strtolower($length));
             }
 
             // Log pricing calculation details for debugging
@@ -385,68 +464,126 @@ class AppointmentController extends Controller
                 }
             }
 
+            // Prepare kids-specific breakdown if this was a kids selector booking
+            $kb_base_price = null;
+            $kb_length_adjustment = null;
+            $kb_final_price = null;
+            $kb_extras_total = null;
+            $isKidsFlow = ($request->filled('kb_length') || ($serviceTypeNormalized && str_contains($serviceTypeNormalized, 'kids')));
+            if ($isKidsFlow) {
+                // Determine kids base price from service model or config fallback
+                $kb_base_price = $serviceModel ? (float) $serviceModel->base_price : (float) config('service_prices.kids_braids', 80);
+                
+                // Calculate all adjustments: type + length + finish (matching UI calculation)
+                $typeAdj = ['protective'=>-20,'cornrows'=>-40,'knotless_small'=>20,'knotless_med'=>0,'box_small'=>10,'box_med'=>0,'stitch'=>20];
+                $lengthAdj = ['shoulder'=>0,'armpit'=>10,'mid_back'=>20,'waist'=>30];
+                $finishAdj = ['curled'=>-10,'plain'=>0];
+                
+                $kb_braid_type = $request->input('kb_braid_type');
+                $kb_length = $request->input('kb_length') ?? $request->input('length');
+                $kb_finish = $request->input('kb_finish');
+                
+                // Normalize kb_length
+                if (is_string($kb_length)) {
+                    $kb_length = str_replace(['-', ' '], '_', strtolower($kb_length));
+                }
+                
+                // Calculate type adjustment
+                $typeAdjustment = 0.00;
+                if ($kb_braid_type && isset($typeAdj[$kb_braid_type])) {
+                    $typeAdjustment = (float) $typeAdj[$kb_braid_type];
+                }
+                
+                // Calculate length adjustment (using the selector mapping, not mid_back rule)
+                $lengthAdjustment = 0.00;
+                if ($kb_length && isset($lengthAdj[$kb_length])) {
+                    $lengthAdjustment = (float) $lengthAdj[$kb_length];
+                }
+                
+                // Calculate finish adjustment
+                $finishAdjustment = 0.00;
+                if ($kb_finish && isset($finishAdj[$kb_finish])) {
+                    $finishAdjustment = (float) $finishAdj[$kb_finish];
+                }
+                
+                // Total adjustments = type + length + finish
+                $kb_total_adjustments = $typeAdjustment + $lengthAdjustment + $finishAdjustment;
+                
+                // Store length adjustment separately for backwards compatibility (but it's actually total adjustments)
+                $kb_length_adjustment = $kb_total_adjustments;
+                
+                // Parse extras if provided (either numeric CSV or named extras)
+                $kb_extras_total = 0.00;
+                $kb_extras_raw = $request->input('kb_extras');
+                if (!empty($kb_extras_raw)) {
+                    if (is_string($kb_extras_raw) && preg_match('/^\d+(?:\.\d+)?(?:,\d+(?:\.\d+)?)*$/', $kb_extras_raw)) {
+                        $parts = array_map('floatval', explode(',', $kb_extras_raw));
+                        $kb_extras_total = array_sum($parts);
+                    } else {
+                        // named extras mapping
+                        $addonMap = ['kb_add_detangle'=>15,'kb_add_beads'=>10,'kb_add_beads_full'=>15,'kb_add_extension'=>20,'kb_add_rest'=>5];
+                        foreach (explode(',', $kb_extras_raw) as $it) {
+                            $it = trim($it);
+                            if (isset($addonMap[$it])) $kb_extras_total += $addonMap[$it];
+                        }
+                    }
+                }
+                
+                // Final price = base + (type + length + finish adjustments) + addons
+                $kb_final_price = round(($kb_base_price ?? 0) + $kb_total_adjustments + ($kb_extras_total ?? 0), 2);
+                // If client submitted a final_price for kids flow, verify within tolerance and prefer server calc if mismatch large
+                if ($request->filled('final_price') && is_numeric($request->input('final_price'))) {
+                    $clientFinal = round((float) $request->input('final_price'), 2);
+                    $tolerance = is_numeric(env('PRICE_TOLERANCE')) ? (float) env('PRICE_TOLERANCE') : 1.00;
+                    if (abs($clientFinal - $kb_final_price) <= $tolerance) {
+                        $kb_final_price = $clientFinal;
+                    } else {
+                        Log::warning('Kids client final_price mismatch; using server calc', ['server' => $kb_final_price, 'client' => $clientFinal]);
+                    }
+                }
+            }
+
             // Create the booking and persist kb_* selector fields, length and final_price
             $booking = \App\Models\Booking::create([
                 'name' => $request->name,
                 'email' => $resolvedEmail ?: ($request->email ?: 'no-email@example.com'),
                 'phone' => $request->phone,
-                'service' => $request->service ?: 'General Service',
+                    // Save canonical service name if we resolved a Service model, otherwise store user-provided label
+                    'service' => $serviceNameForSave ?: ($request->service ?: 'General Service'),
                 'length' => $length,
                 'kb_braid_type' => $request->input('kb_braid_type'),
                 'kb_finish' => $request->input('kb_finish'),
                 'kb_length' => $request->input('kb_length') ?? null,
                 'kb_extras' => $request->input('kb_extras') ?? null,
+                'kb_base_price' => $kb_base_price,
+                'kb_length_adjustment' => $kb_length_adjustment,
+                'kb_final_price' => $kb_final_price,
+                'kb_extras_total' => $kb_extras_total,
                 'appointment_date' => $request->appointment_date,
-                'appointment_time' => $request->appointment_time,
+                // Persist appointment_time normalized to H:i (24h) format when possible
+                'appointment_time' => (function($val){ try { return \Carbon\Carbon::parse($val)->format('H:i'); } catch (\Exception $e) { return $val; } })($request->appointment_time),
                 'message' => $request->message,
                 'sample_picture' => $samplePicturePath,
                 // Persist base price and length adjustment for email fidelity
                 'base_price' => $basePrice,
                 'length_adjustment' => $adjust,
                 'hair_mask_option' => ($isHairMask ? $request->input('hair_mask_option') : null),
-                'final_price' => $finalPrice,
+                // For kids flow prefer kb_final_price as authoritative final price
+                'final_price' => ($kb_final_price !== null) ? $kb_final_price : $finalPrice,
                 'status' => 'pending'
             ]);
-                try {
-                    // Use the resolved email we selected earlier if available
-                    $notifyEmail = $resolvedEmail ?: ($booking->email && $booking->email !== 'no-email@example.com' ? $booking->email : null);
-                    Log::info('Resolved customer email for booking (pre-send)', ['booking_id' => $booking->id, 'resolved_email' => $resolvedEmail, 'booking_email_field' => $booking->email]);
-
-                    if (!empty($notifyEmail)) {
-                        // Log mailer config so we can confirm which SMTP is used for web requests
-                        Log::info('Mail configuration for booking confirmation (pre-send)', [
-                            'mail_default' => config('mail.default'),
-                            'mail_mailer_env' => env('MAIL_MAILER'),
-                            'mail_host' => config('mail.mailers.smtp.host') ?? env('MAIL_HOST'),
-                            'mail_port' => config('mail.mailers.smtp.port') ?? env('MAIL_PORT'),
-                            'mail_username' => env('MAIL_USERNAME'),
-                        ]);
-
-                        try {
-                            // Attempt immediate delivery via Notification sendNow
-                            Notification::route('mail', $notifyEmail)->sendNow(new BookingConfirmation($booking));
-                            Log::info('Booking confirmation notification sent (sendNow)', ['booking_id' => $booking->id, 'email' => $notifyEmail]);
-                        } catch (\Throwable $notifyErr) {
-                            Log::warning('Notification sendNow failed, attempting Mail fallback', ['booking_id' => $booking->id, 'email' => $notifyEmail, 'error' => $notifyErr->getMessage(), 'trace' => $notifyErr->getTraceAsString()]);
-                            try {
-                                \Illuminate\Support\Facades\Mail::to($notifyEmail)->send(new \App\Mail\BookingConfirmationMail($booking));
-                                Log::info('Booking confirmation sent via Mail::to()->send() fallback', ['booking_id' => $booking->id, 'email' => $notifyEmail]);
-                            } catch (\Throwable $mailErr) {
-                                Log::error('Failed to send booking confirmation via Mail fallback', ['booking_id' => $booking->id, 'email' => $notifyEmail, 'error' => $mailErr->getMessage(), 'trace' => $mailErr->getTraceAsString()]);
-                            }
-                        }
-                    } else {
-                        Log::info('No valid email provided; skipping booking confirmation notification', ['booking_id' => $booking->id, 'email' => $booking->email]);
-                    }
             $bookingId = 'BK' . str_pad($booking->id, 6, '0', STR_PAD_LEFT);
             $confirmationCode = 'CONF' . strtoupper(substr(md5($booking->id . time()), 0, 8));
             $booking->confirmation_code = $confirmationCode;
             $booking->save();
 
+            // Log persisted booking details including what was stored for final_price
             Log::info('New appointment booked', [
                 'booking_id' => $bookingId,
                 'confirmation_code' => $confirmationCode,
-                'final_price' => $finalPrice,
+                'final_price_persisted' => $booking->final_price,
+                'server_calculated_final' => isset($serverCalculatedFinal) ? $serverCalculatedFinal : null,
+                'client_submitted_final' => $request->filled('final_price') ? $request->input('final_price') : null,
                 'length' => $booking->length
             ]);
 
@@ -462,8 +599,15 @@ class AppointmentController extends Controller
                         'mail_username' => env('MAIL_USERNAME'),
                     ]);
 
-                    // Attempt immediate delivery via Notification sendNow, with Mail fallback
+                    // Attempt immediate delivery via Notification sendNow, with Mail fallback.
                     try {
+                        Log::info('Attempting to send booking confirmation to customer', [
+                            'booking_id' => $booking->id,
+                            'email' => $booking->email,
+                            'mail_from' => config('mail.from.address'),
+                            'mailer' => config('mail.default')
+                        ]);
+
                         Notification::route('mail', $booking->email)->sendNow(new BookingConfirmation($booking));
                         Log::info('Booking confirmation notification sent (sendNow)', ['booking_id' => $booking->id, 'email' => $booking->email]);
                     } catch (\Throwable $notifyErr) {
@@ -509,10 +653,10 @@ class AppointmentController extends Controller
                         'service' => $request->service ?: 'General Service',
                         'email_provided' => !empty($resolvedEmail) || !empty($request->email)
                     ]
-                ]);
+                ] + ($priceWarning ? ['price_warning' => $priceWarning] : []));
             } else {
                 // Return redirect with flash message for regular form submissions
-                return redirect()->route('home')->with([
+                $flash = [
                     'booking_success' => true,
                     'booking_details' => [
                         'booking_id' => $bookingId,
@@ -523,7 +667,9 @@ class AppointmentController extends Controller
                         'appointment_time' => date('g:i A', strtotime($request->appointment_time)),
                         'service' => $request->service ?: 'General Service'
                     ]
-                ]);
+                ];
+                if ($priceWarning) $flash['price_warning'] = $priceWarning;
+                return redirect()->route('home')->with($flash);
             }
 
         } catch (\Exception $e) {
@@ -552,6 +698,25 @@ class AppointmentController extends Controller
                     'error_message' => 'We apologize, but there was an error processing your appointment. Please try again or contact us directly.'
                 ]);
             }
+        }
+    }
+
+    /**
+     * Return a server-side canonical price breakdown for given inputs.
+     */
+    public function previewPrice(Request $request): JsonResponse
+    {
+        try {
+            $payload = $request->only(['service','service_type','kb_length','length','kb_extras','kb_braid_type','hair_mask_option','selectedHairMaskOption']);
+            $calculator = new PriceCalculator();
+            $breakdown = $calculator->calculate($payload);
+            return response()->json([
+                'success' => true,
+                'breakdown' => $breakdown
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Price preview failed: ' . $e->getMessage());
+            return response()->json(['success' => false, 'message' => 'Failed to compute price'], 500);
         }
     }
 
@@ -701,8 +866,11 @@ class AppointmentController extends Controller
                         'notes' => $booking->notes,
                         'sample_picture' => $booking->sample_picture,
                         'confirmed_at' => $booking->confirmed_at,
+                        'confirmed_at_formatted' => $booking->confirmed_at ? $booking->confirmed_at->setTimezone('America/Toronto')->format('F j, Y g:i A') : null,
                         'completed_at' => $booking->completed_at,
+                        'completed_at_formatted' => $booking->completed_at ? $booking->completed_at->setTimezone('America/Toronto')->format('F j, Y g:i A') : null,
                         'cancelled_at' => $booking->cancelled_at,
+                        'cancelled_at_formatted' => $booking->cancelled_at ? $booking->cancelled_at->setTimezone('America/Toronto')->format('F j, Y g:i A') : null,
                         'completed_by' => $booking->completed_by,
                         'completion_notes' => $booking->completion_notes,
                         'service_duration_minutes' => $booking->service_duration_minutes,
@@ -1151,6 +1319,201 @@ class AppointmentController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Error retrieving booked time slots'
+            ], 500);
+        }
+    }
+
+    /**
+     * Get available time slots for a specific date, filtering out booked and blocked slots
+     */
+    public function getAvailableTimeSlots(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'date' => 'required|date|after_or_equal:today',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        try {
+            $date = $request->date;
+            $dateCarbon = \Carbon\Carbon::parse($date)->startOfDay();
+
+            // Check if the entire date is blocked (all-day block)
+            $appTz = config('app.timezone') ?: date_default_timezone_get();
+            $dateStr = $dateCarbon->format('Y-m-d');
+            $startOfDay = Carbon::createFromFormat('Y-m-d H:i:s', $dateStr . ' 00:00:00', $appTz)->startOfDay();
+            $endOfDay = Carbon::createFromFormat('Y-m-d H:i:s', $dateStr . ' 23:59:59', $appTz)->endOfDay();
+            
+            $blockedSchedules = \App\Models\Schedule::where('type', 'blocked')
+                ->where('start', '<', $endOfDay)
+                ->where('end', '>', $startOfDay)
+                ->get();
+
+            // Check if there's a full-day block
+            foreach ($blockedSchedules as $blockedSchedule) {
+                $startParsed = Carbon::parse($blockedSchedule->start)->utc();
+                $endParsed = Carbon::parse($blockedSchedule->end)->utc();
+                
+                // Check if it's an all-day block
+                $isAllDay = $startParsed->format('H:i:s') === '00:00:00' && 
+                           $endParsed->format('H:i:s') === '00:00:00';
+                
+                if ($isAllDay) {
+                    // Check if this date falls within the all-day block range
+                    $blockStartDate = $startParsed->format('Y-m-d');
+                    $blockEndDate = $endParsed->format('Y-m-d');
+                    
+                    if ($dateStr >= $blockStartDate && $dateStr < $blockEndDate) {
+                        return response()->json([
+                            'success' => true,
+                            'slots' => [],
+                            'message' => $blockedSchedule->title ?? 'This date is blocked',
+                            'date' => $date
+                        ]);
+                    }
+                }
+            }
+
+            // Default available time slots (9 AM to 6 PM, excluding 12-1 PM lunch break)
+            $defaultSlots = ['09:00', '10:00', '11:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00'];
+
+            // Get booked time slots
+            $bookedTimeSlots = \App\Models\Booking::where('appointment_date', $date)
+                ->whereNotIn('status', ['completed', 'cancelled'])
+                ->whereNotNull('appointment_time')
+                ->pluck('appointment_time')
+                ->map(function($time) {
+                    return \Carbon\Carbon::parse($time)->format('H:i');
+                })
+                ->toArray();
+
+            // Get blocked time ranges for this date
+            $blockedTimeRanges = [];
+            $dateStr = $dateCarbon->format('Y-m-d');
+            $startOfDay = Carbon::createFromFormat('Y-m-d H:i:s', $dateStr . ' 00:00:00', $appTz)->startOfDay();
+            $endOfDay = Carbon::createFromFormat('Y-m-d H:i:s', $dateStr . ' 23:59:59', $appTz)->endOfDay();
+            
+            $blockedSchedules = \App\Models\Schedule::where('type', 'blocked')
+                ->where('start', '<', $endOfDay)
+                ->where('end', '>', $startOfDay)
+                ->get();
+
+            foreach ($blockedSchedules as $block) {
+                // Parse from UTC (as stored) first
+                $startParsedUTC = Carbon::parse($block->start)->utc();
+                $endParsedUTC = Carbon::parse($block->end)->utc();
+                
+                // Check if it's an all-day block
+                $isAllDay = $startParsedUTC->format('H:i:s') === '00:00:00' && 
+                           $endParsedUTC->format('H:i:s') === '00:00:00';
+                
+                if (!$isAllDay) {
+                    // For time-specific blocks stored with old code, the UTC times need to be converted
+                    // to app timezone to get the actual local times
+                    $startParsed = $startParsedUTC->copy()->setTimezone($appTz);
+                    $endParsed = $endParsedUTC->copy()->setTimezone($appTz);
+                    
+                    // Check if this block overlaps with the requested date
+                    $blockStartDate = $startParsed->format('Y-m-d');
+                    $blockEndDate = $endParsed->format('Y-m-d');
+                    
+                    // Check if the requested date falls within the block's date range
+                    if ($dateStr >= $blockStartDate && $dateStr <= $blockEndDate) {
+                        // Get the intersection with the requested date
+                        $dayStart = $dateCarbon->copy()->setTimezone($appTz)->startOfDay();
+                        $dayEnd = $dateCarbon->copy()->setTimezone($appTz)->endOfDay();
+                        
+                        $blockStart = $startParsed->copy();
+                        if ($blockStart->lt($dayStart)) $blockStart = $dayStart->copy();
+                        
+                        $blockEnd = $endParsed->copy();
+                        if ($blockEnd->gt($dayEnd)) $blockEnd = $dayEnd->copy();
+                        
+                        if ($blockStart->lt($blockEnd)) {
+                            $blockedTimeRanges[] = [
+                                'start' => $blockStart->format('H:i'),
+                                'end' => $blockEnd->format('H:i'),
+                            ];
+                            
+                            Log::debug('Added blocked time range', [
+                                'block_id' => $block->id,
+                                'stored_utc_start' => $startParsedUTC->format('Y-m-d H:i:s'),
+                                'stored_utc_end' => $endParsedUTC->format('Y-m-d H:i:s'),
+                                'converted_start' => $startParsed->format('Y-m-d H:i:s'),
+                                'converted_end' => $endParsed->format('Y-m-d H:i:s'),
+                                'blocked_start' => $blockStart->format('H:i'),
+                                'blocked_end' => $blockEnd->format('H:i'),
+                                'date' => $date,
+                                'app_timezone' => $appTz,
+                            ]);
+                        }
+                    }
+                }
+            }
+
+            // Log blocked time ranges for debugging
+            Log::debug('Blocked time ranges for date', [
+                'date' => $date,
+                'blocked_ranges' => $blockedTimeRanges,
+            ]);
+
+            // Filter out blocked and booked slots
+            $availableSlots = [];
+            foreach ($defaultSlots as $slotTime) {
+                $isBooked = in_array($slotTime, $bookedTimeSlots);
+                
+                // Check if slot falls within any blocked time range
+                $isBlocked = false;
+                foreach ($blockedTimeRanges as $range) {
+                    // Parse times in the same timezone for comparison
+                    $slotDateTime = Carbon::createFromFormat('Y-m-d H:i', $date . ' ' . $slotTime, $appTz);
+                    $rangeStart = Carbon::createFromFormat('Y-m-d H:i', $date . ' ' . $range['start'], $appTz);
+                    $rangeEnd = Carbon::createFromFormat('Y-m-d H:i', $date . ' ' . $range['end'], $appTz);
+                    
+                    // Check if slot time falls within the blocked range
+                    // For 1-hour slots starting at the slot time, check if the slot time is >= start and <= end (inclusive)
+                    // If block is 06:00 to 14:00, slots 06:00 through 14:00 should be blocked
+                    if ($slotDateTime->gte($rangeStart) && $slotDateTime->lte($rangeEnd)) {
+                        $isBlocked = true;
+                        Log::debug('Slot blocked', [
+                            'slot_time' => $slotTime,
+                            'range_start' => $range['start'],
+                            'range_end' => $range['end'],
+                        ]);
+                        break;
+                    }
+                }
+                
+                if (!$isBooked && !$isBlocked) {
+                    $hour = (int)substr($slotTime, 0, 2);
+                    $minute = substr($slotTime, 3, 2);
+                    $formattedTime = date('g:i A', mktime($hour, $minute, 0));
+                    
+                    $availableSlots[] = [
+                        'time' => $slotTime,
+                        'available' => true,
+                        'formatted_time' => $formattedTime,
+                    ];
+                }
+            }
+
+            return response()->json([
+                'success' => true,
+                'slots' => $availableSlots,
+                'date' => $date
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error getting available time slots: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString()
+            ]);
+            return response()->json([
+                'success' => false,
+                'message' => 'Error retrieving available time slots'
             ], 500);
         }
     }

@@ -123,17 +123,33 @@ class AdminBookingNotification extends Notification
             ];
         }catch(\Exception $e){ $selector_friendly = null; }
 
+        // Use centralized pricing breakdown when available
+        $break = [];
+        try { $break = $b->getPricingBreakdown(); } catch (\Throwable $e) { $break = []; }
+
+        // Expose server/client/persisted price values for admin visibility
+        $break['server_calculated_final'] = $break['final_price'] ?? null;
+        // Try to detect any client-submitted final price embedded in notes (if recorded)
+        $break['client_submitted_final'] = null;
+        if (!empty($b->notes)) {
+            if (preg_match('/client[_\s-]*final[:=]?\s*\$?([0-9]+(?:\.[0-9]{1,2})?)/i', $b->notes, $m)) {
+                $break['client_submitted_final'] = floatval($m[1]);
+            } elseif (preg_match('/final[_\s-]*price[:=]?\s*\$?([0-9]+(?:\.[0-9]{1,2})?)/i', $b->notes, $m2)) {
+                $break['client_submitted_final'] = floatval($m2[1]);
+            }
+        }
+        $break['final_price_persisted'] = isset($b->final_price) ? (float) $b->final_price : null;
+
+        // Pass a single authoritative breakdown to the view so admin sees the same values
         return (new MailMessage)
             ->subject($subject)
             ->view('emails.admin_booking_notification', [
                 'booking' => $b,
                 'formattedId' => $formattedId,
-                'selector' => $selector,
-                'computedTotal' => $computedTotal,
-                'selector_base' => $baseConfigured ?? null,
-                'selector_adjust' => $adjustments ?? null,
-                'selector_addons' => $addons ?? null,
-                'selector_friendly' => $selector_friendly,
+                'breakdown' => $break,
+                'selector' => $break['selector'] ?? $selector,
+                'selector_friendly' => $break['selector_friendly'] ?? $selector_friendly,
+                'hideLengthFinish' => $break['hide_length_finish'] ?? false,
             ]);
     }
 

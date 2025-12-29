@@ -7,6 +7,7 @@ use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 use Illuminate\Support\Facades\Log;
 use App\Models\Booking;
+use Carbon\Carbon;
 
 class BookingConfirmation extends Notification
 {
@@ -39,9 +40,31 @@ class BookingConfirmation extends Notification
     {
         $b = $this->booking;
 
-        // Prefer persisted fields if available (safer for audit/consistency)
-        $basePrice = $b->base_price ?? null;
-        $adjust = $b->length_adjustment ?? null;
+        // Log recipient context for debugging deliveries
+        try {
+            $recipientEmail = null;
+            if (is_object($notifiable) && method_exists($notifiable, 'routeNotificationFor')) {
+                $recipientEmail = $notifiable->routeNotificationFor('mail');
+            } elseif (is_object($notifiable) && property_exists($notifiable, 'email')) {
+                $recipientEmail = $notifiable->email;
+            }
+            Log::info('BookingConfirmation->toMail invoked', [
+                'booking_id' => $b->id ?? null,
+                'recipient_via_notifiable' => $recipientEmail,
+                'booking_email_field' => $b->email ?? null,
+                'mail_from' => config('mail.from.address'),
+                'mail_driver' => config('mail.default')
+            ]);
+        } catch (\Throwable $e) {
+            Log::warning('Failed to log BookingConfirmation recipient context', ['error' => $e->getMessage()]);
+        }
+
+        // Prefer centralized pricing breakdown from the Booking model when available
+        $break = [];
+        try { $break = $this->booking->getPricingBreakdown(); } catch (\Throwable $e) { $break = []; }
+
+        $basePrice = $break['resolved_base'] ?? ($b->base_price ?? null);
+        $adjust = $break['length_adjust'] ?? ($b->length_adjustment ?? null);
 
         // If persisted basePrice missing, try service lookup
         if (is_null($basePrice)) {
@@ -219,26 +242,104 @@ class BookingConfirmation extends Notification
             $resolvedBase = 0.0;
         }
 
+        // Check for hair mask weaving addon and include it in calculations
+        $weavingAddon = 0.00;
+        if (!empty($b->hair_mask_option)) {
+            $maskOptionNormalized = strtolower(trim(str_replace(['_', ' '], '-', (string)$b->hair_mask_option)));
+            if (str_contains($maskOptionNormalized, 'weave') || str_contains($maskOptionNormalized, 'weav')) {
+                $weavingAddon = 30.00;
+                // If length_adjustment contains the weaving addon, subtract it to get pure length adjustment
+                if ($lengthAdjust > 0 && $lengthAdjust == $weavingAddon) {
+                    $lengthAdjust = 0.00;
+                }
+            }
+        }
+        
         // Determine final_price to pass: prefer computed_total_final, then booking final_price, else compute from components
+        // For hair mask services, ensure weaving addon is included
         if (!is_null($computed_total_final)) {
             $final_price_to_pass = $computed_total_final;
         } elseif (!empty($b->final_price) && is_numeric($b->final_price)) {
+            // Use stored final_price (it should already include weaving addon if applicable)
             $final_price_to_pass = (float) $b->final_price;
         } else {
-            $final_price_to_pass = round($resolvedBase + $lengthAdjust + $addonsTotal, 2);
+            // Compute from components including weaving addon
+            $final_price_to_pass = round($resolvedBase + $lengthAdjust + $addonsTotal + $weavingAddon, 2);
         }
 
-        // Also compute an adjustments total (lengthAdjust + addonsTotal) for clarity in templates
-        $adjustmentsTotal = round($lengthAdjust, 2);
-        $addonsTotal = round($addonsTotal, 2);
+        // Use breakdown values if available (more authoritative for kids bookings)
+        $breakdownAdjustmentsTotal = $break['adjustments_total'] ?? null;
+        $breakdownAddonsTotal = $break['addons_total'] ?? null;
+        
+        // For kids bookings, adjustments_total from breakdown includes type + length + finish
+        // Otherwise, calculate from components
+        if (isset($breakdownAdjustmentsTotal) && is_numeric($breakdownAdjustmentsTotal)) {
+            $adjustmentsTotal = round((float)$breakdownAdjustmentsTotal, 2);
+        } elseif (isset($adjustments) && is_numeric($adjustments)) {
+            // Use computed adjustments (type + length + finish) for kids bookings
+            $adjustmentsTotal = round((float)$adjustments, 2);
+        } else {
+            // Fallback to lengthAdjust only (for non-kids bookings)
+            // Don't include weaving addon in adjustments - it's shown separately
+            $adjustmentsTotal = round($lengthAdjust, 2);
+        }
+        
+        if (isset($breakdownAddonsTotal) && is_numeric($breakdownAddonsTotal)) {
+            $addonsTotal = round((float)$breakdownAddonsTotal, 2);
+        } else {
+            $addonsTotal = round($addonsTotal, 2);
+        }
+        
+        // Ensure final price includes weaving addon if present
         $computed_total_final = $computed_total_final ?? $final_price_to_pass;
+        if ($weavingAddon > 0 && $computed_total_final < ($resolvedBase + $weavingAddon)) {
+            // If final price doesn't include weaving addon, add it
+            $computed_total_final = round($resolvedBase + $lengthAdjust + $addonsTotal + $weavingAddon, 2);
+        }
 
         // Compute hideLengthFinish once and pass to views so templates don't duplicate logic
+        // Hide length for services that don't require length adjustments
+        $serviceName = strtolower((string)($b->service ?? ''));
         $rawBraid = strtolower((string)($selector['braid_type'] ?? $b->kb_braid_type ?? $b->service ?? ''));
+        
+        // Services that don't show length in notifications
+        $noLengthServices = [
+            'weaving crotchet',
+            'single crotchet',
+            'natural hair twist',
+            'weaving no-extension',
+            'weaving-no-extension',
+            'weaving_crotchet',
+            'single_crotchet',
+            'natural_hair_twist',
+            'hair mask',
+            'hair-mask',
+            'hair_mask',
+            'mask/relax',
+            'mask/relaxing',
+            'relaxing',
+            'retouching',
+            'retouch'
+        ];
+        
+        // Check if this is a hair mask/relaxing/retouching service
+        $isHairMaskService = (
+            stripos($serviceName, 'hair mask') !== false ||
+            stripos($serviceName, 'hair-mask') !== false ||
+            stripos($serviceName, 'mask/relax') !== false ||
+            stripos($serviceName, 'relaxing') !== false ||
+            stripos($serviceName, 'retouching') !== false ||
+            stripos($serviceName, 'retouch') !== false ||
+            !empty($b->hair_mask_option)
+        );
+        
         $hideLengthFinish = (
             stripos($rawBraid, 'protect') !== false ||
             stripos($rawBraid, 'cornrow') !== false ||
-            preg_match('/protective|cornrows|cornrow/i', $rawBraid)
+            preg_match('/protective|cornrows|cornrow/i', $rawBraid) ||
+            in_array($serviceName, $noLengthServices, true) ||
+            in_array(str_replace([' ', '-'], ['_', '_'], $serviceName), $noLengthServices, true) ||
+            $isHairMaskService
         );
 
         // Log computed breakdown for observability (temporary)
@@ -275,10 +376,11 @@ class BookingConfirmation extends Notification
         // Prepare confirmation number (prefer explicit confirmation_code if set)
         $confirmationNumber = $b->confirmation_code ?? ('BK' . str_pad($b->id ?? 0, 6, '0', STR_PAD_LEFT));
 
-        return (new MailMessage)
+        $mail = (new MailMessage)
             ->subject($subject)
             ->view('emails.booking_confirmation', [
                 'booking' => $b,
+                'breakdown' => $break, // Pass full breakdown so view can use authoritative values
                 'basePrice' => $resolvedBase,
                 'length_adjust' => $lengthAdjust,
                 'addons_total' => $addonsTotal,
@@ -288,7 +390,7 @@ class BookingConfirmation extends Notification
                 'final_price' => $final_price_to_pass,
                 'selector_base' => $baseConfigured ?? null,
                 'selector_adjust' => $adjustments ?? null,
-                'selector_addons' => $addons ?? null,
+                'selector_addons' => $addonsTotal ?? null,
                 'selector_friendly' => $selector_friendly,
                 'hideLengthFinish' => $hideLengthFinish,
                 // View-level flags
@@ -298,6 +400,10 @@ class BookingConfirmation extends Notification
                 'showHeader' => !$isRecipientOwner, // show the small "Booking Confirmation" header for admin emails only
                 'confirmation_number' => $confirmationNumber,
             ]);
+
+            // We intentionally do not attach .ics files to confirmation emails per configuration.
+
+        return $mail;
     }
 
     /**

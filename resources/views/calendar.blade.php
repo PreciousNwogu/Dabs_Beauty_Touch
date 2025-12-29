@@ -356,6 +356,7 @@
             <div class="form-body">
                 <form id="bookingForm">
                     @csrf
+                        <input type="hidden" id="final_price_input" name="final_price" value="">
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label for="name" class="form-label">Full Name *</label>
@@ -445,6 +446,18 @@
         let selectedTime = null;
         let selectedService = null;
 
+        // Helper: format a Date as local YYYY-MM-DD (avoids timezone shifts from toISOString())
+        function formatYMD(d){
+            try{
+                const yyyy = d.getFullYear();
+                const mm = String(d.getMonth() + 1).padStart(2, '0');
+                const dd = String(d.getDate()).padStart(2, '0');
+                return `${yyyy}-${mm}-${dd}`;
+            }catch(e){
+                try{ return d.toISOString().split('T')[0]; }catch(er){ return ''+d; }
+            }
+        }
+
         // Initialize calendar
         document.addEventListener('DOMContentLoaded', function() {
             renderCalendar();
@@ -476,7 +489,7 @@
                     for (let i = 0; i < 42; i++) {
                         const date = new Date(startDate);
                         date.setDate(startDate.getDate() + i);
-                        const dateString = date.toISOString().split('T')[0];
+                        const dateString = formatYMD(date);
 
                         const dayDiv = document.createElement('div');
                         dayDiv.className = 'col calendar-day';
@@ -555,7 +568,7 @@
                 day: 'numeric'
             });
 
-            fetch(`/bookings/slots?date=${date.toISOString().split('T')[0]}`)
+            fetch(`/bookings/slots?date=${formatYMD(date)}`)
                 .then(response => response.json())
                 .then(data => {
                     loading.style.display = 'none';
@@ -629,7 +642,7 @@
             e.preventDefault();
 
             const formData = new FormData(this);
-            formData.append('appointment_date', selectedDate.toISOString().split('T')[0]);
+            formData.append('appointment_date', formatYMD(selectedDate));
             formData.append('appointment_time', selectedTime.time);
 
             const submitBtn = this.querySelector('button[type="submit"]');
@@ -810,14 +823,24 @@
                         console.log(`🔴 Marked ${dateString} as BOOKED`);
 
                     } else if (blockedIndex[dateString]) {
-                        // Mark as blocked-range and show title text
-                        dayElement.classList.add('blocked-range');
-                        dayElement.title = blockedIndex[dateString].title || 'Blocked';
-                        const textDiv = document.createElement('div');
-                        textDiv.className = 'blocked-text';
-                        textDiv.textContent = blockedIndex[dateString].title || 'Blocked';
-                        dayElement.appendChild(textDiv);
-                        console.log(`⛔ Marked ${dateString} as BLOCKED (${blockedIndex[dateString].title})`);
+                        const blockedInfo = blockedIndex[dateString];
+                        const isFullDay = blockedInfo.full_day === true || blockedInfo.full_day === 1;
+                        
+                        if (isFullDay) {
+                            // Mark as blocked-range and show title text
+                            dayElement.classList.add('blocked-range');
+                            dayElement.title = blockedInfo.title || 'Blocked';
+                            const textDiv = document.createElement('div');
+                            textDiv.className = 'blocked-text';
+                            textDiv.textContent = blockedInfo.title || 'Blocked';
+                            dayElement.appendChild(textDiv);
+                            console.log(`⛔ Marked ${dateString} as FULLY BLOCKED (${blockedInfo.title})`);
+                        } else {
+                            // Time-specific block: mark as available
+                            dayElement.classList.add('available');
+                            dayElement.title = (blockedInfo.title || 'Blocked') + ' - Some times blocked, click to see available times';
+                            console.log(`🟡 Marked ${dateString} as AVAILABLE with time-specific blocks`);
+                        }
 
                     } else {
                         // Available

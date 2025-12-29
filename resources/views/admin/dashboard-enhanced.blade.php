@@ -436,7 +436,7 @@
                             @endif
                             <div class="detail-item">
                                 <i class="bi bi-calendar-plus detail-icon"></i>
-                                <span><strong>Booked:</strong> {{ $booking->created_at->format('M d, Y g:i A') }}</span>
+                                <span><strong>Booked:</strong> {{ $booking->created_at ? $booking->created_at->setTimezone('America/Toronto')->format('M d, Y g:i A') : 'N/A' }}</span>
                             </div>
                             @if($booking->message)
                                 <div class="detail-item">

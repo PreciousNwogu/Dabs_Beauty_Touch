@@ -87,6 +87,10 @@ Route::get('/test-upload', function () {
     return view('test-upload');
 });
 
+// Public endpoints for blocked dates (used by booking calendar)
+Route::get('/schedules/blocked-dates', [\App\Http\Controllers\Admin\ScheduleController::class, 'blockedDates'])->name('schedules.blocked-dates');
+Route::get('/schedules/blocked-list', [\App\Http\Controllers\Admin\ScheduleController::class, 'blockedList'])->name('schedules.blocked-list');
+
 // Test database route
 Route::get('/test-db', function () {
     try {
@@ -223,6 +227,9 @@ Route::post('/kids-selector/submit', function (Request $request) {
     return redirect()->route('home')->with('kids_selector', $payload);
 })->name('kids.selector.submit');
 
+// Price preview API (server-side canonical breakdown)
+Route::post('/api/price/preview', [\App\Http\Controllers\AppointmentController::class, 'previewPrice'])->name('api.price.preview');
+
 // Admin authentication routes (unprotected but rate limited) - TEMPORARY SIMPLE VERSION
 Route::get('/admin/login', function () {
     return view('admin.login');
@@ -296,10 +303,10 @@ Route::prefix('admin')->name('admin.')->group(function () {
             $query->where('service', 'LIKE', '%' . request('service') . '%');
         }
 
-        // Paginate bookings (10 per page)
+        // Paginate bookings (50 per page to show more bookings)
         $bookings = $query->orderBy('appointment_date', 'desc')
             ->orderBy('appointment_time', 'desc')
-            ->paginate(10);
+            ->paginate(50);
 
         $stats = [
             'total_bookings' => \App\Models\Booking::count(),
@@ -532,10 +539,62 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::put('/schedules/{id}', [\App\Http\Controllers\Admin\ScheduleController::class, 'update'])->name('schedules.update');
     Route::delete('/schedules/{id}', [\App\Http\Controllers\Admin\ScheduleController::class, 'destroy'])->name('schedules.destroy');
     Route::post('/schedules/reschedule', [\App\Http\Controllers\Admin\ScheduleController::class, 'reschedule'])->name('schedules.reschedule');
-    // Public endpoint used by the booking calendar to mark blocked days
-    Route::get('/schedules/blocked-dates', [\App\Http\Controllers\Admin\ScheduleController::class, 'blockedDates'])->name('schedules.blocked-dates');
-    // Public endpoint: list upcoming blocked ranges for users
-    Route::get('/schedules/blocked-list', [\App\Http\Controllers\Admin\ScheduleController::class, 'blockedList'])->name('schedules.blocked-list');
+    
+    // Temporary route to unblock all January dates (GET for easy browser access)
+    Route::get('/schedules/unblock-january', function(Request $request) {
+        try {
+            $year = $request->input('year', date('Y')); // Default to current year
+            $janStart = \Carbon\Carbon::create($year, 1, 1)->startOfDay();
+            $janEnd = \Carbon\Carbon::create($year, 1, 31)->endOfDay();
+            
+            // Find all blocked schedules that overlap with January
+            $blockedSchedules = \App\Models\Schedule::where('type', 'blocked')
+                ->where(function($query) use ($janStart, $janEnd) {
+                    $query->where(function($q) use ($janStart, $janEnd) {
+                        // Schedule starts before or during January and ends after January starts
+                        $q->where('start', '<=', $janEnd)
+                          ->where('end', '>', $janStart);
+                    });
+                })
+                ->get();
+            
+            if ($blockedSchedules->isEmpty()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => "No blocked schedules found for January {$year}",
+                    'deleted_count' => 0
+                ]);
+            }
+            
+            $deletedCount = 0;
+            $deletedTitles = [];
+            
+            foreach ($blockedSchedules as $schedule) {
+                $deletedTitles[] = $schedule->title ?? 'Untitled';
+                $schedule->delete();
+                $deletedCount++;
+            }
+            
+            \Illuminate\Support\Facades\Log::info('Unblocked January dates', [
+                'year' => $year,
+                'deleted_count' => $deletedCount,
+                'deleted_schedules' => $deletedTitles
+            ]);
+            
+            return response()->json([
+                'success' => true,
+                'message' => "Unblocked {$deletedCount} schedule(s) for January {$year}",
+                'deleted_count' => $deletedCount,
+                'deleted_schedules' => $deletedTitles
+            ]);
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Failed to unblock January: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to unblock January: ' . $e->getMessage()
+            ], 500);
+        }
+    })->name('schedules.unblock-january');
 
 });
 
@@ -743,10 +802,32 @@ Route::post('/bookings', function(Request $request) {
         }catch(
         Exception $e){ /* noop */ }
 
-        // Normalize incoming length (accept hair_length or length) and determine final price using Service model + length adjustments
-        $lengthRaw = $request->input('hair_length') ?? $request->input('length');
+        // If this is a kids-braids submission, ensure a length was provided (kb_length or length/hair_length)
+        if (!empty($bookingData['service_type']) && $bookingData['service_type'] === 'kids-braids') {
+            $providedLength = $bookingData['kb_length'] ?? $request->input('length') ?? $request->input('hair_length') ?? null;
+            if (empty($providedLength)) {
+                // Return early with a validation-like error so the user can correct the form
+                if ($request->wantsJson() || $request->header('X-Requested-With') === 'XMLHttpRequest') {
+                    return response()->json(['success' => false, 'message' => 'Please select a hair length for kids braids.'], 422);
+                }
+                return redirect()->route('home')->withErrors(['length' => 'Please select a hair length for kids braids'])->withInput();
+            }
+
+            // Normalize kb_length to canonical format server-side
+            $norm = strtolower(trim((string)$providedLength));
+            $norm = str_replace([' ', '-'], ['_', '_'], $norm);
+            $norm = str_replace(['tail_bone','tail bone','tail-bone','tailbone','tail_bone'], 'tailbone', $norm);
+            $norm = str_replace(['bra strap','bra-strap','bra_strap'], 'bra_strap', $norm);
+            $bookingData['kb_length'] = $norm;
+        }
+
+        // Normalize incoming length (accept hair_length or length or kb_length) and determine final price using Service model + length adjustments
+        $lengthRaw = $request->input('hair_length') ?? $request->input('length') ?? $bookingData['kb_length'] ?? null;
         if ($lengthRaw) {
-            $length = str_replace('-', '_', $lengthRaw);
+            $length = strtolower(trim((string)$lengthRaw));
+            $length = str_replace([' ', '-'], ['_', '_'], $length);
+            $length = str_replace(['tail_bone','tail bone','tail-bone','tailbone','tail_bone'], 'tailbone', $length);
+            $length = str_replace(['bra strap','bra-strap','bra_strap'], 'bra_strap', $length);
         } else {
             $length = $request->length ?: 'mid_back';
         }
@@ -754,52 +835,100 @@ Route::post('/bookings', function(Request $request) {
             $serviceInput = $request->service;
             $serviceModel = null;
             if ($serviceInput) {
-                // Try slug first
+                // Try slug first (exact match)
                 $serviceModel = Service::where('slug', $serviceInput)->first();
                 if (!$serviceModel) {
-                    // Try by name
+                    // Try by name (exact match)
                     $serviceModel = Service::where('name', $serviceInput)->first();
+                }
+                if (!$serviceModel) {
+                    // Try by name case-insensitive
+                    $serviceModel = Service::whereRaw('LOWER(name) = ?', [strtolower($serviceInput)])->first();
+                }
+                if (!$serviceModel) {
+                    // Try by slug (convert service name to slug format for lookup)
+                    $slugFromName = strtolower(str_replace([' ', '-'], '-', $serviceInput));
+                    $serviceModel = Service::where('slug', $slugFromName)->first();
                 }
             }
 
             // Determine authoritative base price from Service model (ignore client-provided price)
-            $base = $serviceModel ? (float) $serviceModel->base_price : 150.00;
+            // If not found in database, try config file as fallback
+            if ($serviceModel) {
+                $base = (float) $serviceModel->base_price;
+            } else {
+                // Try to find in config by slug (convert service name to slug format)
+                // Convert spaces and hyphens to underscores for config lookup
+                $serviceSlug = strtolower(str_replace([' ', '-'], '_', $serviceInput ?? ''));
+                $base = (float) (config("service_prices.{$serviceSlug}", 150.00));
+            }
 
             // If client explicitly provided a hair_mask_option, prefer that
             $explicitMaskOption = $request->input('hair_mask_option', null);
             $serviceTypeInput = $request->input('service_type') ?? $request->input('service');
             $serviceTypeNormalized = strtolower(trim((string)$serviceTypeInput));
+            $serviceNameNormalized = strtolower(trim((string)($request->input('service') ?? $request->input('service_display') ?? '')));
             $isHairMask = (
                 $serviceTypeNormalized === 'hair-mask' ||
                 str_contains($serviceTypeNormalized, 'hair-mask') ||
                 str_contains($serviceTypeNormalized, 'hair mask') ||
                 str_contains($serviceTypeNormalized, 'hairmask') ||
                 str_contains($serviceTypeNormalized, 'mask/relax') ||
-                str_contains($serviceTypeNormalized, 'relaxing')
+                str_contains($serviceTypeNormalized, 'relaxing') ||
+                str_contains($serviceTypeNormalized, 'retouching') ||
+                str_contains($serviceTypeNormalized, 'retouch') ||
+                str_contains($serviceNameNormalized, 'hair mask') ||
+                str_contains($serviceNameNormalized, 'mask/relax') ||
+                str_contains($serviceNameNormalized, 'relaxing') ||
+                str_contains($serviceNameNormalized, 'retouching') ||
+                str_contains($serviceNameNormalized, 'retouch')
             );
 
             if ($explicitMaskOption !== null && $isHairMask) {
                 // Treat as hair mask when explicit option present and service is hair-mask
                 $base = $serviceModel ? (float) $serviceModel->base_price : 50.00;
-                $addon = ($explicitMaskOption === 'mask-with-weave') ? 30.00 : 0.00;
+                // Normalize mask option value (handle variations like 'mask-with-weave', 'mask_with_weave', etc.)
+                $maskOptionNormalized = strtolower(trim(str_replace(['_', ' '], '-', (string)$explicitMaskOption)));
+                $addon = (str_contains($maskOptionNormalized, 'weave') || str_contains($maskOptionNormalized, 'weav')) ? 30.00 : 0.00;
                 $adjust = $addon;
                 $finalPrice = round($base + $addon, 2);
             } elseif ($isHairMask) {
                 // service_type indicates hair mask; use hair-mask defaults
                 $base = $serviceModel ? (float) $serviceModel->base_price : 50.00;
                 $maskOption = $request->input('hair_mask_option', 'mask-only');
-                $addon = ($maskOption === 'mask-with-weave') ? 30.00 : 0.00;
+                // Normalize mask option value (handle variations)
+                $maskOptionNormalized = strtolower(trim(str_replace(['_', ' '], '-', (string)$maskOption)));
+                $addon = (str_contains($maskOptionNormalized, 'weave') || str_contains($maskOptionNormalized, 'weav')) ? 30.00 : 0.00;
                 $adjust = $addon;
                 $finalPrice = round($base + $addon, 2);
             } else {
-                // Compute adjustment using same per-step $20 rule as controller
-                $ordered = ['neck','shoulder','armpit','bra_strap','mid_back','waist','hip','tailbone','classic'];
-                $midIndex = array_search('mid_back', $ordered, true);
-                $idx = array_search($length, $ordered, true);
-                $d = ($idx !== false && $midIndex !== false) ? ($idx - $midIndex) : 0;
-                $adjust = $d * 20.00;
+                // Check if this is a popular service (no length adjustments)
+                $popularServices = [
+                    'Weaving Crotchet',
+                    'Single Crotchet',
+                    'Natural Hair Twist',
+                    'Weaving No-Extension',
+                    'Kinky Twist',
+                    'Twist Braids'
+                ];
+                $isPopularService = in_array($serviceInput, $popularServices, true);
+                
+                if ($isPopularService) {
+                    // Popular services: no length adjustments, use base price only (mid-back length)
+                    $adjust = 0.00;
+                    $finalPrice = round($base, 2);
+                    // Ensure length is set to mid_back for popular services
+                    $length = 'mid_back';
+                } else {
+                    // Compute adjustment using same per-step $20 rule as controller
+                    $ordered = ['neck','shoulder','armpit','bra_strap','mid_back','waist','hip','tailbone','classic'];
+                    $midIndex = array_search('mid_back', $ordered, true);
+                    $idx = array_search($length, $ordered, true);
+                    $d = ($idx !== false && $midIndex !== false) ? ($idx - $midIndex) : 0;
+                    $adjust = $d * 20.00;
 
-                $finalPrice = round($base + $adjust, 2);
+                    $finalPrice = round($base + $adjust, 2);
+                }
             }
 
             // Persist breakdown for email fidelity and audit
@@ -819,6 +948,38 @@ Route::post('/bookings', function(Request $request) {
         }
 
         Log::info('=== BOOKING DATA PREPARED ===', $bookingData);
+
+        // Check if this date is blocked before creating booking
+        if (!empty($bookingData['appointment_date'])) {
+            try {
+                $appointmentDate = \Carbon\Carbon::parse($bookingData['appointment_date'])->startOfDay();
+                $blockedSchedule = \App\Models\Schedule::where('type', 'blocked')
+                    ->where('start', '<=', $appointmentDate)
+                    ->where('end', '>', $appointmentDate)
+                    ->first();
+
+                if ($blockedSchedule) {
+                    $blockedTitle = $blockedSchedule->title ?? 'Blocked';
+                    $isApiRequest = $request->wantsJson() || $request->header('X-Requested-With') === 'XMLHttpRequest';
+
+                    if ($isApiRequest) {
+                        return response()->json([
+                            'success' => false,
+                            'message' => "This date is blocked: \"{$blockedTitle}\". Please select a different date."
+                        ], 422);
+                    } else {
+                        return redirect()->route('home')
+                            ->with([
+                                'booking_error' => true,
+                                'error_message' => "This date is blocked: \"{$blockedTitle}\". Please select a different date."
+                            ]);
+                    }
+                }
+            } catch (\Exception $e) {
+                Log::warning('Failed to check blocked date for booking: ' . $e->getMessage());
+                // Continue with booking creation if date check fails
+            }
+        }
 
         // Create the booking
         Log::info('=== CREATING BOOKING ===', ['data' => $bookingData]);
@@ -967,11 +1128,33 @@ Route::post('/custom-service', function(Request $request) {
         'appointment_date' => 'nullable|date',
         'appointment_time' => 'nullable|string',
         'message' => 'nullable|string|max:2000',
+        'service_category' => 'nullable|string|max:255',
+        'braid_size' => 'nullable|string|max:255',
+        'hair_length' => 'nullable|string|max:255',
+        'budget_range' => 'nullable|string|max:255',
+        'urgency' => 'nullable|string|max:255',
+        'style_preferences' => 'nullable|array',
+        'special_requirements' => 'nullable|string|max:2000',
+        'reference_image' => 'nullable|file|image|max:5120', // 5MB max
     ];
 
     $data = $request->validate($rules);
 
     try {
+        // Handle file upload for reference image
+        $referenceImagePath = null;
+        if ($request->hasFile('reference_image')) {
+            $file = $request->file('reference_image');
+            $filename = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
+            $referenceImagePath = $file->storeAs('custom-service-images', $filename, 'public');
+        }
+
+        // Convert style_preferences array to JSON string
+        $stylePreferences = null;
+        if (!empty($data['style_preferences']) && is_array($data['style_preferences'])) {
+            $stylePreferences = json_encode($data['style_preferences']);
+        }
+
         // Persist request to database
         $modelData = [
             'name' => $data['name'],
@@ -981,6 +1164,14 @@ Route::post('/custom-service', function(Request $request) {
             'appointment_date' => $data['appointment_date'] ?? null,
             'appointment_time' => $data['appointment_time'] ?? null,
             'message' => $data['message'] ?? null,
+            'service_category' => $data['service_category'] ?? null,
+            'braid_size' => $data['braid_size'] ?? null,
+            'hair_length' => $data['hair_length'] ?? null,
+            'budget_range' => $data['budget_range'] ?? null,
+            'urgency' => $data['urgency'] ?? null,
+            'style_preferences' => $stylePreferences,
+            'special_requirements' => $data['special_requirements'] ?? null,
+            'reference_image' => $referenceImagePath,
         ];
 
         // Log incoming submission and DB config for debugging
@@ -994,11 +1185,12 @@ Route::post('/custom-service', function(Request $request) {
 
         $record = \App\Models\CustomServiceRequest::create($modelData);
 
-        // Build payload for notification including record id
+        // Build payload for notification including record id and all custom service details
         $payload = array_merge($modelData, [
             'id' => $record->id ?? null,
             'ip' => $request->ip(),
             'user_agent' => $request->userAgent(),
+            'style_preferences_array' => !empty($data['style_preferences']) ? $data['style_preferences'] : [],
         ]);
 
         // Log creation result
@@ -1013,14 +1205,45 @@ Route::post('/custom-service', function(Request $request) {
         ]);
 
         // Send notification to admin
-        $adminEmail = config('mail.admin_address') ?: env('ADMIN_EMAIL') ?: 'admin@example.com';
-        \Illuminate\Support\Facades\Notification::route('mail', $adminEmail)
-            ->notify(new \App\Notifications\CustomServiceRequest(array_merge($payload, ['is_admin' => true])));
+        try {
+            $adminEmail = config('mail.admin_address') ?: env('ADMIN_EMAIL') ?: 'admin@example.com';
+            \Illuminate\Support\Facades\Log::info('Sending admin notification for custom service request', [
+                'admin_email' => $adminEmail,
+                'request_id' => $record->id ?? null,
+            ]);
+            
+            // Send notification (will be queued if queue is configured, otherwise sends immediately)
+            \Illuminate\Support\Facades\Notification::route('mail', $adminEmail)
+                ->notify(new \App\Notifications\CustomServiceRequest(array_merge($payload, ['is_admin' => true])));
+            
+            \Illuminate\Support\Facades\Log::info('Admin notification sent for custom service request', [
+                'admin_email' => $adminEmail,
+                'request_id' => $record->id ?? null,
+            ]);
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Failed to send admin notification for custom service request', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'request_id' => $record->id ?? null,
+            ]);
+        }
 
         // Send a simple confirmation to the user if email provided
         if (!empty($record->email)) {
-            \Illuminate\Support\Facades\Notification::route('mail', $record->email)
-                ->notify(new \App\Notifications\UserCustomServiceConfirmation($payload));
+            try {
+                \Illuminate\Support\Facades\Notification::route('mail', $record->email)
+                    ->notify(new \App\Notifications\UserCustomServiceConfirmation($payload));
+                \Illuminate\Support\Facades\Log::info('User confirmation email sent for custom service request', [
+                    'user_email' => $record->email,
+                    'request_id' => $record->id ?? null,
+                ]);
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\Log::error('Failed to send user confirmation email for custom service request', [
+                    'error' => $e->getMessage(),
+                    'user_email' => $record->email,
+                    'request_id' => $record->id ?? null,
+                ]);
+            }
         }
 
         if ($request->wantsJson() || $request->ajax()) {
@@ -1045,9 +1268,7 @@ Route::post('/custom-service', function(Request $request) {
 })->name('custom-service.store');
 
 // Booking routes (public)
-Route::get('/bookings/slots', function(Request $request) {
-    return response()->json(['slots' => []]);
-})->name('bookings.slots');
+Route::get('/bookings/slots', [App\Http\Controllers\AppointmentController::class, 'getAvailableTimeSlots'])->name('bookings.slots');
 
 Route::get('/bookings/calendar', function(Request $request) {
     return response()->json(['calendar' => []]);
@@ -1160,4 +1381,41 @@ Route::prefix('api')->group(function () {
     Route::get('/bookings/unavailable', function() {
         return response()->json(['unavailable' => []]);
     });
+});
+
+// Serve an .ics calendar file for a booking so users can download/import to calendars
+Route::get('/bookings/{id}/calendar.ics', function ($id) {
+    $booking = \App\Models\Booking::withTrashed()->findOrFail($id);
+    $tz = config('app.timezone') ?: 'UTC';
+    try {
+        $date = $booking->appointment_date ? $booking->appointment_date->format('Y-m-d') : null;
+        $time = $booking->appointment_time ?? null;
+        if (!$date || !$time) {
+            abort(404, 'Booking has no scheduled date/time');
+        }
+        $start = \Carbon\Carbon::parse($date . ' ' . $time, $tz)->toImmutable();
+        $duration = (int) ($booking->service_duration_minutes ?? 90);
+        $end = $start->addMinutes($duration);
+
+        $uid = 'booking-' . ($booking->id ?? '0') . '@' . request()->getHost();
+        $now = \Carbon\Carbon::now()->utc();
+        $dtstamp = $now->format('Ymd\THis\Z');
+        $dtstart = $start->utc()->format('Ymd\THis\Z');
+        $dtend = $end->utc()->format('Ymd\THis\Z');
+        $summary = addslashes($booking->service ?? 'Appointment');
+        $description = addslashes('Booking ' . ($booking->confirmation_code ?? ('BK' . str_pad($booking->id ?? 0, 6, '0', STR_PAD_LEFT))) . "\nCustomer: " . ($booking->name ?? '') . "\nPhone: " . ($booking->phone ?? ''));
+
+        $ics = "BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//Dabs Beauty Touch//EN\r\nBEGIN:VEVENT\r\n";
+        $ics .= "UID:{$uid}\r\nDTSTAMP:{$dtstamp}\r\nDTSTART:{$dtstart}\r\nDTEND:{$dtend}\r\n";
+        $ics .= "SUMMARY:{$summary}\r\nDESCRIPTION:{$description}\r\n";
+        $ics .= "END:VEVENT\r\nEND:VCALENDAR\r\n";
+
+        $filename = 'booking-' . ($booking->confirmation_code ?? ('BK' . str_pad($booking->id ?? 0, 6, '0', STR_PAD_LEFT))) . '.ics';
+        return response($ics, 200, [
+            'Content-Type' => 'text/calendar; charset=utf-8',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+        ]);
+    } catch (\Exception $e) {
+        abort(500, 'Could not generate calendar file');
+    }
 });
