@@ -39,6 +39,7 @@ class Booking extends Model
         'kb_finish',
         'kb_length',
         'kb_extras',
+        'kb_extras_total',
         'kb_base_price',
         'kb_length_adjustment',
         'kb_final_price',
@@ -67,6 +68,7 @@ class Booking extends Model
         'kb_base_price' => 'decimal:2',
         'kb_length_adjustment' => 'decimal:2',
         'kb_final_price' => 'decimal:2',
+        'kb_extras_total' => 'decimal:2',
         'base_price' => 'decimal:2',
         'length_adjustment' => 'decimal:2',
     'hair_mask_option' => 'string',
@@ -205,11 +207,18 @@ class Booking extends Model
     public function getFormattedStatusHistory()
     {
         $history = $this->status_history ?: [];
-        return collect($history)->map(function ($entry) {
+        $tz = 'America/Toronto';
+        return collect($history)->map(function ($entry) use ($tz) {
+            try {
+                $ts = \Carbon\Carbon::parse($entry['timestamp'])->setTimezone($tz)->format('M j, Y g:i A');
+            } catch (\Exception $e) {
+                $ts = $entry['timestamp'];
+            }
+
             return [
                 'from' => ucfirst($entry['from']),
                 'to' => ucfirst($entry['to']),
-                'timestamp' => \Carbon\Carbon::parse($entry['timestamp'])->format('M j, Y g:i A'),
+                'timestamp' => $ts,
                 'updated_by' => $entry['updated_by'],
                 'notes' => $entry['notes']
             ];
@@ -365,7 +374,7 @@ class Booking extends Model
                 'classic' => 'Classic',
                 'long' => 'Long'
             ];
-            $addonMap = ['kb_add_detangle' => 'Detangle', 'kb_add_beads' => 'Beads', 'kb_add_beads_full' => 'Beads (full)', 'kb_add_extension' => 'Extension', 'kb_add_rest' => 'Restyle'];
+            $addonMap = ['kb_add_detangle' => 'Detangle', 'kb_add_beads' => 'Beads', 'kb_add_beads_full' => 'Beads (full)', 'kb_add_extension' => 'Extension', 'kb_add_rest' => 'Resting'];
 
             $sel = $selector ?: [];
             $bt = $sel['braid_type'] ?? $b->kb_braid_type ?? null;
@@ -411,21 +420,75 @@ class Booking extends Model
         }
 
         // determine final_price to pass
+        // For kids bookings, prefer computed_total_final which includes all adjustments correctly
+        // Only fall back to stored final_price if computed_total_final is not available
         if (!is_null($computed_total_final)) {
             $final_price_to_pass = $computed_total_final;
+        } elseif (!empty($b->kb_final_price) && is_numeric($b->kb_final_price)) {
+            // For kids bookings, prefer kb_final_price over final_price
+            $final_price_to_pass = (float) $b->kb_final_price;
         } elseif (!empty($b->final_price) && is_numeric($b->final_price)) {
             $final_price_to_pass = (float) $b->final_price;
         } else {
             $final_price_to_pass = round($resolvedBase + $lengthAdjust + $addonsTotal, 2);
         }
 
-        $adjustmentsTotal = round($lengthAdjust, 2);
+        // For kids bookings, adjustments_total should include type + length + finish adjustments
+        // This matches what the UI shows as "Adjustments"
+        if (isset($selector_adjust) && is_numeric($selector_adjust)) {
+            // Use selector_adjust which includes type + length + finish
+            $adjustmentsTotal = round((float)$selector_adjust, 2);
+        } else {
+            // Fallback to lengthAdjust (which may only include length for non-kids bookings)
+            $adjustmentsTotal = round($lengthAdjust, 2);
+        }
+        
         $addonsTotal = round($addonsTotal, 2);
         $computed_total_final = $computed_total_final ?? $final_price_to_pass;
 
-        // hide length/finish for some braid types
+        // hide length/finish for some braid types and services that don't require length adjustments
+        $serviceName = strtolower((string)($b->service ?? ''));
         $rawBraid = strtolower((string)($selector['braid_type'] ?? $b->kb_braid_type ?? $b->service ?? ''));
-        $hideLengthFinish = (stripos($rawBraid, 'protect') !== false || stripos($rawBraid, 'cornrow') !== false || preg_match('/protective|cornrows|cornrow/i', $rawBraid));
+        
+        // Services that don't show length in notifications
+        $noLengthServices = [
+            'weaving crotchet',
+            'single crotchet',
+            'natural hair twist',
+            'weaving no-extension',
+            'weaving-no-extension',
+            'weaving_crotchet',
+            'single_crotchet',
+            'natural_hair_twist',
+            'hair mask',
+            'hair-mask',
+            'hair_mask',
+            'mask/relax',
+            'mask/relaxing',
+            'relaxing',
+            'retouching',
+            'retouch'
+        ];
+        
+        // Check if this is a hair mask/relaxing/retouching service
+        $isHairMaskService = (
+            stripos($serviceName, 'hair mask') !== false ||
+            stripos($serviceName, 'hair-mask') !== false ||
+            stripos($serviceName, 'mask/relax') !== false ||
+            stripos($serviceName, 'relaxing') !== false ||
+            stripos($serviceName, 'retouching') !== false ||
+            stripos($serviceName, 'retouch') !== false ||
+            !empty($b->hair_mask_option)
+        );
+        
+        $hideLengthFinish = (
+            stripos($rawBraid, 'protect') !== false ||
+            stripos($rawBraid, 'cornrow') !== false ||
+            preg_match('/protective|cornrows|cornrow/i', $rawBraid) ||
+            in_array($serviceName, $noLengthServices, true) ||
+            in_array(str_replace([' ', '-'], ['_', '_'], $serviceName), $noLengthServices, true) ||
+            $isHairMaskService
+        );
 
         return [
             'resolved_base' => $resolvedBase,

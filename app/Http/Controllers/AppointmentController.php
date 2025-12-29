@@ -9,6 +9,9 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
 use App\Notifications\BookingConfirmation;
 use App\Services\PriceCalculator;
+use Carbon\Carbon;
+
+use Illuminate\Http\JsonResponse;
 
 class AppointmentController extends Controller
 {
@@ -286,6 +289,31 @@ class AppointmentController extends Controller
                 }
             }
 
+            // Check if this date is blocked
+            $appointmentDate = \Carbon\Carbon::parse($request->appointment_date)->startOfDay();
+            $blockedSchedule = \App\Models\Schedule::where('type', 'blocked')
+                ->where('start', '<=', $appointmentDate)
+                ->where('end', '>', $appointmentDate)
+                ->first();
+
+            if ($blockedSchedule) {
+                $isApiRequest = $request->expectsJson() || $request->is('api/*') || $request->header('X-Requested-With') === 'XMLHttpRequest';
+                $blockedTitle = $blockedSchedule->title ?? 'Blocked';
+
+                if ($isApiRequest) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => "This date is blocked: \"{$blockedTitle}\". Please select a different date."
+                    ], 422);
+                } else {
+                    return redirect()->route('home')
+                        ->with([
+                            'booking_error' => true,
+                            'error_message' => "This date is blocked: \"{$blockedTitle}\". Please select a different date."
+                        ]);
+                }
+            }
+
             // Handle sample picture upload if provided
             $samplePicturePath = null;
             if ($request->hasFile('sample_picture')) {
@@ -445,20 +473,45 @@ class AppointmentController extends Controller
             if ($isKidsFlow) {
                 // Determine kids base price from service model or config fallback
                 $kb_base_price = $serviceModel ? (float) $serviceModel->base_price : (float) config('service_prices.kids_braids', 80);
-                // Normalize kb_length
+                
+                // Calculate all adjustments: type + length + finish (matching UI calculation)
+                $typeAdj = ['protective'=>-20,'cornrows'=>-40,'knotless_small'=>20,'knotless_med'=>0,'box_small'=>10,'box_med'=>0,'stitch'=>20];
+                $lengthAdj = ['shoulder'=>0,'armpit'=>10,'mid_back'=>20,'waist'=>30];
+                $finishAdj = ['curled'=>-10,'plain'=>0];
+                
+                $kb_braid_type = $request->input('kb_braid_type');
                 $kb_length = $request->input('kb_length') ?? $request->input('length');
+                $kb_finish = $request->input('kb_finish');
+                
+                // Normalize kb_length
                 if (is_string($kb_length)) {
                     $kb_length = str_replace(['-', ' '], '_', strtolower($kb_length));
                 }
-                // compute adjustment using same step rule as main flow
-                $ordered = ['neck','shoulder','armpit','bra_strap','mid_back','waist','hip','tailbone','classic'];
-                $midIndex = array_search('mid_back', $ordered, true);
-                $idx = array_search($kb_length, $ordered, true);
-                if ($idx === false || $midIndex === false) {
-                    $kb_length_adjustment = 0.00;
-                } else {
-                    $kb_length_adjustment = (($idx - $midIndex) * 20.00);
+                
+                // Calculate type adjustment
+                $typeAdjustment = 0.00;
+                if ($kb_braid_type && isset($typeAdj[$kb_braid_type])) {
+                    $typeAdjustment = (float) $typeAdj[$kb_braid_type];
                 }
+                
+                // Calculate length adjustment (using the selector mapping, not mid_back rule)
+                $lengthAdjustment = 0.00;
+                if ($kb_length && isset($lengthAdj[$kb_length])) {
+                    $lengthAdjustment = (float) $lengthAdj[$kb_length];
+                }
+                
+                // Calculate finish adjustment
+                $finishAdjustment = 0.00;
+                if ($kb_finish && isset($finishAdj[$kb_finish])) {
+                    $finishAdjustment = (float) $finishAdj[$kb_finish];
+                }
+                
+                // Total adjustments = type + length + finish
+                $kb_total_adjustments = $typeAdjustment + $lengthAdjustment + $finishAdjustment;
+                
+                // Store length adjustment separately for backwards compatibility (but it's actually total adjustments)
+                $kb_length_adjustment = $kb_total_adjustments;
+                
                 // Parse extras if provided (either numeric CSV or named extras)
                 $kb_extras_total = 0.00;
                 $kb_extras_raw = $request->input('kb_extras');
@@ -475,7 +528,9 @@ class AppointmentController extends Controller
                         }
                     }
                 }
-                $kb_final_price = round(($kb_base_price ?? 0) + ($kb_length_adjustment ?? 0) + ($kb_extras_total ?? 0), 2);
+                
+                // Final price = base + (type + length + finish adjustments) + addons
+                $kb_final_price = round(($kb_base_price ?? 0) + $kb_total_adjustments + ($kb_extras_total ?? 0), 2);
                 // If client submitted a final_price for kids flow, verify within tolerance and prefer server calc if mismatch large
                 if ($request->filled('final_price') && is_numeric($request->input('final_price'))) {
                     $clientFinal = round((float) $request->input('final_price'), 2);
@@ -503,6 +558,7 @@ class AppointmentController extends Controller
                 'kb_base_price' => $kb_base_price,
                 'kb_length_adjustment' => $kb_length_adjustment,
                 'kb_final_price' => $kb_final_price,
+                'kb_extras_total' => $kb_extras_total,
                 'appointment_date' => $request->appointment_date,
                 // Persist appointment_time normalized to H:i (24h) format when possible
                 'appointment_time' => (function($val){ try { return \Carbon\Carbon::parse($val)->format('H:i'); } catch (\Exception $e) { return $val; } })($request->appointment_time),
@@ -521,10 +577,13 @@ class AppointmentController extends Controller
             $booking->confirmation_code = $confirmationCode;
             $booking->save();
 
+            // Log persisted booking details including what was stored for final_price
             Log::info('New appointment booked', [
                 'booking_id' => $bookingId,
                 'confirmation_code' => $confirmationCode,
-                'final_price' => $finalPrice,
+                'final_price_persisted' => $booking->final_price,
+                'server_calculated_final' => isset($serverCalculatedFinal) ? $serverCalculatedFinal : null,
+                'client_submitted_final' => $request->filled('final_price') ? $request->input('final_price') : null,
                 'length' => $booking->length
             ]);
 
@@ -639,6 +698,25 @@ class AppointmentController extends Controller
                     'error_message' => 'We apologize, but there was an error processing your appointment. Please try again or contact us directly.'
                 ]);
             }
+        }
+    }
+
+    /**
+     * Return a server-side canonical price breakdown for given inputs.
+     */
+    public function previewPrice(Request $request): JsonResponse
+    {
+        try {
+            $payload = $request->only(['service','service_type','kb_length','length','kb_extras','kb_braid_type','hair_mask_option','selectedHairMaskOption']);
+            $calculator = new PriceCalculator();
+            $breakdown = $calculator->calculate($payload);
+            return response()->json([
+                'success' => true,
+                'breakdown' => $breakdown
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Price preview failed: ' . $e->getMessage());
+            return response()->json(['success' => false, 'message' => 'Failed to compute price'], 500);
         }
     }
 
@@ -788,8 +866,11 @@ class AppointmentController extends Controller
                         'notes' => $booking->notes,
                         'sample_picture' => $booking->sample_picture,
                         'confirmed_at' => $booking->confirmed_at,
+                        'confirmed_at_formatted' => $booking->confirmed_at ? $booking->confirmed_at->setTimezone('America/Toronto')->format('F j, Y g:i A') : null,
                         'completed_at' => $booking->completed_at,
+                        'completed_at_formatted' => $booking->completed_at ? $booking->completed_at->setTimezone('America/Toronto')->format('F j, Y g:i A') : null,
                         'cancelled_at' => $booking->cancelled_at,
+                        'cancelled_at_formatted' => $booking->cancelled_at ? $booking->cancelled_at->setTimezone('America/Toronto')->format('F j, Y g:i A') : null,
                         'completed_by' => $booking->completed_by,
                         'completion_notes' => $booking->completion_notes,
                         'service_duration_minutes' => $booking->service_duration_minutes,
@@ -1238,6 +1319,201 @@ class AppointmentController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Error retrieving booked time slots'
+            ], 500);
+        }
+    }
+
+    /**
+     * Get available time slots for a specific date, filtering out booked and blocked slots
+     */
+    public function getAvailableTimeSlots(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'date' => 'required|date|after_or_equal:today',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        try {
+            $date = $request->date;
+            $dateCarbon = \Carbon\Carbon::parse($date)->startOfDay();
+
+            // Check if the entire date is blocked (all-day block)
+            $appTz = config('app.timezone') ?: date_default_timezone_get();
+            $dateStr = $dateCarbon->format('Y-m-d');
+            $startOfDay = Carbon::createFromFormat('Y-m-d H:i:s', $dateStr . ' 00:00:00', $appTz)->startOfDay();
+            $endOfDay = Carbon::createFromFormat('Y-m-d H:i:s', $dateStr . ' 23:59:59', $appTz)->endOfDay();
+            
+            $blockedSchedules = \App\Models\Schedule::where('type', 'blocked')
+                ->where('start', '<', $endOfDay)
+                ->where('end', '>', $startOfDay)
+                ->get();
+
+            // Check if there's a full-day block
+            foreach ($blockedSchedules as $blockedSchedule) {
+                $startParsed = Carbon::parse($blockedSchedule->start)->utc();
+                $endParsed = Carbon::parse($blockedSchedule->end)->utc();
+                
+                // Check if it's an all-day block
+                $isAllDay = $startParsed->format('H:i:s') === '00:00:00' && 
+                           $endParsed->format('H:i:s') === '00:00:00';
+                
+                if ($isAllDay) {
+                    // Check if this date falls within the all-day block range
+                    $blockStartDate = $startParsed->format('Y-m-d');
+                    $blockEndDate = $endParsed->format('Y-m-d');
+                    
+                    if ($dateStr >= $blockStartDate && $dateStr < $blockEndDate) {
+                        return response()->json([
+                            'success' => true,
+                            'slots' => [],
+                            'message' => $blockedSchedule->title ?? 'This date is blocked',
+                            'date' => $date
+                        ]);
+                    }
+                }
+            }
+
+            // Default available time slots (9 AM to 6 PM, excluding 12-1 PM lunch break)
+            $defaultSlots = ['09:00', '10:00', '11:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00'];
+
+            // Get booked time slots
+            $bookedTimeSlots = \App\Models\Booking::where('appointment_date', $date)
+                ->whereNotIn('status', ['completed', 'cancelled'])
+                ->whereNotNull('appointment_time')
+                ->pluck('appointment_time')
+                ->map(function($time) {
+                    return \Carbon\Carbon::parse($time)->format('H:i');
+                })
+                ->toArray();
+
+            // Get blocked time ranges for this date
+            $blockedTimeRanges = [];
+            $dateStr = $dateCarbon->format('Y-m-d');
+            $startOfDay = Carbon::createFromFormat('Y-m-d H:i:s', $dateStr . ' 00:00:00', $appTz)->startOfDay();
+            $endOfDay = Carbon::createFromFormat('Y-m-d H:i:s', $dateStr . ' 23:59:59', $appTz)->endOfDay();
+            
+            $blockedSchedules = \App\Models\Schedule::where('type', 'blocked')
+                ->where('start', '<', $endOfDay)
+                ->where('end', '>', $startOfDay)
+                ->get();
+
+            foreach ($blockedSchedules as $block) {
+                // Parse from UTC (as stored) first
+                $startParsedUTC = Carbon::parse($block->start)->utc();
+                $endParsedUTC = Carbon::parse($block->end)->utc();
+                
+                // Check if it's an all-day block
+                $isAllDay = $startParsedUTC->format('H:i:s') === '00:00:00' && 
+                           $endParsedUTC->format('H:i:s') === '00:00:00';
+                
+                if (!$isAllDay) {
+                    // For time-specific blocks stored with old code, the UTC times need to be converted
+                    // to app timezone to get the actual local times
+                    $startParsed = $startParsedUTC->copy()->setTimezone($appTz);
+                    $endParsed = $endParsedUTC->copy()->setTimezone($appTz);
+                    
+                    // Check if this block overlaps with the requested date
+                    $blockStartDate = $startParsed->format('Y-m-d');
+                    $blockEndDate = $endParsed->format('Y-m-d');
+                    
+                    // Check if the requested date falls within the block's date range
+                    if ($dateStr >= $blockStartDate && $dateStr <= $blockEndDate) {
+                        // Get the intersection with the requested date
+                        $dayStart = $dateCarbon->copy()->setTimezone($appTz)->startOfDay();
+                        $dayEnd = $dateCarbon->copy()->setTimezone($appTz)->endOfDay();
+                        
+                        $blockStart = $startParsed->copy();
+                        if ($blockStart->lt($dayStart)) $blockStart = $dayStart->copy();
+                        
+                        $blockEnd = $endParsed->copy();
+                        if ($blockEnd->gt($dayEnd)) $blockEnd = $dayEnd->copy();
+                        
+                        if ($blockStart->lt($blockEnd)) {
+                            $blockedTimeRanges[] = [
+                                'start' => $blockStart->format('H:i'),
+                                'end' => $blockEnd->format('H:i'),
+                            ];
+                            
+                            Log::debug('Added blocked time range', [
+                                'block_id' => $block->id,
+                                'stored_utc_start' => $startParsedUTC->format('Y-m-d H:i:s'),
+                                'stored_utc_end' => $endParsedUTC->format('Y-m-d H:i:s'),
+                                'converted_start' => $startParsed->format('Y-m-d H:i:s'),
+                                'converted_end' => $endParsed->format('Y-m-d H:i:s'),
+                                'blocked_start' => $blockStart->format('H:i'),
+                                'blocked_end' => $blockEnd->format('H:i'),
+                                'date' => $date,
+                                'app_timezone' => $appTz,
+                            ]);
+                        }
+                    }
+                }
+            }
+
+            // Log blocked time ranges for debugging
+            Log::debug('Blocked time ranges for date', [
+                'date' => $date,
+                'blocked_ranges' => $blockedTimeRanges,
+            ]);
+
+            // Filter out blocked and booked slots
+            $availableSlots = [];
+            foreach ($defaultSlots as $slotTime) {
+                $isBooked = in_array($slotTime, $bookedTimeSlots);
+                
+                // Check if slot falls within any blocked time range
+                $isBlocked = false;
+                foreach ($blockedTimeRanges as $range) {
+                    // Parse times in the same timezone for comparison
+                    $slotDateTime = Carbon::createFromFormat('Y-m-d H:i', $date . ' ' . $slotTime, $appTz);
+                    $rangeStart = Carbon::createFromFormat('Y-m-d H:i', $date . ' ' . $range['start'], $appTz);
+                    $rangeEnd = Carbon::createFromFormat('Y-m-d H:i', $date . ' ' . $range['end'], $appTz);
+                    
+                    // Check if slot time falls within the blocked range
+                    // For 1-hour slots starting at the slot time, check if the slot time is >= start and <= end (inclusive)
+                    // If block is 06:00 to 14:00, slots 06:00 through 14:00 should be blocked
+                    if ($slotDateTime->gte($rangeStart) && $slotDateTime->lte($rangeEnd)) {
+                        $isBlocked = true;
+                        Log::debug('Slot blocked', [
+                            'slot_time' => $slotTime,
+                            'range_start' => $range['start'],
+                            'range_end' => $range['end'],
+                        ]);
+                        break;
+                    }
+                }
+                
+                if (!$isBooked && !$isBlocked) {
+                    $hour = (int)substr($slotTime, 0, 2);
+                    $minute = substr($slotTime, 3, 2);
+                    $formattedTime = date('g:i A', mktime($hour, $minute, 0));
+                    
+                    $availableSlots[] = [
+                        'time' => $slotTime,
+                        'available' => true,
+                        'formatted_time' => $formattedTime,
+                    ];
+                }
+            }
+
+            return response()->json([
+                'success' => true,
+                'slots' => $availableSlots,
+                'date' => $date
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error getting available time slots: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString()
+            ]);
+            return response()->json([
+                'success' => false,
+                'message' => 'Error retrieving available time slots'
             ], 500);
         }
     }

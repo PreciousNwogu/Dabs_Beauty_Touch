@@ -11,4 +11,11 @@ return [
     'stitch_braids' => 120,
     'hair_mask' => 50,
     'boho_braids' => 150,
+    // Popular Services
+    'weaving_crotchet' => 80,
+    'single_crotchet' => 150,
+    'natural_hair_twist' => 50,
+    'weaving_no_extension' => 30,
+    'kinky_twist' => 120,
+    'twist_braids' => 130,
 ];

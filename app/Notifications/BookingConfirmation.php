@@ -242,26 +242,104 @@ class BookingConfirmation extends Notification
             $resolvedBase = 0.0;
         }
 
+        // Check for hair mask weaving addon and include it in calculations
+        $weavingAddon = 0.00;
+        if (!empty($b->hair_mask_option)) {
+            $maskOptionNormalized = strtolower(trim(str_replace(['_', ' '], '-', (string)$b->hair_mask_option)));
+            if (str_contains($maskOptionNormalized, 'weave') || str_contains($maskOptionNormalized, 'weav')) {
+                $weavingAddon = 30.00;
+                // If length_adjustment contains the weaving addon, subtract it to get pure length adjustment
+                if ($lengthAdjust > 0 && $lengthAdjust == $weavingAddon) {
+                    $lengthAdjust = 0.00;
+                }
+            }
+        }
+        
         // Determine final_price to pass: prefer computed_total_final, then booking final_price, else compute from components
+        // For hair mask services, ensure weaving addon is included
         if (!is_null($computed_total_final)) {
             $final_price_to_pass = $computed_total_final;
         } elseif (!empty($b->final_price) && is_numeric($b->final_price)) {
+            // Use stored final_price (it should already include weaving addon if applicable)
             $final_price_to_pass = (float) $b->final_price;
         } else {
-            $final_price_to_pass = round($resolvedBase + $lengthAdjust + $addonsTotal, 2);
+            // Compute from components including weaving addon
+            $final_price_to_pass = round($resolvedBase + $lengthAdjust + $addonsTotal + $weavingAddon, 2);
         }
 
-        // Also compute an adjustments total (lengthAdjust + addonsTotal) for clarity in templates
-        $adjustmentsTotal = round($lengthAdjust, 2);
-        $addonsTotal = round($addonsTotal, 2);
+        // Use breakdown values if available (more authoritative for kids bookings)
+        $breakdownAdjustmentsTotal = $break['adjustments_total'] ?? null;
+        $breakdownAddonsTotal = $break['addons_total'] ?? null;
+        
+        // For kids bookings, adjustments_total from breakdown includes type + length + finish
+        // Otherwise, calculate from components
+        if (isset($breakdownAdjustmentsTotal) && is_numeric($breakdownAdjustmentsTotal)) {
+            $adjustmentsTotal = round((float)$breakdownAdjustmentsTotal, 2);
+        } elseif (isset($adjustments) && is_numeric($adjustments)) {
+            // Use computed adjustments (type + length + finish) for kids bookings
+            $adjustmentsTotal = round((float)$adjustments, 2);
+        } else {
+            // Fallback to lengthAdjust only (for non-kids bookings)
+            // Don't include weaving addon in adjustments - it's shown separately
+            $adjustmentsTotal = round($lengthAdjust, 2);
+        }
+        
+        if (isset($breakdownAddonsTotal) && is_numeric($breakdownAddonsTotal)) {
+            $addonsTotal = round((float)$breakdownAddonsTotal, 2);
+        } else {
+            $addonsTotal = round($addonsTotal, 2);
+        }
+        
+        // Ensure final price includes weaving addon if present
         $computed_total_final = $computed_total_final ?? $final_price_to_pass;
+        if ($weavingAddon > 0 && $computed_total_final < ($resolvedBase + $weavingAddon)) {
+            // If final price doesn't include weaving addon, add it
+            $computed_total_final = round($resolvedBase + $lengthAdjust + $addonsTotal + $weavingAddon, 2);
+        }
 
         // Compute hideLengthFinish once and pass to views so templates don't duplicate logic
+        // Hide length for services that don't require length adjustments
+        $serviceName = strtolower((string)($b->service ?? ''));
         $rawBraid = strtolower((string)($selector['braid_type'] ?? $b->kb_braid_type ?? $b->service ?? ''));
+        
+        // Services that don't show length in notifications
+        $noLengthServices = [
+            'weaving crotchet',
+            'single crotchet',
+            'natural hair twist',
+            'weaving no-extension',
+            'weaving-no-extension',
+            'weaving_crotchet',
+            'single_crotchet',
+            'natural_hair_twist',
+            'hair mask',
+            'hair-mask',
+            'hair_mask',
+            'mask/relax',
+            'mask/relaxing',
+            'relaxing',
+            'retouching',
+            'retouch'
+        ];
+        
+        // Check if this is a hair mask/relaxing/retouching service
+        $isHairMaskService = (
+            stripos($serviceName, 'hair mask') !== false ||
+            stripos($serviceName, 'hair-mask') !== false ||
+            stripos($serviceName, 'mask/relax') !== false ||
+            stripos($serviceName, 'relaxing') !== false ||
+            stripos($serviceName, 'retouching') !== false ||
+            stripos($serviceName, 'retouch') !== false ||
+            !empty($b->hair_mask_option)
+        );
+        
         $hideLengthFinish = (
             stripos($rawBraid, 'protect') !== false ||
             stripos($rawBraid, 'cornrow') !== false ||
-            preg_match('/protective|cornrows|cornrow/i', $rawBraid)
+            preg_match('/protective|cornrows|cornrow/i', $rawBraid) ||
+            in_array($serviceName, $noLengthServices, true) ||
+            in_array(str_replace([' ', '-'], ['_', '_'], $serviceName), $noLengthServices, true) ||
+            $isHairMaskService
         );
 
         // Log computed breakdown for observability (temporary)
@@ -302,6 +380,7 @@ class BookingConfirmation extends Notification
             ->subject($subject)
             ->view('emails.booking_confirmation', [
                 'booking' => $b,
+                'breakdown' => $break, // Pass full breakdown so view can use authoritative values
                 'basePrice' => $resolvedBase,
                 'length_adjust' => $lengthAdjust,
                 'addons_total' => $addonsTotal,

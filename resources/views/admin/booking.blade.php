@@ -51,7 +51,7 @@
                         @if($booking->status === 'completed')
                             <h5>Completion</h5>
                             <p>
-                                <strong>Completed At:</strong> {{ $booking->completed_at ? $booking->completed_at->format('F j, Y H:i') : 'N/A' }}<br>
+                                <strong>Completed At:</strong> {{ $booking->completed_at ? $booking->completed_at->setTimezone('America/Toronto')->format('F j, Y g:i A') : 'N/A' }}<br>
                                 <strong>Completed By:</strong> {{ $booking->completed_by ?: 'N/A' }}<br>
                                 <strong>Service Duration:</strong> {{ $booking->service_duration_minutes ? $booking->service_duration_minutes . ' minutes' : 'N/A' }}
                             </p>
@@ -81,7 +81,7 @@
                         <h6>Meta</h6>
                         <p class="meta">Booking ID: {{ sprintf('BK%06d', $booking->id) }}<br>
                         Status: {{ ucfirst($booking->status) }}<br>
-                        Created: {{ $booking->created_at->format('F j, Y H:i') }}</p>
+                        Created: {{ $booking->created_at ? $booking->created_at->setTimezone('America/Toronto')->format('F j, Y g:i A') : 'N/A' }}</p>
                     </div>
                 </div>
             </div>
@@ -115,7 +115,7 @@
                         <h5>Meta</h5>
                         <p class="meta">Request ID: {{ $customRequest->id }}<br>
                         Status: <span id="custom-status">{{ ucfirst($customRequest->status) }}</span><br>
-                        Submitted: {{ $customRequest->created_at->format('F j, Y H:i') }}</p>
+                        Submitted: {{ $customRequest->created_at ? $customRequest->created_at->setTimezone('America/Toronto')->format('F j, Y g:i A') : 'N/A' }}</p>
 
                         <div class="d-grid gap-2">
                             <button class="btn btn-sm btn-outline-warning" onclick="updateCustomStatus({{ $customRequest->id }}, 'in_progress')">Mark In Progress</button>
