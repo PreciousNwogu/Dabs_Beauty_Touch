@@ -38,7 +38,7 @@ class BookingReminderNotification extends Notification
             ->line('Customer: ' . ($b->name ?? 'N/A') . ' — ' . ($b->phone ?? 'N/A'))
             ->line('Service: ' . ($b->service ?? 'N/A'))
             ->line('When: ' . ($b->appointment_date?->format('F j, Y') ?? '') . ' ' . ($b->appointment_time ?? ''))
-            ->action('View in admin', url('/admin/bookings/' . $b->id));
+            ->action('View in admin', route('admin.bookings.show', ['id' => $b->id]));
     }
 
     public function toArray(object $notifiable): array

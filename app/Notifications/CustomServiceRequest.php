@@ -81,7 +81,7 @@ class CustomServiceRequest extends Notification implements ShouldQueue
 
             return $mail
                 ->line('**Request ID:** #' . ($r['id'] ?? 'N/A'))
-                ->action('View Request', url('/admin/bookings/' . ($r['id'] ?? '')))
+                ->action('View Request', route('admin.bookings.show', ['id' => $r['id'] ?? '']))
                 ->line('Please review and respond to this request as soon as possible.')
                 ->salutation('Best regards, ' . config('app.name'));
         } else {
