@@ -379,23 +379,47 @@
       @php
         $date = isset($booking->appointment_date) ? $booking->appointment_date->format('Y-m-d') : null;
         $time = $booking->appointment_time ?? null;
-        $tz = config('app.timezone') ?: 'UTC';
+        $tz = config('app.timezone') ?: 'America/Toronto';
         $gcal = null;
         if ($date && $time) {
             try {
-                $start = \Carbon\Carbon::parse($date . ' ' . $time, $tz)->utc()->format('Ymd\THis\Z');
+                $start = \Carbon\Carbon::parse($date . ' ' . $time, $tz);
                 $duration = (int) ($booking->service_duration_minutes ?? 90);
-                $end = \Carbon\Carbon::parse($date . ' ' . $time, $tz)->addMinutes($duration)->utc()->format('Ymd\THis\Z');
-                $title = rawurlencode(($booking->service ?? 'Appointment') . ' (' . ($confirmation_number ?? 'Booking') . ')');
-                $details = rawurlencode('Customer: ' . ($booking->name ?? '') . '\nPhone: ' . ($booking->phone ?? ''));
-                $gcal = 'https://calendar.google.com/calendar/render?action=TEMPLATE&text=' . $title . '&dates=' . $start . '/' . $end . '&details=' . $details;
-            } catch (\Exception $e) { $gcal = null; }
+                $end = $start->copy()->addMinutes($duration);
+                
+                // Format dates for Google Calendar (YYYYMMDDTHHMMSSZ format in UTC)
+                $startUtc = $start->utc()->format('Ymd\THis\Z');
+                $endUtc = $end->utc()->format('Ymd\THis\Z');
+                
+                // Build Google Calendar URL with proper encoding
+                $title = ($booking->service ?? 'Appointment') . ' - ' . ($confirmation_number ?? ('BK' . str_pad($booking->id ?? 0, 6, '0', STR_PAD_LEFT)));
+                $details = 'Booking ID: ' . ($confirmation_number ?? ('BK' . str_pad($booking->id ?? 0, 6, '0', STR_PAD_LEFT))) . "\n";
+                $details .= 'Customer: ' . ($booking->name ?? '') . "\n";
+                $details .= 'Phone: ' . ($booking->phone ?? '') . "\n";
+                if ($booking->email) {
+                    $details .= 'Email: ' . $booking->email . "\n";
+                }
+                $location = 'Dabs Beauty Touch';
+                
+                // Build Google Calendar URL
+                $gcal = 'https://calendar.google.com/calendar/render?' . http_build_query([
+                    'action' => 'TEMPLATE',
+                    'text' => $title,
+                    'dates' => $startUtc . '/' . $endUtc,
+                    'details' => $details,
+                    'location' => $location,
+                    'sf' => 'true',
+                    'output' => 'xml'
+                ]);
+            } catch (\Exception $e) { 
+                $gcal = null;
+            }
         }
       @endphp
 
       @if($gcal)
       <div style="text-align: center; margin: 20px 0;">
-        <a href="{{ $gcal }}" class="btn btn-secondary">Add to Calendar</a>
+        <a href="{{ $gcal }}" target="_blank" rel="noopener" class="btn btn-secondary">Add to Google Calendar</a>
       </div>
       @endif
 
