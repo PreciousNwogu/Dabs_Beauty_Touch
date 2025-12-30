@@ -69,22 +69,45 @@ class PriceCalculator
         $adjust = 0.0;
 
         if ($isHairMask) {
-            $base = $basePrice;
             $useMask = $maskNormalized ?? 'mask-only';
-            $addon = ($useMask === 'mask-with-weave') ? 30.00 : 0.00;
-            $adjust = $addon;
-            $finalPrice = round($base + $addon, 2);
-            $lengthAdjustment = $adjust;
-            $addonsTotal = $addon;
-        } else {
-            $ordered = ['neck','shoulder','armpit','bra_strap','mid_back','waist','hip','tailbone','classic'];
-            $midIndex = array_search('mid_back', $ordered, true);
-            $idx = array_search($length, $ordered, true);
-            if ($idx === false || $midIndex === false) {
+            if ($useMask === 'mask-with-weave') {
+                // Flat $80 price when weave is selected
+                $basePrice = 80.00; // Update base price to $80 for weave option
+                $base = 80.00;
+                $addon = 0.00;
+                $adjust = 0.00;
+                $finalPrice = 80.00;
                 $lengthAdjustment = 0.00;
+                $addonsTotal = 0.00;
             } else {
-                $lengthAdjustment = (($idx - $midIndex) * 20.00);
+                // $50 for mask-only
+                $base = $basePrice;
+                $addon = 0.00;
+                $adjust = 0.00;
+                $finalPrice = round($base, 2);
+                $lengthAdjustment = 0.00;
+                $addonsTotal = 0.00;
             }
+        } else {
+            // Length adjustment pricing with grouped lengths:
+            // - neck, shoulder, armpit: same price (-$40)
+            // - bra_strap, mid_back: base/default price ($0 adjustment)
+            // - waist: +$20
+            // - hip: +$40 (waist + $20)
+            // - tailbone, classic: same price (+$60)
+            $lengthAdjustmentMap = [
+                'neck' => -40.00,      // Same as shoulder and armpit
+                'shoulder' => -40.00,   // Same as neck and armpit
+                'armpit' => -40.00,     // Same as neck and shoulder
+                'bra_strap' => 0.00,    // Base/default price (same as mid_back)
+                'mid_back' => 0.00,     // Base/default price (same as bra_strap)
+                'waist' => 20.00,
+                'hip' => 40.00,        // Waist + $20
+                'tailbone' => 60.00,    // Same as classic
+                'classic' => 60.00,    // Same as tailbone
+            ];
+            
+            $lengthAdjustment = $lengthAdjustmentMap[$length] ?? 0.00;
             $finalPrice = round($basePrice + $lengthAdjustment, 2);
         }
 
@@ -98,14 +121,21 @@ class PriceCalculator
             $kb_base_price = $serviceModel && isset($serviceModel->base_price) ? (float) $serviceModel->base_price : (float) config('service_prices.kids_braids', 80);
             $kb_length = Arr::get($data, 'kb_length') ?? Arr::get($data, 'length');
             if (is_string($kb_length)) $kb_length = str_replace(['-', ' '], '_', strtolower($kb_length));
-            $ordered = ['neck','shoulder','armpit','bra_strap','mid_back','waist','hip','tailbone','classic'];
-            $midIndex = array_search('mid_back', $ordered, true);
-            $idx = array_search($kb_length, $ordered, true);
-            if ($idx === false || $midIndex === false) {
-                $kb_length_adjustment = 0.00;
-            } else {
-                $kb_length_adjustment = (($idx - $midIndex) * 20.00);
-            }
+            
+            // Length adjustment pricing with grouped lengths (same as regular bookings)
+            $lengthAdjustmentMap = [
+                'neck' => -40.00,      // Same as shoulder and armpit
+                'shoulder' => -40.00,   // Same as neck and armpit
+                'armpit' => -40.00,     // Same as neck and shoulder
+                'bra_strap' => 0.00,    // Base/default price (same as mid_back)
+                'mid_back' => 0.00,     // Base/default price (same as bra_strap)
+                'waist' => 20.00,
+                'hip' => 40.00,        // Waist + $20
+                'tailbone' => 60.00,    // Same as classic
+                'classic' => 60.00,    // Same as tailbone
+            ];
+            
+            $kb_length_adjustment = $lengthAdjustmentMap[$kb_length] ?? 0.00;
             $kb_extras_raw = Arr::get($data, 'kb_extras');
             if (!empty($kb_extras_raw)) {
                 if (is_string($kb_extras_raw) && preg_match('/^\d+(?:\.\d+)?(?:,\d+(?:\.\d+)?)*$/', $kb_extras_raw)) {
