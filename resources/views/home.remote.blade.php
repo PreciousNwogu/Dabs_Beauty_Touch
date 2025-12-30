@@ -1280,6 +1280,137 @@
             display: contents;
         }
 
+        /* Mobile responsive styles for calendar */
+        @media (max-width: 767.98px) {
+            #calendarModal .modal-dialog {
+                margin: 0.5rem;
+                max-width: calc(100% - 1rem);
+                max-height: calc(100vh - 1rem);
+            }
+
+            #calendarModal .modal-content {
+                border-radius: 12px;
+                max-height: calc(100vh - 1rem);
+                overflow: hidden;
+                display: flex;
+                flex-direction: column;
+            }
+
+            #calendarModal .modal-body {
+                overflow-y: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+
+            #calendarModal .modal-header {
+                padding: 1rem;
+            }
+
+            #calendarModal .modal-header .modal-title {
+                font-size: 1rem;
+            }
+
+            #calendarModal .modal-body {
+                padding: 1rem;
+            }
+
+            /* Calendar navigation - stack buttons on mobile */
+            #calendarModal .row.align-items-center {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+
+            #calendarModal .row.align-items-center .col-md-4 {
+                width: 100%;
+                text-align: center;
+            }
+
+            #calendarModal .row.align-items-center .col-md-4:first-child {
+                order: 2;
+            }
+
+            #calendarModal .row.align-items-center .col-md-4:nth-child(2) {
+                order: 1;
+            }
+
+            #calendarModal .row.align-items-center .col-md-4:last-child {
+                order: 3;
+            }
+
+            #calendarModal .row.align-items-center .btn {
+                width: 100%;
+                max-width: 200px;
+                padding: 0.5rem 1rem;
+            }
+
+            #calendarModal #calendarMonth {
+                font-size: 1.1rem;
+                margin: 0.5rem 0;
+            }
+
+            /* Calendar grid - smaller gaps and padding on mobile */
+            .calendar-grid {
+                padding: 12px 0 0 0;
+                gap: 4px;
+            }
+
+            /* Calendar day cells - smaller on mobile */
+            .calendar-day {
+                min-height: 40px;
+                padding: 6px 4px;
+                font-size: 0.75rem;
+            }
+
+            .calendar-day .blocked-text {
+                font-size: 0.55rem;
+                margin-top: 2px;
+            }
+
+            /* Time slots container */
+            #timeSlotsContainer {
+                margin-top: 1rem;
+            }
+
+            #timeSlotsContainer h6 {
+                font-size: 0.95rem;
+                margin-bottom: 0.75rem;
+            }
+
+            .time-slot-btn {
+                min-height: 50px;
+                font-size: 0.875rem;
+                padding: 0.5rem;
+            }
+
+            /* Modal footer buttons on mobile */
+            #calendarModal .modal-footer {
+                flex-direction: column;
+                gap: 0.5rem;
+                padding: 1rem;
+            }
+
+            #calendarModal .modal-footer .btn {
+                width: 100%;
+                margin: 0;
+            }
+        }
+
+        /* Extra small devices */
+        @media (max-width: 575.98px) {
+            .calendar-day {
+                min-height: 35px;
+                padding: 4px 2px;
+                font-size: 0.7rem;
+            }
+
+            .calendar-grid {
+                gap: 2px;
+            }
+
+            #calendarModal .modal-body {
+                padding: 0.75rem;
+            }
+        }
+
         .time-slot-btn {
             transition: all 0.3s ease;
             border-radius: 8px;
@@ -2025,7 +2156,7 @@
 
             slots.forEach(slot => {
                 const slotDiv = document.createElement('div');
-                slotDiv.className = `col-md-4 mb-2`;
+                slotDiv.className = `col-6 col-md-4 col-lg-3 mb-2`;
                 slotDiv.innerHTML = `
                     <button class="btn btn-outline-primary w-100 time-slot-btn ${slot.available ? 'available' : 'booked'}"
                             ${slot.available ? `onclick="selectCalendarTime('${slot.time}', '${slot.formatted_time}')"` : 'disabled'}>
@@ -3282,7 +3413,7 @@
 
     <!-- Calendar Modal -->
     <div class="modal fade" id="calendarModal" tabindex="-1">
-        <div class="modal-dialog modal-lg">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
             <div class="modal-content">
                 <div class="modal-header" style="background: linear-gradient(135deg, #17a2b8 0%, #20c997 100%); color: white;">
                     <h5 class="modal-title">
@@ -3326,7 +3457,7 @@
                     <!-- Time Slots -->
                     <div id="timeSlotsContainer" style="display: none;">
                         <h6>Available Time Slots for <span id="selectedDateText"></span></h6>
-                        <div id="timeSlots" class="row g-2"></div>
+                        <div id="timeSlots" class="row g-2 row-cols-2 row-cols-md-3 row-cols-lg-4"></div>
                     </div>
 
                     <!-- Loading -->
