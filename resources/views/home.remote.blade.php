@@ -3473,7 +3473,7 @@
                                     <div>
                                         <strong style="color: #0b3a66;">Note:</strong>
                                         <p class="mb-0" style="color: #0b3a66; font-size: 0.9rem;">
-                                            <strong>Kinky twist</strong> and <strong>twist braid</strong> prices shown are for <strong>mid-back length</strong>. Prices may differ for longer or shorter lengths. Final pricing will be confirmed during booking.
+                                            <strong>Kinky Twist</strong> and <strong>Twist Braids</strong> prices shown are for <strong>mid-back length</strong>. You can select a different length during booking, and the price will adjust automatically. Other popular services use fixed mid-back pricing.
                                         </p>
                                     </div>
                                 </div>
@@ -4657,18 +4657,30 @@ console.log('=== LOADING BOOKING FUNCTIONS ===');
             serviceDisplayInput.value = serviceName;
         }
 
-        // Hide and disable length selection for all popular services
+        // Check if this service should allow length adjustments (Kinky Twist and Twist Braids only)
+        const servicesWithLengthAdjustment = ['Kinky Twist', 'Twist Braids'];
+        const allowsLengthAdjustment = servicesWithLengthAdjustment.includes(serviceName);
+
+        // Show/hide and enable/disable length selection based on service
         const lengthGuideBlock = document.getElementById('lengthGuideBlock');
         if (lengthGuideBlock) {
-            lengthGuideBlock.style.display = 'none';
+            if (allowsLengthAdjustment) {
+                lengthGuideBlock.style.display = 'block';
+            } else {
+                lengthGuideBlock.style.display = 'none';
+            }
         }
         
-        // Disable all length radio buttons and set default to mid-back
+        // Enable/disable length radio buttons based on service
         const lengthRadios = document.getElementsByName('hair_length');
         for (let i = 0; i < lengthRadios.length; i++) {
-            lengthRadios[i].disabled = true;
-            if (lengthRadios[i].value === 'mid-back') {
-                lengthRadios[i].checked = true;
+            if (allowsLengthAdjustment) {
+                lengthRadios[i].disabled = false;
+            } else {
+                lengthRadios[i].disabled = true;
+                if (lengthRadios[i].value === 'mid-back') {
+                    lengthRadios[i].checked = true;
+                }
             }
         }
 
@@ -4677,7 +4689,8 @@ console.log('=== LOADING BOOKING FUNCTIONS ===');
         window.currentServiceInfo.serviceName = serviceName;
         window.currentServiceInfo.serviceType = serviceType;
         window.currentServiceInfo.basePrice = basePrice;
-        window.currentServiceInfo.isPopularService = true; // Flag to skip length adjustments
+        // Only flag as popular service (skip length adjustments) if it's NOT Kinky Twist or Twist Braids
+        window.currentServiceInfo.isPopularService = !allowsLengthAdjustment;
 
         // Update the visible price display
         if (typeof window.updatePriceDisplay === 'function') {
@@ -6621,11 +6634,20 @@ document.addEventListener('DOMContentLoaded', function(){
     function handleLengthChange(e) {
         if (e.target && e.target.name === 'hair_length') {
             console.log('Length changed to:', e.target.value);
-            const serviceType = window.currentServiceInfo.serviceType || document.getElementById('selectedServiceType')?.value || 'custom';
-            const base = priceMap[serviceType] || priceMap['custom'];
             // Defer price update to ensure the radio's checked state has been applied
             setTimeout(function(){
                 console.log('Deferred updatePriceDisplay after click/change for:', e.target.value);
+                // Use the same base price resolution logic as the radio button change handler
+                const selectedPriceEl = document.getElementById('selectedPrice');
+                let base = null;
+                if (selectedPriceEl && selectedPriceEl.value && !isNaN(parseFloat(selectedPriceEl.value))) {
+                    base = parseFloat(selectedPriceEl.value);
+                } else if (window.currentServiceInfo && typeof window.currentServiceInfo.basePrice === 'number') {
+                    base = window.currentServiceInfo.basePrice;
+                } else {
+                    const serviceType = window.currentServiceInfo.serviceType || document.getElementById('selectedServiceType')?.value || 'custom';
+                    base = priceMap[serviceType] || priceMap['custom'];
+                }
                 updatePriceDisplay(base);
             }, 0);
         }
