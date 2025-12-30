@@ -1781,20 +1781,8 @@
         }
 
         function viewBookingDetails(bookingId) {
-            // Fetch booking details
-            fetch(`/admin/booking-details/${bookingId}`)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        showBookingDetails(data.booking);
-                    } else {
-                        alert('Error loading booking details: ' + (data.message || 'Unknown error'));
-                    }
-                })
-                .catch(error => {
-                    console.error('Error loading booking details:', error);
-                    alert('Error loading booking details. Please try again.');
-                });
+            // Navigate to booking details page
+            window.location.href = `/admin/bookings/${bookingId}`;
         }
 
         function showBookingDetails(booking) {
@@ -2160,19 +2148,21 @@
             document.getElementById('completeServicesResults').style.display = 'none';
             document.getElementById('completeServicesEmpty').style.display = 'none';
 
-            // Build search params
-            const params = new URLSearchParams();
-            if (bookingId) params.append('booking_id', bookingId);
-            if (customerName) params.append('customer_name', customerName);
-            if (date) params.append('date', date);
-            if (service) params.append('service', service);
+            // Build search data
+            const searchData = {};
+            if (bookingId) searchData.booking_id = bookingId;
+            if (customerName) searchData.customer_name = customerName;
+            if (date) searchData.date = date;
+            if (service) searchData.service = service;
 
-            fetch('/admin/bookings/search-complete?' + params.toString(), {
+            fetch('/admin/bookings/search-complete', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                }
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify(searchData)
             })
             .then(response => response.json())
             .then(data => {
@@ -2277,14 +2267,50 @@
                     return;
                 }
 
+                const bookingId = document.getElementById('completeBookingIdInput').value;
+                const completedBy = document.getElementById('completeStaffMember').value;
+                const serviceDuration = parseInt(document.getElementById('completeServiceDuration').value);
+                const finalPrice = parseFloat(document.getElementById('completeFinalPrice').value);
+                const paymentStatus = document.getElementById('completePaymentStatus').value;
+                const completionNotes = document.getElementById('completeNotes').value;
+
+                // Validate required fields
+                if (!bookingId) {
+                    alert('Booking ID is required');
+                    submitCompleteServiceBtn.disabled = false;
+                    submitCompleteServiceBtn.innerHTML = '<i class="bi bi-award me-2"></i>Complete Service';
+                    return;
+                }
+
+                if (!completedBy || !completedBy.trim()) {
+                    alert('Please enter the staff member who completed the service');
+                    submitCompleteServiceBtn.disabled = false;
+                    submitCompleteServiceBtn.innerHTML = '<i class="bi bi-award me-2"></i>Complete Service';
+                    return;
+                }
+
+                if (isNaN(serviceDuration) || serviceDuration <= 0) {
+                    alert('Please enter a valid service duration');
+                    submitCompleteServiceBtn.disabled = false;
+                    submitCompleteServiceBtn.innerHTML = '<i class="bi bi-award me-2"></i>Complete Service';
+                    return;
+                }
+
+                if (isNaN(finalPrice) || finalPrice < 0) {
+                    alert('Please enter a valid final price');
+                    submitCompleteServiceBtn.disabled = false;
+                    submitCompleteServiceBtn.innerHTML = '<i class="bi bi-award me-2"></i>Complete Service';
+                    return;
+                }
+
                 const formData = {
-                    booking_id: document.getElementById('completeBookingIdInput').value,
+                    booking_id: bookingId,
                     status: 'completed',
-                    completed_by: document.getElementById('completeStaffMember').value,
-                    service_duration_minutes: parseInt(document.getElementById('completeServiceDuration').value),
-                    final_price: parseFloat(document.getElementById('completeFinalPrice').value),
-                    payment_status: document.getElementById('completePaymentStatus').value,
-                    completion_notes: document.getElementById('completeNotes').value
+                    completed_by: completedBy.trim(),
+                    service_duration_minutes: serviceDuration,
+                    final_price: finalPrice,
+                    payment_status: paymentStatus,
+                    completion_notes: completionNotes ? completionNotes.trim() : ''
                 };
 
                 submitCompleteServiceBtn.disabled = true;
@@ -2294,11 +2320,26 @@
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                        'Accept': 'application/json'
                     },
                     body: JSON.stringify(formData)
                 })
-                .then(response => response.json())
+                .then(response => {
+                    if (!response.ok) {
+                        return response.text().then(text => {
+                            throw new Error('Server error: ' + response.status + ' - ' + text.substring(0, 200));
+                        });
+                    }
+                    const contentType = response.headers.get('content-type');
+                    if (contentType && contentType.includes('application/json')) {
+                        return response.json();
+                    } else {
+                        return response.text().then(text => {
+                            throw new Error('Expected JSON but got: ' + text.substring(0, 200));
+                        });
+                    }
+                })
                 .then(data => {
                     if (data.success) {
                         alert('Service completed successfully!');
@@ -2311,7 +2352,8 @@
                 })
                 .catch(error => {
                     console.error('Error completing service:', error);
-                    alert('Error completing service. Please try again.');
+                    const errorMessage = error.message || 'Unknown error occurred';
+                    alert('Error completing service: ' + errorMessage + '. Please check the console for details.');
                 })
                 .finally(() => {
                     submitCompleteServiceBtn.disabled = false;
