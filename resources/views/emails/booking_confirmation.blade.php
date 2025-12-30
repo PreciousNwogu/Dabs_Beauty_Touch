@@ -22,7 +22,7 @@
       overflow: hidden;
     }
     .header {
-      background: linear-gradient(135deg, #1a237e 0%, #283593 100%);
+      background: linear-gradient(135deg, #0066ff 0%, #0080ff 100%);
       padding: 24px;
       text-align: center;
     }
