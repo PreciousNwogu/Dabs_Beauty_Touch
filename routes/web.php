@@ -987,25 +987,24 @@ Route::post('/bookings', function(Request $request) {
                 $adjust = $addon;
                 $finalPrice = round($base + $addon, 2);
             } else {
-                // Check if this is a popular service (no length adjustments)
-                $popularServices = [
+                // Check if this is a popular service that should skip length adjustments
+                // Note: Kinky Twist and Twist Braids are popular services but DO allow length adjustments
+                $popularServicesNoLengthAdjustment = [
                     'Weaving Crotchet',
                     'Single Crotchet',
                     'Natural Hair Twist',
-                    'Weaving No-Extension',
-                    'Kinky Twist',
-                    'Twist Braids'
+                    'Weaving No-Extension'
                 ];
-                $isPopularService = in_array($serviceInput, $popularServices, true);
+                $isPopularServiceNoLength = in_array($serviceInput, $popularServicesNoLengthAdjustment, true);
                 
-                if ($isPopularService) {
-                    // Popular services: no length adjustments, use base price only (mid-back length)
+                if ($isPopularServiceNoLength) {
+                    // Popular services (excluding Kinky Twist and Twist Braids): no length adjustments, use base price only (mid-back length)
                     $adjust = 0.00;
                     $finalPrice = round($base, 2);
                     // Ensure length is set to mid_back for popular services
                     $length = 'mid_back';
                 } else {
-                    // Length adjustment pricing with grouped lengths:
+                    // Length adjustment pricing with grouped lengths (applies to regular services AND Kinky Twist/Twist Braids):
                     // - neck, shoulder, armpit: same price (-$40)
                     // - bra_strap, mid_back: base/default price ($0 adjustment)
                     // - waist: +$20
