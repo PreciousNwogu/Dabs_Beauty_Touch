@@ -1494,10 +1494,10 @@
 
                         <div class="mb-3">
                             <label for="completePaymentStatus" class="form-label">Payment Status</label>
-                            <select class="form-select" id="completePaymentStatus" name="payment_status">
+                            <select class="form-select" id="completePaymentStatus" name="payment_status" required>
                                 <option value="pending">Pending</option>
-                                <option value="paid">Paid</option>
-                                <option value="partial">Partial</option>
+                                <option value="fully_paid">Fully Paid</option>
+                                <option value="deposit_paid">Deposit Only</option>
                             </select>
                         </div>
 

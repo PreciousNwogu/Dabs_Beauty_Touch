@@ -396,8 +396,13 @@ Route::prefix('admin')->name('admin.')->group(function () {
                 if ($request->final_price) {
                     $booking->final_price = $request->final_price;
                 }
-                if ($request->payment_status) {
+                // Ensure payment_status is always set to a valid enum value
+                $validPaymentStatuses = ['pending', 'deposit_paid', 'fully_paid'];
+                if ($request->payment_status && in_array($request->payment_status, $validPaymentStatuses)) {
                     $booking->payment_status = $request->payment_status;
+                } else {
+                    // Default to 'pending' if not provided or invalid
+                    $booking->payment_status = 'pending';
                 }
             } elseif ($request->status === 'cancelled') {
                 $booking->cancelled_at = now();
