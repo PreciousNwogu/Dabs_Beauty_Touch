@@ -48,7 +48,25 @@
         <tr><td style="font-weight:700;">Name</td><td>{{ $booking->name ?? 'N/A' }}</td></tr>
         <tr style="background:#f8fafc;"><td style="font-weight:700;">Email</td><td>{{ $booking->email ?? 'N/A' }}</td></tr>
         <tr><td style="font-weight:700;">Phone</td><td>{{ $booking->phone ?? 'N/A' }}</td></tr>
-        <tr style="background:#f8fafc;"><td style="font-weight:700;">Service</td><td>{{ $booking->service ?? 'N/A' }}</td></tr>
+        <tr style="background:#f8fafc;"><td style="font-weight:700;">Service</td><td>
+          @php
+            $serviceDisplay = $booking->service ?? 'N/A';
+            // If service name doesn't include "with Weaving" but hair_mask_option indicates weave, append it
+            if (!str_contains(strtolower($serviceDisplay), 'with weaving') && !empty($booking->hair_mask_option)) {
+              $maskOptionNormalized = strtolower(trim(str_replace(['_', ' '], '-', (string)$booking->hair_mask_option)));
+              if (str_contains($maskOptionNormalized, 'weave') || str_contains($maskOptionNormalized, 'weav')) {
+                $serviceNameLower = strtolower($serviceDisplay);
+                if (str_contains($serviceNameLower, 'hair mask') || 
+                    str_contains($serviceNameLower, 'hair-mask') || 
+                    str_contains($serviceNameLower, 'relaxing') || 
+                    str_contains($serviceNameLower, 'retouch')) {
+                  $serviceDisplay = trim($serviceDisplay) . ' with Weaving';
+                }
+              }
+            }
+          @endphp
+          {{ $serviceDisplay }}
+        </td></tr>
         <tr><td style="font-weight:700;">Appointment Date</td><td>
           @if($booking->appointment_date)
             {{ \Carbon\Carbon::parse($booking->appointment_date)->format('F j, Y') }}
@@ -113,16 +131,25 @@
           }
         }
 
-        // Check for hair mask weaving addon
+        // Check for hair mask with weave - now priced as flat $80 (base price is $80, no separate addon)
         $weavingAddon = 0.00;
         $hasWeavingAddon = false;
         if (!empty($booking->hair_mask_option)) {
           $maskOptionNormalized = strtolower(trim(str_replace(['_', ' '], '-', (string)$booking->hair_mask_option)));
           if (str_contains($maskOptionNormalized, 'weave') || str_contains($maskOptionNormalized, 'weav')) {
-            $weavingAddon = 30.00;
-            $hasWeavingAddon = true;
+            // With new pricing, base price is $80 for mask-with-weave, no separate addon
+            // Check if base price is already $80 (new pricing) or if we need to add $30 (old pricing)
+            if (($basePrice ?? 0) >= 80.00) {
+              // New pricing: base is already $80, no addon needed
+              $weavingAddon = 0.00;
+              $hasWeavingAddon = false;
+            } else {
+              // Legacy pricing: add $30 addon
+              $weavingAddon = 30.00;
+              $hasWeavingAddon = true;
+            }
             // If length_adjustment contains the weaving addon, subtract it to get pure length adjustment
-            if ($typeLengthFinishAdjust > 0 && $typeLengthFinishAdjust == $weavingAddon) {
+            if ($typeLengthFinishAdjust > 0 && $typeLengthFinishAdjust == 30.00) {
               $typeLengthFinishAdjust = 0.00;
             }
           }
@@ -138,15 +165,6 @@
         <tr style="background:#f8fafc;"><td style="font-weight:700;">Braid Type</td><td>{{ $braidType ?? '—' }}</td></tr>
         @if(!$hideLengthFinish)
           <tr><td style="font-weight:700;">Finish</td><td>{{ $finishVal ?? '—' }}</td></tr>
-          <tr style="background:#f8fafc;"><td style="font-weight:700;">Hair Length</td>
-            <td>
-              @if(!empty($booking->hair_mask_option))
-                -
-              @else
-                {{ $lengthVal ?? '—' }}
-              @endif
-            </td>
-          </tr>
         @endif
         <tr><td style="font-weight:700;">Add-ons</td><td>{{ $extrasVal ?: 'None' }}</td></tr>
       </table>

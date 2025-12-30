@@ -303,13 +303,25 @@ class Booking extends Model
 
         // compute length adjust if missing
         if (is_null($adjust) && $b->length) {
-            $ordered = ['neck','shoulder','armpit','bra_strap','mid_back','waist','hip','tailbone','classic'];
-            $midIndex = array_search('mid_back', $ordered, true);
-            $idx = array_search($b->length, $ordered, true);
-            if ($idx !== false && $midIndex !== false) {
-                $d = $idx - $midIndex;
-                $adjust = ($d * 20.00);
-            }
+            // Length adjustment pricing with grouped lengths:
+            // - neck, shoulder, armpit: same price (-$40)
+            // - bra_strap, mid_back: base/default price ($0 adjustment)
+            // - waist: +$20
+            // - hip: +$40 (waist + $20)
+            // - tailbone, classic: same price (+$60)
+            $lengthAdjustmentMap = [
+                'neck' => -40.00,
+                'shoulder' => -40.00,
+                'armpit' => -40.00,
+                'bra_strap' => 0.00,
+                'mid_back' => 0.00,
+                'waist' => 20.00,
+                'hip' => 40.00,
+                'tailbone' => 60.00,
+                'classic' => 60.00,
+            ];
+            
+            $adjust = $lengthAdjustmentMap[$b->length] ?? 0.00;
         }
 
         // If we resolved an adjustment value from persisted fields or computation,

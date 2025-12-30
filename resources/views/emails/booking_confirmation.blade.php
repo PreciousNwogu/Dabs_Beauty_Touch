@@ -198,7 +198,25 @@
           </tr>
           <tr>
             <td>Service</td>
-            <td><strong>{{ $booking->service ?? 'N/A' }}</strong></td>
+            <td><strong>
+              @php
+                $serviceDisplay = $booking->service ?? 'N/A';
+                // If service name doesn't include "with Weaving" but hair_mask_option indicates weave, append it
+                if (!str_contains(strtolower($serviceDisplay), 'with weaving') && !empty($booking->hair_mask_option)) {
+                  $maskOptionNormalized = strtolower(trim(str_replace(['_', ' '], '-', (string)$booking->hair_mask_option)));
+                  if (str_contains($maskOptionNormalized, 'weave') || str_contains($maskOptionNormalized, 'weav')) {
+                    $serviceNameLower = strtolower($serviceDisplay);
+                    if (str_contains($serviceNameLower, 'hair mask') || 
+                        str_contains($serviceNameLower, 'hair-mask') || 
+                        str_contains($serviceNameLower, 'relaxing') || 
+                        str_contains($serviceNameLower, 'retouch')) {
+                      $serviceDisplay = trim($serviceDisplay) . ' with Weaving';
+                    }
+                  }
+                }
+              @endphp
+              {{ $serviceDisplay }}
+            </strong></td>
           </tr>
           <tr>
             <td>Date</td>
@@ -259,12 +277,6 @@
             }
           @endphp
 
-          @if(!$hideLengthFinish && isset($lengthVal))
-          <tr>
-            <td>Length</td>
-            <td>{{ ucwords(str_replace('_',' ',$lengthVal)) }}</td>
-          </tr>
-          @endif
           @if(isset($braidType) && $braidType)
           <tr>
             <td>Braid Type</td>
@@ -309,18 +321,27 @@
         }
         $addons_total = $addons_total ?? 0;
         
-        // Check for hair mask weaving addon (use passed value from notification if available)
-        $weavingAddon = $weaving_addon ?? 0.00;
+        // Check for hair mask weaving option - new pricing uses $80 base, no separate addon
+        $weavingAddon = 0.00;
         $hasWeavingAddon = false;
-        if ($weavingAddon > 0) {
-          $hasWeavingAddon = true;
-        } elseif (!empty($booking->hair_mask_option)) {
+        $isMaskWithWeave = false;
+        if (!empty($booking->hair_mask_option)) {
           $maskOptionNormalized = strtolower(trim(str_replace(['_', ' '], '-', (string)$booking->hair_mask_option)));
           if (str_contains($maskOptionNormalized, 'weave') || str_contains($maskOptionNormalized, 'weav')) {
-            $weavingAddon = 30.00;
-            $hasWeavingAddon = true;
+            $isMaskWithWeave = true;
+            // With new pricing, base price is $80 for mask-with-weave, no separate addon
+            // Check if base price is already $80 (new pricing) or if we need to add $30 (old pricing)
+            if (($basePrice ?? 0) >= 80.00) {
+              // New pricing: base is already $80, no addon needed
+              $weavingAddon = 0.00;
+              $hasWeavingAddon = false;
+            } else {
+              // Legacy pricing: add $30 addon
+              $weavingAddon = 30.00;
+              $hasWeavingAddon = true;
+            }
             // If length_adjustment contains the weaving addon, subtract it to get pure length adjustment
-            if ($typeLengthFinishAdjust > 0 && $typeLengthFinishAdjust == $weavingAddon) {
+            if ($typeLengthFinishAdjust > 0 && $typeLengthFinishAdjust == 30.00) {
               $typeLengthFinishAdjust = 0.00;
             }
           }
@@ -328,7 +349,7 @@
         
         // Calculate adjustments total (excluding weaving addon which is shown separately)
         $adjustmentsTotal = ($typeLengthFinishAdjust ?? 0) + (is_numeric($addons_total) ? $addons_total : 0);
-        // Final price should match what's stored in the database (which includes weaving addon)
+        // Final price should match what's stored in the database (which includes weaving addon or $80 base)
         $finalPrice = $final_price ?? $booking->final_price ?? round(($basePrice ?? 0) + $adjustmentsTotal + $weavingAddon, 2);
       @endphp
 
