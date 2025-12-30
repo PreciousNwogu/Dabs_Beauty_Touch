@@ -112,7 +112,8 @@
             <div class="col-md-4">
                 <div class="price-box">
                     <h6>Price Summary</h6>
-                    <div class="mb-2">Base: <span id="kb_base_price">$--</span></div>
+                    @php $kidsBaseServer = config('service_prices.kids_braids', 80); @endphp
+                    <div class="mb-2">Base: <span id="kb_base_price">${{ number_format($kidsBaseServer, 0) }}</span></div>
                     <div class="mb-2">Adjustments: <span id="kb_adjustments">$0</span></div>
                     <div class="mb-3"><strong>Total: <span id="kb_total_price">$--</span></strong></div>
                     <div class="d-grid">
@@ -328,6 +329,18 @@ document.addEventListener('DOMContentLoaded', function(){
 
     // run initial evaluation
     evaluateBraidType();
+
+    // Ensure hidden kb_price_input is seeded with server base if not provided (keeps production/client in sync)
+    try{
+        const kbPriceInput = document.getElementById('kb_price_input');
+        const kbBaseEl = document.getElementById('kb_base_price');
+        if(kbPriceInput && kbBaseEl){
+            const m = (kbBaseEl.textContent||kbBaseEl.innerText||'').match(/\$?\s*([0-9,\.]+)/);
+            if(m && (!kbPriceInput.value || Number(kbPriceInput.value) === 0)){
+                kbPriceInput.value = Number(m[1].replace(/,/g,''));
+            }
+        }
+    }catch(e){}
 
     // If user came from kids modal Back button, restore selector state from localStorage
     try{
