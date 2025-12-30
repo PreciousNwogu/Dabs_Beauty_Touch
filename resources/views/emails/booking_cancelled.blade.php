@@ -272,10 +272,6 @@
       <h4>Stay Connected</h4>
       <p>Follow us for updates, styling inspiration, and special offers:</p>
       {!! \App\Helpers\SocialLinks::render() !!}
-      <p style="margin-top: 20px; font-size: 12px; color: #a0aec0;">
-        This is an automated notification email. Please do not reply directly to this message.<br>
-        If you have any questions, please contact us through our website or phone.
-      </p>
     </div>
   </div>
 @php

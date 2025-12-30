@@ -1432,6 +1432,39 @@
             border-color: #030f68 !important;
             color: white !important;
             box-shadow: 0 4px 12px rgba(3, 15, 104, 0.4);
+            transform: scale(1.05);
+        }
+
+        .time-slot-btn.btn-primary .status-text {
+            opacity: 1 !important;
+            font-weight: 600;
+        }
+
+        .time-slot-btn.selected {
+            border-width: 2px;
+            animation: pulse-selected 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse-selected {
+            0%, 100% {
+                box-shadow: 0 4px 12px rgba(3, 15, 104, 0.4);
+            }
+            50% {
+                box-shadow: 0 4px 20px rgba(3, 15, 104, 0.6);
+            }
+        }
+
+        .pulse-animation {
+            animation: pulse-btn 1.5s ease-in-out;
+        }
+
+        @keyframes pulse-btn {
+            0%, 100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.05);
+            }
         }
 
         .time-slot-btn.booked {
@@ -2141,27 +2174,28 @@
 
         function renderTimeSlotsInModal(slots) {
             const timeSlots = document.getElementById('timeSlots');
+            const instructionDiv = document.getElementById('timeSlotsInstruction');
             timeSlots.innerHTML = '';
 
             if (slots.length === 0) {
-                timeSlots.innerHTML = '<div class="alert alert-info">No available slots for this date</div>';
+                if (instructionDiv) instructionDiv.style.display = 'none';
+                timeSlots.innerHTML = '<div class="col-12"><div class="alert alert-warning"><i class="bi bi-exclamation-triangle me-2"></i>No available slots for this date. Please select another date.</div></div>';
                 return;
             }
 
-            // Add helpful message at the top
-            const messageDiv = document.createElement('div');
-            messageDiv.className = 'alert alert-info mb-3';
-            messageDiv.innerHTML = '<i class="bi bi-info-circle me-2"></i>Click on a time slot below to select it, then click "CONFIRM SELECTION" to book your appointment.';
-            timeSlots.appendChild(messageDiv);
+            // Show instruction message
+            if (instructionDiv) instructionDiv.style.display = 'block';
 
             slots.forEach(slot => {
                 const slotDiv = document.createElement('div');
                 slotDiv.className = `col-6 col-md-4 col-lg-3 mb-2`;
                 slotDiv.innerHTML = `
                     <button class="btn btn-outline-primary w-100 time-slot-btn ${slot.available ? 'available' : 'booked'}"
-                            ${slot.available ? `onclick="selectCalendarTime('${slot.time}', '${slot.formatted_time}')"` : 'disabled'}>
-                        ${slot.formatted_time}
-                        <br><small>${slot.available ? 'Available' : 'Booked'}</small>
+                            ${slot.available ? `onclick="selectCalendarTime('${slot.time}', '${slot.formatted_time}')"` : 'disabled'}
+                            data-time="${slot.time}"
+                            data-formatted="${slot.formatted_time}">
+                        <span class="time-display" style="font-size: 1rem; font-weight: 600;">${slot.formatted_time}</span>
+                        <br><small class="status-text" style="font-size: 0.75rem; opacity: 0.8;">${slot.available ? 'Available' : 'Booked'}</small>
                     </button>
                 `;
                 timeSlots.appendChild(slotDiv);
@@ -2175,16 +2209,36 @@
         window.selectCalendarTime = function(time, formattedTime) {
             selectedCalendarTime = { time, formattedTime };
 
-            // Update time slot buttons
+            // Update time slot buttons - remove selected state from all
             document.querySelectorAll('.time-slot-btn').forEach(btn => {
-                btn.classList.remove('btn-primary');
+                btn.classList.remove('btn-primary', 'selected');
                 btn.classList.add('btn-outline-primary');
+                // Reset button content
+                const timeDisplay = btn.querySelector('.time-display');
+                const statusText = btn.querySelector('.status-text');
+                if (timeDisplay && statusText) {
+                    statusText.textContent = 'Available';
+                }
             });
-            event.target.classList.remove('btn-outline-primary');
-            event.target.classList.add('btn-primary');
+
+            // Find and highlight the selected button
+            const selectedBtn = document.querySelector(`.time-slot-btn[data-time="${time}"]`);
+            if (selectedBtn) {
+                selectedBtn.classList.remove('btn-outline-primary');
+                selectedBtn.classList.add('btn-primary', 'selected');
+                // Update status text to show selected
+                const statusText = selectedBtn.querySelector('.status-text');
+                if (statusText) {
+                    statusText.innerHTML = '<i class="bi bi-check-circle-fill me-1"></i>Selected';
+                }
+            }
 
             // Enable confirm button
-            document.getElementById('confirmDateTimeBtn').disabled = false;
+            const confirmBtn = document.getElementById('confirmDateTimeBtn');
+            if (confirmBtn) {
+                confirmBtn.disabled = false;
+                confirmBtn.classList.add('pulse-animation');
+            }
         };
 
         window.confirmDateTime = function() {
@@ -3456,7 +3510,10 @@
 
                     <!-- Time Slots -->
                     <div id="timeSlotsContainer" style="display: none;">
-                        <h6>Available Time Slots for <span id="selectedDateText"></span></h6>
+                        <h6 class="mb-3" style="font-weight: 600; color: #0b3a66;">Available Time Slots for <span id="selectedDateText"></span></h6>
+                        <div id="timeSlotsInstruction" class="alert alert-info mb-3" style="display: none; background: #e7f3ff; border-left: 4px solid #17a2b8; border-radius: 8px;">
+                            <i class="bi bi-info-circle me-2"></i>Click on a time slot below to select it, then click "CONFIRM SELECTION" to book your appointment.
+                        </div>
                         <div id="timeSlots" class="row g-2 row-cols-2 row-cols-md-3 row-cols-lg-4"></div>
                     </div>
 
