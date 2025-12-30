@@ -289,28 +289,85 @@ class AppointmentController extends Controller
                 }
             }
 
-            // Check if this date is blocked
+            // Check if this date/time is blocked (only block full-day blocks or if time falls within blocked range)
             $appointmentDate = \Carbon\Carbon::parse($request->appointment_date)->startOfDay();
-            $blockedSchedule = \App\Models\Schedule::where('type', 'blocked')
-                ->where('start', '<=', $appointmentDate)
+            $appointmentTime = $request->appointment_time ?? null;
+            
+            // Get all blocked schedules that overlap with this date
+            $blockedSchedules = \App\Models\Schedule::where('type', 'blocked')
+                ->where('start', '<=', $appointmentDate->copy()->endOfDay())
                 ->where('end', '>', $appointmentDate)
-                ->first();
+                ->get();
 
-            if ($blockedSchedule) {
-                $isApiRequest = $request->expectsJson() || $request->is('api/*') || $request->header('X-Requested-With') === 'XMLHttpRequest';
-                $blockedTitle = $blockedSchedule->title ?? 'Blocked';
+            foreach ($blockedSchedules as $blockedSchedule) {
+                $startParsed = \Carbon\Carbon::parse($blockedSchedule->start)->utc();
+                $endParsed = \Carbon\Carbon::parse($blockedSchedule->end)->utc();
+                
+                // Check if it's a full-day block
+                $isAllDay = $startParsed->format('H:i:s') === '00:00:00' && 
+                           $endParsed->format('H:i:s') === '00:00:00';
+                
+                if ($isAllDay) {
+                    // Full-day block: check if this date falls within the block range
+                    $blockStartDate = $startParsed->format('Y-m-d');
+                    $blockEndDate = $endParsed->format('Y-m-d');
+                    $requestedDate = $appointmentDate->format('Y-m-d');
+                    
+                    if ($requestedDate >= $blockStartDate && $requestedDate < $blockEndDate) {
+                        $isApiRequest = $request->expectsJson() || $request->is('api/*') || $request->header('X-Requested-With') === 'XMLHttpRequest';
+                        $blockedTitle = $blockedSchedule->title ?? 'Blocked';
 
-                if ($isApiRequest) {
-                    return response()->json([
-                        'success' => false,
-                        'message' => "This date is blocked: \"{$blockedTitle}\". Please select a different date."
-                    ], 422);
+                        if ($isApiRequest) {
+                            return response()->json([
+                                'success' => false,
+                                'message' => "This date is blocked: \"{$blockedTitle}\". Please select a different date."
+                            ], 422);
+                        } else {
+                            return redirect()->route('home')
+                                ->with([
+                                    'booking_error' => true,
+                                    'error_message' => "This date is blocked: \"{$blockedTitle}\". Please select a different date."
+                                ]);
+                        }
+                    }
                 } else {
-                    return redirect()->route('home')
-                        ->with([
-                            'booking_error' => true,
-                            'error_message' => "This date is blocked: \"{$blockedTitle}\". Please select a different date."
-                        ]);
+                    // Time-specific block: only block if the selected time falls within the blocked range
+                    if ($appointmentTime) {
+                        try {
+                            $requestedDateTime = \Carbon\Carbon::parse($request->appointment_date . ' ' . $appointmentTime);
+                            $blockStart = $startParsed->copy()->setTimezone(config('app.timezone') ?: 'UTC');
+                            $blockEnd = $endParsed->copy()->setTimezone(config('app.timezone') ?: 'UTC');
+                            
+                            // Check if the requested date matches the block date(s)
+                            $blockStartDate = $blockStart->format('Y-m-d');
+                            $blockEndDate = $blockEnd->format('Y-m-d');
+                            $requestedDate = $appointmentDate->format('Y-m-d');
+                            
+                            if ($requestedDate >= $blockStartDate && $requestedDate <= $blockEndDate) {
+                                // Check if the time falls within the blocked range
+                                if ($requestedDateTime->gte($blockStart) && $requestedDateTime->lt($blockEnd)) {
+                                    $isApiRequest = $request->expectsJson() || $request->is('api/*') || $request->header('X-Requested-With') === 'XMLHttpRequest';
+                                    $blockedTitle = $blockedSchedule->title ?? 'Blocked';
+
+                                    if ($isApiRequest) {
+                                        return response()->json([
+                                            'success' => false,
+                                            'message' => "The selected time is blocked: \"{$blockedTitle}\". Please select a different time."
+                                        ], 422);
+                                    } else {
+                                        return redirect()->route('home')
+                                            ->with([
+                                                'booking_error' => true,
+                                                'error_message' => "The selected time is blocked: \"{$blockedTitle}\". Please select a different time."
+                                            ]);
+                                    }
+                                }
+                            }
+                        } catch (\Exception $timeException) {
+                            // If time parsing fails, continue with booking
+                            Log::warning('Failed to check blocked time: ' . $timeException->getMessage());
+                        }
+                    }
                 }
             }
 
@@ -369,6 +426,24 @@ class AppointmentController extends Controller
             if (!empty($serviceInput)) {
                 $serviceModel = \App\Models\Service::where('slug', $serviceInput)->orWhere('name', $serviceInput)->first();
                 if ($serviceModel) $serviceNameForSave = $serviceModel->name;
+            }
+            
+            // If this is a hair mask service with weave option, append " with Weaving" to the service name
+            $hairMaskOption = $request->input('hair_mask_option') ?? $request->input('selectedHairMaskOption');
+            if ($hairMaskOption) {
+                $maskOptionNormalized = strtolower(trim(str_replace(['_', ' '], '-', (string)$hairMaskOption)));
+                if (str_contains($maskOptionNormalized, 'weave') || str_contains($maskOptionNormalized, 'weav')) {
+                    $serviceNameLower = strtolower($serviceNameForSave ?? '');
+                    if (str_contains($serviceNameLower, 'hair mask') || 
+                        str_contains($serviceNameLower, 'hair-mask') || 
+                        str_contains($serviceNameLower, 'relaxing') || 
+                        str_contains($serviceNameLower, 'retouch')) {
+                        // Only append if not already there
+                        if (!str_contains(strtolower($serviceNameForSave), 'with weaving')) {
+                            $serviceNameForSave = trim($serviceNameForSave) . ' with Weaving';
+                        }
+                    }
+                }
             }
 
             $calculator = new PriceCalculator();

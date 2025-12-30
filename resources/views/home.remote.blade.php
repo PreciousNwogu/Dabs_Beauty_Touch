@@ -5135,16 +5135,23 @@ console.log('=== LOADING BOOKING FUNCTIONS ===');
                 return;
             }
             
-            // Check if selected date is blocked
+            // Check if selected date is blocked (only block if it's a full-day block)
             const appointmentDateField = document.getElementById('appointment_date');
             const selectedDate = appointmentDateField ? appointmentDateField.value.trim() : '';
             if(selectedDate) {
                 const blockedIndex = (blockedDatesCache || []).reduce((acc, b) => { acc[b.date] = b; return acc; }, {});
                 if(blockedIndex[selectedDate]) {
-                    e.preventDefault();
-                    const blockedTitle = blockedIndex[selectedDate].title || 'Blocked';
-                    alert(`This date is blocked: "${blockedTitle}". Please select another date.`);
-                    return;
+                    const blockedInfo = blockedIndex[selectedDate];
+                    const isFullDay = blockedInfo.full_day === true || blockedInfo.full_day === 1;
+                    
+                    // Only prevent booking if it's a full-day block
+                    if (isFullDay) {
+                        e.preventDefault();
+                        const blockedTitle = blockedInfo.title || 'Blocked';
+                        alert(`This date is blocked: "${blockedTitle}". Please select another date.`);
+                        return;
+                    }
+                    // If it's a time-specific block, allow the booking (time validation happens on backend)
                 }
             }
 
@@ -6196,21 +6203,31 @@ document.addEventListener('DOMContentLoaded', function(){
         key = key.replace(/__+/g, '_');
         console.log('Length adjustment for:', lengthValue, '-> key:', key);
 
-        // Ordered lengths from shortest -> longest (must match server)
-        const ordered = ['neck','shoulder','armpit','bra_strap','mid_back','waist','hip','tailbone','classic'];
-        const midIndex = ordered.indexOf('mid_back');
-        const idx = ordered.indexOf(key);
+        // Length adjustment pricing with grouped lengths (must match server):
+        // - neck, shoulder, armpit: same price (-$40)
+        // - bra_strap, mid_back: base/default price ($0 adjustment)
+        // - waist: +$20
+        // - hip: +$40 (waist + $20)
+        // - tailbone, classic: same price (+$60)
+        const lengthAdjustmentMap = {
+            'neck': -40,
+            'shoulder': -40,
+            'armpit': -40,
+            'bra_strap': 0,
+            'mid_back': 0,
+            'waist': 20,
+            'hip': 40,
+            'tailbone': 60,
+            'classic': 60,
+        };
 
-        if (idx === -1 || midIndex === -1) {
+        if (!lengthAdjustmentMap.hasOwnProperty(key)) {
             console.warn('Unknown length key:', key, 'defaulting to 0 adjustment');
             return 0;
         }
 
-        // Per-step rule: each single step away from mid_back changes price by $20.
-        // This makes waist = +20, bra_strap = -20, and two steps away = +/-40, etc.
-        const d = idx - midIndex;
-        const adjustment = d * 20;
-        console.log('Length adjustment amount (per-step $20):', adjustment, {d});
+        const adjustment = lengthAdjustmentMap[key];
+        console.log('Length adjustment amount:', adjustment, {key});
         return adjustment;
     }
 
@@ -7240,13 +7257,22 @@ document.addEventListener('DOMContentLoaded', function(){
                     isValid = false;
                     errors.push('Date');
                 } else if(selectedDate) {
-                    // Check if the selected date is blocked
+                    // Check if the selected date is blocked (only block if it's a full-day block)
                     const blockedIndex = (blockedDatesCache || []).reduce((acc, b) => { acc[b.date] = b; return acc; }, {});
                     if(blockedIndex[selectedDate]) {
-                        const blockedTitle = blockedIndex[selectedDate].title || 'Blocked';
-                        showFieldError('kidsBookingDate', `This date is blocked: "${blockedTitle}". Please select another date.`);
-                        isValid = false;
-                        errors.push('Date');
+                        const blockedInfo = blockedIndex[selectedDate];
+                        const isFullDay = blockedInfo.full_day === true || blockedInfo.full_day === 1;
+                        
+                        // Only show error if it's a full-day block
+                        if (isFullDay) {
+                            const blockedTitle = blockedInfo.title || 'Blocked';
+                            showFieldError('kidsBookingDate', `This date is blocked: "${blockedTitle}". Please select another date.`);
+                            isValid = false;
+                            errors.push('Date');
+                        } else {
+                            // Time-specific block - allow date selection (time validation happens on backend)
+                            clearFieldError('kidsBookingDate');
+                        }
                     } else {
                         clearFieldError('kidsBookingDate');
                     }

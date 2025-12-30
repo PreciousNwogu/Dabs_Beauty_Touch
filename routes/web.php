@@ -532,6 +532,91 @@ Route::prefix('admin')->name('admin.')->group(function () {
         }
     })->name('bookings.search');
 
+    Route::post('/bookings/search-complete', function(Request $request) {
+        try {
+            $query = \App\Models\Booking::query();
+
+            // Only show bookings that can be completed (pending or confirmed)
+            $query->whereIn('status', ['pending', 'confirmed']);
+
+            // Search by ID (from query params or JSON body)
+            $bookingId = $request->input('booking_id') ?? $request->booking_id;
+            if ($bookingId) {
+                $query->where('id', $bookingId);
+            }
+
+            // Search by customer name
+            $customerName = $request->input('customer_name') ?? $request->customer_name;
+            if ($customerName) {
+                $query->where('name', 'LIKE', '%' . $customerName . '%');
+            }
+
+            // Search by date
+            $date = $request->input('date') ?? $request->date;
+            if ($date) {
+                $query->whereDate('appointment_date', $date);
+            }
+
+            // Search by service name
+            $service = $request->input('service') ?? $request->service;
+            if ($service) {
+                $query->where('service', 'LIKE', '%' . $service . '%');
+            }
+
+            // If no search criteria provided, return empty result
+            if (!$bookingId && !$customerName && !$date && !$service) {
+                return response()->json([
+                    'success' => true,
+                    'bookings' => [],
+                    'count' => 0
+                ]);
+            }
+
+            $bookings = $query->orderBy('appointment_date', 'desc')
+                             ->orderBy('appointment_time', 'desc')
+                             ->get();
+
+            $formattedBookings = $bookings->map(function($booking) {
+                $formattedDate = null;
+                if ($booking->appointment_date) {
+                    try {
+                        $formattedDate = is_string($booking->appointment_date)
+                            ? date('M j, Y', strtotime($booking->appointment_date))
+                            : $booking->appointment_date->format('M j, Y');
+                    } catch (\Exception $e) {
+                        $formattedDate = $booking->appointment_date;
+                    }
+                }
+
+                return [
+                    'id' => $booking->id,
+                    'name' => $booking->name,
+                    'email' => $booking->email,
+                    'phone' => $booking->phone,
+                    'service' => $booking->service,
+                    'appointment_date' => $formattedDate,
+                    'appointment_date_raw' => $booking->appointment_date ? (is_string($booking->appointment_date) ? $booking->appointment_date : $booking->appointment_date->format('Y-m-d')) : null,
+                    'appointment_time' => $booking->appointment_time,
+                    'status' => $booking->status,
+                    'final_price' => $booking->final_price
+                ];
+            });
+
+            return response()->json([
+                'success' => true,
+                'bookings' => $formattedBookings,
+                'count' => $formattedBookings->count()
+            ]);
+
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Error searching bookings for completion: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Error searching for bookings: ' . $e->getMessage()
+            ], 500);
+        }
+    })->name('bookings.search-complete');
+
     // Admin schedule management (FullCalendar events)
     Route::get('/schedules', [\App\Http\Controllers\Admin\ScheduleController::class, 'index'])->name('schedules.index');
     Route::get('/schedules/events', [\App\Http\Controllers\Admin\ScheduleController::class, 'events'])->name('schedules.events');
@@ -920,13 +1005,25 @@ Route::post('/bookings', function(Request $request) {
                     // Ensure length is set to mid_back for popular services
                     $length = 'mid_back';
                 } else {
-                    // Compute adjustment using same per-step $20 rule as controller
-                    $ordered = ['neck','shoulder','armpit','bra_strap','mid_back','waist','hip','tailbone','classic'];
-                    $midIndex = array_search('mid_back', $ordered, true);
-                    $idx = array_search($length, $ordered, true);
-                    $d = ($idx !== false && $midIndex !== false) ? ($idx - $midIndex) : 0;
-                    $adjust = $d * 20.00;
-
+                    // Length adjustment pricing with grouped lengths:
+                    // - neck, shoulder, armpit: same price (-$40)
+                    // - bra_strap, mid_back: base/default price ($0 adjustment)
+                    // - waist: +$20
+                    // - hip: +$40 (waist + $20)
+                    // - tailbone, classic: same price (+$60)
+                    $lengthAdjustmentMap = [
+                        'neck' => -40.00,
+                        'shoulder' => -40.00,
+                        'armpit' => -40.00,
+                        'bra_strap' => 0.00,
+                        'mid_back' => 0.00,
+                        'waist' => 20.00,
+                        'hip' => 40.00,
+                        'tailbone' => 60.00,
+                        'classic' => 60.00,
+                    ];
+                    
+                    $adjust = $lengthAdjustmentMap[$length] ?? 0.00;
                     $finalPrice = round($base + $adjust, 2);
                 }
             }
@@ -949,30 +1046,87 @@ Route::post('/bookings', function(Request $request) {
 
         Log::info('=== BOOKING DATA PREPARED ===', $bookingData);
 
-        // Check if this date is blocked before creating booking
+        // Check if this date is blocked before creating booking (only block full-day blocks)
         if (!empty($bookingData['appointment_date'])) {
             try {
                 $appointmentDate = \Carbon\Carbon::parse($bookingData['appointment_date'])->startOfDay();
-                $blockedSchedule = \App\Models\Schedule::where('type', 'blocked')
-                    ->where('start', '<=', $appointmentDate)
+                $appointmentTime = $bookingData['appointment_time'] ?? null;
+                
+                // Get all blocked schedules that overlap with this date
+                $blockedSchedules = \App\Models\Schedule::where('type', 'blocked')
+                    ->where('start', '<=', $appointmentDate->copy()->endOfDay())
                     ->where('end', '>', $appointmentDate)
-                    ->first();
+                    ->get();
 
-                if ($blockedSchedule) {
-                    $blockedTitle = $blockedSchedule->title ?? 'Blocked';
-                    $isApiRequest = $request->wantsJson() || $request->header('X-Requested-With') === 'XMLHttpRequest';
+                foreach ($blockedSchedules as $blockedSchedule) {
+                    $startParsed = \Carbon\Carbon::parse($blockedSchedule->start)->utc();
+                    $endParsed = \Carbon\Carbon::parse($blockedSchedule->end)->utc();
+                    
+                    // Check if it's a full-day block
+                    $isAllDay = $startParsed->format('H:i:s') === '00:00:00' && 
+                               $endParsed->format('H:i:s') === '00:00:00';
+                    
+                    if ($isAllDay) {
+                        // Full-day block: check if this date falls within the block range
+                        $blockStartDate = $startParsed->format('Y-m-d');
+                        $blockEndDate = $endParsed->format('Y-m-d');
+                        $requestedDate = $appointmentDate->format('Y-m-d');
+                        
+                        if ($requestedDate >= $blockStartDate && $requestedDate < $blockEndDate) {
+                            $blockedTitle = $blockedSchedule->title ?? 'Blocked';
+                            $isApiRequest = $request->wantsJson() || $request->header('X-Requested-With') === 'XMLHttpRequest';
 
-                    if ($isApiRequest) {
-                        return response()->json([
-                            'success' => false,
-                            'message' => "This date is blocked: \"{$blockedTitle}\". Please select a different date."
-                        ], 422);
+                            if ($isApiRequest) {
+                                return response()->json([
+                                    'success' => false,
+                                    'message' => "This date is blocked: \"{$blockedTitle}\". Please select a different date."
+                                ], 422);
+                            } else {
+                                return redirect()->route('home')
+                                    ->with([
+                                        'booking_error' => true,
+                                        'error_message' => "This date is blocked: \"{$blockedTitle}\". Please select a different date."
+                                    ]);
+                            }
+                        }
                     } else {
-                        return redirect()->route('home')
-                            ->with([
-                                'booking_error' => true,
-                                'error_message' => "This date is blocked: \"{$blockedTitle}\". Please select a different date."
-                            ]);
+                        // Time-specific block: only block if the selected time falls within the blocked range
+                        if ($appointmentTime) {
+                            try {
+                                $requestedDateTime = \Carbon\Carbon::parse($bookingData['appointment_date'] . ' ' . $appointmentTime);
+                                $blockStart = $startParsed->copy()->setTimezone(config('app.timezone') ?: 'UTC');
+                                $blockEnd = $endParsed->copy()->setTimezone(config('app.timezone') ?: 'UTC');
+                                
+                                // Check if the requested date matches the block date(s)
+                                $blockStartDate = $blockStart->format('Y-m-d');
+                                $blockEndDate = $blockEnd->format('Y-m-d');
+                                $requestedDate = $appointmentDate->format('Y-m-d');
+                                
+                                if ($requestedDate >= $blockStartDate && $requestedDate <= $blockEndDate) {
+                                    // Check if the time falls within the blocked range
+                                    if ($requestedDateTime->gte($blockStart) && $requestedDateTime->lt($blockEnd)) {
+                                        $blockedTitle = $blockedSchedule->title ?? 'Blocked';
+                                        $isApiRequest = $request->wantsJson() || $request->header('X-Requested-With') === 'XMLHttpRequest';
+
+                                        if ($isApiRequest) {
+                                            return response()->json([
+                                                'success' => false,
+                                                'message' => "The selected time is blocked: \"{$blockedTitle}\". Please select a different time."
+                                            ], 422);
+                                        } else {
+                                            return redirect()->route('home')
+                                                ->with([
+                                                    'booking_error' => true,
+                                                    'error_message' => "The selected time is blocked: \"{$blockedTitle}\". Please select a different time."
+                                                ]);
+                                        }
+                                    }
+                                }
+                            } catch (\Exception $timeException) {
+                                // If time parsing fails, continue with booking
+                                \Illuminate\Support\Facades\Log::warning('Failed to check blocked time: ' . $timeException->getMessage());
+                            }
+                        }
                     }
                 }
             } catch (\Exception $e) {
