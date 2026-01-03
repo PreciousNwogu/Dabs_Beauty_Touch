@@ -227,7 +227,7 @@
                     
                     <div class="info-box">
                         <i class="bi bi-info-circle-fill"></i>
-                        <strong>Current Email:</strong> {{ $user->email }}
+                        <strong>Current Email:</strong> {{ $user->email ?? 'N/A' }}
                     </div>
 
                     <form method="POST" action="{{ route('admin.profile.update-email') }}" id="emailForm">
@@ -294,7 +294,7 @@
                             </div>
                             <div class="row mb-3">
                                 <div class="col-sm-4"><strong>Email:</strong></div>
-                                <div class="col-sm-8">{{ $user->email }}</div>
+                                <div class="col-sm-8">{{ $user->email ?? 'N/A' }}</div>
                             </div>
                             <div class="row mb-3">
                                 <div class="col-sm-4"><strong>Account Type:</strong></div>
@@ -304,7 +304,7 @@
                             </div>
                             <div class="row">
                                 <div class="col-sm-4"><strong>Member Since:</strong></div>
-                                <div class="col-sm-8">{{ $user->created_at->format('F j, Y') }}</div>
+                                <div class="col-sm-8">{{ $user->created_at ? $user->created_at->format('F j, Y') : 'N/A' }}</div>
                             </div>
                         </div>
                     </div>
@@ -361,7 +361,7 @@
 
         document.getElementById('emailForm').addEventListener('submit', function(e) {
             const email = document.getElementById('new_email').value;
-            const currentEmail = '{{ $user->email }}';
+            const currentEmail = '{{ $user->email ?? '' }}';
 
             if (email === currentEmail) {
                 e.preventDefault();
