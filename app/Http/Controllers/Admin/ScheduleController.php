@@ -464,27 +464,6 @@ class ScheduleController extends Controller
                     $sDateOnly = $sParsed->format('Y-m-d');
                     $eDateOnly = $eParsed->format('Y-m-d');
                     
-                    // Extract time portions (HH:MM:SS)
-                    $startTimeOnly = $sParsed->format('H:i:s');
-                    $endTimeOnly = $eParsed->format('H:i:s');
-                    
-                    // Check if this is a recurring daily time block pattern
-                    // (e.g., block from 00:00 to 14:00 each day, or from 14:00 to 23:59 each day)
-                    // This happens when start time is earlier than end time on the same calendar day
-                    $isRecurringDailyBlock = false;
-                    if ($sDateOnly !== $eDateOnly) {
-                        // Block spans multiple days - check if it's a daily recurring pattern
-                        // Compare just the time portions
-                        $startTimeSeconds = $sParsed->copy()->startOfDay()->diffInSeconds($sParsed);
-                        $endTimeSeconds = $eParsed->copy()->startOfDay()->diffInSeconds($eParsed);
-                        
-                        // If start time < end time, it's a daily recurring pattern
-                        // (e.g., 00:00 to 14:00, or 14:00 to 23:59)
-                        if ($startTimeSeconds < $endTimeSeconds) {
-                            $isRecurringDailyBlock = true;
-                        }
-                    }
-                    
                     // Determine the date range this block covers
                     $blockStartDate = Carbon::createFromFormat('Y-m-d H:i:s', $sDateOnly . ' 00:00:00', $appTz)->startOfDay();
                     // For end date, if the block ends at a specific time, we still want to include that date
@@ -498,37 +477,26 @@ class ScheduleController extends Controller
                     for ($d = $iterStart->copy(); $d->lt($iterEnd); $d->addDay()) {
                         $dateStr = $d->format('Y-m-d');
 
-                        if ($isRecurringDailyBlock) {
-                            // Apply the time pattern to this day
-                            $dayBlockStart = $d->copy()->setTimeFromTimeString($startTimeOnly);
-                            $dayBlockEnd = $d->copy()->setTimeFromTimeString($endTimeOnly);
-                            
-                            $startTime = $dayBlockStart->format('H:i');
-                            $endTime = $dayBlockEnd->format('H:i');
-                            
-                            $fullDay = ($startTime === '00:00' && ($endTime === '23:59' || $endTime === '00:00'));
-                        } else {
-                            // Determine the blocked window that applies to this particular day
-                            $dayStart = $d->copy()->startOfDay();
-                            $dayEnd = $d->copy()->endOfDay();
+                        // Determine the blocked window that applies to this particular day
+                        $dayStart = $d->copy()->startOfDay();
+                        $dayEnd = $d->copy()->endOfDay();
 
-                            // Block window is the intersection of the slot range and this day
-                            $blockStart = $sParsed->copy();
-                            if ($blockStart->lt($dayStart)) $blockStart = $dayStart->copy();
+                        // Block window is the intersection of the slot range and this day
+                        $blockStart = $sParsed->copy();
+                        if ($blockStart->lt($dayStart)) $blockStart = $dayStart->copy();
 
-                            $blockEnd = $eParsed->copy();
-                            if ($blockEnd->gt($dayEnd)) $blockEnd = $dayEnd->copy();
+                        $blockEnd = $eParsed->copy();
+                        if ($blockEnd->gt($dayEnd)) $blockEnd = $dayEnd->copy();
 
-                            // Format times as HH:MM
-                            $startTime = $blockStart->format('H:i');
-                            $endTime = $blockEnd->format('H:i');
+                        // Format times as HH:MM
+                        $startTime = $blockStart->format('H:i');
+                        $endTime = $blockEnd->format('H:i');
 
-                            // Check if this is effectively a full day for this specific date
-                            $fullDay = ($blockStart->format('H:i') === '00:00' && 
-                                       ($blockEnd->format('H:i') === '23:59' || 
-                                        $blockEnd->format('H:i') === '00:00' ||
-                                        $blockEnd->format('H:i:s') === '23:59:59'));
-                        }
+                        // Check if this is effectively a full day for this specific date
+                        $fullDay = ($blockStart->format('H:i') === '00:00' && 
+                                   ($blockEnd->format('H:i') === '23:59' || 
+                                    $blockEnd->format('H:i') === '00:00' ||
+                                    $blockEnd->format('H:i:s') === '23:59:59'));
 
                         $dates[] = [
                             'date' => $dateStr,

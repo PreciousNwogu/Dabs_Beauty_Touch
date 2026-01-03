@@ -1432,39 +1432,6 @@
             border-color: #030f68 !important;
             color: white !important;
             box-shadow: 0 4px 12px rgba(3, 15, 104, 0.4);
-            transform: scale(1.05);
-        }
-
-        .time-slot-btn.btn-primary .status-text {
-            opacity: 1 !important;
-            font-weight: 600;
-        }
-
-        .time-slot-btn.selected {
-            border-width: 2px;
-            animation: pulse-selected 2s ease-in-out infinite;
-        }
-
-        @keyframes pulse-selected {
-            0%, 100% {
-                box-shadow: 0 4px 12px rgba(3, 15, 104, 0.4);
-            }
-            50% {
-                box-shadow: 0 4px 20px rgba(3, 15, 104, 0.6);
-            }
-        }
-
-        .pulse-animation {
-            animation: pulse-btn 1.5s ease-in-out;
-        }
-
-        @keyframes pulse-btn {
-            0%, 100% {
-                transform: scale(1);
-            }
-            50% {
-                transform: scale(1.05);
-            }
         }
 
         .time-slot-btn.booked {
@@ -1626,6 +1593,8 @@
             margin-top: 4px;
             color: #6c757d;
         }
+
+        /* Custom service request modal z-index - only applied via JavaScript when needed */
 
         #customServiceForm .form-select-lg, #customServiceForm .form-control-lg {
             font-size: 1rem;
@@ -2209,36 +2178,16 @@
         window.selectCalendarTime = function(time, formattedTime) {
             selectedCalendarTime = { time, formattedTime };
 
-            // Update time slot buttons - remove selected state from all
+            // Update time slot buttons
             document.querySelectorAll('.time-slot-btn').forEach(btn => {
-                btn.classList.remove('btn-primary', 'selected');
+                btn.classList.remove('btn-primary');
                 btn.classList.add('btn-outline-primary');
-                // Reset button content
-                const timeDisplay = btn.querySelector('.time-display');
-                const statusText = btn.querySelector('.status-text');
-                if (timeDisplay && statusText) {
-                    statusText.textContent = 'Available';
-                }
             });
-
-            // Find and highlight the selected button
-            const selectedBtn = document.querySelector(`.time-slot-btn[data-time="${time}"]`);
-            if (selectedBtn) {
-                selectedBtn.classList.remove('btn-outline-primary');
-                selectedBtn.classList.add('btn-primary', 'selected');
-                // Update status text to show selected
-                const statusText = selectedBtn.querySelector('.status-text');
-                if (statusText) {
-                    statusText.innerHTML = '<i class="bi bi-check-circle-fill me-1"></i>Selected';
-                }
-            }
+            event.target.classList.remove('btn-outline-primary');
+            event.target.classList.add('btn-primary');
 
             // Enable confirm button
-            const confirmBtn = document.getElementById('confirmDateTimeBtn');
-            if (confirmBtn) {
-                confirmBtn.disabled = false;
-                confirmBtn.classList.add('pulse-animation');
-            }
+            document.getElementById('confirmDateTimeBtn').disabled = false;
         };
 
         window.confirmDateTime = function() {
@@ -4183,7 +4132,29 @@
                         </div>
                         <div class="col-md-6 p-5 d-flex flex-column justify-content-center">
                             <h2 class="section-title mb-4" style="font-size:2rem; font-weight:700;">Send us a Message</h2>
-                            <form action="{{ route('contact.store') }}" method="POST" class="bg-white p-4 rounded shadow-sm" style="border-radius:18px;">
+                            
+                            @if(session('success'))
+                                <div class="alert alert-success alert-dismissible fade show mb-4" role="alert" style="border-radius: 10px; border-left: 4px solid #28a745;">
+                                    <i class="bi bi-check-circle-fill me-2"></i>
+                                    <strong>Success!</strong> {{ session('success') }}
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                </div>
+                            @endif
+
+                            @if($errors->any())
+                                <div class="alert alert-danger alert-dismissible fade show mb-4" role="alert" style="border-radius: 10px; border-left: 4px solid #dc3545;">
+                                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                                    <strong>Please fix the following errors:</strong>
+                                    <ul class="mb-0 mt-2">
+                                        @foreach($errors->all() as $error)
+                                            <li>{{ $error }}</li>
+                                        @endforeach
+                                    </ul>
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                </div>
+                            @endif
+
+                            <form action="{{ route('contact.store') }}" method="POST" id="contactForm" class="bg-white p-4 rounded shadow-sm" style="border-radius:18px;">
                                 @csrf
                                 <div class="row g-4">
                                     <div class="col-12 mb-3">
@@ -5097,14 +5068,44 @@ console.log('=== LOADING BOOKING FUNCTIONS ===');
         // Open the custom service request modal
         const modalEl = document.getElementById('customServiceRequestModal');
         if (modalEl) {
-            const modal = new bootstrap.Modal(modalEl);
+            const modal = new bootstrap.Modal(modalEl, {
+                backdrop: true,
+                keyboard: true
+            });
+            
+            // Set z-index before showing to ensure it's on top
+            modalEl.style.zIndex = '1060';
+            
             modal.show();
             
-            // Focus on name field when modal opens
-            setTimeout(() => {
+            // After modal is shown, ensure it stays on top
+            modalEl.addEventListener('shown.bs.modal', function() {
+                // Set z-index again after Bootstrap applies its own
+                modalEl.style.zIndex = '1060';
+                
+                // Find and adjust only the backdrop for this modal
+                const backdrops = document.querySelectorAll('.modal-backdrop');
+                if (backdrops.length > 0) {
+                    // Get the last backdrop (should be for this modal)
+                    const lastBackdrop = backdrops[backdrops.length - 1];
+                    // Only adjust if this modal is actually visible
+                    if (modalEl.classList.contains('show')) {
+                        lastBackdrop.style.zIndex = '1055';
+                    }
+                }
+                
+                // Focus on name field
                 const nameField = document.getElementById('csrName');
-                if (nameField) nameField.focus();
-            }, 300);
+                if (nameField) {
+                    setTimeout(() => nameField.focus(), 100);
+                }
+            }, { once: true });
+            
+            // Clean up z-index when modal is hidden to not interfere with other modals
+            modalEl.addEventListener('hidden.bs.modal', function() {
+                // Reset z-index so it doesn't interfere with other modals
+                modalEl.style.zIndex = '';
+            }, { once: false });
         }
     }
 
@@ -5176,6 +5177,13 @@ console.log('=== LOADING BOOKING FUNCTIONS ===');
                          document.querySelector('input[name="_token"]')?.value;
         if (csrfToken) {
             formData.append('_token', csrfToken);
+        }
+
+        // Ensure custom service modal stays on top during submission (only if it's actually visible)
+        const modalEl = document.getElementById('customServiceRequestModal');
+        if (modalEl && modalEl.classList.contains('show') && modalEl.offsetParent !== null) {
+            // Only adjust if modal is actually visible
+            modalEl.style.zIndex = '1060';
         }
 
         // Show loading state
@@ -5591,11 +5599,100 @@ console.log('=== LOADING BOOKING FUNCTIONS ===');
         }
     });
 
-    const contactForm = document.querySelector('form[action*="contact.store"], form[action*="custom-service.store"]');
+    // Contact form submission handler
+    const contactForm = document.getElementById('contactForm');
     if (contactForm) {
         contactForm.addEventListener('submit', function(e) {
-            // You can add client-side validation here if needed
-            console.log('Contact or Custom-Service form submitted');
+            e.preventDefault();
+            
+            const submitBtn = contactForm.querySelector('button[type="submit"]');
+            const originalText = submitBtn?.innerHTML;
+            
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Sending...';
+            }
+            
+            // Get form data
+            const formData = new FormData(contactForm);
+            
+            // Submit via AJAX
+            fetch(contactForm.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Show success message
+                    const successAlert = document.createElement('div');
+                    successAlert.className = 'alert alert-success alert-dismissible fade show mb-4';
+                    successAlert.style.cssText = 'border-radius: 10px; border-left: 4px solid #28a745;';
+                    successAlert.innerHTML = `
+                        <i class="bi bi-check-circle-fill me-2"></i>
+                        <strong>Success!</strong> ${data.message || 'Thank you for your message! We will get back to you soon.'}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    `;
+                    
+                    // Insert before form
+                    contactForm.parentNode.insertBefore(successAlert, contactForm);
+                    
+                    // Scroll to success message
+                    successAlert.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                    
+                    // Reset form
+                    contactForm.reset();
+                    
+                    // Auto-remove success message after 5 seconds
+                    setTimeout(() => {
+                        if (successAlert.parentNode) {
+                            successAlert.remove();
+                        }
+                    }, 5000);
+                } else {
+                    // Show error message
+                    const errorAlert = document.createElement('div');
+                    errorAlert.className = 'alert alert-danger alert-dismissible fade show mb-4';
+                    errorAlert.style.cssText = 'border-radius: 10px; border-left: 4px solid #dc3545;';
+                    errorAlert.innerHTML = `
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                        <strong>Error!</strong> ${data.message || 'Failed to send message. Please try again.'}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    `;
+                    contactForm.parentNode.insertBefore(errorAlert, contactForm);
+                    errorAlert.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                }
+            })
+            .catch(error => {
+                console.error('Contact form error:', error);
+                const errorAlert = document.createElement('div');
+                errorAlert.className = 'alert alert-danger alert-dismissible fade show mb-4';
+                errorAlert.style.cssText = 'border-radius: 10px; border-left: 4px solid #dc3545;';
+                errorAlert.innerHTML = `
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                    <strong>Error!</strong> An error occurred while sending your message. Please try again.
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                `;
+                contactForm.parentNode.insertBefore(errorAlert, contactForm);
+                errorAlert.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            })
+            .finally(() => {
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    if (originalText) submitBtn.innerHTML = originalText;
+                }
+            });
+        });
+    }
+
+    // Handle custom service form separately
+    const customServiceForm = document.querySelector('form[action*="custom-service.store"]');
+    if (customServiceForm && customServiceForm !== contactForm) {
+        customServiceForm.addEventListener('submit', function(e) {
+            console.log('Custom-Service form submitted');
         });
     }
 

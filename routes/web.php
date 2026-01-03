@@ -5,6 +5,7 @@ use App\Http\Controllers\Admin\ServiceController as AdminServiceController;
 use App\Models\Service;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Http\Request;
 
@@ -356,16 +357,79 @@ Route::prefix('admin')->name('admin.')->group(function () {
         return view('admin.complete-service');
     })->name('complete-service');
 
-    // Admin profile routes - SIMPLE VERSION
+    // Admin profile routes
     Route::get('/profile', function () {
         $user = Auth::user();
         return view('admin.profile', compact('user'));
     })->name('profile');
 
-    Route::post('/profile', function (Request $request) {
-        // Simple profile update logic can be added here later
-        return back()->with('success', 'Profile updated successfully!');
-    })->name('profile.update');
+    // Update email
+    Route::post('/profile/update-email', function (Request $request) {
+        $user = Auth::user();
+        
+        $validated = $request->validate([
+            'email' => 'required|email|unique:users,email,' . $user->id,
+            'password' => 'required',
+        ], [
+            'email.required' => 'Email address is required.',
+            'email.email' => 'Please enter a valid email address.',
+            'email.unique' => 'This email address is already in use.',
+            'password.required' => 'Current password is required to change your email.',
+        ]);
+
+        // Verify current password
+        if (!Hash::check($request->password, $user->password)) {
+            return back()->withErrors(['password' => 'Current password is incorrect.'])->withInput();
+        }
+
+        // Update email
+        $user->email = $validated['email'];
+        $user->save();
+
+        Log::info('Admin email updated', [
+            'user_id' => $user->id,
+            'old_email' => $user->getOriginal('email'),
+            'new_email' => $user->email,
+        ]);
+
+        return back()->with('success', 'Email address updated successfully!');
+    })->name('profile.update-email');
+
+    // Update password
+    Route::post('/profile/update-password', function (Request $request) {
+        $user = Auth::user();
+        
+        $validated = $request->validate([
+            'current_password' => 'required',
+            'password' => 'required|min:8|confirmed',
+        ], [
+            'current_password.required' => 'Current password is required.',
+            'password.required' => 'New password is required.',
+            'password.min' => 'New password must be at least 8 characters long.',
+            'password.confirmed' => 'New password confirmation does not match.',
+        ]);
+
+        // Verify current password
+        if (!Hash::check($request->current_password, $user->password)) {
+            return back()->withErrors(['current_password' => 'Current password is incorrect.'])->withInput();
+        }
+
+        // Check if new password is different from current
+        if (Hash::check($request->password, $user->password)) {
+            return back()->withErrors(['password' => 'New password must be different from your current password.'])->withInput();
+        }
+
+        // Update password
+        $user->password = Hash::make($validated['password']);
+        $user->save();
+
+        Log::info('Admin password updated', [
+            'user_id' => $user->id,
+            'email' => $user->email,
+        ]);
+
+        return back()->with('success', 'Password updated successfully!');
+    })->name('profile.update-password');
 
     // Admin booking management routes
     Route::post('/bookings/update-status', function(Request $request) {
@@ -1264,16 +1328,115 @@ Route::post('/bookings', function(Request $request) {
 })->name('bookings.store');
 
 Route::post('/contact', function(Request $request) {
-    // Validate the contact form
-    $request->validate([
-        'name' => 'required|string|max:255',
-        'email' => 'required|email|max:255',
-        'message' => 'required|string|max:1000',
-    ]);
+    try {
+        // Validate the contact form
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|max:255',
+            'subject' => 'nullable|string|max:255',
+            'message' => 'required|string|max:1000',
+        ]);
 
-    // Store contact form submission (you can save to database later)
-    // For now, just redirect back with success message
-    return redirect()->back()->with('success', 'Thank you for your message! We will get back to you soon.');
+        // Prepare contact data with correct timezone
+        $timezone = 'America/Toronto'; // Always use Toronto timezone
+        $submittedAt = \Carbon\Carbon::now($timezone);
+        
+        $contactData = [
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+            'subject' => $validated['subject'] ?? null,
+            'message' => $validated['message'],
+            'ip' => $request->ip(),
+            'user_agent' => $request->userAgent(),
+            'submitted_at' => $submittedAt->toDateTimeString(),
+            'submitted_at_timestamp' => $submittedAt->timestamp,
+            'submitted_at_timezone' => $timezone, // Store timezone for reference
+        ];
+
+        // Log the contact form submission
+        Log::info('Contact form submission received', [
+            'name' => $contactData['name'],
+            'email' => $contactData['email'],
+            'subject' => $contactData['subject'],
+            'ip' => $contactData['ip'],
+        ]);
+
+        // Send notification to admin
+        try {
+            $adminEmail = config('mail.admin_address') ?: env('ADMIN_EMAIL') ?: 'admin@example.com';
+            
+            if (empty($adminEmail) || $adminEmail === 'admin@example.com') {
+                Log::warning('Admin email not configured for contact form notification', [
+                    'contact_name' => $contactData['name'],
+                    'config_mail_admin' => config('mail.admin_address'),
+                    'env_admin_email' => env('ADMIN_EMAIL'),
+                ]);
+            }
+            
+            Log::info('Sending admin notification for contact form submission', [
+                'admin_email' => $adminEmail,
+                'contact_name' => $contactData['name'],
+                'contact_email' => $contactData['email'],
+            ]);
+            
+            // Create notification instance
+            $notification = new \App\Notifications\AdminContactNotification($contactData);
+            
+            // Send notification immediately (not queued) to ensure admin receives it right away
+            \Illuminate\Support\Facades\Notification::route('mail', $adminEmail)
+                ->notifyNow($notification);
+            
+            Log::info('Admin notification sent successfully for contact form submission', [
+                'admin_email' => $adminEmail,
+                'contact_name' => $contactData['name'],
+            ]);
+        } catch (\Throwable $e) {
+            Log::error('Failed to send admin notification for contact form submission', [
+                'error' => $e->getMessage(),
+                'error_class' => get_class($e),
+                'trace' => $e->getTraceAsString(),
+                'contact_name' => $contactData['name'] ?? null,
+                'contact_email' => $contactData['email'] ?? null,
+                'admin_email' => $adminEmail ?? null,
+            ]);
+            // Don't fail the request if notification fails - still show success to user
+        }
+
+        // Return success response
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Thank you for your message! We will get back to you soon.'
+            ]);
+        }
+
+        return redirect()->back()->with('success', 'Thank you for your message! We will get back to you soon.');
+        
+    } catch (\Illuminate\Validation\ValidationException $e) {
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => $e->errors()
+            ], 422);
+        }
+        return redirect()->back()->withErrors($e->errors())->withInput();
+    } catch (\Exception $e) {
+        Log::error('Contact form submission failed', [
+            'error' => $e->getMessage(),
+            'trace' => $e->getTraceAsString(),
+            'request_data' => $request->all(),
+        ]);
+
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'An error occurred while submitting your message. Please try again.'
+            ], 500);
+        }
+
+        return redirect()->back()->withErrors(['error' => 'An error occurred while submitting your message. Please try again.'])->withInput();
+    }
 })->name('contact.store');
 
 // Custom service request form handler
@@ -1370,9 +1533,12 @@ Route::post('/custom-service', function(Request $request) {
                 'request_id' => $record->id ?? null,
             ]);
             
-            // Send notification (will be queued if queue is configured, otherwise sends immediately)
+            // Create notification instance
+            $notification = new \App\Notifications\CustomServiceRequest(array_merge($payload, ['is_admin' => true]));
+            
+            // Send notification immediately (not queued) to ensure admin receives it right away
             \Illuminate\Support\Facades\Notification::route('mail', $adminEmail)
-                ->notify(new \App\Notifications\CustomServiceRequest(array_merge($payload, ['is_admin' => true])));
+                ->notifyNow($notification);
             
             \Illuminate\Support\Facades\Log::info('Admin notification sent for custom service request', [
                 'admin_email' => $adminEmail,

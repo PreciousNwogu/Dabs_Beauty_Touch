@@ -11,7 +11,35 @@ document.addEventListener('DOMContentLoaded', () => {
     const eventsUrl = calendarEl.dataset.eventsUrl || '/schedules/events';
     const rescheduleUrl = calendarEl.dataset.rescheduleUrl || '/schedules/reschedule';
     const storeUrl = calendarEl.dataset.storeUrl || '/schedules';
-    const csrf = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+    
+    // Helper function to get CSRF token
+    const getCsrfToken = () => {
+        const metaTag = document.querySelector('meta[name="csrf-token"]');
+        return metaTag ? metaTag.getAttribute('content') : null;
+    };
+    
+    // Helper function to refresh CSRF token
+    const refreshCsrfToken = async () => {
+        try {
+            const response = await fetch('/csrf-token', {
+                method: 'GET',
+                headers: { 'Accept': 'application/json' }
+            });
+            if (response.ok) {
+                const data = await response.json();
+                const metaTag = document.querySelector('meta[name="csrf-token"]');
+                if (metaTag && data.token) {
+                    metaTag.setAttribute('content', data.token);
+                    return data.token;
+                }
+            }
+        } catch (err) {
+            console.error('Failed to refresh CSRF token:', err);
+        }
+        return null;
+    };
+    
+    let csrf = getCsrfToken();
 
     const calendar = new Calendar(calendarEl, {
         plugins: [dayGridPlugin, timeGridPlugin, interactionPlugin],
@@ -50,7 +78,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             fetch(rescheduleUrl, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrf },
+                headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': getCsrfToken() },
                 body: JSON.stringify({ booking_id: bookingId, start: startIso, end: endIso })
             }).then(r => r.json()).then(data => {
                 if (!data.success) { alert('Failed to reschedule booking: ' + (data.message || 'Unknown')); info.revert(); }
@@ -104,7 +132,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (confirm('Delete this schedule slot / block?')) {
                     fetch('/admin/schedules/' + origId, {
                         method: 'DELETE',
-                        headers: { 'X-CSRF-TOKEN': csrf }
+                        headers: { 'X-CSRF-TOKEN': getCsrfToken() }
                     }).then(r => r.json()).then(data => {
                         if (data.success) {
                             calendar.refetchEvents();
@@ -509,6 +537,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     csrf: csrf ? 'present' : 'missing' 
                 });
                 
+                // Get fresh CSRF token
+                csrf = getCsrfToken();
+                if (!csrf) {
+                    alert('❌ CSRF token not found. Please refresh the page and try again.');
+                    return;
+                }
+                
                 const res = await fetch(storeUrl, {
                     method: 'POST',
                     headers: { 
@@ -526,6 +561,66 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (!res.ok) {
                     const errorText = await res.text();
                     console.error('Server error response:', errorText);
+                    
+                    // Check if it's a CSRF token mismatch error (419 status code)
+                    if (res.status === 419 || errorText.includes('CSRF token mismatch') || errorText.includes('csrf')) {
+                        console.log('CSRF token mismatch detected, refreshing token...');
+                        const newToken = await refreshCsrfToken();
+                        if (newToken) {
+                            csrf = newToken;
+                            console.log('CSRF token refreshed, retrying request...');
+                            // Retry the request with the new token
+                            const retryRes = await fetch(storeUrl, {
+                                method: 'POST',
+                                headers: { 
+                                    'Content-Type': 'application/json', 
+                                    'X-CSRF-TOKEN': csrf,
+                                    'Accept': 'application/json'
+                                },
+                                body: JSON.stringify({ title, start: start.toISOString(), end: end.toISOString(), type: 'blocked' })
+                            });
+                            
+                            if (!retryRes.ok) {
+                                const retryErrorText = await retryRes.text();
+                                let retryErrorMessage = 'Failed to create blocked range after token refresh';
+                                try {
+                                    const retryErrorData = JSON.parse(retryErrorText);
+                                    retryErrorMessage = retryErrorData.message || retryErrorData.error || retryErrorMessage;
+                                } catch (e) {
+                                    retryErrorMessage += ` (${retryRes.status} ${retryRes.statusText})`;
+                                }
+                                alert('❌ ' + retryErrorMessage + '\n\nPlease refresh the page and try again.');
+                                return;
+                            }
+                            
+                            // Success on retry - continue with normal success flow
+                            const retryData = await retryRes.json();
+                            if (retryData.success) {
+                                try { window._blockModalInstance?.hide(); } catch (e) {}
+                                calendar.refetchEvents();
+                                try { calendar.gotoDate(start); } catch (e) {}
+                                
+                                const alertDiv = document.createElement('div');
+                                alertDiv.className = 'alert alert-success alert-dismissible fade show position-fixed top-0 start-50 translate-middle-x mt-3';
+                                alertDiv.style.zIndex = '9999';
+                                alertDiv.innerHTML = `
+                                    <i class="bi bi-check-circle-fill me-2"></i>
+                                    <strong>Success!</strong> Blocked range "${title}" has been created.
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                                `;
+                                document.body.appendChild(alertDiv);
+                                setTimeout(() => alertDiv.remove(), 5000);
+                                return;
+                            } else {
+                                alert('❌ Failed to create block: ' + (retryData.message || 'Unknown error'));
+                                return;
+                            }
+                        } else {
+                            alert('❌ Session expired. Please refresh the page and try again.');
+                            return;
+                        }
+                    }
+                    
                     let errorMessage = 'Failed to create blocked range';
                     try {
                         const errorData = JSON.parse(errorText);
@@ -744,7 +839,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 const raw = ('' + slot.id);
                                 const parts = raw.split('-');
                                 const origId = parts.length > 1 ? parts[1] : raw.replace('slot-', '');
-                                const delResp = await fetch(`/admin/schedules/${origId}`, { method: 'DELETE', headers: { 'X-CSRF-TOKEN': csrf } });
+                                const delResp = await fetch(`/admin/schedules/${origId}`, { method: 'DELETE', headers: { 'X-CSRF-TOKEN': getCsrfToken() } });
                                 const delData = await delResp.json();
                                 if (delData.success) {
                                     // Check if this is the last item before removal
