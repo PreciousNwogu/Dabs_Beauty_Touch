@@ -632,16 +632,24 @@ document.addEventListener('DOMContentLoaded', () => {
             case 'time-morning':
                 if (allDayCheck) allDayCheck.checked = false;
                 updateBlockMode();
+                // Set start date to today at 00:00, end date to next week at 14:00
+                // The backend will apply this time block (00:00 to 14:00) to each day in the range
+                // For intermediate days, it will block the full day (00:00 to 23:59) since the block spans them
+                // For the last day, it will block from 00:00 to 14:00
                 blockStart.value = formatDateTimeLocal(new Date(today.getFullYear(), today.getMonth(), today.getDate(), 0, 0));
-                blockEnd.value = formatDateTimeLocal(new Date(today.getFullYear(), today.getMonth(), today.getDate(), 14, 0));
+                blockEnd.value = formatDateTimeLocal(new Date(nextWeek.getFullYear(), nextWeek.getMonth(), nextWeek.getDate(), 14, 0));
                 if (blockTitle) blockTitle.value = 'Morning Blocked - Open from 3 PM';
                 break;
 
             case 'time-afternoon':
                 if (allDayCheck) allDayCheck.checked = false;
                 updateBlockMode();
+                // Set start date to today at 14:00, end date to next week at 23:59
+                // The backend will apply this time block (14:00 to 23:59) to each day in the range
+                // For intermediate days, it will block the full day (00:00 to 23:59) since the block spans them
+                // For the last day, it will block from 14:00 to 23:59
                 blockStart.value = formatDateTimeLocal(new Date(today.getFullYear(), today.getMonth(), today.getDate(), 14, 0));
-                blockEnd.value = formatDateTimeLocal(new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59));
+                blockEnd.value = formatDateTimeLocal(new Date(nextWeek.getFullYear(), nextWeek.getMonth(), nextWeek.getDate(), 23, 59));
                 if (blockTitle) blockTitle.value = 'Afternoon Blocked - Open till 1 PM';
                 break;
 
