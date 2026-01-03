@@ -360,6 +360,9 @@ Route::prefix('admin')->name('admin.')->group(function () {
     // Admin profile routes
     Route::get('/profile', function () {
         $user = Auth::user();
+        if (!$user) {
+            return redirect()->route('admin.login')->with('error', 'Please log in to access your profile.');
+        }
         return view('admin.profile', compact('user'));
     })->name('profile');
 
