@@ -653,6 +653,11 @@
                         <a class="nav-link active" href="{{ route('admin.dashboard') }}">Admin</a>
                     </li>
                     <li class="nav-item">
+                        <a class="nav-link" href="{{ route('admin.profile') }}">
+                            <i class="bi bi-person-circle me-1"></i>Profile
+                        </a>
+                    </li>
+                    <li class="nav-item">
                         <form method="POST" action="{{ route('admin.logout') }}" class="d-inline">
                             @csrf
                             <button type="submit" class="nav-link btn btn-link" style="background: none; border: none; color: #dc3545; font-weight: 600;">

@@ -292,7 +292,7 @@ class AppointmentController extends Controller
             // Check if this date/time is blocked (only block full-day blocks or if time falls within blocked range)
             $appointmentDate = \Carbon\Carbon::parse($request->appointment_date)->startOfDay();
             $appointmentTime = $request->appointment_time ?? null;
-            
+
             // Get all blocked schedules that overlap with this date
             $blockedSchedules = \App\Models\Schedule::where('type', 'blocked')
                 ->where('start', '<=', $appointmentDate->copy()->endOfDay())
@@ -302,17 +302,17 @@ class AppointmentController extends Controller
             foreach ($blockedSchedules as $blockedSchedule) {
                 $startParsed = \Carbon\Carbon::parse($blockedSchedule->start)->utc();
                 $endParsed = \Carbon\Carbon::parse($blockedSchedule->end)->utc();
-                
+
                 // Check if it's a full-day block
-                $isAllDay = $startParsed->format('H:i:s') === '00:00:00' && 
+                $isAllDay = $startParsed->format('H:i:s') === '00:00:00' &&
                            $endParsed->format('H:i:s') === '00:00:00';
-                
+
                 if ($isAllDay) {
                     // Full-day block: check if this date falls within the block range
                     $blockStartDate = $startParsed->format('Y-m-d');
                     $blockEndDate = $endParsed->format('Y-m-d');
                     $requestedDate = $appointmentDate->format('Y-m-d');
-                    
+
                     if ($requestedDate >= $blockStartDate && $requestedDate < $blockEndDate) {
                         $isApiRequest = $request->expectsJson() || $request->is('api/*') || $request->header('X-Requested-With') === 'XMLHttpRequest';
                         $blockedTitle = $blockedSchedule->title ?? 'Blocked';
@@ -334,51 +334,18 @@ class AppointmentController extends Controller
                     // Time-specific block: only block if the selected time falls within the blocked range
                     if ($appointmentTime) {
                         try {
-                            $appTz = config('app.timezone') ?: 'UTC';
-                            $requestedDateTime = \Carbon\Carbon::parse($request->appointment_date . ' ' . $appointmentTime)->setTimezone($appTz);
-                            $blockStart = $startParsed->copy()->setTimezone($appTz);
-                            $blockEnd = $endParsed->copy()->setTimezone($appTz);
-                            
+                            $requestedDateTime = \Carbon\Carbon::parse($request->appointment_date . ' ' . $appointmentTime);
+                            $blockStart = $startParsed->copy()->setTimezone(config('app.timezone') ?: 'UTC');
+                            $blockEnd = $endParsed->copy()->setTimezone(config('app.timezone') ?: 'UTC');
+
                             // Check if the requested date matches the block date(s)
                             $blockStartDate = $blockStart->format('Y-m-d');
                             $blockEndDate = $blockEnd->format('Y-m-d');
                             $requestedDate = $appointmentDate->format('Y-m-d');
-                            
+
                             if ($requestedDate >= $blockStartDate && $requestedDate <= $blockEndDate) {
-                                // Extract time portions
-                                $startTimeOnly = $blockStart->format('H:i:s');
-                                $endTimeOnly = $blockEnd->format('H:i:s');
-                                
-                                // Check if this is a recurring daily time block pattern
-                                $isRecurringDailyBlock = false;
-                                if ($blockStartDate !== $blockEndDate) {
-                                    $startTimeSeconds = $blockStart->copy()->startOfDay()->diffInSeconds($blockStart);
-                                    $endTimeSeconds = $blockEnd->copy()->startOfDay()->diffInSeconds($blockEnd);
-                                    
-                                    // If start time < end time, it's a daily recurring pattern
-                                    if ($startTimeSeconds < $endTimeSeconds) {
-                                        $isRecurringDailyBlock = true;
-                                    }
-                                }
-                                
-                                $isBlocked = false;
-                                if ($isRecurringDailyBlock) {
-                                    // Apply the time pattern to the requested date
-                                    $dayBlockStart = $appointmentDate->copy()->setTimezone($appTz)->setTimeFromTimeString($startTimeOnly);
-                                    $dayBlockEnd = $appointmentDate->copy()->setTimezone($appTz)->setTimeFromTimeString($endTimeOnly);
-                                    
-                                    // Check if the requested time falls within the blocked range for this day
-                                    if ($requestedDateTime->gte($dayBlockStart) && $requestedDateTime->lt($dayBlockEnd)) {
-                                        $isBlocked = true;
-                                    }
-                                } else {
-                                    // Check if the time falls within the blocked range
-                                    if ($requestedDateTime->gte($blockStart) && $requestedDateTime->lt($blockEnd)) {
-                                        $isBlocked = true;
-                                    }
-                                }
-                                
-                                if ($isBlocked) {
+                                // Check if the time falls within the blocked range
+                                if ($requestedDateTime->gte($blockStart) && $requestedDateTime->lt($blockEnd)) {
                                     $isApiRequest = $request->expectsJson() || $request->is('api/*') || $request->header('X-Requested-With') === 'XMLHttpRequest';
                                     $blockedTitle = $blockedSchedule->title ?? 'Blocked';
 
@@ -460,16 +427,16 @@ class AppointmentController extends Controller
                 $serviceModel = \App\Models\Service::where('slug', $serviceInput)->orWhere('name', $serviceInput)->first();
                 if ($serviceModel) $serviceNameForSave = $serviceModel->name;
             }
-            
+
             // If this is a hair mask service with weave option, append " with Weaving" to the service name
             $hairMaskOption = $request->input('hair_mask_option') ?? $request->input('selectedHairMaskOption');
             if ($hairMaskOption) {
                 $maskOptionNormalized = strtolower(trim(str_replace(['_', ' '], '-', (string)$hairMaskOption)));
                 if (str_contains($maskOptionNormalized, 'weave') || str_contains($maskOptionNormalized, 'weav')) {
                     $serviceNameLower = strtolower($serviceNameForSave ?? '');
-                    if (str_contains($serviceNameLower, 'hair mask') || 
-                        str_contains($serviceNameLower, 'hair-mask') || 
-                        str_contains($serviceNameLower, 'relaxing') || 
+                    if (str_contains($serviceNameLower, 'hair mask') ||
+                        str_contains($serviceNameLower, 'hair-mask') ||
+                        str_contains($serviceNameLower, 'relaxing') ||
                         str_contains($serviceNameLower, 'retouch')) {
                         // Only append if not already there
                         if (!str_contains(strtolower($serviceNameForSave), 'with weaving')) {
@@ -581,45 +548,45 @@ class AppointmentController extends Controller
             if ($isKidsFlow) {
                 // Determine kids base price from service model or config fallback
                 $kb_base_price = $serviceModel ? (float) $serviceModel->base_price : (float) config('service_prices.kids_braids', 80);
-                
+
                 // Calculate all adjustments: type + length + finish (matching UI calculation)
                 $typeAdj = ['protective'=>-20,'cornrows'=>-40,'knotless_small'=>20,'knotless_med'=>0,'box_small'=>10,'box_med'=>0,'stitch'=>20];
                 $lengthAdj = ['shoulder'=>0,'armpit'=>10,'mid_back'=>20,'waist'=>30];
                 $finishAdj = ['curled'=>-10,'plain'=>0];
-                
+
                 $kb_braid_type = $request->input('kb_braid_type');
                 $kb_length = $request->input('kb_length') ?? $request->input('length');
                 $kb_finish = $request->input('kb_finish');
-                
+
                 // Normalize kb_length
                 if (is_string($kb_length)) {
                     $kb_length = str_replace(['-', ' '], '_', strtolower($kb_length));
                 }
-                
+
                 // Calculate type adjustment
                 $typeAdjustment = 0.00;
                 if ($kb_braid_type && isset($typeAdj[$kb_braid_type])) {
                     $typeAdjustment = (float) $typeAdj[$kb_braid_type];
                 }
-                
+
                 // Calculate length adjustment (using the selector mapping, not mid_back rule)
                 $lengthAdjustment = 0.00;
                 if ($kb_length && isset($lengthAdj[$kb_length])) {
                     $lengthAdjustment = (float) $lengthAdj[$kb_length];
                 }
-                
+
                 // Calculate finish adjustment
                 $finishAdjustment = 0.00;
                 if ($kb_finish && isset($finishAdj[$kb_finish])) {
                     $finishAdjustment = (float) $finishAdj[$kb_finish];
                 }
-                
+
                 // Total adjustments = type + length + finish
                 $kb_total_adjustments = $typeAdjustment + $lengthAdjustment + $finishAdjustment;
-                
+
                 // Store length adjustment separately for backwards compatibility (but it's actually total adjustments)
                 $kb_length_adjustment = $kb_total_adjustments;
-                
+
                 // Parse extras if provided (either numeric CSV or named extras)
                 $kb_extras_total = 0.00;
                 $kb_extras_raw = $request->input('kb_extras');
@@ -636,7 +603,7 @@ class AppointmentController extends Controller
                         }
                     }
                 }
-                
+
                 // Final price = base + (type + length + finish adjustments) + addons
                 $kb_final_price = round(($kb_base_price ?? 0) + $kb_total_adjustments + ($kb_extras_total ?? 0), 2);
                 // If client submitted a final_price for kids flow, verify within tolerance and prefer server calc if mismatch large
@@ -1456,7 +1423,7 @@ class AppointmentController extends Controller
             $dateStr = $dateCarbon->format('Y-m-d');
             $startOfDay = Carbon::createFromFormat('Y-m-d H:i:s', $dateStr . ' 00:00:00', $appTz)->startOfDay();
             $endOfDay = Carbon::createFromFormat('Y-m-d H:i:s', $dateStr . ' 23:59:59', $appTz)->endOfDay();
-            
+
             $blockedSchedules = \App\Models\Schedule::where('type', 'blocked')
                 ->where('start', '<', $endOfDay)
                 ->where('end', '>', $startOfDay)
@@ -1466,16 +1433,16 @@ class AppointmentController extends Controller
             foreach ($blockedSchedules as $blockedSchedule) {
                 $startParsed = Carbon::parse($blockedSchedule->start)->utc();
                 $endParsed = Carbon::parse($blockedSchedule->end)->utc();
-                
+
                 // Check if it's an all-day block
-                $isAllDay = $startParsed->format('H:i:s') === '00:00:00' && 
+                $isAllDay = $startParsed->format('H:i:s') === '00:00:00' &&
                            $endParsed->format('H:i:s') === '00:00:00';
-                
+
                 if ($isAllDay) {
                     // Check if this date falls within the all-day block range
                     $blockStartDate = $startParsed->format('Y-m-d');
                     $blockEndDate = $endParsed->format('Y-m-d');
-                    
+
                     if ($dateStr >= $blockStartDate && $dateStr < $blockEndDate) {
                         return response()->json([
                             'success' => true,
@@ -1505,7 +1472,7 @@ class AppointmentController extends Controller
             $dateStr = $dateCarbon->format('Y-m-d');
             $startOfDay = Carbon::createFromFormat('Y-m-d H:i:s', $dateStr . ' 00:00:00', $appTz)->startOfDay();
             $endOfDay = Carbon::createFromFormat('Y-m-d H:i:s', $dateStr . ' 23:59:59', $appTz)->endOfDay();
-            
+
             $blockedSchedules = \App\Models\Schedule::where('type', 'blocked')
                 ->where('start', '<', $endOfDay)
                 ->where('end', '>', $startOfDay)
@@ -1515,86 +1482,50 @@ class AppointmentController extends Controller
                 // Parse from UTC (as stored) first
                 $startParsedUTC = Carbon::parse($block->start)->utc();
                 $endParsedUTC = Carbon::parse($block->end)->utc();
-                
+
                 // Check if it's an all-day block
-                $isAllDay = $startParsedUTC->format('H:i:s') === '00:00:00' && 
+                $isAllDay = $startParsedUTC->format('H:i:s') === '00:00:00' &&
                            $endParsedUTC->format('H:i:s') === '00:00:00';
-                
+
                 if (!$isAllDay) {
                     // For time-specific blocks stored with old code, the UTC times need to be converted
                     // to app timezone to get the actual local times
                     $startParsed = $startParsedUTC->copy()->setTimezone($appTz);
                     $endParsed = $endParsedUTC->copy()->setTimezone($appTz);
-                    
+
                     // Check if this block overlaps with the requested date
                     $blockStartDate = $startParsed->format('Y-m-d');
                     $blockEndDate = $endParsed->format('Y-m-d');
-                    
+
                     // Check if the requested date falls within the block's date range
                     if ($dateStr >= $blockStartDate && $dateStr <= $blockEndDate) {
-                        // Extract time portions
-                        $startTimeOnly = $startParsed->format('H:i:s');
-                        $endTimeOnly = $endParsed->format('H:i:s');
-                        
-                        // Check if this is a recurring daily time block pattern
-                        $isRecurringDailyBlock = false;
-                        if ($blockStartDate !== $blockEndDate) {
-                            // Block spans multiple days - check if it's a daily recurring pattern
-                            $startTimeSeconds = $startParsed->copy()->startOfDay()->diffInSeconds($startParsed);
-                            $endTimeSeconds = $endParsed->copy()->startOfDay()->diffInSeconds($endParsed);
-                            
-                            // If start time < end time, it's a daily recurring pattern
-                            if ($startTimeSeconds < $endTimeSeconds) {
-                                $isRecurringDailyBlock = true;
-                            }
-                        }
-                        
-                        if ($isRecurringDailyBlock) {
-                            // Apply the time pattern to this day
-                            $dayBlockStart = $dateCarbon->copy()->setTimezone($appTz)->setTimeFromTimeString($startTimeOnly);
-                            $dayBlockEnd = $dateCarbon->copy()->setTimezone($appTz)->setTimeFromTimeString($endTimeOnly);
-                            
+                        // Get the intersection with the requested date
+                        $dayStart = $dateCarbon->copy()->setTimezone($appTz)->startOfDay();
+                        $dayEnd = $dateCarbon->copy()->setTimezone($appTz)->endOfDay();
+
+                        $blockStart = $startParsed->copy();
+                        if ($blockStart->lt($dayStart)) $blockStart = $dayStart->copy();
+
+                        $blockEnd = $endParsed->copy();
+                        if ($blockEnd->gt($dayEnd)) $blockEnd = $dayEnd->copy();
+
+                        if ($blockStart->lt($blockEnd)) {
                             $blockedTimeRanges[] = [
-                                'start' => $dayBlockStart->format('H:i'),
-                                'end' => $dayBlockEnd->format('H:i'),
+                                'start' => $blockStart->format('H:i'),
+                                'end' => $blockEnd->format('H:i'),
                             ];
-                            
-                            Log::debug('Added recurring daily blocked time range', [
+
+                            Log::debug('Added blocked time range', [
                                 'block_id' => $block->id,
-                                'time_pattern' => $startTimeOnly . ' to ' . $endTimeOnly,
-                                'blocked_start' => $dayBlockStart->format('H:i'),
-                                'blocked_end' => $dayBlockEnd->format('H:i'),
+                                'stored_utc_start' => $startParsedUTC->format('Y-m-d H:i:s'),
+                                'stored_utc_end' => $endParsedUTC->format('Y-m-d H:i:s'),
+                                'converted_start' => $startParsed->format('Y-m-d H:i:s'),
+                                'converted_end' => $endParsed->format('Y-m-d H:i:s'),
+                                'blocked_start' => $blockStart->format('H:i'),
+                                'blocked_end' => $blockEnd->format('H:i'),
                                 'date' => $date,
+                                'app_timezone' => $appTz,
                             ]);
-                        } else {
-                            // Get the intersection with the requested date
-                            $dayStart = $dateCarbon->copy()->setTimezone($appTz)->startOfDay();
-                            $dayEnd = $dateCarbon->copy()->setTimezone($appTz)->endOfDay();
-                            
-                            $blockStart = $startParsed->copy();
-                            if ($blockStart->lt($dayStart)) $blockStart = $dayStart->copy();
-                            
-                            $blockEnd = $endParsed->copy();
-                            if ($blockEnd->gt($dayEnd)) $blockEnd = $dayEnd->copy();
-                            
-                            if ($blockStart->lt($blockEnd)) {
-                                $blockedTimeRanges[] = [
-                                    'start' => $blockStart->format('H:i'),
-                                    'end' => $blockEnd->format('H:i'),
-                                ];
-                                
-                                Log::debug('Added blocked time range', [
-                                    'block_id' => $block->id,
-                                    'stored_utc_start' => $startParsedUTC->format('Y-m-d H:i:s'),
-                                    'stored_utc_end' => $endParsedUTC->format('Y-m-d H:i:s'),
-                                    'converted_start' => $startParsed->format('Y-m-d H:i:s'),
-                                    'converted_end' => $endParsed->format('Y-m-d H:i:s'),
-                                    'blocked_start' => $blockStart->format('H:i'),
-                                    'blocked_end' => $blockEnd->format('H:i'),
-                                    'date' => $date,
-                                    'app_timezone' => $appTz,
-                                ]);
-                            }
                         }
                     }
                 }
@@ -1610,7 +1541,7 @@ class AppointmentController extends Controller
             $availableSlots = [];
             foreach ($defaultSlots as $slotTime) {
                 $isBooked = in_array($slotTime, $bookedTimeSlots);
-                
+
                 // Check if slot falls within any blocked time range
                 $isBlocked = false;
                 foreach ($blockedTimeRanges as $range) {
@@ -1618,7 +1549,7 @@ class AppointmentController extends Controller
                     $slotDateTime = Carbon::createFromFormat('Y-m-d H:i', $date . ' ' . $slotTime, $appTz);
                     $rangeStart = Carbon::createFromFormat('Y-m-d H:i', $date . ' ' . $range['start'], $appTz);
                     $rangeEnd = Carbon::createFromFormat('Y-m-d H:i', $date . ' ' . $range['end'], $appTz);
-                    
+
                     // Check if slot time falls within the blocked range
                     // For 1-hour slots starting at the slot time, check if the slot time is >= start and <= end (inclusive)
                     // If block is 06:00 to 14:00, slots 06:00 through 14:00 should be blocked
@@ -1632,12 +1563,12 @@ class AppointmentController extends Controller
                         break;
                     }
                 }
-                
+
                 if (!$isBooked && !$isBlocked) {
                     $hour = (int)substr($slotTime, 0, 2);
                     $minute = substr($slotTime, 3, 2);
                     $formattedTime = date('g:i A', mktime($hour, $minute, 0));
-                    
+
                     $availableSlots[] = [
                         'time' => $slotTime,
                         'available' => true,
