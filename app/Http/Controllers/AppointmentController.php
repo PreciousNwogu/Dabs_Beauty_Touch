@@ -334,9 +334,10 @@ class AppointmentController extends Controller
                     // Time-specific block: only block if the selected time falls within the blocked range
                     if ($appointmentTime) {
                         try {
-                            $requestedDateTime = \Carbon\Carbon::parse($request->appointment_date . ' ' . $appointmentTime);
-                            $blockStart = $startParsed->copy()->setTimezone(config('app.timezone') ?: 'UTC');
-                            $blockEnd = $endParsed->copy()->setTimezone(config('app.timezone') ?: 'UTC');
+                            $appTz = config('app.timezone') ?: 'UTC';
+                            $requestedDateTime = \Carbon\Carbon::parse($request->appointment_date . ' ' . $appointmentTime)->setTimezone($appTz);
+                            $blockStart = $startParsed->copy()->setTimezone($appTz);
+                            $blockEnd = $endParsed->copy()->setTimezone($appTz);
                             
                             // Check if the requested date matches the block date(s)
                             $blockStartDate = $blockStart->format('Y-m-d');
@@ -344,8 +345,40 @@ class AppointmentController extends Controller
                             $requestedDate = $appointmentDate->format('Y-m-d');
                             
                             if ($requestedDate >= $blockStartDate && $requestedDate <= $blockEndDate) {
-                                // Check if the time falls within the blocked range
-                                if ($requestedDateTime->gte($blockStart) && $requestedDateTime->lt($blockEnd)) {
+                                // Extract time portions
+                                $startTimeOnly = $blockStart->format('H:i:s');
+                                $endTimeOnly = $blockEnd->format('H:i:s');
+                                
+                                // Check if this is a recurring daily time block pattern
+                                $isRecurringDailyBlock = false;
+                                if ($blockStartDate !== $blockEndDate) {
+                                    $startTimeSeconds = $blockStart->copy()->startOfDay()->diffInSeconds($blockStart);
+                                    $endTimeSeconds = $blockEnd->copy()->startOfDay()->diffInSeconds($blockEnd);
+                                    
+                                    // If start time < end time, it's a daily recurring pattern
+                                    if ($startTimeSeconds < $endTimeSeconds) {
+                                        $isRecurringDailyBlock = true;
+                                    }
+                                }
+                                
+                                $isBlocked = false;
+                                if ($isRecurringDailyBlock) {
+                                    // Apply the time pattern to the requested date
+                                    $dayBlockStart = $appointmentDate->copy()->setTimezone($appTz)->setTimeFromTimeString($startTimeOnly);
+                                    $dayBlockEnd = $appointmentDate->copy()->setTimezone($appTz)->setTimeFromTimeString($endTimeOnly);
+                                    
+                                    // Check if the requested time falls within the blocked range for this day
+                                    if ($requestedDateTime->gte($dayBlockStart) && $requestedDateTime->lt($dayBlockEnd)) {
+                                        $isBlocked = true;
+                                    }
+                                } else {
+                                    // Check if the time falls within the blocked range
+                                    if ($requestedDateTime->gte($blockStart) && $requestedDateTime->lt($blockEnd)) {
+                                        $isBlocked = true;
+                                    }
+                                }
+                                
+                                if ($isBlocked) {
                                     $isApiRequest = $request->expectsJson() || $request->is('api/*') || $request->header('X-Requested-With') === 'XMLHttpRequest';
                                     $blockedTitle = $blockedSchedule->title ?? 'Blocked';
 
@@ -1499,33 +1532,69 @@ class AppointmentController extends Controller
                     
                     // Check if the requested date falls within the block's date range
                     if ($dateStr >= $blockStartDate && $dateStr <= $blockEndDate) {
-                        // Get the intersection with the requested date
-                        $dayStart = $dateCarbon->copy()->setTimezone($appTz)->startOfDay();
-                        $dayEnd = $dateCarbon->copy()->setTimezone($appTz)->endOfDay();
+                        // Extract time portions
+                        $startTimeOnly = $startParsed->format('H:i:s');
+                        $endTimeOnly = $endParsed->format('H:i:s');
                         
-                        $blockStart = $startParsed->copy();
-                        if ($blockStart->lt($dayStart)) $blockStart = $dayStart->copy();
+                        // Check if this is a recurring daily time block pattern
+                        $isRecurringDailyBlock = false;
+                        if ($blockStartDate !== $blockEndDate) {
+                            // Block spans multiple days - check if it's a daily recurring pattern
+                            $startTimeSeconds = $startParsed->copy()->startOfDay()->diffInSeconds($startParsed);
+                            $endTimeSeconds = $endParsed->copy()->startOfDay()->diffInSeconds($endParsed);
+                            
+                            // If start time < end time, it's a daily recurring pattern
+                            if ($startTimeSeconds < $endTimeSeconds) {
+                                $isRecurringDailyBlock = true;
+                            }
+                        }
                         
-                        $blockEnd = $endParsed->copy();
-                        if ($blockEnd->gt($dayEnd)) $blockEnd = $dayEnd->copy();
-                        
-                        if ($blockStart->lt($blockEnd)) {
+                        if ($isRecurringDailyBlock) {
+                            // Apply the time pattern to this day
+                            $dayBlockStart = $dateCarbon->copy()->setTimezone($appTz)->setTimeFromTimeString($startTimeOnly);
+                            $dayBlockEnd = $dateCarbon->copy()->setTimezone($appTz)->setTimeFromTimeString($endTimeOnly);
+                            
                             $blockedTimeRanges[] = [
-                                'start' => $blockStart->format('H:i'),
-                                'end' => $blockEnd->format('H:i'),
+                                'start' => $dayBlockStart->format('H:i'),
+                                'end' => $dayBlockEnd->format('H:i'),
                             ];
                             
-                            Log::debug('Added blocked time range', [
+                            Log::debug('Added recurring daily blocked time range', [
                                 'block_id' => $block->id,
-                                'stored_utc_start' => $startParsedUTC->format('Y-m-d H:i:s'),
-                                'stored_utc_end' => $endParsedUTC->format('Y-m-d H:i:s'),
-                                'converted_start' => $startParsed->format('Y-m-d H:i:s'),
-                                'converted_end' => $endParsed->format('Y-m-d H:i:s'),
-                                'blocked_start' => $blockStart->format('H:i'),
-                                'blocked_end' => $blockEnd->format('H:i'),
+                                'time_pattern' => $startTimeOnly . ' to ' . $endTimeOnly,
+                                'blocked_start' => $dayBlockStart->format('H:i'),
+                                'blocked_end' => $dayBlockEnd->format('H:i'),
                                 'date' => $date,
-                                'app_timezone' => $appTz,
                             ]);
+                        } else {
+                            // Get the intersection with the requested date
+                            $dayStart = $dateCarbon->copy()->setTimezone($appTz)->startOfDay();
+                            $dayEnd = $dateCarbon->copy()->setTimezone($appTz)->endOfDay();
+                            
+                            $blockStart = $startParsed->copy();
+                            if ($blockStart->lt($dayStart)) $blockStart = $dayStart->copy();
+                            
+                            $blockEnd = $endParsed->copy();
+                            if ($blockEnd->gt($dayEnd)) $blockEnd = $dayEnd->copy();
+                            
+                            if ($blockStart->lt($blockEnd)) {
+                                $blockedTimeRanges[] = [
+                                    'start' => $blockStart->format('H:i'),
+                                    'end' => $blockEnd->format('H:i'),
+                                ];
+                                
+                                Log::debug('Added blocked time range', [
+                                    'block_id' => $block->id,
+                                    'stored_utc_start' => $startParsedUTC->format('Y-m-d H:i:s'),
+                                    'stored_utc_end' => $endParsedUTC->format('Y-m-d H:i:s'),
+                                    'converted_start' => $startParsed->format('Y-m-d H:i:s'),
+                                    'converted_end' => $endParsed->format('Y-m-d H:i:s'),
+                                    'blocked_start' => $blockStart->format('H:i'),
+                                    'blocked_end' => $blockEnd->format('H:i'),
+                                    'date' => $date,
+                                    'app_timezone' => $appTz,
+                                ]);
+                            }
                         }
                     }
                 }
