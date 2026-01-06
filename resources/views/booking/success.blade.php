@@ -3,7 +3,27 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Booking Confirmed - Dab's Beauty Touch</title>
+    
+    <!-- Primary Meta Tags -->
+    <title>Booking Confirmed - Dab's Beauty Touch | Appointment Success</title>
+    <meta name="title" content="Booking Confirmed - Dab's Beauty Touch | Appointment Success">
+    <meta name="description" content="Your appointment has been successfully booked. Booking confirmation details and next steps for your hair braiding service at Dab's Beauty Touch.">
+    <meta name="robots" content="noindex, nofollow">
+    <link rel="canonical" href="{{ url('/booking/success') }}">
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="{{ url('/booking/success') }}">
+    <meta property="og:title" content="Booking Confirmed - Dab's Beauty Touch">
+    <meta property="og:description" content="Your appointment has been successfully booked.">
+    <meta property="og:image" content="{{ asset('images/logo.jpg') }}">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="{{ url('/booking/success') }}">
+    <meta name="twitter:title" content="Booking Confirmed - Dab's Beauty Touch">
+    <meta name="twitter:description" content="Your appointment has been successfully booked.">
+    <meta name="twitter:image" content="{{ asset('images/logo.jpg') }}">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
     <style>
