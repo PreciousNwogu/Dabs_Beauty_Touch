@@ -3,7 +3,28 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Book Appointment - Dab's Beauty Touch</title>
+    
+    <!-- Primary Meta Tags -->
+    <title>Book Appointment - Dab's Beauty Touch | Online Booking</title>
+    <meta name="title" content="Book Appointment - Dab's Beauty Touch | Online Booking">
+    <meta name="description" content="Book your hair braiding appointment online. Choose from professional braiding services including knotless braids, box braids, wig installation, and custom styles. Easy online scheduling available.">
+    <meta name="keywords" content="book hair braiding appointment, online booking, Ottawa braiding salon, schedule appointment, hair braiding booking">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="{{ url('/calendar') }}">
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="{{ url('/calendar') }}">
+    <meta property="og:title" content="Book Appointment - Dab's Beauty Touch | Online Booking">
+    <meta property="og:description" content="Book your hair braiding appointment online. Choose from professional braiding services. Easy online scheduling available.">
+    <meta property="og:image" content="{{ asset('images/logo.jpg') }}">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:url" content="{{ url('/calendar') }}">
+    <meta name="twitter:title" content="Book Appointment - Dab's Beauty Touch">
+    <meta name="twitter:description" content="Book your hair braiding appointment online. Easy online scheduling available.">
+    <meta name="twitter:image" content="{{ asset('images/logo.jpg') }}">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
     <style>
