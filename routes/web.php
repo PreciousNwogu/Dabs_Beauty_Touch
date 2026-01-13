@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Http\Request;
+use Illuminate\Http\Request as HttpRequest;
 
 // Main route - show the home page
 Route::get('/', function () {
@@ -435,7 +435,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
     })->name('profile.update-password');
 
     // Admin booking management routes
-    Route::post('/bookings/update-status', function(Request $request) {
+    Route::post('/bookings/update-status', function(HttpRequest $request) {
         try {
             // Accept both booking_id and appointment_id for compatibility
             $bookingId = $request->booking_id ?? $request->appointment_id;
@@ -477,9 +477,12 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
             $booking->save();
 
-            // Send notifications for completed or cancelled statuses
+            // Send notifications for confirmed, completed, or cancelled statuses
             try {
-                if ($request->status === 'completed' && $booking->email) {
+                if ($request->status === 'confirmed' && $booking->email && $booking->email !== 'no-email@example.com') {
+                    \Illuminate\Support\Facades\Notification::route('mail', $booking->email)
+                        ->notify(new \App\Notifications\BookingConfirmation($booking));
+                } elseif ($request->status === 'completed' && $booking->email) {
                     \Illuminate\Support\Facades\Notification::route('mail', $booking->email)
                         ->notify(new \App\Notifications\ServiceCompletedNotification($booking));
                 } elseif ($request->status === 'cancelled' && $booking->email) {
