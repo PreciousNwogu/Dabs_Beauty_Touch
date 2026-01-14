@@ -2072,32 +2072,98 @@
         }
 
         // Quick status update function used by inline buttons
-        function updateStatusQuick(bookingId, newStatus) {
+        // Make sure it's globally accessible
+        window.updateStatusQuick = function(bookingId, newStatus) {
             console.log('updateStatusQuick called with:', bookingId, newStatus);
+            
+            // Validate inputs
+            if (!bookingId || !newStatus) {
+                console.error('Invalid parameters:', { bookingId, newStatus });
+                alert('Error: Missing booking ID or status');
+                return;
+            }
 
             const confirmMessage = `Are you sure you want to mark booking #${bookingId} as ${newStatus}?`;
             if (!confirm(confirmMessage)) {
                 return;
             }
 
-            const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+            const csrfToken = document.querySelector('meta[name="csrf-token"]');
+            if (!csrfToken) {
+                alert('❌ CSRF token not found. Please refresh the page and try again.');
+                return;
+            }
+            const csrfTokenValue = csrfToken.getAttribute('content');
 
             // If cancelling via quick action, ask who cancelled (optional) so notification can include it
             let cancelledBy = null;
             if (newStatus === 'cancelled') {
                 cancelledBy = prompt('Enter name to record as who cancelled (leave blank for Admin):', 'Admin');
+                // If user cancels the prompt, abort the operation
+                if (cancelledBy === null) {
+                    return;
+                }
             }
 
-            fetch('{{ route("admin.bookings.update-status") }}', {
+            // Build the URL - use absolute URL to ensure it works on hosted sites
+            // Try to get route from Blade helper, fallback to constructing URL manually
+            let updateStatusUrl = '{{ route("admin.bookings.update-status") }}';
+            
+            // If route helper didn't work (empty or contains Blade syntax), construct manually
+            if (!updateStatusUrl || updateStatusUrl.includes('{{') || updateStatusUrl.includes('route(')) {
+                updateStatusUrl = '/admin/bookings/update-status';
+            }
+            
+            let fullUpdateUrl = updateStatusUrl;
+            if (updateStatusUrl.startsWith('/')) {
+                // Relative URL - make it absolute using current origin
+                fullUpdateUrl = window.location.origin + updateStatusUrl;
+            }
+
+            console.log('Updating booking status:', {
+                bookingId,
+                newStatus,
+                url: fullUpdateUrl,
+                hasCsrf: !!csrfTokenValue,
+                cancelledBy: cancelledBy
+            });
+
+            // Show loading indicator - store button reference and original text for error handling
+            let button = null;
+            let originalText = null;
+            try {
+                // Try to find the button that was clicked
+                button = event?.target || document.querySelector(`button[onclick*="updateStatusQuick(${bookingId}"]`);
+                if (button) {
+                    originalText = button.innerHTML;
+                    button.disabled = true;
+                    button.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Updating...';
+                    
+                    // Re-enable button after 10 seconds as fallback
+                    setTimeout(() => {
+                        if (button && button.disabled) {
+                            button.disabled = false;
+                            button.innerHTML = originalText || 'Retry';
+                        }
+                    }, 10000);
+                }
+            } catch (e) {
+                console.warn('Could not find button for loading indicator:', e);
+            }
+
+            fetch(fullUpdateUrl, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': csrfToken
+                    'X-CSRF-TOKEN': csrfTokenValue,
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
                 },
+                credentials: 'same-origin', // Include cookies for CSRF
                 body: JSON.stringify({
                     booking_id: bookingId,
                     status: newStatus,
-                    cancelled_by: cancelledBy
+                    cancelled_by: cancelledBy || null
                 })
             })
             .then(response => {
@@ -2117,22 +2183,73 @@
                 return response.json();
             })
             .then(data => {
+                console.log('Status update response:', data);
                 if (data.success) {
-                    window.location.reload();
+                    // Show success message briefly before reload
+                    const successMsg = document.createElement('div');
+                    successMsg.className = 'alert alert-success alert-dismissible fade show position-fixed top-0 start-50 translate-middle-x mt-3';
+                    successMsg.style.zIndex = '9999';
+                    successMsg.innerHTML = `
+                        <i class="bi bi-check-circle-fill me-2"></i>
+                        <strong>Success!</strong> Booking status updated to ${newStatus}.
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    `;
+                    document.body.appendChild(successMsg);
+                    
+                    // Reload after short delay
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1000);
                 } else {
                     alert('Error updating booking status: ' + (data.message || 'Unknown error'));
+                    // Re-enable button
+                    if (button) {
+                        button.disabled = false;
+                        button.innerHTML = originalText || button.innerHTML.replace('<span class="spinner-border spinner-border-sm me-1"></span>Updating...', '');
+                    }
                 }
             })
             .catch(error => {
-                if (error && error.body) {
+                console.error('Error updating booking status:', error);
+                console.error('Error details:', {
+                    message: error.message,
+                    name: error.name,
+                    stack: error.stack,
+                    url: fullUpdateUrl,
+                    bookingId: bookingId,
+                    status: newStatus
+                });
+
+                let userMessage = 'Error updating booking status. ';
+                
+                if (error.message === 'Failed to fetch') {
+                    userMessage += 'Unable to reach the server.\n\n';
+                    userMessage += 'Please check:\n';
+                    userMessage += '1. Your internet connection\n';
+                    userMessage += '2. The server is running\n';
+                    userMessage += '3. Try refreshing the page\n\n';
+                    userMessage += 'URL attempted: ' + fullUpdateUrl;
+                } else if (error && error.body) {
                     console.error('Full server response for quick booking update:', error.body);
+                    // Try to extract meaningful error message from HTML response
+                    if (error.body.includes('CSRF token mismatch') || error.body.includes('419')) {
+                        userMessage = 'Session expired. Please refresh the page and try again.';
+                    } else {
+                        userMessage += (error.message || 'Please try again.');
+                    }
                 } else {
-                    console.error('Error:', error);
+                    userMessage += (error.message || 'Please try again.');
                 }
-                const userMessage = (error && error.message) ? error.message : 'Error updating booking status. Please try again.';
-                alert(userMessage);
+                
+                alert('❌ ' + userMessage);
+                
+                // Re-enable button on error
+                if (button) {
+                    button.disabled = false;
+                    button.innerHTML = originalText || button.innerHTML.replace('<span class="spinner-border spinner-border-sm me-1"></span>Updating...', '');
+                }
             });
-        }
+        };
         
         // Complete Services Modal functionality
         const openCompleteServicesModalBtn = document.getElementById('openCompleteServicesModal');

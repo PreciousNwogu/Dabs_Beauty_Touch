@@ -436,9 +436,30 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
     // Admin booking management routes
     Route::post('/bookings/update-status', function(HttpRequest $request) {
+        // Log incoming request for debugging
+        Log::info('Booking status update request received', [
+            'method' => $request->method(),
+            'url' => $request->fullUrl(),
+            'ip' => $request->ip(),
+            'user_agent' => $request->userAgent(),
+            'has_csrf' => $request->hasHeader('X-CSRF-TOKEN'),
+            'booking_id' => $request->booking_id ?? $request->appointment_id,
+            'status' => $request->status,
+            'request_data' => $request->all(),
+        ]);
+
         try {
             // Accept both booking_id and appointment_id for compatibility
             $bookingId = $request->booking_id ?? $request->appointment_id;
+            
+            if (!$bookingId) {
+                Log::warning('Booking status update failed: No booking ID provided');
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Booking ID is required'
+                ], 400);
+            }
+            
             $booking = \App\Models\Booking::findOrFail($bookingId);
             $booking->status = $request->status;
 
