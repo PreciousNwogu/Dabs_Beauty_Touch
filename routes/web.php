@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Http\Request;
 use Illuminate\Http\Request as HttpRequest;
 
 // Main route - show the home page
@@ -289,50 +290,75 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
     // Admin dashboard (accessible after login)
     Route::get('/dashboard', function () {
-        $query = \App\Models\Booking::with([]);
+        try {
+            $query = \App\Models\Booking::with([]);
 
-        // Apply filters if provided
-        if (request('status') && request('status') !== 'all') {
-            $query->where('status', request('status'));
+            // Apply filters if provided
+            if (request('status') && request('status') !== 'all') {
+                $query->where('status', request('status'));
+            }
+
+            if (request('date')) {
+                $query->whereDate('appointment_date', request('date'));
+            }
+
+            if (request('service')) {
+                $query->where('service', 'LIKE', '%' . request('service') . '%');
+            }
+
+            // Paginate bookings (50 per page to show more bookings)
+            $bookings = $query->orderBy('appointment_date', 'desc')
+                ->orderBy('appointment_time', 'desc')
+                ->paginate(50);
+
+            $stats = [
+                'total_bookings' => \App\Models\Booking::count(),
+                'pending_bookings' => \App\Models\Booking::where('status', 'pending')->count(),
+                'confirmed_bookings' => \App\Models\Booking::where('status', 'confirmed')->count(),
+                'completed_bookings' => \App\Models\Booking::where('status', 'completed')->count(),
+                'today_bookings' => \App\Models\Booking::whereDate('appointment_date', today())->count(),
+                'this_week_bookings' => \App\Models\Booking::whereBetween('appointment_date', [
+                    now()->startOfWeek(),
+                    now()->endOfWeek()
+                ])->count(),
+                // Revenue calculations for completed bookings only
+                'today_revenue' => \App\Models\Booking::where('status', 'completed')
+                    ->whereDate('completed_at', today())
+                    ->sum('final_price') ?? 0,
+                'monthly_revenue' => \App\Models\Booking::where('status', 'completed')
+                    ->whereYear('completed_at', now()->year)
+                    ->whereMonth('completed_at', now()->month)
+                    ->sum('final_price') ?? 0,
+            ];
+
+            // Also fetch recent custom service requests for admin review
+            try {
+                $customRequests = \App\Models\CustomServiceRequest::orderBy('created_at', 'desc')->take(10)->get();
+            } catch (\Exception $e) {
+                Log::warning('Failed to fetch custom service requests: ' . $e->getMessage());
+                $customRequests = collect([]); // Empty collection as fallback
+            }
+
+            return view('admin.dashboard', compact('bookings', 'stats', 'customRequests'));
+        } catch (\Exception $e) {
+            Log::error('Admin dashboard error: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine()
+            ]);
+            
+            // Return error response
+            if (request()->expectsJson() || request()->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'An error occurred while loading the dashboard: ' . $e->getMessage()
+                ], 500);
+            }
+            
+            // For web requests, redirect to login with error message
+            return redirect()->route('admin.login')
+                ->with('error', 'An error occurred while loading the dashboard. Please try again later.');
         }
-
-        if (request('date')) {
-            $query->whereDate('appointment_date', request('date'));
-        }
-
-        if (request('service')) {
-            $query->where('service', 'LIKE', '%' . request('service') . '%');
-        }
-
-        // Paginate bookings (50 per page to show more bookings)
-        $bookings = $query->orderBy('appointment_date', 'desc')
-            ->orderBy('appointment_time', 'desc')
-            ->paginate(50);
-
-        $stats = [
-            'total_bookings' => \App\Models\Booking::count(),
-            'pending_bookings' => \App\Models\Booking::where('status', 'pending')->count(),
-            'confirmed_bookings' => \App\Models\Booking::where('status', 'confirmed')->count(),
-            'completed_bookings' => \App\Models\Booking::where('status', 'completed')->count(),
-            'today_bookings' => \App\Models\Booking::whereDate('appointment_date', today())->count(),
-            'this_week_bookings' => \App\Models\Booking::whereBetween('appointment_date', [
-                now()->startOfWeek(),
-                now()->endOfWeek()
-            ])->count(),
-            // Revenue calculations for completed bookings only
-            'today_revenue' => \App\Models\Booking::where('status', 'completed')
-                ->whereDate('completed_at', today())
-                ->sum('final_price') ?? 0,
-            'monthly_revenue' => \App\Models\Booking::where('status', 'completed')
-                ->whereYear('completed_at', now()->year)
-                ->whereMonth('completed_at', now()->month)
-                ->sum('final_price') ?? 0,
-        ];
-
-    // Also fetch recent custom service requests for admin review
-    $customRequests = \App\Models\CustomServiceRequest::orderBy('created_at', 'desc')->take(10)->get();
-
-    return view('admin.dashboard', compact('bookings', 'stats', 'customRequests'));
     })->name('dashboard');
 
     // Get booking details for modal
