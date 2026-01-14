@@ -245,6 +245,7 @@ Route::get('/check-db', function () {
     try {
         $userCount = \App\Models\User::count();
         $adminCount = \App\Models\User::where('is_admin', true)->count();
+        $adminUsers = \App\Models\User::where('is_admin', true)->get(['id', 'name', 'email']);
 
         return [
             'database_connection' => $connection,
@@ -252,12 +253,65 @@ Route::get('/check-db', function () {
             'total_users' => $userCount,
             'admin_users' => $adminCount,
             'admin_exists' => \App\Models\User::where('email', 'admin@dabsbeautytouch.com')->exists(),
+            'admin_users_list' => $adminUsers->map(function($user) {
+                return [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email
+                ];
+            })->toArray(),
         ];
     } catch (\Exception $e) {
         return [
             'database_connection' => $connection,
             'database_name' => $dbName,
             'error' => $e->getMessage()
+        ];
+    }
+});
+
+// TEMPORARY: Create admin user route (remove after use)
+Route::get('/create-admin', function () {
+    try {
+        $adminEmail = 'admin@dabsbeautytouch.com';
+        $adminPassword = 'admin123!@#';
+        
+        $existingAdmin = \App\Models\User::where('email', $adminEmail)->first();
+        
+        if ($existingAdmin) {
+            // Update existing user to be admin
+            $existingAdmin->update([
+                'is_admin' => true,
+                'password' => \Illuminate\Support\Facades\Hash::make($adminPassword)
+            ]);
+            return [
+                'success' => true,
+                'message' => 'Admin user updated',
+                'email' => $adminEmail,
+                'password' => $adminPassword
+            ];
+        } else {
+            // Create new admin user
+            \App\Models\User::create([
+                'name' => 'System Administrator',
+                'email' => $adminEmail,
+                'password' => \Illuminate\Support\Facades\Hash::make($adminPassword),
+                'is_admin' => true,
+            ]);
+            
+            return [
+                'success' => true,
+                'message' => 'Admin user created successfully',
+                'email' => $adminEmail,
+                'password' => $adminPassword,
+                'note' => 'Please change the password after first login'
+            ];
+        }
+    } catch (\Exception $e) {
+        return [
+            'success' => false,
+            'error' => $e->getMessage(),
+            'trace' => $e->getTraceAsString()
         ];
     }
 });
