@@ -2117,7 +2117,13 @@
             let fullUpdateUrl = updateStatusUrl;
             if (updateStatusUrl.startsWith('/')) {
                 // Relative URL - make it absolute using current origin
-                fullUpdateUrl = window.location.origin + updateStatusUrl;
+                // Force HTTPS to prevent mixed content errors
+                const protocol = window.location.protocol === 'https:' ? 'https:' : 'https:';
+                const host = window.location.host;
+                fullUpdateUrl = protocol + '//' + host + updateStatusUrl;
+            } else if (updateStatusUrl.startsWith('http://')) {
+                // If URL is HTTP, convert to HTTPS to prevent mixed content errors
+                fullUpdateUrl = updateStatusUrl.replace('http://', 'https://');
             }
 
             console.log('Updating booking status:', {
