@@ -365,7 +365,7 @@
         @endif
 
         <!-- Login Form -->
-        <form method="POST" action="{{ route('admin.login.submit') }}" id="loginForm">
+        <form method="POST" action="/admin/login" id="loginForm">
             @csrf
 
             <div class="form-floating">
@@ -420,6 +420,20 @@
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
+        // Ensure form action uses HTTPS to prevent mixed content errors
+        document.addEventListener('DOMContentLoaded', function() {
+            const loginForm = document.getElementById('loginForm');
+            if (loginForm && window.location.protocol === 'https:') {
+                const currentAction = loginForm.action;
+                if (currentAction && currentAction.startsWith('http://')) {
+                    loginForm.action = currentAction.replace('http://', 'https://');
+                } else if (currentAction && currentAction.startsWith('/')) {
+                    // Relative URL - ensure it uses current protocol
+                    loginForm.action = window.location.protocol + '//' + window.location.host + currentAction;
+                }
+            }
+        });
+
         // Toggle password visibility
         function togglePassword() {
             const passwordField = document.getElementById('password');
