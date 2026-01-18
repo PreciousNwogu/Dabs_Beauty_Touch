@@ -11,18 +11,15 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Request as HttpRequest;
 use Illuminate\Support\Facades\Artisan;
 
-// TEMPORARY (staging-only): clear application caches.
-// Protect this route with an env check + secret key and remove when done.
+// TEMPORARY: clear application caches.
+// This is protected by a secret key. Remove when done.
 Route::get('/__clear', function (Request $request) {
-    // Only allow on staging/local environments
-    abort_unless(app()->environment(['staging', 'local']), 404);
-
-    // Require a secret key in staging to prevent public abuse:
+    // Require a secret key to prevent public abuse:
     // call as: /__clear?key=YOUR_CLEAR_CACHE_KEY
     $expectedKey = env('CLEAR_CACHE_KEY');
-    if (app()->environment('staging') && $expectedKey) {
-        abort_unless(hash_equals($expectedKey, (string) $request->query('key', '')), 403);
-    }
+    // Hide the endpoint if the key isn't configured
+    abort_unless(is_string($expectedKey) && $expectedKey !== '', 404);
+    abort_unless(hash_equals($expectedKey, (string) $request->query('key', '')), 403);
 
     Artisan::call('optimize:clear');
 
