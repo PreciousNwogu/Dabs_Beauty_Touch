@@ -2105,16 +2105,10 @@
                 }
             }
 
-            // Build the URL - use absolute URL to ensure it works on hosted sites
-            // Try to get route from Blade helper, fallback to constructing URL manually
-            let updateStatusUrl = '{{ route("admin.bookings.update-status") }}';
-            
-            // If route helper didn't work (empty or contains Blade syntax), construct manually.
-            // IMPORTANT: avoid literal "{{" in Blade templates (it can be parsed by Blade).
-            const bladeEchoToken = '{' + '{';
-            if (!updateStatusUrl || updateStatusUrl.includes(bladeEchoToken) || updateStatusUrl.includes('route(')) {
-                updateStatusUrl = '/admin/bookings/update-status';
-            }
+            // Build the URL - use absolute URL to ensure it works on hosted sites.
+            // IMPORTANT: do NOT embed Blade `route(...)` calls inside <script> blocks (can cause Blade/PHP parse errors).
+            // Use the known relative endpoint instead.
+            let updateStatusUrl = '/admin/bookings/update-status';
             
             let fullUpdateUrl = updateStatusUrl;
             if (updateStatusUrl.startsWith('/')) {
@@ -2420,7 +2414,7 @@
                 submitCompleteServiceBtn.disabled = true;
                 submitCompleteServiceBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Completing...';
 
-                fetch('{{ route("admin.bookings.update-status") }}', {
+                fetch('/admin/bookings/update-status', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
