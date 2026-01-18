@@ -183,7 +183,18 @@
       </table>
 
       <p style="margin-top:14px;">Quick actions:</p>
-      <a class="cta" href="{{ url('/admin/bookings/' . ($booking->id ?? '')) }}">View Booking Details</a>
+      @php
+        $bookingId = $booking->id ?? null;
+        $code = $booking->confirmation_code ?? null;
+        // Prefer the public confirmation link so it works from email without admin login.
+        $publicUrl = ($bookingId && $code)
+          ? secure_url('/bookings/confirm/' . $bookingId . '/' . $code)
+          : null;
+        // Fallback: admin view (requires login)
+        $adminUrl = $bookingId ? secure_url('/admin/bookings/' . $bookingId) : null;
+      @endphp
+
+      <a class="cta" href="{{ $publicUrl ?: ($adminUrl ?: '#') }}">View Booking Details</a>
 
       <div style="margin-top:18px;border-top:1px solid #eef2f6;padding-top:12px;font-size:13px;color:#6c757d;">
         <p style="margin:6px 0 8px 0;font-weight:700;color:#0b3a66;">Stay connected</p>
