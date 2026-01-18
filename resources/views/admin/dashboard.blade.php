@@ -1302,13 +1302,19 @@
                     <!-- Content will be populated by JavaScript -->
                 </div>
             </div>
+        </div>
+    </div>
 
-            <!-- Recent Custom Service Requests -->
-            <div class="p-4">
-                <h5>Recent Custom Service Requests</h5>
+    <!-- Recent Custom Service Requests -->
+    <div class="container mb-5">
+        <div class="card shadow-sm" style="border-radius: 16px; overflow: hidden;">
+            <div class="card-header" style="background: linear-gradient(135deg, #0d6efd 0%, #05137c 100%); color: white;">
+                <h5 class="mb-0">Recent Custom Service Requests</h5>
+            </div>
+            <div class="card-body p-0">
                 @if(isset($customRequests) && $customRequests->count())
                     <div class="table-responsive">
-                        <table class="table table-striped">
+                        <table class="table table-striped mb-0">
                             <thead>
                                 <tr>
                                     <th>ID</th>
@@ -1338,7 +1344,9 @@
                         </table>
                     </div>
                 @else
-                    <p class="text-muted">No custom service requests yet.</p>
+                    <div class="p-4">
+                        <p class="text-muted mb-0">No custom service requests yet.</p>
+                    </div>
                 @endif
             </div>
         </div>
