@@ -3480,6 +3480,14 @@
                     <button type="button" class="btn btn-primary" onclick="confirmDateTime()" id="confirmDateTimeBtn" disabled>
                         <i class="bi bi-check-circle me-2"></i>CONFIRM SELECTION
                     </button>
+                    <div class="w-100 text-center mt-2">
+                        <a href="#services"
+                           class="small text-decoration-none"
+                           style="color:#0b3a66;font-weight:600;"
+                           onclick="closeCalendarAndGoToServices(event)">
+                            Prefer to browse services first?
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>
@@ -4294,6 +4302,21 @@
                 block: 'start'
             });
         }
+    }
+
+    // Calendar modal: close then scroll to services section
+    function closeCalendarAndGoToServices(event) {
+        event.preventDefault();
+
+        const calendarModal = bootstrap.Modal.getInstance(document.getElementById('calendarModal'));
+        if (calendarModal) {
+            calendarModal.hide();
+        }
+
+        // Wait for modal to close then scroll
+        setTimeout(function() {
+            scrollToServices();
+        }, 300);
     }
 
     // Function to close modal and navigate to terms
