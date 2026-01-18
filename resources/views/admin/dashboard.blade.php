@@ -2106,9 +2106,14 @@
             }
 
             // Build the URL - use absolute URL to ensure it works on hosted sites.
-            // IMPORTANT: do NOT embed Blade `route(...)` calls inside <script> blocks (can cause Blade/PHP parse errors).
-            // Use the known relative endpoint instead.
-            let updateStatusUrl = '/admin/bookings/update-status';
+            // NOTE: Avoid literal "{{" in this JS (Blade will try to compile it and can throw a ParseError).
+            let updateStatusUrl = @json(route('admin.bookings.update-status'));
+
+            // Fallback: if route helper didn't work (empty or contains Blade syntax), construct manually
+            const bladeEchoToken = '{' + '{';
+            if (!updateStatusUrl || updateStatusUrl.includes(bladeEchoToken) || updateStatusUrl.includes('route(' + "'")) {
+                updateStatusUrl = '/admin/bookings/update-status';
+            }
             
             let fullUpdateUrl = updateStatusUrl;
             if (updateStatusUrl.startsWith('/')) {
