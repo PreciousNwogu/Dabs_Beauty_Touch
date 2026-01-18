@@ -1454,8 +1454,9 @@ class AppointmentController extends Controller
                 }
             }
 
-            // Default available time slots (9 AM to 6 PM, excluding 12-1 PM lunch break)
-            $defaultSlots = ['09:00', '10:00', '11:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00'];
+            // Default available time slots (9 AM to 6 PM)
+            // Note: Lunch/break time is controlled via blocked schedules, not hardcoded exclusions.
+            $defaultSlots = ['09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00'];
 
             // Get booked time slots
             $bookedTimeSlots = \App\Models\Booking::where('appointment_date', $date)
@@ -1550,10 +1551,9 @@ class AppointmentController extends Controller
                     $rangeStart = Carbon::createFromFormat('Y-m-d H:i', $date . ' ' . $range['start'], $appTz);
                     $rangeEnd = Carbon::createFromFormat('Y-m-d H:i', $date . ' ' . $range['end'], $appTz);
 
-                    // Check if slot time falls within the blocked range
-                    // For 1-hour slots starting at the slot time, check if the slot time is >= start and <= end (inclusive)
-                    // If block is 06:00 to 14:00, slots 06:00 through 14:00 should be blocked
-                    if ($slotDateTime->gte($rangeStart) && $slotDateTime->lte($rangeEnd)) {
+                    // Check if slot time falls within the blocked range.
+                    // Treat blocked ranges as [start, end) so a lunch block 12:00–13:00 does NOT block the 13:00 slot.
+                    if ($slotDateTime->gte($rangeStart) && $slotDateTime->lt($rangeEnd)) {
                         $isBlocked = true;
                         Log::debug('Slot blocked', [
                             'slot_time' => $slotTime,

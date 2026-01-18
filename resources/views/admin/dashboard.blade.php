@@ -822,7 +822,7 @@
                                                 • Block lunch (12:00 - 13:00) → Morning & afternoon open
                                             </small>
                                             <br><small class="text-muted mt-1 d-block">
-                                                📋 <strong>Available Time Slots:</strong> 9 AM, 10 AM, 11 AM, 1 PM, 2 PM, 3 PM, 4 PM, 5 PM, 6 PM (12 PM lunch excluded)
+                                                📋 <strong>Available Time Slots:</strong> 9 AM, 10 AM, 11 AM, 12 PM, 1 PM, 2 PM, 3 PM, 4 PM, 5 PM, 6 PM
                                             </small>
                                         </div>
                                     </div>

@@ -2096,11 +2096,12 @@
                 day: 'numeric'
             });
 
-            // Generate default time slots (9 AM to 6 PM, excluding 12-1 PM break)
+            // Generate default time slots (9 AM to 6 PM)
             const defaultSlots = [
                 { time: '09:00', available: true, formatted_time: '9:00 AM' },
                 { time: '10:00', available: true, formatted_time: '10:00 AM' },
                 { time: '11:00', available: true, formatted_time: '11:00 AM' },
+                { time: '12:00', available: true, formatted_time: '12:00 PM' },
                 { time: '13:00', available: true, formatted_time: '1:00 PM' },
                 { time: '14:00', available: true, formatted_time: '2:00 PM' },
                 { time: '15:00', available: true, formatted_time: '3:00 PM' },
