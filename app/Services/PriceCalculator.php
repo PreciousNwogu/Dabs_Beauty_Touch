@@ -30,7 +30,12 @@ class PriceCalculator
 
         // Fallbacks from config
         if ($basePrice === null) {
-            if (str_contains($serviceType, 'hair-mask') || str_contains($serviceType, 'mask') || str_contains($serviceType, 'relax')) {
+            if (
+                str_contains($serviceType, 'hair-mask') ||
+                str_contains($serviceType, 'mask') ||
+                str_contains($serviceType, 'relax') ||
+                str_contains($serviceType, 'retouch')
+            ) {
                 $basePrice = (float) config('service_prices.hair_mask', 50);
             } elseif (str_contains($serviceType, 'kids')) {
                 $basePrice = (float) config('service_prices.kids_braids', 80);
@@ -60,7 +65,11 @@ class PriceCalculator
         }
 
         $isHairMask = (
-            $serviceType === 'hair-mask' || str_contains($serviceType, 'hair-mask') || str_contains($serviceType, 'mask') || str_contains($serviceType, 'relax')
+            $serviceType === 'hair-mask' ||
+            str_contains($serviceType, 'hair-mask') ||
+            str_contains($serviceType, 'mask') ||
+            str_contains($serviceType, 'relax') ||
+            str_contains($serviceType, 'retouch')
         );
 
         $lengthAdjustment = 0.0;
@@ -71,14 +80,14 @@ class PriceCalculator
         if ($isHairMask) {
             $useMask = $maskNormalized ?? 'mask-only';
             if ($useMask === 'mask-with-weave') {
-                // Flat $80 price when weave is selected
-                $basePrice = 80.00; // Update base price to $80 for weave option
-                $base = 80.00;
-                $addon = 0.00;
+                // Base is $50 and weave add-on is +$30 => $80 total
+                $base = (float) config('service_prices.hair_mask', 50);
+                $addon = 30.00;
                 $adjust = 0.00;
-                $finalPrice = 80.00;
                 $lengthAdjustment = 0.00;
-                $addonsTotal = 0.00;
+                $addonsTotal = 30.00;
+                $finalPrice = round($base + $addon, 2);
+                $basePrice = $base; // persist canonical base price
             } else {
                 // $50 for mask-only
                 $base = $basePrice;

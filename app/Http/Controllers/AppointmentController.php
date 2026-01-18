@@ -137,7 +137,8 @@ class AppointmentController extends Controller
             str_contains($serviceTypeNormalized, 'hair mask') ||
             str_contains($serviceTypeNormalized, 'hairmask') ||
             str_contains($serviceTypeNormalized, 'mask/relax') ||
-            str_contains($serviceTypeNormalized, 'relaxing')
+            str_contains($serviceTypeNormalized, 'relaxing') ||
+            str_contains($serviceTypeNormalized, 'retouch')
         );
 
         $isBraid = (
