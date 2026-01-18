@@ -2109,8 +2109,10 @@
             // Try to get route from Blade helper, fallback to constructing URL manually
             let updateStatusUrl = '{{ route("admin.bookings.update-status") }}';
             
-            // If route helper didn't work (empty or contains Blade syntax), construct manually
-            if (!updateStatusUrl || updateStatusUrl.includes('{{') || updateStatusUrl.includes('route(')) {
+            // If route helper didn't work (empty or contains Blade syntax), construct manually.
+            // IMPORTANT: avoid literal "{{" in Blade templates (it can be parsed by Blade).
+            const bladeEchoToken = '{' + '{';
+            if (!updateStatusUrl || updateStatusUrl.includes(bladeEchoToken) || updateStatusUrl.includes('route(')) {
                 updateStatusUrl = '/admin/bookings/update-status';
             }
             
