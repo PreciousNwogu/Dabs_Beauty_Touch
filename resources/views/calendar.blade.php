@@ -42,15 +42,27 @@
 
         .calendar-grid {
             padding: 30px;
-            /* Use CSS Grid so weekdays and day cells always align into 7 columns */
+        }
+
+        /* Weekday header row */
+        .calendar-weekdays {
             display: grid;
             grid-template-columns: repeat(7, 1fr);
             gap: 12px;
+            margin-bottom: 12px;
         }
 
-        /* Make the bootstrap .row wrappers transparent so their child .col elements become grid items */
-        .calendar-grid .row {
-            display: contents;
+        .calendar-weekday {
+            text-align: center;
+            font-weight: 700;
+            color: #212529;
+        }
+
+        /* Day cells grid */
+        #calendarDays.calendar-days {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 12px;
         }
 
         .calendar-day {
@@ -262,8 +274,15 @@
 
             .calendar-grid {
                 padding: 15px;
+            }
+
+            .calendar-weekdays {
                 gap: 8px;
-                grid-template-columns: repeat(7, 1fr);
+                margin-bottom: 8px;
+            }
+
+            #calendarDays.calendar-days {
+                gap: 8px;
             }
         }
     </style>
@@ -321,20 +340,16 @@
 
             <!-- Calendar Grid -->
             <div class="calendar-grid">
-                <div class="row">
-                    <div class="col-12">
-                        <div class="row">
-                            <div class="col text-center fw-bold">Sun</div>
-                            <div class="col text-center fw-bold">Mon</div>
-                            <div class="col text-center fw-bold">Tue</div>
-                            <div class="col text-center fw-bold">Wed</div>
-                            <div class="col text-center fw-bold">Thu</div>
-                            <div class="col text-center fw-bold">Fri</div>
-                            <div class="col text-center fw-bold">Sat</div>
-                        </div>
-                    </div>
+                <div class="calendar-weekdays">
+                    <div class="calendar-weekday">Sun</div>
+                    <div class="calendar-weekday">Mon</div>
+                    <div class="calendar-weekday">Tue</div>
+                    <div class="calendar-weekday">Wed</div>
+                    <div class="calendar-weekday">Thu</div>
+                    <div class="calendar-weekday">Fri</div>
+                    <div class="calendar-weekday">Sat</div>
                 </div>
-                <div id="calendarDays" class="row mt-2"></div>
+                <div id="calendarDays" class="calendar-days"></div>
             </div>
         </div>
 
@@ -388,6 +403,13 @@
                                 <option value="Hair Mask/Relaxing">Hair Mask/Relaxing</option>
                                 <option value="Smedium Boho Braids">Smedium Boho Braids</option>
                             </select>
+                            <div class="mt-2">
+                                <a href="{{ route('home') }}#services"
+                                   class="small text-decoration-none"
+                                   style="color:#0b3a66;font-weight:600;">
+                                    Prefer to browse services first?
+                                </a>
+                            </div>
                         </div>
                     </div>
                     <div class="mb-3">
