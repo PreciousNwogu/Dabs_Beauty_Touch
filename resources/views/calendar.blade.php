@@ -48,7 +48,7 @@
         /* Weekday header row */
         .calendar-weekdays {
             display: grid;
-            grid-template-columns: repeat(7, 1fr);
+            grid-template-columns: repeat(7, minmax(0, 1fr));
             gap: 12px;
             margin-bottom: 12px;
         }
@@ -57,12 +57,13 @@
             text-align: center;
             font-weight: 700;
             color: #212529;
+            min-width: 0;
         }
 
         /* Day cells grid */
         #calendarDays.calendar-days {
             display: grid;
-            grid-template-columns: repeat(7, 1fr);
+            grid-template-columns: repeat(7, minmax(0, 1fr));
             gap: 12px;
         }
 
@@ -80,6 +81,9 @@
             width: 100%;
             box-sizing: border-box;
             touch-action: manipulation;
+            border-radius: 12px;
+            position: relative;
+            min-width: 0; /* prevent min-content overflow from widening columns */
         }
 
         .calendar-day:hover {
@@ -313,6 +317,7 @@
                 min-height: 52px;
                 padding: 10px 6px;
                 font-size: 0.95rem;
+                aspect-ratio: 1 / 1;
             }
 
             .calendar-grid {
@@ -365,11 +370,23 @@
                 min-height: 46px;
                 padding: 8px 4px;
                 border-radius: 10px;
+                aspect-ratio: 1 / 1;
             }
 
             .calendar-day .blocked-text {
                 font-size: 0.6rem;
                 margin-top: 4px;
+                position: absolute;
+                left: 6px;
+                right: 6px;
+                bottom: 6px;
+                margin-top: 0;
+                /* Let text wrap without affecting grid sizing */
+                white-space: normal;
+                display: -webkit-box;
+                -webkit-line-clamp: 2;
+                -webkit-box-orient: vertical;
+                overflow: hidden;
             }
 
             /* Disable hover lift on touch devices */
