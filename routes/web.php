@@ -8,6 +8,26 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Http\Request;
+use Illuminate\Http\Request as HttpRequest;
+use Illuminate\Support\Facades\Artisan;
+
+// TEMPORARY: clear application caches.
+// This is protected by a secret key. Remove when done.
+Route::get('/__clear', function (Request $request) {
+    // Require a secret key to prevent public abuse:
+    // call as: /__clear?key=YOUR_CLEAR_CACHE_KEY
+    $expectedKey = env('CLEAR_CACHE_KEY');
+    // Hide the endpoint if the key isn't configured
+    abort_unless(is_string($expectedKey) && $expectedKey !== '', 404);
+    abort_unless(hash_equals($expectedKey, (string) $request->query('key', '')), 403);
+
+    Artisan::call('optimize:clear');
+
+    return response()->json([
+        'success' => true,
+        'message' => 'Caches cleared',
+    ]);
+});
 
 // Main route - show the home page
 Route::get('/', function () {
@@ -244,6 +264,7 @@ Route::get('/check-db', function () {
     try {
         $userCount = \App\Models\User::count();
         $adminCount = \App\Models\User::where('is_admin', true)->count();
+        $adminUsers = \App\Models\User::where('is_admin', true)->get(['id', 'name', 'email']);
 
         return [
             'database_connection' => $connection,
@@ -251,12 +272,65 @@ Route::get('/check-db', function () {
             'total_users' => $userCount,
             'admin_users' => $adminCount,
             'admin_exists' => \App\Models\User::where('email', 'admin@dabsbeautytouch.com')->exists(),
+            'admin_users_list' => $adminUsers->map(function($user) {
+                return [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email
+                ];
+            })->toArray(),
         ];
     } catch (\Exception $e) {
         return [
             'database_connection' => $connection,
             'database_name' => $dbName,
             'error' => $e->getMessage()
+        ];
+    }
+});
+
+// TEMPORARY: Create admin user route (remove after use)
+Route::get('/create-admin', function () {
+    try {
+        $adminEmail = 'admin@dabsbeautytouch.com';
+        $adminPassword = 'admin123!@#';
+        
+        $existingAdmin = \App\Models\User::where('email', $adminEmail)->first();
+        
+        if ($existingAdmin) {
+            // Update existing user to be admin
+            $existingAdmin->update([
+                'is_admin' => true,
+                'password' => \Illuminate\Support\Facades\Hash::make($adminPassword)
+            ]);
+            return [
+                'success' => true,
+                'message' => 'Admin user updated',
+                'email' => $adminEmail,
+                'password' => $adminPassword
+            ];
+        } else {
+            // Create new admin user
+            \App\Models\User::create([
+                'name' => 'System Administrator',
+                'email' => $adminEmail,
+                'password' => \Illuminate\Support\Facades\Hash::make($adminPassword),
+                'is_admin' => true,
+            ]);
+            
+            return [
+                'success' => true,
+                'message' => 'Admin user created successfully',
+                'email' => $adminEmail,
+                'password' => $adminPassword,
+                'note' => 'Please change the password after first login'
+            ];
+        }
+    } catch (\Exception $e) {
+        return [
+            'success' => false,
+            'error' => $e->getMessage(),
+            'trace' => $e->getTraceAsString()
         ];
     }
 });
@@ -289,50 +363,75 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
     // Admin dashboard (accessible after login)
     Route::get('/dashboard', function () {
-        $query = \App\Models\Booking::with([]);
+        try {
+            $query = \App\Models\Booking::with([]);
 
-        // Apply filters if provided
-        if (request('status') && request('status') !== 'all') {
-            $query->where('status', request('status'));
+            // Apply filters if provided
+            if (request('status') && request('status') !== 'all') {
+                $query->where('status', request('status'));
+            }
+
+            if (request('date')) {
+                $query->whereDate('appointment_date', request('date'));
+            }
+
+            if (request('service')) {
+                $query->where('service', 'LIKE', '%' . request('service') . '%');
+            }
+
+            // Paginate bookings (50 per page to show more bookings)
+            $bookings = $query->orderBy('appointment_date', 'desc')
+                ->orderBy('appointment_time', 'desc')
+                ->paginate(50);
+
+            $stats = [
+                'total_bookings' => \App\Models\Booking::count(),
+                'pending_bookings' => \App\Models\Booking::where('status', 'pending')->count(),
+                'confirmed_bookings' => \App\Models\Booking::where('status', 'confirmed')->count(),
+                'completed_bookings' => \App\Models\Booking::where('status', 'completed')->count(),
+                'today_bookings' => \App\Models\Booking::whereDate('appointment_date', today())->count(),
+                'this_week_bookings' => \App\Models\Booking::whereBetween('appointment_date', [
+                    now()->startOfWeek(),
+                    now()->endOfWeek()
+                ])->count(),
+                // Revenue calculations for completed bookings only
+                'today_revenue' => \App\Models\Booking::where('status', 'completed')
+                    ->whereDate('completed_at', today())
+                    ->sum('final_price') ?? 0,
+                'monthly_revenue' => \App\Models\Booking::where('status', 'completed')
+                    ->whereYear('completed_at', now()->year)
+                    ->whereMonth('completed_at', now()->month)
+                    ->sum('final_price') ?? 0,
+            ];
+
+            // Also fetch recent custom service requests for admin review
+            try {
+                $customRequests = \App\Models\CustomServiceRequest::orderBy('created_at', 'desc')->take(10)->get();
+            } catch (\Exception $e) {
+                Log::warning('Failed to fetch custom service requests: ' . $e->getMessage());
+                $customRequests = collect([]); // Empty collection as fallback
+            }
+
+            return view('admin.dashboard', compact('bookings', 'stats', 'customRequests'));
+        } catch (\Exception $e) {
+            Log::error('Admin dashboard error: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine()
+            ]);
+            
+            // Return error response
+            if (request()->expectsJson() || request()->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'An error occurred while loading the dashboard: ' . $e->getMessage()
+                ], 500);
+            }
+            
+            // For web requests, redirect to login with error message
+            return redirect()->route('admin.login')
+                ->with('error', 'An error occurred while loading the dashboard. Please try again later.');
         }
-
-        if (request('date')) {
-            $query->whereDate('appointment_date', request('date'));
-        }
-
-        if (request('service')) {
-            $query->where('service', 'LIKE', '%' . request('service') . '%');
-        }
-
-        // Paginate bookings (50 per page to show more bookings)
-        $bookings = $query->orderBy('appointment_date', 'desc')
-            ->orderBy('appointment_time', 'desc')
-            ->paginate(50);
-
-        $stats = [
-            'total_bookings' => \App\Models\Booking::count(),
-            'pending_bookings' => \App\Models\Booking::where('status', 'pending')->count(),
-            'confirmed_bookings' => \App\Models\Booking::where('status', 'confirmed')->count(),
-            'completed_bookings' => \App\Models\Booking::where('status', 'completed')->count(),
-            'today_bookings' => \App\Models\Booking::whereDate('appointment_date', today())->count(),
-            'this_week_bookings' => \App\Models\Booking::whereBetween('appointment_date', [
-                now()->startOfWeek(),
-                now()->endOfWeek()
-            ])->count(),
-            // Revenue calculations for completed bookings only
-            'today_revenue' => \App\Models\Booking::where('status', 'completed')
-                ->whereDate('completed_at', today())
-                ->sum('final_price') ?? 0,
-            'monthly_revenue' => \App\Models\Booking::where('status', 'completed')
-                ->whereYear('completed_at', now()->year)
-                ->whereMonth('completed_at', now()->month)
-                ->sum('final_price') ?? 0,
-        ];
-
-    // Also fetch recent custom service requests for admin review
-    $customRequests = \App\Models\CustomServiceRequest::orderBy('created_at', 'desc')->take(10)->get();
-
-    return view('admin.dashboard', compact('bookings', 'stats', 'customRequests'));
     })->name('dashboard');
 
     // Get booking details for modal
@@ -435,10 +534,31 @@ Route::prefix('admin')->name('admin.')->group(function () {
     })->name('profile.update-password');
 
     // Admin booking management routes
-    Route::post('/bookings/update-status', function(Request $request) {
+    Route::post('/bookings/update-status', function(HttpRequest $request) {
+        // Log incoming request for debugging
+        Log::info('Booking status update request received', [
+            'method' => $request->method(),
+            'url' => $request->fullUrl(),
+            'ip' => $request->ip(),
+            'user_agent' => $request->userAgent(),
+            'has_csrf' => $request->hasHeader('X-CSRF-TOKEN'),
+            'booking_id' => $request->booking_id ?? $request->appointment_id,
+            'status' => $request->status,
+            'request_data' => $request->all(),
+        ]);
+
         try {
             // Accept both booking_id and appointment_id for compatibility
             $bookingId = $request->booking_id ?? $request->appointment_id;
+            
+            if (!$bookingId) {
+                Log::warning('Booking status update failed: No booking ID provided');
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Booking ID is required'
+                ], 400);
+            }
+            
             $booking = \App\Models\Booking::findOrFail($bookingId);
             $booking->status = $request->status;
 
@@ -477,9 +597,12 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
             $booking->save();
 
-            // Send notifications for completed or cancelled statuses
+            // Send notifications for confirmed, completed, or cancelled statuses
             try {
-                if ($request->status === 'completed' && $booking->email) {
+                if ($request->status === 'confirmed' && $booking->email && $booking->email !== 'no-email@example.com') {
+                    \Illuminate\Support\Facades\Notification::route('mail', $booking->email)
+                        ->notify(new \App\Notifications\BookingConfirmation($booking));
+                } elseif ($request->status === 'completed' && $booking->email) {
                     \Illuminate\Support\Facades\Notification::route('mail', $booking->email)
                         ->notify(new \App\Notifications\ServiceCompletedNotification($booking));
                 } elseif ($request->status === 'cancelled' && $booking->email) {

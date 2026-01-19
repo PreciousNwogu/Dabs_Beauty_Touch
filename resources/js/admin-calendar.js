@@ -527,13 +527,26 @@ document.addEventListener('DOMContentLoaded', () => {
             submitBlockBtn.disabled = true;
             submitBlockBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Creating...';
 
+            // Ensure storeUrl is absolute if it's relative (declare outside try for catch block access)
+            let fullStoreUrl = storeUrl;
+            if (storeUrl.startsWith('/')) {
+                // Relative URL - make it absolute using current origin
+                // Force HTTPS to prevent mixed content errors
+                const protocol = window.location.protocol === 'https:' ? 'https:' : 'https:';
+                const host = window.location.host;
+                fullStoreUrl = protocol + '//' + host + storeUrl;
+            } else if (storeUrl.startsWith('http://')) {
+                // If URL is HTTP, convert to HTTPS to prevent mixed content errors
+                fullStoreUrl = storeUrl.replace('http://', 'https://');
+            }
+
             try {
                 console.log('Creating blocked range:', { 
                     title, 
                     allDay,
                     input: { start: startInput, end: endInput },
                     parsed: { start: start.toISOString(), end: end.toISOString() },
-                    storeUrl, 
+                    storeUrl: fullStoreUrl, 
                     csrf: csrf ? 'present' : 'missing' 
                 });
                 
@@ -541,10 +554,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 csrf = getCsrfToken();
                 if (!csrf) {
                     alert('❌ CSRF token not found. Please refresh the page and try again.');
+                    submitBlockBtn.disabled = false;
+                    submitBlockBtn.innerHTML = '<i class="bi bi-x-lg me-1"></i>Create Block';
                     return;
                 }
                 
-                const res = await fetch(storeUrl, {
+                const res = await fetch(fullStoreUrl, {
                     method: 'POST',
                     headers: { 
                         'Content-Type': 'application/json', 
@@ -570,7 +585,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             csrf = newToken;
                             console.log('CSRF token refreshed, retrying request...');
                             // Retry the request with the new token
-                            const retryRes = await fetch(storeUrl, {
+                            const retryRes = await fetch(fullStoreUrl, {
                                 method: 'POST',
                                 headers: { 
                                     'Content-Type': 'application/json', 
