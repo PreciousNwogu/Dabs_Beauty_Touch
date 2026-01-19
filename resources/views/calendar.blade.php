@@ -400,7 +400,7 @@
                                 <option value="Medium Knotless Braids">Medium Knotless Braids</option>
                                 <option value="Jumbo Knotless Braids">Jumbo Knotless Braids</option>
                                 <option value="Kids Braids">Kids Braids</option>
-                                <option value="8 Rows Stitch Braids">8 Rows Stitch Braids</option>
+                                <option value="8–10 Rows Stitch Braids">8–10 Rows Stitch Braids</option>
                                 <option value="Hair Mask/Relaxing">Hair Mask/Relaxing</option>
                                 <option value="Smedium Boho Braids">Smedium Boho Braids</option>
                             </select>
@@ -415,13 +415,6 @@
                                 <button class="btn btn-outline-secondary" type="button" onclick="openServiceForWhoModalCal()">
                                     Choose
                                 </button>
-                            </div>
-                            <div class="mt-2">
-                                <a href="{{ route('home') }}#services"
-                                   class="small text-decoration-none"
-                                   style="color:#0b3a66;font-weight:600;">
-                                    Prefer to browse services first?
-                                </a>
                             </div>
                         </div>
                     </div>
@@ -543,7 +536,7 @@
                 'Medium Knotless Braids' => (int) config('service_prices.medium_knotless', 130),
                 'Jumbo Knotless Braids' => (int) config('service_prices.jumbo_knotless', 100),
                 'Kids Braids' => (int) config('service_prices.kids_braids', 80),
-                '8 Rows Stitch Braids' => (int) config('service_prices.stitch_braids', 120),
+                '8–10 Rows Stitch Braids' => (int) config('service_prices.stitch_braids', 120),
                 'Hair Mask/Relaxing' => (int) config('service_prices.hair_mask', 50),
                 'Smedium Boho Braids' => (int) config('service_prices.boho_braids', 150),
             ];

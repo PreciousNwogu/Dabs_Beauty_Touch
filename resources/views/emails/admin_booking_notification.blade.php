@@ -155,14 +155,39 @@
           }
         }
 
-        // Adjustments total = type + length + finish adjustments + addons + weaving addon (matches UI)
-        $adjustmentsTotal = ($typeLengthFinishAdjust ?? 0) + ($addons ?? 0) + $weavingAddon;
+        // Stitch braids tiny rows (>10) add-on (+$20)
+        $stitchAddon = 0.00;
+        $hasStitchAddon = false;
+        $svcLower = strtolower((string)($booking->service ?? ''));
+        $isStitchSvc = str_contains($svcLower, 'stitch');
+        $stitchChoice = $booking->stitch_rows_option ?? null;
+        if ($isStitchSvc && $stitchChoice === 'more_than_ten') {
+          $stitchAddon = 20.00;
+          $hasStitchAddon = true;
+        }
+
+        // Adjustments total = type + length + finish adjustments + addons + weaving addon + stitch addon (matches UI)
+        $adjustmentsTotal = ($typeLengthFinishAdjust ?? 0) + ($addons ?? 0) + $weavingAddon + $stitchAddon;
         $finalPrice = $bd['final_price'] ?? $booking->final_price ?? round(($basePrice ?? 0) + $adjustmentsTotal, 2);
       @endphp
 
       <h4 style="margin-top:16px;margin-bottom:8px;color:#0b3a66;">Details</h4>
       <table width="100%" cellpadding="6" style="border-collapse:collapse;">
         <tr style="background:#f8fafc;"><td style="font-weight:700;">Braid Type</td><td>{{ $braidType ?? '—' }}</td></tr>
+        @if($isStitchSvc)
+          <tr>
+            <td style="font-weight:700;">Stitch rows</td>
+            <td>
+              @if($stitchChoice === 'more_than_ten')
+                More than 10 rows (tiny) +$20
+              @elseif($stitchChoice === 'ten_or_less')
+                8–10 rows (base price)
+              @else
+                —
+              @endif
+            </td>
+          </tr>
+        @endif
         @if(!$hideLengthFinish)
           <tr><td style="font-weight:700;">Finish</td><td>{{ $finishVal ?? '—' }}</td></tr>
         @endif
@@ -174,6 +199,9 @@
         <tr style="background:#f8fafc;"><td style="font-weight:700;">Base price</td><td>{{ isset($basePrice) ? sprintf('$%.2f', $basePrice) : '—' }}</td></tr>
         @if($hasWeavingAddon)
         <tr><td style="font-weight:700;">Weaving Add-on</td><td>{{ sprintf('$%.2f', $weavingAddon) }}</td></tr>
+        @endif
+        @if($hasStitchAddon)
+        <tr><td style="font-weight:700;">Tiny stitch (&gt;10 rows)</td><td>{{ sprintf('$%.2f', $stitchAddon) }}</td></tr>
         @endif
         @if(($typeLengthFinishAdjust ?? 0) > 0 || ($addons ?? 0) > 0)
         <tr style="{{ $hasWeavingAddon ? 'background:#f8fafc;' : '' }}"><td style="font-weight:700;">Adjustments / Add-ons</td><td>{{ sprintf('$%.2f', ($typeLengthFinishAdjust ?? 0) + ($addons ?? 0)) }}</td></tr>

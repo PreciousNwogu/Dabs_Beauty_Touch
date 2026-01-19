@@ -49,6 +49,16 @@ class PriceCalculator
         $length = Arr::get($data, 'kb_length') ?? Arr::get($data, 'length') ?? 'mid_back';
         if (is_string($length)) $length = str_replace('-', '_', $length);
 
+        // Stitch rows option (tiny stitch >10 rows => +$20)
+        $stitchRowsOption = Arr::get($data, 'stitch_rows_option');
+        $stitchRowsOptionNorm = null;
+        if ($stitchRowsOption !== null) {
+            $raw = strtolower(trim((string) $stitchRowsOption));
+            if (in_array($raw, ['ten_or_less', 'more_than_ten'], true)) {
+                $stitchRowsOptionNorm = $raw;
+            }
+        }
+
         // Normalize hair mask option
         $explicitMask = Arr::get($data, 'hair_mask_option') ?? Arr::get($data, 'selectedHairMaskOption') ?? null;
         $maskNormalized = null;
@@ -70,6 +80,11 @@ class PriceCalculator
             str_contains($serviceType, 'mask') ||
             str_contains($serviceType, 'relax') ||
             str_contains($serviceType, 'retouch')
+        );
+
+        $isStitch = (
+            str_contains($serviceType, 'stitch') ||
+            (is_string($serviceInput) && stripos($serviceInput, 'stitch') !== false)
         );
 
         $lengthAdjustment = 0.0;
@@ -117,7 +132,9 @@ class PriceCalculator
             ];
             
             $lengthAdjustment = $lengthAdjustmentMap[$length] ?? 0.00;
-            $finalPrice = round($basePrice + $lengthAdjustment, 2);
+            $stitchAddon = ($isStitch && $stitchRowsOptionNorm === 'more_than_ten') ? 20.00 : 0.00;
+            $addonsTotal = $stitchAddon;
+            $finalPrice = round($basePrice + $lengthAdjustment + $stitchAddon, 2);
         }
 
         // Kids selector extras parsing
@@ -164,6 +181,7 @@ class PriceCalculator
             'addons_total' => $addonsTotal,
             'final_price' => $finalPrice,
             'hair_mask_option_normalized' => $maskNormalized,
+            'stitch_rows_option_normalized' => $stitchRowsOptionNorm,
             'kb_base_price' => $kb_base_price,
             'kb_length_adjustment' => $kb_length_adjustment,
             'kb_extras_total' => $kb_extras_total,

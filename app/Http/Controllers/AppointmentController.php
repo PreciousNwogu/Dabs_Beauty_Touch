@@ -148,6 +148,11 @@ class AppointmentController extends Controller
             str_contains($serviceTypeNormalized, 'knot')
         );
 
+        $isStitch = (
+            str_contains($serviceTypeNormalized, 'stitch') ||
+            str_contains(strtolower((string) $request->input('service', '')), 'stitch')
+        );
+
         // Handle sample_picture validation separately to avoid empty file issues
         $validationRules = [
             'name' => 'required|string|max:255',
@@ -175,6 +180,13 @@ class AppointmentController extends Controller
             $validationRules['kb_length'] = 'required_without:length|string|in:neck,shoulder,armpit,bra_strap,mid_back,waist,hip,tailbone,classic';
         } else {
             $validationRules['length'] = 'required|string|in:neck,shoulder,armpit,bra_strap,mid_back,waist,hip,tailbone,classic';
+        }
+
+        // Stitch rows option: only required for stitch braids
+        if ($isStitch) {
+            $validationRules['stitch_rows_option'] = 'required|string|in:ten_or_less,more_than_ten';
+        } else {
+            $validationRules['stitch_rows_option'] = 'nullable|string|in:ten_or_less,more_than_ten';
         }
 
         // Only validate sample_picture if a file was actually uploaded
@@ -456,6 +468,7 @@ class AppointmentController extends Controller
                 'kb_length' => $request->input('kb_length'),
                 'kb_extras' => $request->input('kb_extras'),
                 'hair_mask_option' => $request->input('hair_mask_option') ?? $request->input('selectedHairMaskOption'),
+                'stitch_rows_option' => $request->input('stitch_rows_option'),
             ];
 
             $breakdown = $calculator->calculate($calcInput);
@@ -644,6 +657,7 @@ class AppointmentController extends Controller
                 'base_price' => $basePrice,
                 'length_adjustment' => $adjust,
                 'hair_mask_option' => ($isHairMask ? $request->input('hair_mask_option') : null),
+                'stitch_rows_option' => $request->input('stitch_rows_option'),
                 // For kids flow prefer kb_final_price as authoritative final price
                 'final_price' => ($kb_final_price !== null) ? $kb_final_price : $finalPrice,
                 'status' => 'pending'
@@ -783,7 +797,7 @@ class AppointmentController extends Controller
     public function previewPrice(Request $request): JsonResponse
     {
         try {
-            $payload = $request->only(['service','service_type','kb_length','length','kb_extras','kb_braid_type','hair_mask_option','selectedHairMaskOption']);
+            $payload = $request->only(['service','service_type','kb_length','length','kb_extras','kb_braid_type','hair_mask_option','selectedHairMaskOption','stitch_rows_option']);
             $calculator = new PriceCalculator();
             $breakdown = $calculator->calculate($payload);
             return response()->json([

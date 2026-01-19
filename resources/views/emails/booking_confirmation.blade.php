@@ -295,6 +295,25 @@
             <td>{{ $extrasVal }}</td>
           </tr>
           @endif
+          @php
+            $svcLower = strtolower((string)($booking->service ?? ''));
+            $isStitchSvc = str_contains($svcLower, 'stitch');
+            $stitchChoice = $booking->stitch_rows_option ?? null;
+          @endphp
+          @if($isStitchSvc)
+          <tr>
+            <td>Stitch rows</td>
+            <td>
+              @if($stitchChoice === 'more_than_ten')
+                More than 10 rows (tiny) +$20
+              @elseif($stitchChoice === 'ten_or_less')
+                8–10 rows (base price)
+              @else
+                —
+              @endif
+            </td>
+          </tr>
+          @endif
         </table>
       </div>
 
@@ -347,10 +366,18 @@
           }
         }
         
-        // Calculate adjustments total (excluding weaving addon which is shown separately)
+        // Stitch braids tiny rows (>10) add-on (+$20)
+        $stitchAddon = 0.00;
+        $hasStitchAddon = false;
+        if ($isStitchSvc && ($stitchChoice === 'more_than_ten')) {
+          $stitchAddon = 20.00;
+          $hasStitchAddon = true;
+        }
+
+        // Calculate adjustments total (excluding weaving + stitch add-ons which are shown separately)
         $adjustmentsTotal = ($typeLengthFinishAdjust ?? 0) + (is_numeric($addons_total) ? $addons_total : 0);
-        // Final price should match what's stored in the database (which includes weaving addon or $80 base)
-        $finalPrice = $final_price ?? $booking->final_price ?? round(($basePrice ?? 0) + $adjustmentsTotal + $weavingAddon, 2);
+        // Final price should match what's stored in the database (which includes weaving addon, stitch addon, or $80 mask-with-weave legacy behavior)
+        $finalPrice = $final_price ?? $booking->final_price ?? round(($basePrice ?? 0) + $adjustmentsTotal + $weavingAddon + $stitchAddon, 2);
       @endphp
 
       <div class="price-box">
@@ -362,6 +389,12 @@
         <div class="price-row">
           <span class="price-label">Weaving Add-on</span>
           <span class="price-value">{{ sprintf('$%.2f', $weavingAddon) }}</span>
+        </div>
+        @endif
+        @if($hasStitchAddon)
+        <div class="price-row">
+          <span class="price-label">Tiny stitch (&gt;10 rows)</span>
+          <span class="price-value">{{ sprintf('$%.2f', $stitchAddon) }}</span>
         </div>
         @endif
         @if(($typeLengthFinishAdjust ?? 0) > 0 || (is_numeric($addons_total) && $addons_total > 0))

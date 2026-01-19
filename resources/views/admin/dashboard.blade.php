@@ -984,7 +984,7 @@
                         <option value="Medium Knotless Braids">Medium Knotless Braids</option>
                         <option value="Jumbo Knotless Braids">Jumbo Knotless Braids</option>
                         <option value="Kids Braids">Kids Braids</option>
-                        <option value="8 Rows Stitch Braids">8 Rows Stitch Braids</option>
+                        <option value="8–10 Rows Stitch Braids">8–10 Rows Stitch Braids</option>
                         <option value="Hair Mask/Relaxing">Hair Mask/Relaxing</option>
                         <option value="Smedium Boho Braids">Smedium Boho Braids</option>
                     </select>
