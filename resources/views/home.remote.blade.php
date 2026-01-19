@@ -1922,10 +1922,215 @@
             }
         };
 
+        // --- Booking draft (persist typed info across service flows / redirects) ---
+        (function() {
+            const KEY = 'dbt_booking_draft_v1';
+
+            function safeParse(raw) {
+                try { return raw ? (JSON.parse(raw) || {}) : {}; } catch (e) { return {}; }
+            }
+
+            function loadDraft() {
+                try { return safeParse(sessionStorage.getItem(KEY)); } catch (e) { return {}; }
+            }
+
+            function saveDraft(partial) {
+                try {
+                    const cur = loadDraft();
+                    const next = { ...cur };
+                    Object.keys(partial || {}).forEach(k => {
+                        const v = partial[k];
+                        if (typeof v === 'string') {
+                            const t = v.trim();
+                            if (t) next[k] = t;
+                        } else if (v !== null && v !== undefined) {
+                            next[k] = v;
+                        }
+                    });
+                    sessionStorage.setItem(KEY, JSON.stringify(next));
+                } catch (e) { /* noop */ }
+            }
+
+            function fillIfEmpty(id, value) {
+                try {
+                    if (!value) return;
+                    const el = document.getElementById(id);
+                    if (!el) return;
+                    if (el.value && el.value.trim()) return;
+                    el.value = value;
+                    // Make autofill behave like real user input (triggers validators/UI)
+                    try { el.dispatchEvent(new Event('input', { bubbles: true })); } catch (e) {}
+                    try { el.dispatchEvent(new Event('change', { bubbles: true })); } catch (e) {}
+                } catch (e) { /* noop */ }
+            }
+
+            function clearDraft() {
+                try { sessionStorage.removeItem(KEY); } catch (e) { /* noop */ }
+            }
+
+            // Expose for other code paths (e.g., submit handlers)
+            window.__dbtClearBookingDraft = clearDraft;
+
+            window.__dbtSaveBookingDraftFromMain = function() {
+                try {
+                    const name = (document.getElementById('name') || {}).value || '';
+                    const phone = (document.getElementById('phone') || {}).value || '';
+                    const email = (document.getElementById('email') || {}).value || '';
+                    const address = (document.getElementById('address') || {}).value || '';
+                    const message = (document.getElementById('message') || {}).value || '';
+                    const bookingDateDisplay = (document.getElementById('bookingDate') || {}).value || '';
+                    const timeDisplay = (document.getElementById('timeInput') || {}).value || '';
+                    const appointment_date = (document.getElementById('appointment_date') || {}).value || '';
+                    const appointment_time = (document.getElementById('appointment_time_hidden') || {}).value || '';
+                    saveDraft({ name, phone, email, address, message, bookingDateDisplay, timeDisplay, appointment_date, appointment_time });
+                } catch (e) { /* noop */ }
+            };
+
+            window.__dbtSaveBookingDraftFromKids = function() {
+                try {
+                    // Intentionally do NOT map main name -> kids_name (child name differs)
+                    const phone = (document.getElementById('kids_phone') || {}).value || '';
+                    const email = (document.getElementById('kids_email') || {}).value || '';
+                    const bookingDateDisplay = (document.getElementById('kidsBookingDate') || {}).value || '';
+                    const timeDisplay = (document.getElementById('kidsBookingTime') || {}).value || '';
+                    const kidsForm = document.getElementById('kidsBookingForm');
+                    const appointment_date = kidsForm ? ((kidsForm.querySelector('input[name="appointment_date"]') || {}).value || '') : '';
+                    const appointment_time = kidsForm ? ((kidsForm.querySelector('input[name="appointment_time"]') || {}).value || '') : '';
+                    saveDraft({ phone, email, bookingDateDisplay, timeDisplay, appointment_date, appointment_time });
+                } catch (e) { /* noop */ }
+            };
+
+            window.__dbtApplyBookingDraftToMain = function() {
+                const d = loadDraft();
+                fillIfEmpty('name', d.name);
+                fillIfEmpty('phone', d.phone);
+                fillIfEmpty('email', d.email);
+                fillIfEmpty('address', d.address);
+                fillIfEmpty('message', d.message);
+                // Date/time (visible + hidden submit fields)
+                fillIfEmpty('bookingDate', d.bookingDateDisplay);
+                fillIfEmpty('timeInput', d.timeDisplay);
+                fillIfEmpty('appointment_date', d.appointment_date);
+                fillIfEmpty('appointment_time_hidden', d.appointment_time);
+            };
+
+            window.__dbtApplyBookingDraftToKids = function() {
+                const d = loadDraft();
+                fillIfEmpty('kids_phone', d.phone);
+                fillIfEmpty('kids_email', d.email);
+                // Date/time (kids visible + hidden submit fields)
+                fillIfEmpty('kidsBookingDate', d.bookingDateDisplay);
+                fillIfEmpty('kidsBookingTime', d.timeDisplay);
+                try {
+                    const kidsForm = document.getElementById('kidsBookingForm');
+                    if (kidsForm) {
+                        const hd = kidsForm.querySelector('input[name="appointment_date"]');
+                        const ht = kidsForm.querySelector('input[name="appointment_time"]');
+                        if (hd && (!hd.value || !hd.value.trim()) && d.appointment_date) hd.value = d.appointment_date;
+                        if (ht && (!ht.value || !ht.value.trim()) && d.appointment_time) ht.value = d.appointment_time;
+                    }
+                } catch (e) { /* noop */ }
+                try {
+                    const dateLabel = document.getElementById('kidsSelectedDateLabel'); if (dateLabel && (!dateLabel.textContent || !dateLabel.textContent.trim()) && d.bookingDateDisplay) dateLabel.textContent = d.bookingDateDisplay;
+                    const timeLabel = document.getElementById('kidsSelectedTimeLabel'); if (timeLabel && (!timeLabel.textContent || !timeLabel.textContent.trim()) && d.timeDisplay) timeLabel.textContent = d.timeDisplay;
+                } catch (e) { /* noop */ }
+            };
+
+            document.addEventListener('DOMContentLoaded', function() {
+                // If user refreshed/reloaded the page, clear the draft (per request)
+                try {
+                    const navEntry = (performance && performance.getEntriesByType) ? performance.getEntriesByType('navigation')[0] : null;
+                    const navType = navEntry ? navEntry.type : ((performance && performance.navigation) ? performance.navigation.type : null);
+                    const isReload = (navType === 'reload') || (navType === 1);
+                    if (isReload) {
+                        clearDraft();
+                        return; // don't apply draft on a refresh
+                    }
+                } catch (e) { /* noop */ }
+
+                // If user arrives from calendar, restore into any visible form
+                try { window.__dbtApplyBookingDraftToMain(); } catch (e) {}
+                try { window.__dbtApplyBookingDraftToKids(); } catch (e) {}
+
+                // Keep saving as user types (main booking form)
+                try {
+                    ['name','phone','email','address','message'].forEach(id => {
+                        const el = document.getElementById(id);
+                        if (el) el.addEventListener('input', window.__dbtSaveBookingDraftFromMain);
+                    });
+                } catch (e) {}
+
+                // Keep saving as user types (kids modal)
+                try {
+                    ['kids_phone','kids_email'].forEach(id => {
+                        const el = document.getElementById(id);
+                        if (el) el.addEventListener('input', window.__dbtSaveBookingDraftFromKids);
+                    });
+                } catch (e) {}
+
+                // Clear draft once either form is submitted
+                try {
+                    const bookingForm = document.getElementById('bookingForm');
+                    if (bookingForm) bookingForm.addEventListener('submit', function () { clearDraft(); });
+                } catch (e) {}
+                try {
+                    const kidsForm = document.getElementById('kidsBookingForm');
+                    if (kidsForm) kidsForm.addEventListener('submit', function () { clearDraft(); });
+                } catch (e) {}
+            });
+        })();
+
+        // Deep link support: /?openBooking=1&service=Service%20Name
+        document.addEventListener('DOMContentLoaded', function () {
+            try {
+                const url = new URL(window.location.href);
+                const shouldOpen = url.searchParams.get('openBooking') === '1';
+                const serviceName = url.searchParams.get('service');
+                if (shouldOpen && serviceName && typeof window.openBookingModal === 'function') {
+                    // Mark this booking as originating from the calendar page flow
+                    window.__bookingOrigin = 'calendar';
+                    window.openBookingModal(serviceName, null);
+
+                    // Clean the URL so refresh doesn't re-open the modal
+                    url.searchParams.delete('openBooking');
+                    url.searchParams.delete('service');
+                    window.history.replaceState({}, document.title, url.pathname + (url.search ? url.search : '') + (url.hash ? url.hash : ''));
+                }
+            } catch (e) {
+                // no-op
+            }
+        });
+
         // Calendar Integration Variables
         let calendarCurrentDate = new Date();
         let selectedCalendarDate = null;
         let selectedCalendarTime = null;
+
+    // Stitch rows selector (used for stitch-braids pricing)
+    window.selectStitchRowsOption = function(option) {
+        try {
+            const el = document.getElementById('stitch_rows_option');
+            if (el) el.value = option || '';
+        } catch (e) {}
+
+        // Hide modal
+        try {
+            const inst = bootstrap.Modal.getInstance(document.getElementById('stitchRowsModal'));
+            if (inst) inst.hide();
+        } catch (e) {}
+
+        // Recompute estimated price immediately
+        try {
+            const selectedPriceEl = document.getElementById('selectedPrice');
+            let base = null;
+            if (selectedPriceEl && selectedPriceEl.value && !isNaN(parseFloat(selectedPriceEl.value))) {
+                base = parseFloat(selectedPriceEl.value);
+            } else if (window.currentServiceInfo && typeof window.currentServiceInfo.basePrice === 'number') {
+                base = window.currentServiceInfo.basePrice;
+            }
+            if (typeof updatePriceDisplay === 'function') updatePriceDisplay(base);
+        } catch (e) {}
+    };
 
         // Helper: format a Date as local YYYY-MM-DD (avoids timezone shifts from toISOString())
         function formatYMD(d){
@@ -2291,11 +2496,12 @@
                 day: 'numeric'
             });
 
-            // Generate default time slots (9 AM to 6 PM, excluding 12-1 PM break)
+            // Generate default time slots (9 AM to 6 PM)
             const defaultSlots = [
                 { time: '09:00', available: true, formatted_time: '9:00 AM' },
                 { time: '10:00', available: true, formatted_time: '10:00 AM' },
                 { time: '11:00', available: true, formatted_time: '11:00 AM' },
+                { time: '12:00', available: true, formatted_time: '12:00 PM' },
                 { time: '13:00', available: true, formatted_time: '1:00 PM' },
                 { time: '14:00', available: true, formatted_time: '2:00 PM' },
                 { time: '15:00', available: true, formatted_time: '3:00 PM' },
@@ -2462,6 +2668,10 @@
                         }
                     }catch(e){ /* noop */ }
                 }catch(e){ console.warn('Failed to populate kids booking inputs', e); }
+
+            // Persist chosen date/time so switching service flows keeps it
+            try { window.__dbtSaveBookingDraftFromMain?.(); } catch (e) {}
+            try { window.__dbtSaveBookingDraftFromKids?.(); } catch (e) {}
 
                 // Close calendar modal
                 try{
@@ -2801,7 +3011,7 @@
                         <div class="row align-items-center">
                             <div class="col-lg-6">
                                 <div class="slide-content" style="padding: 40px;">
-                                    <h3 style="color: #030f68; font-weight: 700; font-size: 2rem; margin-bottom: 20px;">8 Rows Stitch Braids</h3>
+                                    <h3 style="color: #030f68; font-weight: 700; font-size: 2rem; margin-bottom: 20px;">8–10 Rows Stitch Braids</h3>
                                     <p style="color: #666; font-size: 1.1rem; line-height: 1.6; margin-bottom: 25px;">
                                         Unique stitch pattern braids that create a distinctive, textured look. Features a special weaving technique that adds dimension and style to your braided hairstyle.
                                     </p>
@@ -2822,7 +3032,7 @@
                                     <div class="pricing-info mb-3" style="background: rgba(255, 102, 0, 0.1); padding: 15px; border-radius: 10px; border-left: 4px solid #ff6600;">
                                         <p class="price" style="margin: 0; color: #030f68; font-weight: 700; font-size: 1.2rem;">Starting at ${{ number_format(config('service_prices.stitch_braids', 120),0) }}</p>
                                     </div>
-                                    <button class="btn btn-warning mt-3" onclick="openBookingModal('8 Rows Stitch Braids', 'stitch-braids')" style="font-weight: 600; padding: 12px 30px;">
+                                    <button class="btn btn-warning mt-3" onclick="openBookingModal('8–10 Rows Stitch Braids', 'stitch-braids')" style="font-weight: 600; padding: 12px 30px;">
                                         <i class="bi bi-calendar-check me-2"></i>Book Now
                                     </button>
                                 </div>
@@ -3287,9 +3497,9 @@
                     </div>
                 </div>
                 <div class="col-lg-4 col-md-6 col-6">
-                    <div class="service-card h-100" onclick="openBookingModal('8 Rows Stitch Braids', 'stitch-braids')">
-                        <img src="{{ asset('images/stitch braid.jpg') }}" alt="8 Rows Stitch Braids">
-                        <h4>8 Rows Stitch Braids</h4>
+                    <div class="service-card h-100" onclick="openBookingModal('8–10 Rows Stitch Braids', 'stitch-braids')">
+                        <img src="{{ asset('images/stitch braid.jpg') }}" alt="8–10 Rows Stitch Braids">
+                        <h4>8–10 Rows Stitch Braids</h4>
                         <p>Unique stitch pattern braids that create a distinctive, textured look. Features a special weaving technique that adds dimension and style to your braided hairstyle.</p>
                         <p class="price"><strong>Starting at ${{ number_format(config('service_prices.stitch_braids', 120),0) }}</strong></p>
                         <button class="btn btn-warning mt-3">Book Now</button>
@@ -3369,18 +3579,22 @@
                         <input type="hidden" id="selectedPrice" name="price">
                         <input type="hidden" id="final_price_input" name="final_price" value="">
                         <input type="hidden" id="selectedHairMaskOption" name="hair_mask_option" value="mask-only">
+                        <input type="hidden" id="stitch_rows_option" name="stitch_rows_option" value="">
 
                         <!-- Pricing Information (detailed boxes like screenshot) -->
                             <div id="bookingDetailedInfo" class="mb-3">
                                 <div style="background:#fff7e0;border-radius:12px;padding:18px;border-left:6px solid #ff6600;">
                                 <h5 style="color:#0b3a66;font-weight:700;margin-bottom:8px;">Pricing Information</h5>
-                                <p style="margin:0 0 12px 0;color:#0b3a66;font-weight:600;">💰 <span style="font-weight:700;">Default Pricing:</span> All service prices shown are for <strong>mid-back length</strong>.</p>
+                                <p style="margin:0 0 12px 0;color:#0b3a66;font-weight:600;">💰 <span style="font-weight:700;">Default Pricing:</span> All braid service prices shown are for <strong>mid-back / bra-strap length</strong> (the “base price”).</p>
 
                                 <div style="background:#ffeacc;border-radius:10px;padding:12px;border:1px solid rgba(0,0,0,0.03);margin-bottom:12px;">
                                     <h6 style="margin:0 0 8px 0;color:#0b3a66;font-weight:700;">📏 Length Adjustments:</h6>
                                     <ul style="margin:0;padding-left:18px;color:#0b3a66;">
-                                        <li><strong>+ $20</strong> for longer length (waist length and beyond)</li>
-                                        <li><strong>- $20</strong> for shorter length (shoulder length and above)</li>
+                                        <li><strong>- $40</strong> for <strong>Neck / Shoulder / Armpit</strong></li>
+                                        <li><strong>$0</strong> for <strong>Bra-strap / Mid-back</strong> (base)</li>
+                                        <li><strong>+ $20</strong> for <strong>Waist</strong></li>
+                                        <li><strong>+ $40</strong> for <strong>Hip</strong></li>
+                                        <li><strong>+ $60</strong> for <strong>Tailbone / Classic</strong></li>
                                     </ul>
                                 </div>
 
@@ -3395,11 +3609,16 @@
                                 </div>
 
                                 <div style="background:#f0efe9;border-radius:10px;padding:14px;margin-bottom:12px;">
-                                    <p style="margin:0;color:#0b3a66;"><strong>💡 Example:</strong> Small Knotless Braids (<strong>$150</strong>) + Waist Length (+<strong>$20</strong>) = <strong style="color:#0b3a66;">$170 total</strong></p>
+                                    @php
+                                        $exBase = (float) config('service_prices.small_knotless', 170);
+                                        $exTotal = $exBase + 20; // waist
+                                    @endphp
+                                    <p style="margin:0;color:#0b3a66;"><strong>💡 Example:</strong> Small Knotless Braids (<strong>${{ number_format($exBase, 0) }}</strong>) + Waist (+<strong>$20</strong>) = <strong style="color:#0b3a66;">${{ number_format($exTotal, 0) }} total</strong></p>
                                 </div>
 
-                                <div style="background:#ffe6e0;border-radius:10px;padding:14px;border-left:6px solid #e35a4a;">
-                                    <p style="margin:0;color:#b93a36;font-weight:700;">⚠️ Stitch Braids Special: <span style="font-weight:700;color:#b93a36;">+ $20</span> for more than 10 rows. Additional length charges apply based on your hair length.</p>
+                                <div style="background:#e7f3ff;border-radius:10px;padding:14px;border-left:6px solid #0d6efd;">
+                                    <p style="margin:0;color:#0b3a66;font-weight:700;">ℹ️ Hair Mask / Relax / Retouch:</p>
+                                    <p style="margin:6px 0 0 0;color:#0b3a66;">Mask only: <strong>${{ number_format((float) config('service_prices.hair_mask', 50), 0) }}</strong>. With weave add-on: <strong>$80</strong>.</p>
                                 </div>
                             </div>
                         </div>
@@ -3415,6 +3634,9 @@
                                     <small style="color:#6c757d; display:block;">Default is mid-back pricing. Final price computed on submit.</small>
                                 </div>
 
+                            </div>
+                            <div id="stitchBraidTinyNote" class="alert alert-warning mt-2 mb-0" style="display:none; border-left:6px solid #e35a4a;">
+                                <strong>Note:</strong> Tiny Stitch Braids (more than 10 rows) attracts an extra <strong>$20</strong>.
                             </div>
                             <!-- Braid Length Guide + Selection (inside booking form so it is submitted) -->
                             <div class="col-12" id="lengthGuideBlock">
@@ -4131,6 +4353,93 @@
         </div>
     </div>
 
+    <!-- Who is this service for? Modal -->
+    <div class="modal fade" id="serviceForWhoModal" tabindex="-1" aria-labelledby="serviceForWhoModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content" style="border-radius: 18px; border: none; overflow: hidden;">
+                <div class="modal-header" style="background: linear-gradient(135deg, #030f68 0%, #4a8bc2 100%); color: white;">
+                    <h5 class="modal-title" id="serviceForWhoModalLabel" style="font-weight: 700;">
+                        <i class="bi bi-question-circle me-2"></i>Who is this service for?
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <p class="mb-3" style="color:#0b3a66; font-weight: 600;">Select one option:</p>
+                    <div class="d-grid gap-3">
+                        <button type="button" class="btn btn-outline-primary btn-lg" onclick="chooseServiceForKids()"
+                                style="border-radius: 14px; font-weight: 700; padding: 14px 16px;">
+                            <i class="bi bi-emoji-smile me-2"></i>Kid (0–8 years)
+                        </button>
+                        <button type="button" class="btn btn-primary btn-lg" onclick="chooseServiceForNotKids()"
+                                style="border-radius: 14px; font-weight: 700; padding: 14px 16px;">
+                            <i class="bi bi-person-check me-2"></i>Not a kid
+                        </button>
+                    </div>
+                </div>
+                <div class="modal-footer" style="border-top: none;">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Non-kids service picker (excludes Kids Braids) -->
+    <div class="modal fade" id="nonKidsServicesModal" tabindex="-1" aria-labelledby="nonKidsServicesModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content" style="border-radius: 18px; border: none; overflow: hidden;">
+                <div class="modal-header" style="background: linear-gradient(135deg, #030f68 0%, #4a8bc2 100%); color: white;">
+                    <h5 class="modal-title" id="nonKidsServicesModalLabel" style="font-weight: 700;">
+                        <i class="bi bi-scissors me-2"></i>Select a service
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="alert alert-info" style="background:#e7f3ff; border-left: 4px solid #17a2b8; border-radius: 10px;">
+                        <i class="bi bi-info-circle me-2"></i>These are all services (excluding Kids Braids). Choose one to continue booking.
+                    </div>
+                    <div id="nonKidsServicesList" class="row g-2"></div>
+                </div>
+                <div class="modal-footer" style="border-top: none;">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Back</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stitch Braids rows selector (8–10 vs >10 rows) -->
+    <div class="modal fade" id="stitchRowsModal" tabindex="-1" aria-labelledby="stitchRowsModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content" style="border-radius: 18px; border: none; overflow: hidden;">
+                <div class="modal-header" style="background: linear-gradient(135deg, #030f68 0%, #4a8bc2 100%); color: white;">
+                    <h5 class="modal-title" id="stitchRowsModalLabel" style="font-weight: 800;">
+                        <i class="bi bi-sliders me-2"></i>Stitch Braids — choose rows
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="alert alert-info" style="background:#e7f3ff; border-left: 4px solid #17a2b8; border-radius: 10px;">
+                        <strong>Note:</strong> Tiny Stitch Braids (more than 10 rows) attracts an extra <strong>$20</strong>.
+                    </div>
+                    <div class="d-grid gap-3">
+                        <button type="button" class="btn btn-primary btn-lg"
+                                onclick="window.selectStitchRowsOption('ten_or_less')"
+                                style="border-radius: 14px; font-weight: 800; padding: 14px 16px;">
+                            8–10 rows (base price)
+                        </button>
+                        <button type="button" class="btn btn-outline-primary btn-lg"
+                                onclick="window.selectStitchRowsOption('more_than_ten')"
+                                style="border-radius: 14px; font-weight: 800; padding: 14px 16px;">
+                            More than 10 rows (tiny) +$20
+                        </button>
+                    </div>
+                </div>
+                <div class="modal-footer" style="border-top: none;">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Kids Booking Modal moved to end of file -->
 
     <!-- Important Information Section -->
@@ -4489,6 +4798,36 @@
                 block: 'start'
             });
         }
+
+        // Intercept navbar "Services" click to launch the guided flow (kids vs not kids)
+        document.addEventListener('DOMContentLoaded', function() {
+            const navServicesLink = document.getElementById('navServicesLink');
+            if (navServicesLink) {
+                navServicesLink.addEventListener('click', function(e) {
+                    // Only intercept when we're on the home page and the modal exists
+                    const modalEl = document.getElementById('serviceForWhoModal');
+                    if (modalEl && typeof window.openServiceForWhoModal === 'function') {
+                        e.preventDefault();
+                        window.openServiceForWhoModal();
+                    }
+                });
+            }
+        });
+    }
+
+    // Calendar modal: close then scroll to services section
+    function closeCalendarAndGoToServices(event) {
+        event.preventDefault();
+
+        const calendarModal = bootstrap.Modal.getInstance(document.getElementById('calendarModal'));
+        if (calendarModal) {
+            calendarModal.hide();
+        }
+
+        // Wait for modal to close then scroll
+        setTimeout(function() {
+            scrollToServices();
+        }, 300);
     }
 
     // Function to close modal and navigate to terms
@@ -4746,6 +5085,12 @@ console.log('=== LOADING BOOKING FUNCTIONS ===');
 
     // Function to open service selection modal
     window.openServiceSelectionModal = function() {
+        // New guided flow: ask who the service is for first
+        if (typeof window.openServiceForWhoModal === 'function') {
+            window.openServiceForWhoModal();
+            return;
+        }
+        // Fallback to old modal if needed
         const modalEl = document.getElementById('serviceSelectionModal');
         if (!modalEl) {
             console.error('Service selection modal not found');
@@ -4754,11 +5099,204 @@ console.log('=== LOADING BOOKING FUNCTIONS ===');
         const serviceModal = new bootstrap.Modal(modalEl);
         serviceModal.show();
     };
+
+    // Always open the "Select Service" modal (Popular Services + Custom Service Request)
+    // This bypasses the kids-vs-not-kids prompt.
+    window.openSelectServiceModal = function() {
+        const modalEl = document.getElementById('serviceSelectionModal');
+        if (!modalEl) {
+            console.error('serviceSelectionModal not found');
+            return;
+        }
+        try {
+            const m = new bootstrap.Modal(modalEl);
+            m.show();
+        } catch (e) {
+            // fallback
+            modalEl.style.display = 'block';
+            modalEl.classList.add('show');
+            modalEl.setAttribute('aria-hidden', 'false');
+            document.body.classList.add('modal-open');
+        }
+    };
     
     // Also define as regular function for backward compatibility
     function openServiceSelectionModal() {
         window.openServiceSelectionModal();
     }
+
+    // Guided service flow: Who is this service for?
+    window.openServiceForWhoModal = function() {
+        const modalEl = document.getElementById('serviceForWhoModal');
+        if (!modalEl) {
+            console.warn('serviceForWhoModal not found; falling back to serviceSelectionModal');
+            return window.openServiceSelectionModal?.();
+        }
+        const m = new bootstrap.Modal(modalEl);
+        m.show();
+    };
+
+    window.chooseServiceForKids = function() {
+        try {
+            const whoModal = bootstrap.Modal.getInstance(document.getElementById('serviceForWhoModal'));
+            if (whoModal) whoModal.hide();
+        } catch (e) {}
+
+        // Redirect to the kids selector page
+        try { window.__dbtSaveBookingDraftFromMain?.(); } catch (e) {}
+        window.location.href = '/kids-selector';
+    };
+
+    window.chooseServiceForNotKids = function() {
+        // From the booking modal "Change service" flow, go to the Select Service modal (popular + custom request)
+        const bookingVisible = (function(){
+            try {
+                const bm = document.getElementById('bookingModal');
+                return !!(bm && bm.classList.contains('show'));
+            } catch (e) { return false; }
+        })();
+
+        if (window.__serviceChangeFlow === true || bookingVisible) {
+            window.__serviceChangeFlow = false;
+
+            const openSelect = function() {
+                try { window.openSelectServiceModal?.(); } catch (e) {}
+            };
+
+            try {
+                const whoEl = document.getElementById('serviceForWhoModal');
+                const whoModal = bootstrap.Modal.getInstance(whoEl);
+                if (whoEl && whoModal) {
+                    // Wait until the "who for" modal is fully hidden before opening another modal
+                    whoEl.addEventListener('hidden.bs.modal', function() {
+                        openSelect();
+                    }, { once: true });
+                    whoModal.hide();
+                    // Fallback in case the event doesn't fire (safety)
+                    setTimeout(openSelect, 450);
+                    return;
+                }
+            } catch (e) {}
+
+            // If we couldn't access the modal instance, try opening immediately
+            openSelect();
+            return;
+        }
+
+        // Default flow (navbar Services): show non-kids list
+        try {
+            const whoModal = bootstrap.Modal.getInstance(document.getElementById('serviceForWhoModal'));
+            if (whoModal) whoModal.hide();
+        } catch (e) {}
+        window.openNonKidsServicesModal();
+    };
+
+    window.openNonKidsServicesModal = function() {
+        const modalEl = document.getElementById('nonKidsServicesModal');
+        if (!modalEl) {
+            console.warn('nonKidsServicesModal not found; falling back to serviceSelectionModal');
+            return window.openServiceSelectionModal?.();
+        }
+
+        window.populateNonKidsServicesList();
+        const m = new bootstrap.Modal(modalEl);
+        m.show();
+    };
+
+    window.populateNonKidsServicesList = function() {
+        const container = document.getElementById('nonKidsServicesList');
+        if (!container) return;
+        container.innerHTML = '';
+
+        // Base prices (single source of truth: config/service_prices.php + popular services)
+        @php
+            $basePriceByServiceName = [
+                // Main services
+                'Small Knotless Braids' => (int) config('service_prices.small_knotless', 170),
+                'Smedium Knotless Braids' => (int) config('service_prices.smedium_knotless', 150),
+                'Wig Installation' => (int) config('service_prices.wig_installation', 150),
+                'Medium Knotless Braids' => (int) config('service_prices.medium_knotless', 130),
+                'Jumbo Knotless Braids' => (int) config('service_prices.jumbo_knotless', 100),
+                'Kids Braids' => (int) config('service_prices.kids_braids', 80),
+                '8–10 Rows Stitch Braids' => (int) config('service_prices.stitch_braids', 120),
+                'Hair Mask/Relaxing' => (int) config('service_prices.hair_mask', 50),
+                'Smedium Boho Braids' => (int) config('service_prices.boho_braids', 150),
+
+                // Popular services (these are shown in the Services section too)
+                'Weaving Crotchet' => (int) config('service_prices.weaving_crotchet', 80),
+                'Single Crotchet' => (int) config('service_prices.single_crotchet', 150),
+                'Natural Hair Twist' => (int) config('service_prices.natural_hair_twist', 50),
+                'Weaving No-Extension' => (int) config('service_prices.weaving_no_extension', 30),
+                'Kinky Twist' => (int) config('service_prices.kinky_twist', 120),
+                'Twist Braids' => (int) config('service_prices.twist_braids', 130),
+            ];
+        @endphp
+        const basePriceByServiceName = @json($basePriceByServiceName);
+
+        // Source of truth: if a service dropdown exists, use it; otherwise use the configured base-price map.
+        const select = document.querySelector('#bookingModal select[name="service"]') || document.getElementById('serviceSelection');
+        const options = select ? Array.from(select.querySelectorAll('option')) : [];
+
+        let services = options
+            .map(o => (o.value || '').trim())
+            .filter(v => v.length > 0);
+
+        if (!services.length) {
+            try {
+                services = Object.keys(basePriceByServiceName || {});
+            } catch (e) { services = []; }
+        }
+
+        // Exclude kids services + deduplicate
+        const unique = Array.from(new Set(services.filter(v => !/kids/i.test(v))));
+
+        if (!unique.length) {
+            container.innerHTML = '<div class="col-12"><div class="alert alert-warning mb-0">No services found.</div></div>';
+            return;
+        }
+
+        unique.forEach(serviceName => {
+            const col = document.createElement('div');
+            col.className = 'col-12 col-md-6 col-lg-4';
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'btn btn-outline-primary w-100';
+            btn.style.borderRadius = '12px';
+            btn.style.padding = '12px 10px';
+            btn.style.fontWeight = '700';
+            btn.textContent = serviceName;
+            btn.addEventListener('click', function () {
+                window.selectNonKidsService(serviceName);
+            });
+            col.appendChild(btn);
+
+            // Price hint (pulled from same config as Services section)
+            try {
+                const p = basePriceByServiceName[serviceName];
+                if (typeof p === 'number' && !isNaN(p) && p > 0) {
+                    const priceEl = document.createElement('div');
+                    priceEl.className = 'small text-muted mt-1 text-center';
+                    priceEl.textContent = 'Starting at $' + p;
+                    col.appendChild(priceEl);
+                }
+            } catch (e) {}
+            container.appendChild(col);
+        });
+    };
+
+    window.selectNonKidsService = function(serviceName) {
+        try {
+            const nonKidsModal = bootstrap.Modal.getInstance(document.getElementById('nonKidsServicesModal'));
+            if (nonKidsModal) nonKidsModal.hide();
+        } catch (e) {}
+
+        // Open main booking modal with selected service
+        if (typeof window.openBookingModal === 'function') {
+            window.openBookingModal(serviceName, null);
+        } else {
+            console.warn('openBookingModal not found');
+        }
+    };
 
     // Close booking/kids modal and open service selection modal
     function backToServiceSelection(){
@@ -4796,17 +5334,27 @@ console.log('=== LOADING BOOKING FUNCTIONS ===');
                 backBtn.style.display = 'none';
             }
 
-            // small delay to allow modal hide animation then open service selection
+            // small delay to allow modal hide animation then open the appropriate chooser
             setTimeout(function(){
                 try{ 
-                    if(typeof openServiceSelectionModal === 'function') {
-                        openServiceSelectionModal();
-                    } else {
-                        const serviceModalEl = document.getElementById('serviceSelectionModal');
-                        if (serviceModalEl) {
-                            const serviceModal = new bootstrap.Modal(serviceModalEl);
-                            serviceModal.show();
-                        }
+                    // Calendar-origin flow: go to kids selector page (not another modal).
+                    // Everything else: go straight to the "Other Services" modal.
+                    if (window.__bookingOrigin === 'calendar') {
+                        // Persist any typed draft before redirecting
+                        try { window.__dbtSaveBookingDraftFromMain?.(); } catch (e) {}
+                        window.location.href = '/kids-selector';
+                        return;
+                    }
+
+                    // For "Change service" we want: Not a kid => Select Service (popular+custom), Kid => kids booking modal
+                    window.__serviceChangeFlow = true;
+                    if (typeof window.openServiceForWhoModal === 'function') {
+                        window.openServiceForWhoModal();
+                    } else if (typeof openServiceForWhoModal === 'function') {
+                        openServiceForWhoModal();
+                    } else if (typeof window.openOtherServicesModal === 'function') {
+                        // fallback: at least open the Select Service modal
+                        window.openOtherServicesModal();
                     }
                 }catch(e){ console.warn('openServiceSelectionModal failed', e); }
             }, 260);
@@ -4819,6 +5367,8 @@ console.log('=== LOADING BOOKING FUNCTIONS ===');
             // populate basic hidden fields in the kids modal
             const svc = document.getElementById('kids_service_input'); if(svc) svc.value = serviceName || 'Kids Braids';
             const st = document.getElementById('kids_service_type_input'); if(st) st.value = serviceType || 'kids-braids';
+            // Restore saved draft (parent phone/email) when switching from main flow/calendar
+            try { window.__dbtApplyBookingDraftToKids?.(); } catch (e) {}
                 // Prefill price preview from selector data if available, otherwise fall back to configured base
             try{
                 const sel = (typeof window !== 'undefined') ? window.__kidsSelectorData : null;
@@ -4978,14 +5528,14 @@ console.log('=== LOADING BOOKING FUNCTIONS ===');
         const selectedServiceInput = document.getElementById('selectedService');
         const serviceDisplayInput = document.getElementById('serviceDisplay');
 
-        // Map common services to their base prices (USD)
+        // Map common services to their base prices (USD) (single source of truth: config/service_prices.php)
         const priceMap = {
-            'Weaving Crotchet': '80',
-            'Single Crotchet': '150',
-            'Natural Hair Twist': '50',
-            'Weaving No-Extension': '30',
-            'Kinky Twist': '120',
-            'Twist Braids': '130'
+            'Weaving Crotchet': {{ (int) config('service_prices.weaving_crotchet', 80) }},
+            'Single Crotchet': {{ (int) config('service_prices.single_crotchet', 150) }},
+            'Natural Hair Twist': {{ (int) config('service_prices.natural_hair_twist', 50) }},
+            'Weaving No-Extension': {{ (int) config('service_prices.weaving_no_extension', 30) }},
+            'Kinky Twist': {{ (int) config('service_prices.kinky_twist', 120) }},
+            'Twist Braids': {{ (int) config('service_prices.twist_braids', 130) }}
         };
 
         // Get base price from the map
@@ -5598,6 +6148,23 @@ console.log('=== LOADING BOOKING FUNCTIONS ===');
             const serviceNameHidden = this.querySelector('input[name="service"]')?.value || document.getElementById('selectedService')?.value || document.getElementById('serviceDisplay')?.value || '';
             const serviceTypeLower = (serviceTypeHidden || '').toLowerCase();
             const serviceNameLower = (serviceNameHidden || '').toLowerCase();
+
+            // Stitch braids rows choice is required and affects pricing (+$20 for >10 rows)
+            const isStitch = serviceTypeLower.includes('stitch') || serviceNameLower.includes('stitch');
+            if (isStitch) {
+                const stitchOpt = (document.getElementById('stitch_rows_option') || {}).value || '';
+                if (!stitchOpt) {
+                    e.preventDefault();
+                    try {
+                        if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+                            const m = new bootstrap.Modal(document.getElementById('stitchRowsModal'));
+                            m.show();
+                        }
+                    } catch (e) {}
+                    alert('Please select Stitch Braids rows (8–10 rows or more than 10 rows) to continue.');
+                    return;
+                }
+            }
             const isHairMaskForm = (
                 serviceTypeLower.includes('hair-mask') || 
                 serviceTypeLower.includes('relax') ||
@@ -6672,17 +7239,36 @@ document.addEventListener('DOMContentLoaded', function(){
 // Dynamic price preview and form wiring
 (function() {
     const priceMap = {
-        'small-knotless': 170,
-        'smedium-knotless': 150,
-        'wig-installation': 150,
-        'medium-knotless': 130,
-        'jumbo-knotless': 100,
-        'kids-braids': 80,
-        'stitch-braids': 120,
-        'hair-mask': 50,
-        'retouching': 50,
-        'boho-braids': 150,
+        'small-knotless': {{ (int) config('service_prices.small_knotless', 170) }},
+        'smedium-knotless': {{ (int) config('service_prices.smedium_knotless', 150) }},
+        'wig-installation': {{ (int) config('service_prices.wig_installation', 150) }},
+        'medium-knotless': {{ (int) config('service_prices.medium_knotless', 130) }},
+        'jumbo-knotless': {{ (int) config('service_prices.jumbo_knotless', 100) }},
+        'kids-braids': {{ (int) config('service_prices.kids_braids', 80) }},
+        'stitch-braids': {{ (int) config('service_prices.stitch_braids', 120) }},
+        'hair-mask': {{ (int) config('service_prices.hair_mask', 50) }},
+        'retouching': {{ (int) config('service_prices.hair_mask', 50) }},
+        'boho-braids': {{ (int) config('service_prices.boho_braids', 150) }},
         'custom': 100
+    };
+
+    // Name → base price (used when we only have a serviceName, not a serviceType)
+    const priceByServiceName = {
+        'Small Knotless Braids': {{ (int) config('service_prices.small_knotless', 170) }},
+        'Smedium Knotless Braids': {{ (int) config('service_prices.smedium_knotless', 150) }},
+        'Wig Installation': {{ (int) config('service_prices.wig_installation', 150) }},
+        'Medium Knotless Braids': {{ (int) config('service_prices.medium_knotless', 130) }},
+        'Jumbo Knotless Braids': {{ (int) config('service_prices.jumbo_knotless', 100) }},
+        'Kids Braids': {{ (int) config('service_prices.kids_braids', 80) }},
+        '8–10 Rows Stitch Braids': {{ (int) config('service_prices.stitch_braids', 120) }},
+        'Hair Mask/Relaxing': {{ (int) config('service_prices.hair_mask', 50) }},
+        'Smedium Boho Braids': {{ (int) config('service_prices.boho_braids', 150) }},
+        'Weaving Crotchet': {{ (int) config('service_prices.weaving_crotchet', 80) }},
+        'Single Crotchet': {{ (int) config('service_prices.single_crotchet', 150) }},
+        'Natural Hair Twist': {{ (int) config('service_prices.natural_hair_twist', 50) }},
+        'Weaving No-Extension': {{ (int) config('service_prices.weaving_no_extension', 30) }},
+        'Kinky Twist': {{ (int) config('service_prices.kinky_twist', 120) }},
+        'Twist Braids': {{ (int) config('service_prices.twist_braids', 130) }},
     };
 
     function lengthAdjustment(lengthValue) {
@@ -6774,7 +7360,19 @@ document.addEventListener('DOMContentLoaded', function(){
     function updatePriceDisplay(basePrice) {
         const serviceType = window.currentServiceInfo.serviceType || document.getElementById('selectedServiceType')?.value || 'custom';
         const serviceNameDisplay = (window.currentServiceInfo && window.currentServiceInfo.serviceName) || document.getElementById('serviceDisplay')?.value || '';
-        const isHairMask = (serviceType === 'hair-mask') || (''+serviceNameDisplay).toLowerCase().includes('mask');
+        const stLower = (''+serviceType).toLowerCase();
+        const snLower = (''+serviceNameDisplay).toLowerCase();
+        const isHairMask = (
+            stLower === 'hair-mask' ||
+            stLower.includes('hair-mask') ||
+            stLower.includes('mask') ||
+            stLower.includes('relax') ||
+            stLower.includes('retouch') ||
+            snLower.includes('hair mask') ||
+            snLower.includes('mask') ||
+            snLower.includes('relax') ||
+            snLower.includes('retouch')
+        );
 
         // Resolve authoritative base price when caller didn't pass a number
         let base = (typeof basePrice === 'number') ? basePrice : null;
@@ -6790,7 +7388,7 @@ document.addEventListener('DOMContentLoaded', function(){
             }
         }
 
-        // For hair-mask we show mask options and compute addon (+30 for weave)
+        // For hair-mask/relax/retouch we show mask options and compute addon (+$30 for weave)
         if (isHairMask) {
             // read selected mask option (only consider actual radio inputs)
             const maskRadio = document.querySelector('input[type="radio"][name="hair_mask_option"]:checked');
@@ -6830,7 +7428,7 @@ document.addEventListener('DOMContentLoaded', function(){
             }
             if (!maskVal) maskVal = document.getElementById('selectedHairMaskOption')?.value || 'mask-only';
             const addon = (maskVal === 'mask-with-weave') ? 30 : 0;
-            const finalPrice = (typeof basePrice === 'number' ? basePrice : 0) + addon;
+            const finalPrice = (typeof base === 'number' && !isNaN(base) ? base : 0) + addon;
 
             console.log('Hair-mask price calc', { basePrice, maskVal, addon, finalPrice });
 
@@ -6839,9 +7437,15 @@ document.addEventListener('DOMContentLoaded', function(){
             const hiddenMask = document.getElementById('selectedHairMaskOption');
 
             if (disp) disp.textContent = finalPrice ? ('$' + finalPrice) : '--';
-            // Ensure the hidden selectedPrice reflects the authoritative final price (base + weave addon)
-            if (hidden) hidden.value = (typeof finalPrice === 'number') ? Number(finalPrice).toFixed(2) : (parseFloat(basePrice) || '');
+            // Keep hidden "price" as the base price; send final price via final_price_input
+            if (hidden) hidden.value = (typeof base === 'number' && !isNaN(base)) ? Number(base).toFixed(2) : '';
             if (hiddenMask) hiddenMask.value = maskVal;
+
+            // Ensure final_price_input is set so server + emails reflect the correct total
+            try {
+                const finalInput = document.getElementById('final_price_input');
+                if (finalInput) finalInput.value = (typeof finalPrice === 'number') ? Number(finalPrice).toFixed(2) : '';
+            } catch (e) { /* noop */ }
 
             return finalPrice;
         }
@@ -6878,6 +7482,17 @@ document.addEventListener('DOMContentLoaded', function(){
             // Popular services: use base price only (mid-back length, no adjustments)
             console.log('Popular service detected - using base price only (mid-back length)');
         }
+
+        // Stitch braids: tiny stitch (>10 rows) adds +$20
+        try {
+            const stLower = (''+serviceType).toLowerCase();
+            const snLower = (''+serviceNameDisplay).toLowerCase();
+            const isStitch = stLower.includes('stitch') || snLower.includes('stitch');
+            const stitchOpt = (document.getElementById('stitch_rows_option') || {}).value || '';
+            if (isStitch && stitchOpt === 'more_than_ten') {
+                finalPrice = (typeof finalPrice === 'number' ? finalPrice : (parseFloat(finalPrice) || 0)) + 20;
+            }
+        } catch (e) { /* noop */ }
 
         console.log('Price calculation:', {
             basePrice: base,
@@ -6946,11 +7561,22 @@ document.addEventListener('DOMContentLoaded', function(){
     window.openBookingModal = function(serviceName, serviceType) {
         console.log('Opening booking modal for:', serviceName, serviceType);
 
+        // Track where the booking came from:
+        // - service cards/carousel pass a non-null serviceType slug
+        // - calendar page redirects are marked earlier via window.__bookingOrigin = 'calendar'
+        try {
+            // If serviceType is provided, this is a service-card/inline booking and should override any prior origin.
+            // If serviceType is null, keep whatever origin we already have (e.g., calendar deep-link).
+            window.__bookingOrigin = serviceType ? 'service-card' : (window.__bookingOrigin || 'other');
+        } catch (e) { /* noop */ }
+
         // Store service info globally
         window.currentServiceInfo = {
             serviceName: serviceName,
             serviceType: serviceType,
-            basePrice: (serviceType && priceMap[serviceType]) ? priceMap[serviceType] : priceMap['custom']
+            basePrice: (serviceType && priceMap[serviceType])
+                ? priceMap[serviceType]
+                : ((serviceName && priceByServiceName[serviceName]) ? priceByServiceName[serviceName] : priceMap['custom'])
         };
 
         // Call original modal opener first (it may clear the form)
@@ -6972,6 +7598,9 @@ document.addEventListener('DOMContentLoaded', function(){
 
             const serviceDisplayEl = document.getElementById('serviceDisplay');
             if (serviceDisplayEl) serviceDisplayEl.value = serviceName || '';
+
+            // Restore saved draft (name/phone/email/notes) after prevOpen clears the form
+            try { window.__dbtApplyBookingDraftToMain?.(); } catch (e) {}
 
             const base = window.currentServiceInfo.basePrice;
 
@@ -7045,6 +7674,33 @@ document.addEventListener('DOMContentLoaded', function(){
                 serviceNameLower.includes('retouch')
             );
             const disableLengths = isHairMaskLocal;
+
+            // Stitch braids note (tiny stitch >10 rows +$20)
+            try {
+                const stitchNote = document.getElementById('stitchBraidTinyNote');
+                const isStitch = serviceTypeLower.includes('stitch') || serviceNameLower.includes('stitch');
+                if (stitchNote) stitchNote.style.display = isStitch ? 'block' : 'none';
+            } catch (e) { /* noop */ }
+
+            // Stitch braids rows selector popup (required to choose 8–10 vs >10)
+            try {
+                const isStitch = serviceTypeLower.includes('stitch') || serviceNameLower.includes('stitch');
+                const stitchHidden = document.getElementById('stitch_rows_option');
+                if (stitchHidden && !isStitch) {
+                    stitchHidden.value = '';
+                }
+                if (isStitch && stitchHidden && !stitchHidden.value) {
+                    // show selector modal on top
+                    setTimeout(function () {
+                        try {
+                            if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+                                const m = new bootstrap.Modal(document.getElementById('stitchRowsModal'));
+                                m.show();
+                            }
+                        } catch (e) { /* noop */ }
+                    }, 150);
+                }
+            } catch (e) { /* noop */ }
 
             // hair-mask specific UI (show mask options for hair-mask, relaxing, retouching services)
             if (isHairMaskLocal) {

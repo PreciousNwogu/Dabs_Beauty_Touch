@@ -253,20 +253,13 @@ class BookingConfirmation extends Notification
             $resolvedBase = 0.0;
         }
 
-        // Check for hair mask with weave - now priced as flat $80 (base price is $80, no separate addon)
+        // Check for hair mask with weave - base $50 + $30 weaving add-on => $80 total
         $weavingAddon = 0.00;
         if (!empty($b->hair_mask_option)) {
             $maskOptionNormalized = strtolower(trim(str_replace(['_', ' '], '-', (string)$b->hair_mask_option)));
             if (str_contains($maskOptionNormalized, 'weave') || str_contains($maskOptionNormalized, 'weav')) {
-                // With new pricing, base price is $80 for mask-with-weave, no separate addon
-                // Check if base price is already $80 (new pricing) or if we need to add $30 (old pricing)
-                if (($resolvedBase ?? 0) >= 80.00) {
-                    // New pricing: base is already $80, no addon needed
-                    $weavingAddon = 0.00;
-                } else {
-                    // Legacy pricing: add $30 addon
-                    $weavingAddon = 30.00;
-                }
+                // Canonical add-on is +$30; keep backward compatibility for older records that saved base as $80
+                $weavingAddon = (($resolvedBase ?? 0) >= 80.00) ? 0.00 : 30.00;
                 // If length_adjustment contains the weaving addon, subtract it to get pure length adjustment
                 if ($lengthAdjust > 0 && $lengthAdjust == 30.00) {
                     $lengthAdjust = 0.00;
@@ -309,19 +302,11 @@ class BookingConfirmation extends Notification
             $addonsTotal = round($addonsTotal, 2);
         }
         
-        // Ensure final price is correct (for new pricing, base is $80; for legacy, add $30 addon)
+        // Ensure final price is correct (for legacy records that stored base as $80, addon is $0; otherwise +$30)
         $computed_total_final = $computed_total_final ?? $final_price_to_pass;
         if ($weavingAddon > 0 && $computed_total_final < ($resolvedBase + $weavingAddon)) {
             // Legacy pricing: If final price doesn't include weaving addon, add it
             $computed_total_final = round($resolvedBase + $lengthAdjust + $addonsTotal + $weavingAddon, 2);
-        } elseif ($weavingAddon == 0 && !empty($b->hair_mask_option)) {
-            // New pricing: If mask-with-weave and final price is not $80, ensure it's $80
-            $maskOptionNormalized = strtolower(trim(str_replace(['_', ' '], '-', (string)$b->hair_mask_option)));
-            if (str_contains($maskOptionNormalized, 'weave') || str_contains($maskOptionNormalized, 'weav')) {
-                if ($computed_total_final < 80.00) {
-                    $computed_total_final = 80.00;
-                }
-            }
         }
 
         // Compute hideLengthFinish once and pass to views so templates don't duplicate logic

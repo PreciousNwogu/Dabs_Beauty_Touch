@@ -70,6 +70,8 @@ routes/web-simple.php
 *.backup
 *.bak
 *.old
+*.sql
+!database/migrations/*.sql
 
 # Logs and Debug Files
 *.log

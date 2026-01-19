@@ -32,6 +32,7 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, #f8f9fa 0%, #e3eafc 100%);
             min-height: 100vh;
+            -webkit-tap-highlight-color: transparent;
         }
 
         .navbar {
@@ -63,15 +64,28 @@
 
         .calendar-grid {
             padding: 30px;
-            /* Use CSS Grid so weekdays and day cells always align into 7 columns */
-            display: grid;
-            grid-template-columns: repeat(7, 1fr);
-            gap: 12px;
         }
 
-        /* Make the bootstrap .row wrappers transparent so their child .col elements become grid items */
-        .calendar-grid .row {
-            display: contents;
+        /* Weekday header row */
+        .calendar-weekdays {
+            display: grid;
+            grid-template-columns: repeat(7, minmax(0, 1fr));
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .calendar-weekday {
+            text-align: center;
+            font-weight: 700;
+            color: #212529;
+            min-width: 0;
+        }
+
+        /* Day cells grid */
+        #calendarDays.calendar-days {
+            display: grid;
+            grid-template-columns: repeat(7, minmax(0, 1fr));
+            gap: 12px;
         }
 
         .calendar-day {
@@ -87,6 +101,10 @@
             align-items: center;
             width: 100%;
             box-sizing: border-box;
+            touch-action: manipulation;
+            border-radius: 12px;
+            position: relative;
+            min-width: 0; /* prevent min-content overflow from widening columns */
         }
 
         .calendar-day:hover {
@@ -185,6 +203,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            touch-action: manipulation;
         }
 
         .time-slot:hover {
@@ -275,16 +294,142 @@
         }
 
         @media (max-width: 768px) {
+            .container {
+                padding-left: 12px;
+                padding-right: 12px;
+            }
+
+            .calendar-container,
+            .time-slots,
+            .booking-form {
+                border-radius: 16px;
+            }
+
+            .calendar-header {
+                padding: 18px 14px;
+            }
+
+            .calendar-header h1 {
+                font-size: 1.4rem;
+                margin-bottom: 6px !important;
+            }
+
+            .calendar-header p {
+                font-size: 0.95rem;
+            }
+
+            .calendar-nav {
+                padding: 12px;
+            }
+
+            .calendar-nav .row > [class^="col-"] {
+                margin-bottom: 8px;
+            }
+
+            .calendar-nav .row > [class^="col-"]:last-child {
+                margin-bottom: 0;
+            }
+
+            #currentMonth {
+                font-size: 1.2rem;
+            }
+
             .calendar-day {
-                min-height: 60px;
-                padding: 10px;
-                font-size: 0.9rem;
+                min-height: 52px;
+                padding: 10px 6px;
+                font-size: 0.95rem;
+                aspect-ratio: 1 / 1;
             }
 
             .calendar-grid {
                 padding: 15px;
+            }
+
+            .calendar-weekdays {
                 gap: 8px;
-                grid-template-columns: repeat(7, 1fr);
+                margin-bottom: 8px;
+            }
+
+            #calendarDays.calendar-days {
+                gap: 8px;
+            }
+
+            .calendar-weekday {
+                font-size: 0.8rem;
+            }
+
+            .time-slot {
+                padding: 14px 14px;
+                font-size: 0.95rem;
+            }
+
+            .form-header {
+                padding: 18px 14px;
+            }
+
+            .form-body {
+                padding: 16px;
+            }
+
+            .btn-primary {
+                width: 100%;
+            }
+        }
+
+        /* Extra-small phones */
+        @media (max-width: 576px) {
+            /* Reduce gaps so 7 columns fit comfortably */
+            .calendar-weekdays { gap: 6px; }
+            #calendarDays.calendar-days { gap: 6px; }
+
+            .calendar-weekday {
+                font-size: 0.72rem;
+                letter-spacing: 0.02em;
+            }
+
+            .calendar-day {
+                min-height: 46px;
+                padding: 8px 4px;
+                border-radius: 10px;
+                aspect-ratio: 1 / 1;
+            }
+
+            .calendar-day .blocked-text {
+                font-size: 0.6rem;
+                margin-top: 4px;
+                position: absolute;
+                left: 6px;
+                right: 6px;
+                bottom: 6px;
+                margin-top: 0;
+                /* Let text wrap without affecting grid sizing */
+                white-space: normal;
+                display: -webkit-box;
+                -webkit-line-clamp: 2;
+                -webkit-box-orient: vertical;
+                overflow: hidden;
+            }
+
+            /* Disable hover lift on touch devices */
+            .calendar-day:hover {
+                transform: none;
+                box-shadow: none;
+            }
+
+            .time-slot {
+                border-radius: 0;
+            }
+
+            .time-slot span:last-child {
+                margin-left: 10px;
+                font-size: 0.85rem;
+                opacity: 0.9;
+            }
+
+            /* Make nav buttons easier to tap */
+            .calendar-nav button {
+                width: 100%;
+                padding: 12px 14px;
             }
         }
     </style>
@@ -323,17 +468,17 @@
 
             <!-- Calendar Navigation -->
             <div class="calendar-nav">
-                <div class="row align-items-center">
-                    <div class="col-md-4">
-                        <button class="btn btn-outline-primary" onclick="previousMonth()">
+                <div class="row align-items-center g-2">
+                    <div class="col-6 col-md-4">
+                        <button class="btn btn-outline-primary w-100" onclick="previousMonth()">
                             <i class="bi bi-chevron-left"></i> Previous
                         </button>
                     </div>
-                    <div class="col-md-4 text-center">
+                    <div class="col-12 col-md-4 text-center order-3 order-md-2">
                         <h3 id="currentMonth" class="mb-0"></h3>
                     </div>
-                    <div class="col-md-4 text-end">
-                        <button class="btn btn-outline-primary" onclick="nextMonth()">
+                    <div class="col-6 col-md-4 text-end order-2 order-md-3">
+                        <button class="btn btn-outline-primary w-100" onclick="nextMonth()">
                             Next <i class="bi bi-chevron-right"></i>
                         </button>
                     </div>
@@ -342,20 +487,16 @@
 
             <!-- Calendar Grid -->
             <div class="calendar-grid">
-                <div class="row">
-                    <div class="col-12">
-                        <div class="row">
-                            <div class="col text-center fw-bold">Sun</div>
-                            <div class="col text-center fw-bold">Mon</div>
-                            <div class="col text-center fw-bold">Tue</div>
-                            <div class="col text-center fw-bold">Wed</div>
-                            <div class="col text-center fw-bold">Thu</div>
-                            <div class="col text-center fw-bold">Fri</div>
-                            <div class="col text-center fw-bold">Sat</div>
-                        </div>
-                    </div>
+                <div class="calendar-weekdays">
+                    <div class="calendar-weekday">Sun</div>
+                    <div class="calendar-weekday">Mon</div>
+                    <div class="calendar-weekday">Tue</div>
+                    <div class="calendar-weekday">Wed</div>
+                    <div class="calendar-weekday">Thu</div>
+                    <div class="calendar-weekday">Fri</div>
+                    <div class="calendar-weekday">Sat</div>
                 </div>
-                <div id="calendarDays" class="row mt-2"></div>
+                <div id="calendarDays" class="calendar-days"></div>
             </div>
         </div>
 
@@ -397,7 +538,8 @@
                         </div>
                         <div class="col-md-6 mb-3">
                             <label for="service" class="form-label">Service *</label>
-                            <select class="form-select" id="service" name="service" required>
+                            <!-- Keep the real select for form submit, but hide it and drive selection via a guided modal -->
+                            <select class="form-select d-none" id="service" name="service" required>
                                 <option value="">Select a service</option>
                                 <option value="Small Knotless Braids">Small Knotless Braids</option>
                                 <option value="Smedium Knotless Braids">Smedium Knotless Braids</option>
@@ -405,10 +547,22 @@
                                 <option value="Medium Knotless Braids">Medium Knotless Braids</option>
                                 <option value="Jumbo Knotless Braids">Jumbo Knotless Braids</option>
                                 <option value="Kids Braids">Kids Braids</option>
-                                <option value="8 Rows Stitch Braids">8 Rows Stitch Braids</option>
+                                <option value="8–10 Rows Stitch Braids">8–10 Rows Stitch Braids</option>
                                 <option value="Hair Mask/Relaxing">Hair Mask/Relaxing</option>
                                 <option value="Smedium Boho Braids">Smedium Boho Braids</option>
                             </select>
+                            <div class="input-group">
+                                <input type="text"
+                                       class="form-control"
+                                       id="serviceDisplay"
+                                       placeholder="Select a service"
+                                       readonly
+                                       style="background-color:#f8f9fa; cursor:pointer;"
+                                       onclick="openServiceForWhoModalCal()">
+                                <button class="btn btn-outline-secondary" type="button" onclick="openServiceForWhoModalCal()">
+                                    Choose
+                                </button>
+                            </div>
                         </div>
                     </div>
                     <div class="mb-3">
@@ -460,12 +614,236 @@
         </div>
     </div>
 
+    <!-- Who is this service for? (Calendar page) -->
+    <div class="modal fade" id="serviceForWhoModalCal" tabindex="-1" aria-labelledby="serviceForWhoModalCalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content" style="border-radius: 18px; border: none; overflow: hidden;">
+                <div class="modal-header" style="background: linear-gradient(135deg, #030f68 0%, #4a8bc2 100%); color: white;">
+                    <h5 class="modal-title" id="serviceForWhoModalCalLabel" style="font-weight: 700;">
+                        <i class="bi bi-question-circle me-2"></i>Who is this service for?
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <p class="mb-3" style="color:#0b3a66; font-weight: 600;">Select one option:</p>
+                    <div class="d-grid gap-3">
+                        <button type="button" class="btn btn-outline-primary btn-lg" onclick="chooseServiceForKidsCal()"
+                                style="border-radius: 14px; font-weight: 700; padding: 14px 16px;">
+                            <i class="bi bi-emoji-smile me-2"></i>Kid (0–8 years)
+                        </button>
+                        <button type="button" class="btn btn-primary btn-lg" onclick="chooseServiceForNotKidsCal()"
+                                style="border-radius: 14px; font-weight: 700; padding: 14px 16px;">
+                            <i class="bi bi-person-check me-2"></i>Not a kid
+                        </button>
+                    </div>
+                </div>
+                <div class="modal-footer" style="border-top: none;">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Non-kids services list (Calendar page, excludes Kids Braids) -->
+    <div class="modal fade" id="nonKidsServicesModalCal" tabindex="-1" aria-labelledby="nonKidsServicesModalCalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content" style="border-radius: 18px; border: none; overflow: hidden;">
+                <div class="modal-header" style="background: linear-gradient(135deg, #030f68 0%, #4a8bc2 100%); color: white;">
+                    <h5 class="modal-title" id="nonKidsServicesModalCalLabel" style="font-weight: 700;">
+                        <i class="bi bi-scissors me-2"></i>Select a service
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="alert alert-info" style="background:#e7f3ff; border-left: 4px solid #17a2b8; border-radius: 10px;">
+                        <i class="bi bi-info-circle me-2"></i>Choose a service to continue booking.
+                    </div>
+                    <div id="nonKidsServicesListCal" class="row g-2"></div>
+                </div>
+                <div class="modal-footer" style="border-top: none;">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" onclick="openServiceForWhoModalCal()">Back</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         let currentDate = new Date();
         let selectedDate = null;
         let selectedTime = null;
         let selectedService = null;
+
+        // Base prices (single source of truth: config/service_prices.php)
+        @php
+            $basePriceByServiceNameCal = [
+                'Small Knotless Braids' => (int) config('service_prices.small_knotless', 170),
+                'Smedium Knotless Braids' => (int) config('service_prices.smedium_knotless', 150),
+                'Wig Installation' => (int) config('service_prices.wig_installation', 150),
+                'Medium Knotless Braids' => (int) config('service_prices.medium_knotless', 130),
+                'Jumbo Knotless Braids' => (int) config('service_prices.jumbo_knotless', 100),
+                'Kids Braids' => (int) config('service_prices.kids_braids', 80),
+                '8–10 Rows Stitch Braids' => (int) config('service_prices.stitch_braids', 120),
+                'Hair Mask/Relaxing' => (int) config('service_prices.hair_mask', 50),
+                'Smedium Boho Braids' => (int) config('service_prices.boho_braids', 150),
+            ];
+        @endphp
+        const basePriceByServiceNameCal = @json($basePriceByServiceNameCal);
+
+        // --- Booking draft (persist typed info across service flows / redirects) ---
+        const DBT_BOOKING_DRAFT_KEY = 'dbt_booking_draft_v1';
+
+        function loadBookingDraftCal() {
+            try {
+                const raw = sessionStorage.getItem(DBT_BOOKING_DRAFT_KEY);
+                return raw ? (JSON.parse(raw) || {}) : {};
+            } catch (e) { return {}; }
+        }
+
+        function clearBookingDraftCal() {
+            try { sessionStorage.removeItem(DBT_BOOKING_DRAFT_KEY); } catch (e) { /* noop */ }
+        }
+
+        function saveBookingDraftCal() {
+            try {
+                const draft = loadBookingDraftCal();
+                const nameEl = document.getElementById('name');
+                const phoneEl = document.getElementById('phone');
+                const emailEl = document.getElementById('email');
+                const notesEl = document.getElementById('notes');
+
+                const next = { ...draft };
+                if (nameEl && nameEl.value && nameEl.value.trim()) next.name = nameEl.value.trim();
+                if (phoneEl && phoneEl.value && phoneEl.value.trim()) next.phone = phoneEl.value.trim();
+                if (emailEl && emailEl.value && emailEl.value.trim()) next.email = emailEl.value.trim();
+                if (notesEl && notesEl.value && notesEl.value.trim()) next.message = notesEl.value.trim(); // map calendar notes -> home message
+
+                // Date/time (so home modal & kids modal can auto-fill)
+                try {
+                    if (selectedDate) {
+                        next.appointment_date = formatYMD(selectedDate);
+                        next.bookingDateDisplay = selectedDate.toLocaleDateString('en-US', {
+                            weekday: 'long',
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric'
+                        });
+                    }
+                    if (selectedTime && selectedTime.time) {
+                        next.appointment_time = selectedTime.time;
+                        next.timeDisplay = selectedTime.formatted_time || selectedTime.formattedTime || selectedTime.time;
+                    }
+                } catch (e) { /* noop */ }
+
+                sessionStorage.setItem(DBT_BOOKING_DRAFT_KEY, JSON.stringify(next));
+            } catch (e) { /* noop */ }
+        }
+
+        // --- Service selection (guided flow) ---
+        function openServiceForWhoModalCal() {
+            const modalEl = document.getElementById('serviceForWhoModalCal');
+            if (!modalEl || typeof bootstrap === 'undefined') {
+                // Fallback: allow user to use the hidden select if Bootstrap isn't available
+                const select = document.getElementById('service');
+                if (select) select.classList.remove('d-none');
+                return;
+            }
+            const m = new bootstrap.Modal(modalEl);
+            m.show();
+        }
+
+        function chooseServiceForKidsCal() {
+            try {
+                const whoModal = bootstrap.Modal.getInstance(document.getElementById('serviceForWhoModalCal'));
+                if (whoModal) whoModal.hide();
+            } catch (e) {}
+
+            // Persist any typed draft details before redirecting
+            saveBookingDraftCal();
+
+            // Kids bookings require the kids flow/selector.
+            // Redirect to kids selector page.
+            window.location.href = '/kids-selector';
+        }
+
+        function chooseServiceForNotKidsCal() {
+            try {
+                const whoModal = bootstrap.Modal.getInstance(document.getElementById('serviceForWhoModalCal'));
+                if (whoModal) whoModal.hide();
+            } catch (e) {}
+            openNonKidsServicesModalCal();
+        }
+
+        function openNonKidsServicesModalCal() {
+            const modalEl = document.getElementById('nonKidsServicesModalCal');
+            if (!modalEl || typeof bootstrap === 'undefined') return;
+            populateNonKidsServicesListCal();
+            const m = new bootstrap.Modal(modalEl);
+            m.show();
+        }
+
+        function populateNonKidsServicesListCal() {
+            const container = document.getElementById('nonKidsServicesListCal');
+            const select = document.getElementById('service');
+            if (!container || !select) return;
+            container.innerHTML = '';
+
+            const services = Array.from(select.querySelectorAll('option'))
+                .map(o => (o.value || '').trim())
+                .filter(v => v.length > 0)
+                .filter(v => !/kids/i.test(v)); // exclude Kids Braids
+
+            const unique = Array.from(new Set(services));
+            if (!unique.length) {
+                container.innerHTML = '<div class="col-12"><div class="alert alert-warning mb-0">No services available.</div></div>';
+                return;
+            }
+
+            unique.forEach(serviceName => {
+                const col = document.createElement('div');
+                col.className = 'col-12 col-md-6 col-lg-4';
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'btn btn-outline-primary w-100';
+                btn.style.borderRadius = '12px';
+                btn.style.padding = '12px 10px';
+                btn.style.fontWeight = '700';
+                btn.textContent = serviceName;
+                btn.addEventListener('click', function () {
+                    selectNonKidsServiceCal(serviceName);
+                });
+                col.appendChild(btn);
+
+                // Price hint (pulled from same config as Services section)
+                try {
+                    const p = basePriceByServiceNameCal[serviceName];
+                    if (typeof p === 'number' && !isNaN(p) && p > 0) {
+                        const priceEl = document.createElement('div');
+                        priceEl.className = 'small text-muted mt-1 text-center';
+                        priceEl.textContent = 'Starting at $' + p;
+                        col.appendChild(priceEl);
+                    }
+                } catch (e) {}
+                container.appendChild(col);
+            });
+        }
+
+        function selectNonKidsServiceCal(serviceName) {
+            // Persist any typed draft details before redirecting
+            saveBookingDraftCal();
+
+            // Redirect to home and open the main booking modal with this service preselected
+            const homeUrl = @json(route('home'));
+            try {
+                const u = new URL(homeUrl, window.location.origin);
+                u.searchParams.set('openBooking', '1');
+                u.searchParams.set('service', serviceName);
+                window.location.href = u.toString();
+            } catch (e) {
+                // Fallback: simple redirect
+                window.location.href = '/?openBooking=1&service=' + encodeURIComponent(serviceName);
+            }
+        }
 
         // Helper: format a Date as local YYYY-MM-DD (avoids timezone shifts from toISOString())
         function formatYMD(d){
@@ -481,8 +859,38 @@
 
         // Initialize calendar
         document.addEventListener('DOMContentLoaded', function() {
+            // If user refreshed/reloaded the page, clear the draft (per request)
+            try {
+                const navEntry = (performance && performance.getEntriesByType) ? performance.getEntriesByType('navigation')[0] : null;
+                const navType = navEntry ? navEntry.type : ((performance && performance.navigation) ? performance.navigation.type : null);
+                const isReload = (navType === 'reload') || (navType === 1);
+                if (isReload) {
+                    clearBookingDraftCal();
+                }
+            } catch (e) { /* noop */ }
+
+            // Save typed fields as the user types (so switching flows doesn't lose data)
+            try {
+                const form = document.getElementById('bookingForm');
+                if (form) {
+                    ['name','phone','email','notes'].forEach(id => {
+                        const el = document.getElementById(id);
+                        if (el) el.addEventListener('input', saveBookingDraftCal);
+                    });
+                    // Clear draft once the calendar page booking form is submitted
+                    form.addEventListener('submit', function () { clearBookingDraftCal(); });
+                }
+            } catch (e) {}
+
             renderCalendar();
             loadCalendarData();
+
+            // Initialize service display if a value already exists
+            try {
+                const select = document.getElementById('service');
+                const display = document.getElementById('serviceDisplay');
+                if (select && display && select.value) display.value = select.value;
+            } catch (e) {}
         });
 
         function renderCalendar() {
@@ -571,6 +979,9 @@
 
             // Show time slots
             loadTimeSlots(date);
+
+            // Save partial draft (date chosen)
+            saveBookingDraftCal();
         }
 
         function loadTimeSlots(date) {
@@ -641,6 +1052,9 @@
             event.target.classList.add('selected');
 
             showBookingForm();
+
+            // Save draft (date + time chosen)
+            saveBookingDraftCal();
         }
 
         function showBookingForm() {
@@ -661,6 +1075,14 @@
         // Handle form submission
         document.getElementById('bookingForm').addEventListener('submit', function(e) {
             e.preventDefault();
+
+            // Ensure a service is selected via the guided flow
+            const svc = document.getElementById('service');
+            if (!svc || !svc.value) {
+                alert('Please select a service to continue.');
+                openServiceForWhoModalCal();
+                return;
+            }
 
             const formData = new FormData(this);
             formData.append('appointment_date', formatYMD(selectedDate));

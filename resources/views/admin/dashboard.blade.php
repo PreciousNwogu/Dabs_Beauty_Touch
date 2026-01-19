@@ -628,6 +628,52 @@
             background: linear-gradient(135deg, #c82333 0%, #a71e2a 100%) !important;
             box-shadow: 0 3px 6px rgba(220, 53, 69, 0.4);
         }
+
+        /* Booking details modal (View Details) */
+        .bd-card {
+            border: 1px solid rgba(0,0,0,0.08);
+            border-radius: 12px;
+            overflow: hidden;
+            background: #fff;
+        }
+        .bd-card-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 700;
+            padding: 12px 16px;
+        }
+        .bd-card-header.bd-customer { background: #0d6efd; color: #fff; }
+        .bd-card-header.bd-sample { background: #6c757d; color: #fff; }
+        .bd-card-header.bd-appointment { background: #198754; color: #fff; }
+
+        .bd-panel {
+            padding: 14px 16px;
+            border-radius: 12px;
+            background: #ffffff;
+        }
+        .bd-row {
+            display: grid;
+            grid-template-columns: 160px 1fr;
+            gap: 16px;
+            padding: 10px 0;
+        }
+        .bd-row + .bd-row { border-top: 1px solid rgba(0,0,0,0.06); }
+        .bd-label { font-weight: 700; color: #212529; }
+        .bd-value { color: #212529; word-break: break-word; }
+
+        .bd-sample-placeholder {
+            border: 1px solid rgba(0,0,0,0.08);
+            border-radius: 12px;
+            padding: 26px 14px;
+            background: #fff;
+        }
+        .bd-sample-img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 12px;
+            box-shadow: 0 6px 18px rgba(0,0,0,0.10);
+        }
     </style>
 </head>
 <body>
@@ -776,7 +822,7 @@
                                                 • Block lunch (12:00 - 13:00) → Morning & afternoon open
                                             </small>
                                             <br><small class="text-muted mt-1 d-block">
-                                                📋 <strong>Available Time Slots:</strong> 9 AM, 10 AM, 11 AM, 1 PM, 2 PM, 3 PM, 4 PM, 5 PM, 6 PM (12 PM lunch excluded)
+                                                📋 <strong>Available Time Slots:</strong> 9 AM, 10 AM, 11 AM, 12 PM, 1 PM, 2 PM, 3 PM, 4 PM, 5 PM, 6 PM
                                             </small>
                                         </div>
                                     </div>
@@ -938,7 +984,7 @@
                         <option value="Medium Knotless Braids">Medium Knotless Braids</option>
                         <option value="Jumbo Knotless Braids">Jumbo Knotless Braids</option>
                         <option value="Kids Braids">Kids Braids</option>
-                        <option value="8 Rows Stitch Braids">8 Rows Stitch Braids</option>
+                        <option value="8–10 Rows Stitch Braids">8–10 Rows Stitch Braids</option>
                         <option value="Hair Mask/Relaxing">Hair Mask/Relaxing</option>
                         <option value="Smedium Boho Braids">Smedium Boho Braids</option>
                     </select>
@@ -1256,13 +1302,19 @@
                     <!-- Content will be populated by JavaScript -->
                 </div>
             </div>
+        </div>
+    </div>
 
-            <!-- Recent Custom Service Requests -->
-            <div class="p-4">
-                <h5>Recent Custom Service Requests</h5>
+    <!-- Recent Custom Service Requests -->
+    <div class="container mb-5">
+        <div class="card shadow-sm" style="border-radius: 16px; overflow: hidden;">
+            <div class="card-header" style="background: linear-gradient(135deg, #0d6efd 0%, #05137c 100%); color: white;">
+                <h5 class="mb-0">Recent Custom Service Requests</h5>
+            </div>
+            <div class="card-body p-0">
                 @if(isset($customRequests) && $customRequests->count())
                     <div class="table-responsive">
-                        <table class="table table-striped">
+                        <table class="table table-striped mb-0">
                             <thead>
                                 <tr>
                                     <th>ID</th>
@@ -1292,7 +1344,9 @@
                         </table>
                     </div>
                 @else
-                    <p class="text-muted">No custom service requests yet.</p>
+                    <div class="p-4">
+                        <p class="text-muted mb-0">No custom service requests yet.</p>
+                    </div>
                 @endif
             </div>
         </div>
@@ -1791,114 +1845,168 @@
         }
 
         function showBookingDetails(booking) {
-            const detailsHtml = `
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="card mb-3">
-                            <div class="card-header bg-primary text-white">
-                                <h6 class="mb-0"><i class="bi bi-person me-2"></i>Customer Information</h6>
-                            </div>
-                            <div class="card-body">
-                                <table class="table table-borderless mb-0">
-                                    <tr><td><strong>Name:</strong></td><td>${booking.name}</td></tr>
-                                    <tr><td><strong>Phone:</strong></td><td>${booking.phone}</td></tr>
-                                    <tr><td><strong>Email:</strong></td><td>${booking.email || 'Not provided'}</td></tr>
-                                    <tr><td><strong>Address:</strong></td><td>${booking.address || 'Not provided'}</td></tr>
-                                </table>
-                            </div>
-                        </div>
+            const safe = (v, fallback = 'Not provided') => {
+                if (v === null || typeof v === 'undefined') return fallback;
+                const s = String(v).trim();
+                return s.length ? s : fallback;
+            };
 
-                        <div class="card mb-3">
-                            <div class="card-header bg-success text-white">
-                                <h6 class="mb-0"><i class="bi bi-calendar me-2"></i>Appointment Information</h6>
+            const bookingId = booking.booking_id || booking.id;
+            const apptDate = booking.appointment_date
+                ? new Date(String(booking.appointment_date).slice(0, 10) + 'T00:00:00').toLocaleDateString()
+                : 'N/A';
+            const finalPrice = (booking.final_price !== null && typeof booking.final_price !== 'undefined' && String(booking.final_price).length)
+                ? ('$' + parseFloat(booking.final_price).toFixed(2))
+                : 'N/A';
+            const sampleUrl = booking.sample_picture
+                ? (String(booking.sample_picture).startsWith('http') ? booking.sample_picture : '/storage/' + booking.sample_picture)
+                : null;
+
+            const detailsHtml = `
+                <div class="row g-3">
+                    <div class="col-lg-6">
+                        <div class="bd-card">
+                            <div class="bd-card-header bd-customer">
+                                <i class="bi bi-person"></i>
+                                <span>Customer Information</span>
                             </div>
-                            <div class="card-body">
-                                <table class="table table-borderless mb-0">
-                                    <tr><td><strong>Booking ID:</strong></td><td>${booking.booking_id || booking.id}</td></tr>
-                                    <tr><td><strong>Confirmation Code:</strong></td><td>${booking.confirmation_code || 'N/A'}</td></tr>
-                                    <tr><td><strong>Service:</strong></td><td>${booking.service}</td></tr>
-                                    <tr><td><strong>Length:</strong></td><td>${booking.length || 'Not specified'}</td></tr>
-                                    <tr><td><strong>Final Price:</strong></td><td>${typeof booking.final_price !== 'undefined' ? ('$' + parseFloat(booking.final_price).toFixed(2)) : 'N/A'}</td></tr>
-                                    <tr><td><strong>Date:</strong></td><td>${new Date(booking.appointment_date).toLocaleDateString()}</td></tr>
-                                    <tr><td><strong>Time:</strong></td><td>${booking.appointment_time}</td></tr>
-                                    <tr><td><strong>Status:</strong></td><td><span class="status-badge status-${booking.status}">${booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}</span></td></tr>
-                                </table>
+                            <div class="bd-panel">
+                                <div class="bd-row">
+                                    <div class="bd-label">Name:</div>
+                                    <div class="bd-value">${safe(booking.name, '—')}</div>
+                                </div>
+                                <div class="bd-row">
+                                    <div class="bd-label">Phone:</div>
+                                    <div class="bd-value">${safe(booking.phone, '—')}</div>
+                                </div>
+                                <div class="bd-row">
+                                    <div class="bd-label">Email:</div>
+                                    <div class="bd-value">${safe(booking.email, 'Not provided')}</div>
+                                </div>
+                                <div class="bd-row">
+                                    <div class="bd-label">Address:</div>
+                                    <div class="bd-value">${safe(booking.address, 'Not provided')}</div>
+                                </div>
                             </div>
                         </div>
                     </div>
 
-                    <div class="col-md-6">
-                        ${booking.sample_picture ? `
-                            <div class="card mb-3">
-                                <div class="card-header bg-info text-white">
-                                    <h6 class="mb-0"><i class="bi bi-image me-2"></i>Sample Image</h6>
-                                </div>
-                                <div class="card-body text-center">
-                                    <img src="${booking.sample_picture.startsWith('http') ? booking.sample_picture : '/storage/' + booking.sample_picture}"
-                                         alt="Sample Image"
-                                         style="max-width: 100%; height: auto; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);"
-                                         onclick="viewImageModal('${booking.sample_picture.startsWith('http') ? booking.sample_picture : '/storage/' + booking.sample_picture}', '${booking.name}')"
-                                         class="cursor-pointer">
-                                    <div class="mt-2">
-                                        <a href="${booking.sample_picture.startsWith('http') ? booking.sample_picture : '/storage/' + booking.sample_picture}" download class="btn btn-sm btn-outline-primary">
+                    <div class="col-lg-6">
+                        <div class="bd-card">
+                            <div class="bd-card-header bd-sample">
+                                <i class="bi bi-image"></i>
+                                <span>Sample Image</span>
+                            </div>
+                            <div class="bd-panel text-center">
+                                ${sampleUrl ? `
+                                    <img
+                                        src="${sampleUrl}"
+                                        alt="Sample Image"
+                                        class="bd-sample-img cursor-pointer"
+                                        onclick="viewImageModal('${sampleUrl}', '${safe(booking.name, 'Customer')}')"
+                                    >
+                                    <div class="mt-3">
+                                        <a href="${sampleUrl}" download class="btn btn-sm btn-outline-primary">
                                             <i class="bi bi-download me-1"></i>Download
                                         </a>
                                     </div>
-                                </div>
+                                ` : `
+                                    <div class="bd-sample-placeholder text-muted">
+                                        <i class="bi bi-image" style="font-size: 3rem;"></i>
+                                        <div class="mt-2">No sample image uploaded</div>
+                                    </div>
+                                `}
                             </div>
-                        ` : `
-                            <div class="card mb-3">
-                                <div class="card-header bg-secondary text-white">
-                                    <h6 class="mb-0"><i class="bi bi-image me-2"></i>Sample Image</h6>
-                                </div>
-                                <div class="card-body text-center text-muted">
-                                    <i class="bi bi-image" style="font-size: 3rem;"></i>
-                                    <p>No sample image uploaded</p>
-                                </div>
-                            </div>
-                        `}
+                        </div>
+                    </div>
 
-                        ${booking.message ? `
-                            <div class="card mb-3">
-                                <div class="card-header bg-warning text-dark">
-                                    <h6 class="mb-0"><i class="bi bi-chat-text me-2"></i>Customer Message</h6>
+                    <div class="col-12">
+                        <div class="bd-card">
+                            <div class="bd-card-header bd-appointment">
+                                <i class="bi bi-calendar"></i>
+                                <span>Appointment Information</span>
+                            </div>
+                            <div class="bd-panel">
+                                <div class="bd-row">
+                                    <div class="bd-label">Booking ID:</div>
+                                    <div class="bd-value">${safe(bookingId, '—')}</div>
                                 </div>
-                                <div class="card-body">
-                                    <p class="mb-0">"${booking.message}"</p>
+                                <div class="bd-row">
+                                    <div class="bd-label">Confirmation Code:</div>
+                                    <div class="bd-value">${safe(booking.confirmation_code, 'N/A')}</div>
+                                </div>
+                                <div class="bd-row">
+                                    <div class="bd-label">Service:</div>
+                                    <div class="bd-value">${safe(booking.service, '—')}</div>
+                                </div>
+                                <div class="bd-row">
+                                    <div class="bd-label">Length:</div>
+                                    <div class="bd-value">${safe(booking.length, 'Not specified')}</div>
+                                </div>
+                                <div class="bd-row">
+                                    <div class="bd-label">Final Price:</div>
+                                    <div class="bd-value">${finalPrice}</div>
+                                </div>
+                                <div class="bd-row">
+                                    <div class="bd-label">Date:</div>
+                                    <div class="bd-value">${apptDate}</div>
+                                </div>
+                                <div class="bd-row">
+                                    <div class="bd-label">Time:</div>
+                                    <div class="bd-value">${safe(booking.appointment_time, '—')}</div>
+                                </div>
+                                <div class="bd-row">
+                                    <div class="bd-label">Status:</div>
+                                    <div class="bd-value">
+                                        <span class="status-badge status-${safe(booking.status, 'pending').toLowerCase()}">
+                                            ${safe(booking.status, 'pending').charAt(0).toUpperCase() + safe(booking.status, 'pending').slice(1)}
+                                        </span>
+                                    </div>
                                 </div>
                             </div>
-                        ` : ''}
+                        </div>
+                    </div>
 
-                        ${booking.status === 'completed' && booking.completed_at ? `
-                            <div class="card border-success">
-                                <div class="card-header bg-success text-white">
-                                    <h6 class="mb-0"><i class="bi bi-check-circle me-2"></i>Service Completion Details</h6>
+                    ${booking.message ? `
+                        <div class="col-12">
+                            <div class="bd-card">
+                                <div class="bd-card-header" style="background:#ffc107;color:#212529;">
+                                    <i class="bi bi-chat-text"></i>
+                                    <span>Customer Message</span>
                                 </div>
-                                <div class="card-body">
-                                    <div class="row">
-                                        <div class="col-12 mb-2">
-                                            <strong>Completed By:</strong><br>
-                                            ${booking.completed_by || 'N/A'}
-                                        </div>
-                                        <div class="col-6">
-                                            <strong>Duration:</strong><br>
-                                            ${booking.service_duration_minutes ? booking.service_duration_minutes + ' minutes' : 'N/A'}
-                                        </div>
-                                        <div class="col-6">
-                                            <strong>Final Price:</strong><br>
-                                            ${booking.final_price ? '$' + parseFloat(booking.final_price).toFixed(2) : 'N/A'}
-                                        </div>
+                                <div class="bd-panel">
+                                    <div class="text-muted">${safe(booking.message, '')}</div>
+                                </div>
+                            </div>
+                        </div>
+                    ` : ''}
+
+                    ${booking.status === 'completed' && booking.completed_at ? `
+                        <div class="col-12">
+                            <div class="bd-card">
+                                <div class="bd-card-header bd-appointment">
+                                    <i class="bi bi-check-circle"></i>
+                                    <span>Service Completion Details</span>
+                                </div>
+                                <div class="bd-panel">
+                                    <div class="bd-row">
+                                        <div class="bd-label">Completed By:</div>
+                                        <div class="bd-value">${safe(booking.completed_by, 'N/A')}</div>
+                                    </div>
+                                    <div class="bd-row">
+                                        <div class="bd-label">Duration:</div>
+                                        <div class="bd-value">${booking.service_duration_minutes ? (booking.service_duration_minutes + ' minutes') : 'N/A'}</div>
                                     </div>
                                     ${booking.completion_notes ? `
-                                        <div class="mt-3">
-                                            <strong>Completion Notes:</strong><br>
-                                            <em>"${booking.completion_notes}"</em>
+                                        <div class="bd-row">
+                                            <div class="bd-label">Notes:</div>
+                                            <div class="bd-value">${safe(booking.completion_notes, '')}</div>
                                         </div>
                                     ` : ''}
                                 </div>
                             </div>
-                        ` : ''}
-                    </div>
+                        </div>
+                    ` : ''}
                 </div>
             `;
 
@@ -2060,32 +2168,105 @@
         }
 
         // Quick status update function used by inline buttons
-        function updateStatusQuick(bookingId, newStatus) {
+        // Make sure it's globally accessible
+        window.updateStatusQuick = function(bookingId, newStatus) {
             console.log('updateStatusQuick called with:', bookingId, newStatus);
+            
+            // Validate inputs
+            if (!bookingId || !newStatus) {
+                console.error('Invalid parameters:', { bookingId, newStatus });
+                alert('Error: Missing booking ID or status');
+                return;
+            }
 
             const confirmMessage = `Are you sure you want to mark booking #${bookingId} as ${newStatus}?`;
             if (!confirm(confirmMessage)) {
                 return;
             }
 
-            const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+            const csrfToken = document.querySelector('meta[name="csrf-token"]');
+            if (!csrfToken) {
+                alert('❌ CSRF token not found. Please refresh the page and try again.');
+                return;
+            }
+            const csrfTokenValue = csrfToken.getAttribute('content');
 
             // If cancelling via quick action, ask who cancelled (optional) so notification can include it
             let cancelledBy = null;
             if (newStatus === 'cancelled') {
                 cancelledBy = prompt('Enter name to record as who cancelled (leave blank for Admin):', 'Admin');
+                // If user cancels the prompt, abort the operation
+                if (cancelledBy === null) {
+                    return;
+                }
             }
 
-            fetch('{{ route("admin.bookings.update-status") }}', {
+            // Build the URL - use absolute URL to ensure it works on hosted sites.
+            // NOTE: Avoid literal "{{" in this JS (Blade will try to compile it and can throw a ParseError).
+            let updateStatusUrl = @json(route('admin.bookings.update-status'));
+
+            // Fallback: if route helper didn't work (empty or contains Blade syntax), construct manually
+            const bladeEchoToken = '{' + '{';
+            if (!updateStatusUrl || updateStatusUrl.includes(bladeEchoToken) || updateStatusUrl.includes('route(' + "'")) {
+                updateStatusUrl = '/admin/bookings/update-status';
+            }
+            
+            let fullUpdateUrl = updateStatusUrl;
+            if (updateStatusUrl.startsWith('/')) {
+                // Relative URL - make it absolute using current origin
+                // Force HTTPS to prevent mixed content errors
+                const protocol = window.location.protocol === 'https:' ? 'https:' : 'https:';
+                const host = window.location.host;
+                fullUpdateUrl = protocol + '//' + host + updateStatusUrl;
+            } else if (updateStatusUrl.startsWith('http://')) {
+                // If URL is HTTP, convert to HTTPS to prevent mixed content errors
+                fullUpdateUrl = updateStatusUrl.replace('http://', 'https://');
+            }
+
+            console.log('Updating booking status:', {
+                bookingId,
+                newStatus,
+                url: fullUpdateUrl,
+                hasCsrf: !!csrfTokenValue,
+                cancelledBy: cancelledBy
+            });
+
+            // Show loading indicator - store button reference and original text for error handling
+            let button = null;
+            let originalText = null;
+            try {
+                // Try to find the button that was clicked
+                button = event?.target || document.querySelector(`button[onclick*="updateStatusQuick(${bookingId}"]`);
+                if (button) {
+                    originalText = button.innerHTML;
+                    button.disabled = true;
+                    button.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Updating...';
+                    
+                    // Re-enable button after 10 seconds as fallback
+                    setTimeout(() => {
+                        if (button && button.disabled) {
+                            button.disabled = false;
+                            button.innerHTML = originalText || 'Retry';
+                        }
+                    }, 10000);
+                }
+            } catch (e) {
+                console.warn('Could not find button for loading indicator:', e);
+            }
+
+            fetch(fullUpdateUrl, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': csrfToken
+                    'X-CSRF-TOKEN': csrfTokenValue,
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
                 },
+                credentials: 'same-origin', // Include cookies for CSRF
                 body: JSON.stringify({
                     booking_id: bookingId,
                     status: newStatus,
-                    cancelled_by: cancelledBy
+                    cancelled_by: cancelledBy || null
                 })
             })
             .then(response => {
@@ -2105,22 +2286,73 @@
                 return response.json();
             })
             .then(data => {
+                console.log('Status update response:', data);
                 if (data.success) {
-                    window.location.reload();
+                    // Show success message briefly before reload
+                    const successMsg = document.createElement('div');
+                    successMsg.className = 'alert alert-success alert-dismissible fade show position-fixed top-0 start-50 translate-middle-x mt-3';
+                    successMsg.style.zIndex = '9999';
+                    successMsg.innerHTML = `
+                        <i class="bi bi-check-circle-fill me-2"></i>
+                        <strong>Success!</strong> Booking status updated to ${newStatus}.
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    `;
+                    document.body.appendChild(successMsg);
+                    
+                    // Reload after short delay
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1000);
                 } else {
                     alert('Error updating booking status: ' + (data.message || 'Unknown error'));
+                    // Re-enable button
+                    if (button) {
+                        button.disabled = false;
+                        button.innerHTML = originalText || button.innerHTML.replace('<span class="spinner-border spinner-border-sm me-1"></span>Updating...', '');
+                    }
                 }
             })
             .catch(error => {
-                if (error && error.body) {
+                console.error('Error updating booking status:', error);
+                console.error('Error details:', {
+                    message: error.message,
+                    name: error.name,
+                    stack: error.stack,
+                    url: fullUpdateUrl,
+                    bookingId: bookingId,
+                    status: newStatus
+                });
+
+                let userMessage = 'Error updating booking status. ';
+                
+                if (error.message === 'Failed to fetch') {
+                    userMessage += 'Unable to reach the server.\n\n';
+                    userMessage += 'Please check:\n';
+                    userMessage += '1. Your internet connection\n';
+                    userMessage += '2. The server is running\n';
+                    userMessage += '3. Try refreshing the page\n\n';
+                    userMessage += 'URL attempted: ' + fullUpdateUrl;
+                } else if (error && error.body) {
                     console.error('Full server response for quick booking update:', error.body);
+                    // Try to extract meaningful error message from HTML response
+                    if (error.body.includes('CSRF token mismatch') || error.body.includes('419')) {
+                        userMessage = 'Session expired. Please refresh the page and try again.';
+                    } else {
+                        userMessage += (error.message || 'Please try again.');
+                    }
                 } else {
-                    console.error('Error:', error);
+                    userMessage += (error.message || 'Please try again.');
                 }
-                const userMessage = (error && error.message) ? error.message : 'Error updating booking status. Please try again.';
-                alert(userMessage);
+                
+                alert('❌ ' + userMessage);
+                
+                // Re-enable button on error
+                if (button) {
+                    button.disabled = false;
+                    button.innerHTML = originalText || button.innerHTML.replace('<span class="spinner-border spinner-border-sm me-1"></span>Updating...', '');
+                }
             });
-        }
+        };
         
         // Complete Services Modal functionality
         const openCompleteServicesModalBtn = document.getElementById('openCompleteServicesModal');
@@ -2321,7 +2553,7 @@
                 submitCompleteServiceBtn.disabled = true;
                 submitCompleteServiceBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Completing...';
 
-                fetch('{{ route("admin.bookings.update-status") }}', {
+                fetch('/admin/bookings/update-status', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
