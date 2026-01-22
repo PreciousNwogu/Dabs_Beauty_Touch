@@ -49,7 +49,7 @@ class PriceCalculator
         $length = Arr::get($data, 'kb_length') ?? Arr::get($data, 'length') ?? 'mid_back';
         if (is_string($length)) $length = str_replace('-', '_', $length);
 
-        // Stitch rows option (tiny stitch >10 rows => +$20)
+        // Stitch rows option (tiny stitch >10 rows => +$30)
         $stitchRowsOption = Arr::get($data, 'stitch_rows_option');
         $stitchRowsOptionNorm = null;
         if ($stitchRowsOption !== null) {
@@ -132,7 +132,7 @@ class PriceCalculator
             ];
             
             $lengthAdjustment = $lengthAdjustmentMap[$length] ?? 0.00;
-            $stitchAddon = ($isStitch && $stitchRowsOptionNorm === 'more_than_ten') ? 20.00 : 0.00;
+            $stitchAddon = ($isStitch && $stitchRowsOptionNorm === 'more_than_ten') ? 30.00 : 0.00;
             $addonsTotal = $stitchAddon;
             $finalPrice = round($basePrice + $lengthAdjustment + $stitchAddon, 2);
         }

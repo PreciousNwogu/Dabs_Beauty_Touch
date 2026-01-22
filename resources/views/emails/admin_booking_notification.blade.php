@@ -155,14 +155,14 @@
           }
         }
 
-        // Stitch braids tiny rows (>10) add-on (+$20)
+        // Stitch braids tiny rows (>10) add-on (+$30)
         $stitchAddon = 0.00;
         $hasStitchAddon = false;
         $svcLower = strtolower((string)($booking->service ?? ''));
         $isStitchSvc = str_contains($svcLower, 'stitch');
         $stitchChoice = $booking->stitch_rows_option ?? null;
         if ($isStitchSvc && $stitchChoice === 'more_than_ten') {
-          $stitchAddon = 20.00;
+          $stitchAddon = 30.00;
           $hasStitchAddon = true;
         }
 
@@ -179,7 +179,7 @@
             <td style="font-weight:700;">Stitch rows</td>
             <td>
               @if($stitchChoice === 'more_than_ten')
-                More than 10 rows (tiny) +$20
+                More than 10 rows (tiny) +$30
               @elseif($stitchChoice === 'ten_or_less')
                 8–10 rows (base price)
               @else
