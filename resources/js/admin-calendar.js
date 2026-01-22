@@ -40,6 +40,9 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     
     let csrf = getCsrfToken();
+    // When set, the "Block Dates" modal acts as an edit form instead of create.
+    // This stores the original Schedule model id (not the expanded per-day event id).
+    window._editingBlockId = null;
 
     const calendar = new Calendar(calendarEl, {
         plugins: [dayGridPlugin, timeGridPlugin, interactionPlugin],
@@ -161,18 +164,25 @@ document.addEventListener('DOMContentLoaded', () => {
         openBlockBtn.addEventListener('click', () => {
             const modalEl = document.getElementById('blockModal');
             if (modalEl) {
+                // Reset edit mode
+                window._editingBlockId = null;
+
                 // Reset form
                 const blockTitle = document.getElementById('blockTitle');
                 const blockStart = document.getElementById('blockStart');
                 const blockEnd = document.getElementById('blockEnd');
                 const blockAllDay = document.getElementById('blockAllDay');
                 const blockPreview = document.getElementById('blockPreview');
+                const editingNotice = document.getElementById('editingBlockNotice');
+                const submitBtn = document.getElementById('submitBlock');
                 
                 if (blockTitle) blockTitle.value = '';
                 if (blockStart) blockStart.value = '';
                 if (blockEnd) blockEnd.value = '';
                 if (blockAllDay) blockAllDay.checked = true;
                 if (blockPreview) blockPreview.style.display = 'none';
+                if (editingNotice) editingNotice.style.display = 'none';
+                if (submitBtn) submitBtn.innerHTML = '<i class="bi bi-slash-circle me-2"></i>Create Block';
                 
                 // Initialize mode
                 updateBlockMode();
@@ -183,6 +193,111 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
+
+    const pad2 = (n) => String(n).padStart(2, '0');
+
+    // Format an ISO string as a datetime-local value using UTC components
+    // (we treat the admin inputs as "UTC clock time" to match the existing create logic).
+    const isoToDateTimeLocalUTC = (iso) => {
+        const d = new Date(iso);
+        return `${d.getUTCFullYear()}-${pad2(d.getUTCMonth() + 1)}-${pad2(d.getUTCDate())}T${pad2(d.getUTCHours())}:${pad2(d.getUTCMinutes())}`;
+    };
+
+    const isoToDateTimeLocalUTCOnDate = (dateObjUTC, hh = 0, mm = 0) => {
+        const yyyy = dateObjUTC.getUTCFullYear();
+        const mo = pad2(dateObjUTC.getUTCMonth() + 1);
+        const dd = pad2(dateObjUTC.getUTCDate());
+        return `${yyyy}-${mo}-${dd}T${pad2(hh)}:${pad2(mm)}`;
+    };
+
+    const looksAllDayUTC = (startIso, endIso) => {
+        try {
+            const s = new Date(startIso);
+            const e = new Date(endIso);
+            return (
+                s.getUTCHours() === 0 && s.getUTCMinutes() === 0 &&
+                e.getUTCHours() === 0 && e.getUTCMinutes() === 0
+            );
+        } catch (e) {
+            return false;
+        }
+    };
+
+    const extractOrigScheduleId = (rawId, extendedProps) => {
+        if (extendedProps && (extendedProps.orig_slot_id || extendedProps.orig_slot_id === 0)) {
+            return String(extendedProps.orig_slot_id);
+        }
+        const idStr = String(rawId || '');
+        if (idStr.startsWith('slot-')) {
+            const parts = idStr.split('-');
+            if (parts.length >= 2 && parts[1]) return String(parts[1]);
+        }
+        return null;
+    };
+
+    const getOrigRange = (slotObj) => {
+        const ext = slotObj && slotObj.extendedProps ? slotObj.extendedProps : {};
+        const startIso = (ext && ext.orig_start) ? ext.orig_start : slotObj.start;
+        const endIso = (ext && ext.orig_end) ? ext.orig_end : slotObj.end;
+        return { startIso, endIso };
+    };
+
+    const openEditBlockInModal = (slotObj) => {
+        const modalEl = document.getElementById('blockModal');
+        if (!modalEl) return;
+
+        const { startIso, endIso } = getOrigRange(slotObj);
+        const origId = extractOrigScheduleId(slotObj.id, slotObj.extendedProps);
+        if (!origId || !startIso || !endIso) {
+            alert('❌ Unable to edit this block (missing block id or dates).');
+            return;
+        }
+
+        window._editingBlockId = origId;
+
+        const blockTitle = document.getElementById('blockTitle');
+        const blockStart = document.getElementById('blockStart');
+        const blockEnd = document.getElementById('blockEnd');
+        const blockAllDay = document.getElementById('blockAllDay');
+        const editingNotice = document.getElementById('editingBlockNotice');
+        const submitBtn = document.getElementById('submitBlock');
+        const blockPreview = document.getElementById('blockPreview');
+
+        if (blockPreview) blockPreview.style.display = 'none';
+
+        const isAllDay = looksAllDayUTC(startIso, endIso);
+        if (blockAllDay) blockAllDay.checked = !!isAllDay;
+        updateBlockMode();
+
+        if (blockTitle) blockTitle.value = slotObj.title || 'Blocked';
+
+        try {
+            if (isAllDay) {
+                // Stored end is exclusive (00:00 of next day). Show inclusive end date in the input.
+                const s = new Date(startIso);
+                const e = new Date(endIso);
+                const inclusiveEnd = new Date(e.getTime() - 24 * 60 * 60 * 1000);
+                if (blockStart) blockStart.value = isoToDateTimeLocalUTCOnDate(s, 0, 0);
+                if (blockEnd) blockEnd.value = isoToDateTimeLocalUTCOnDate(inclusiveEnd, 23, 59);
+            } else {
+                if (blockStart) blockStart.value = isoToDateTimeLocalUTC(startIso);
+                if (blockEnd) blockEnd.value = isoToDateTimeLocalUTC(endIso);
+            }
+        } catch (e) {
+            console.error('Failed to prefill edit block fields', e);
+        }
+
+        if (editingNotice) editingNotice.style.display = 'flex';
+        if (submitBtn) submitBtn.innerHTML = '<i class="bi bi-pencil-square me-2"></i>Update Block';
+
+        // Hide manage modal (if open) then show block modal
+        try { window._manageBlocksModalInstance?.hide(); } catch (e) {}
+        window._blockModalInstance = new bootstrap.Modal(modalEl);
+        window._blockModalInstance.show();
+
+        // Update preview once opened
+        try { updateBlockPreview(); } catch (e) {}
+    };
 
     // Update preview when inputs change
     const updateBlockPreview = () => {
@@ -525,29 +640,40 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Disable button during submission
             submitBlockBtn.disabled = true;
-            submitBlockBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Creating...';
+            const isEditing = !!window._editingBlockId;
+            submitBlockBtn.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span>${isEditing ? 'Updating...' : 'Creating...'}`;
 
-            // Ensure storeUrl is absolute if it's relative (declare outside try for catch block access)
-            let fullStoreUrl = storeUrl;
-            if (storeUrl.startsWith('/')) {
-                // Relative URL - make it absolute using current origin
-                // Force HTTPS to prevent mixed content errors
-                const protocol = window.location.protocol === 'https:' ? 'https:' : 'https:';
-                const host = window.location.host;
-                fullStoreUrl = protocol + '//' + host + storeUrl;
-            } else if (storeUrl.startsWith('http://')) {
-                // If URL is HTTP, convert to HTTPS to prevent mixed content errors
-                fullStoreUrl = storeUrl.replace('http://', 'https://');
-            }
+            // Build request URL (create vs update)
+            // Use the current page origin/protocol. Only upgrade http -> https when the page itself is https
+            // to avoid mixed-content errors in production while keeping localhost/dev working.
+            const normalizeUrl = (url) => {
+                try {
+                    const absolute = new URL(url, window.location.origin);
+                    if (window.location.protocol === 'https:' && absolute.protocol === 'http:') {
+                        absolute.protocol = 'https:';
+                    }
+                    return absolute.toString();
+                } catch (e) {
+                    // Fallback: best-effort, keep as-is
+                    return url;
+                }
+            };
+            const fullStoreUrl = normalizeUrl(storeUrl);
+            const updatePath = window._editingBlockId ? (`/admin/schedules/${window._editingBlockId}`) : null;
+            const fullUpdateUrl = updatePath ? normalizeUrl(updatePath) : null;
+            const requestUrl = isEditing ? fullUpdateUrl : fullStoreUrl;
+            const requestMethod = isEditing ? 'PUT' : 'POST';
 
             try {
-                console.log('Creating blocked range:', { 
-                    title, 
+                console.log(isEditing ? 'Updating blocked range:' : 'Creating blocked range:', {
+                    editingId: window._editingBlockId || null,
+                    title,
                     allDay,
                     input: { start: startInput, end: endInput },
                     parsed: { start: start.toISOString(), end: end.toISOString() },
-                    storeUrl: fullStoreUrl, 
-                    csrf: csrf ? 'present' : 'missing' 
+                    url: requestUrl,
+                    method: requestMethod,
+                    csrf: csrf ? 'present' : 'missing'
                 });
                 
                 // Get fresh CSRF token
@@ -555,12 +681,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (!csrf) {
                     alert('❌ CSRF token not found. Please refresh the page and try again.');
                     submitBlockBtn.disabled = false;
-                    submitBlockBtn.innerHTML = '<i class="bi bi-x-lg me-1"></i>Create Block';
+                    submitBlockBtn.innerHTML = isEditing ? '<i class="bi bi-pencil-square me-2"></i>Update Block' : '<i class="bi bi-slash-circle me-2"></i>Create Block';
                     return;
                 }
                 
-                const res = await fetch(fullStoreUrl, {
-                    method: 'POST',
+                const res = await fetch(requestUrl, {
+                    method: requestMethod,
                     headers: { 
                         'Content-Type': 'application/json', 
                         'X-CSRF-TOKEN': csrf,
@@ -585,8 +711,8 @@ document.addEventListener('DOMContentLoaded', () => {
                             csrf = newToken;
                             console.log('CSRF token refreshed, retrying request...');
                             // Retry the request with the new token
-                            const retryRes = await fetch(fullStoreUrl, {
-                                method: 'POST',
+                            const retryRes = await fetch(requestUrl, {
+                                method: requestMethod,
                                 headers: { 
                                     'Content-Type': 'application/json', 
                                     'X-CSRF-TOKEN': csrf,
@@ -614,13 +740,14 @@ document.addEventListener('DOMContentLoaded', () => {
                                 try { window._blockModalInstance?.hide(); } catch (e) {}
                                 calendar.refetchEvents();
                                 try { calendar.gotoDate(start); } catch (e) {}
+                                window._editingBlockId = null;
                                 
                                 const alertDiv = document.createElement('div');
                                 alertDiv.className = 'alert alert-success alert-dismissible fade show position-fixed top-0 start-50 translate-middle-x mt-3';
                                 alertDiv.style.zIndex = '9999';
                                 alertDiv.innerHTML = `
                                     <i class="bi bi-check-circle-fill me-2"></i>
-                                    <strong>Success!</strong> Blocked range "${title}" has been created.
+                                    <strong>Success!</strong> Blocked range "${title}" has been ${isEditing ? 'updated' : 'created'}.
                                     <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                                 `;
                                 document.body.appendChild(alertDiv);
@@ -660,6 +787,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     // refresh calendar and jump to the start of the block to make it visible
                     calendar.refetchEvents();
                     try { calendar.gotoDate(start); } catch (e) {}
+                    window._editingBlockId = null;
                     
                     // Show success message
                     const alertDiv = document.createElement('div');
@@ -667,7 +795,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     alertDiv.style.zIndex = '9999';
                     alertDiv.innerHTML = `
                         <i class="bi bi-check-circle-fill me-2"></i>
-                        <strong>Success!</strong> Blocked range "${title}" has been created.
+                        <strong>Success!</strong> Blocked range "${title}" has been ${isEditing ? 'updated' : 'created'}.
                         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                     `;
                     document.body.appendChild(alertDiv);
@@ -679,7 +807,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         errorMessage += '\n\nConflicts with existing bookings:\n' + 
                             data.conflicts.map(c => `- ${c.name} on ${c.date} at ${c.time}`).join('\n');
                     }
-                    alert('❌ Failed to create block: ' + errorMessage);
+                    alert(`❌ Failed to ${isEditing ? 'update' : 'create'} block: ` + errorMessage);
                 }
             } catch (err) {
                 console.error('Block create error:', err);
@@ -689,10 +817,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     storeUrl,
                     csrf: csrf ? 'present' : 'missing'
                 });
-                alert('❌ Error creating blocked range: ' + (err.message || 'Network or server error. Please check the console for details.'));
+                alert(`❌ Error ${isEditing ? 'updating' : 'creating'} blocked range: ` + (err.message || 'Network or server error. Please check the console for details.'));
             } finally {
                 submitBlockBtn.disabled = false;
-                submitBlockBtn.innerHTML = '<i class="bi bi-slash-circle me-2"></i>Create Block';
+                submitBlockBtn.innerHTML = isEditing ? '<i class="bi bi-pencil-square me-2"></i>Update Block' : '<i class="bi bi-slash-circle me-2"></i>Create Block';
             }
         });
     }
@@ -783,6 +911,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (!modalEl) return;
                 // show modal
                 const modal = new bootstrap.Modal(modalEl);
+                window._manageBlocksModalInstance = modal;
                 modal.show();
 
                 const listEl = document.getElementById('blocksList');
@@ -793,10 +922,22 @@ document.addEventListener('DOMContentLoaded', () => {
                     const items = await resp.json();
                     // filter blocked slots
                     const blocked = items.filter(i => i.extendedProps && i.extendedProps.type === 'blocked');
+                    // Deduplicate expanded all-day blocked events (one entry per original schedule slot)
+                    const byOrigId = {};
+                    blocked.forEach(b => {
+                        const origId = extractOrigScheduleId(b.id, b.extendedProps);
+                        if (!origId) return;
+                        // Prefer an entry that includes orig_start/orig_end if available
+                        const hasOrig = b.extendedProps && b.extendedProps.orig_start && b.extendedProps.orig_end;
+                        if (!byOrigId[origId] || (hasOrig && !(byOrigId[origId].extendedProps && byOrigId[origId].extendedProps.orig_start))) {
+                            byOrigId[origId] = b;
+                        }
+                    });
+                    const uniqueBlocked = Object.keys(byOrigId).map(k => byOrigId[k]);
                     
                     listEl.innerHTML = '';
                     
-                    if (!blocked.length) {
+                    if (!uniqueBlocked.length) {
                         listEl.innerHTML = `
                             <div class="text-center py-5">
                                 <i class="bi bi-calendar-check" style="font-size: 3rem; color: #6c757d; opacity: 0.5;"></i>
@@ -807,10 +948,13 @@ document.addEventListener('DOMContentLoaded', () => {
                         return;
                     }
 
-                    blocked.forEach((slot, index) => {
-                        const startDate = new Date(slot.start);
-                        const endDate = new Date(slot.end);
-                        const daysDiff = Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24));
+                    uniqueBlocked.forEach((slot) => {
+                        const { startIso, endIso } = getOrigRange(slot);
+                        const startDate = new Date(startIso);
+                        const endDate = new Date(endIso);
+                        const isAllDay = looksAllDayUTC(startIso, endIso);
+                        const durationDays = Math.max(1, Math.round((endDate - startDate) / (1000 * 60 * 60 * 24)));
+                        const inclusiveEnd = isAllDay ? new Date(endDate.getTime() - 24 * 60 * 60 * 1000) : endDate;
                         
                         const li = document.createElement('div');
                         li.className = 'list-group-item';
@@ -828,26 +972,34 @@ document.addEventListener('DOMContentLoaded', () => {
                             </div>
                             <div class="text-muted small mb-2">
                                 <i class="bi bi-calendar-event me-1"></i>
-                                <strong>Start:</strong> ${startDate.toLocaleDateString('en-US', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                                <strong>Start:</strong> ${startDate.toLocaleDateString('en-US', isAllDay ? { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' } : { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
                             </div>
                             <div class="text-muted small mb-2">
                                 <i class="bi bi-calendar-x me-1"></i>
-                                <strong>End:</strong> ${endDate.toLocaleDateString('en-US', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                                <strong>End:</strong> ${inclusiveEnd.toLocaleDateString('en-US', isAllDay ? { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' } : { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
                             </div>
                             <div class="badge bg-warning text-dark mt-2">
-                                <i class="bi bi-clock me-1"></i>${daysDiff} ${daysDiff === 1 ? 'day' : 'days'}
+                                <i class="bi bi-clock me-1"></i>${isAllDay ? `${durationDays} ${durationDays === 1 ? 'day' : 'days'} (all day)` : 'Time-specific'}
                             </div>
                         `;
                         
-                        const btn = document.createElement('button');
-                        btn.className = 'btn btn-outline-danger btn-sm';
-                        btn.style.cssText = 'white-space: nowrap; margin-left: 16px;';
-                        btn.innerHTML = '<i class="bi bi-trash me-1"></i>Remove';
-                        btn.addEventListener('click', async () => {
+                        const actions = document.createElement('div');
+                        actions.style.cssText = 'white-space: nowrap; margin-left: 16px; display:flex; flex-direction:column; gap:8px;';
+
+                        const editBtn = document.createElement('button');
+                        editBtn.className = 'btn btn-outline-primary btn-sm';
+                        editBtn.innerHTML = '<i class="bi bi-pencil-square me-1"></i>Edit';
+                        editBtn.addEventListener('click', () => openEditBlockInModal(slot));
+
+                        const removeBtn = document.createElement('button');
+                        removeBtn.className = 'btn btn-outline-danger btn-sm';
+                        removeBtn.innerHTML = '<i class="bi bi-trash me-1"></i>Remove';
+                        removeBtn.addEventListener('click', async () => {
                             if (!confirm(`Are you sure you want to remove the blocked range "${slot.title || 'Blocked'}"?`)) return;
                             
-                            btn.disabled = true;
-                            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Removing...';
+                            removeBtn.disabled = true;
+                            editBtn.disabled = true;
+                            removeBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Removing...';
                             
                             try {
                                 // slot.id might be slot-<origId>-YYYYMMDD; extract the original slot id
@@ -894,19 +1046,23 @@ document.addEventListener('DOMContentLoaded', () => {
                                     }, 300);
                                 } else {
                                     alert('❌ Failed to remove block: ' + (delData.message || 'Unknown error'));
-                                    btn.disabled = false;
-                                    btn.innerHTML = '<i class="bi bi-trash me-1"></i>Remove';
+                                    removeBtn.disabled = false;
+                                    editBtn.disabled = false;
+                                    removeBtn.innerHTML = '<i class="bi bi-trash me-1"></i>Remove';
                                 }
                             } catch (err) {
                                 console.error('Unblock error', err);
                                 alert('❌ Error removing block. Please check the console for details.');
-                                btn.disabled = false;
-                                btn.innerHTML = '<i class="bi bi-trash me-1"></i>Remove';
+                                removeBtn.disabled = false;
+                                editBtn.disabled = false;
+                                removeBtn.innerHTML = '<i class="bi bi-trash me-1"></i>Remove';
                             }
                         });
 
                         card.appendChild(left);
-                        card.appendChild(btn);
+                        actions.appendChild(editBtn);
+                        actions.appendChild(removeBtn);
+                        card.appendChild(actions);
                         li.appendChild(card);
                         listEl.appendChild(li);
                     });
