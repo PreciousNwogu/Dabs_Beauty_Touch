@@ -223,6 +223,7 @@
       @endphp
 
       <a class="cta" href="{{ $publicUrl ?: ($adminUrl ?: '#') }}">View Booking Details</a>
+      <a class="cta" style="background:#030f68;margin-left:8px;" href="{{ $publicUrl ?: ($adminUrl ?: '#') }}">Edit Booking</a>
 
       <div style="margin-top:18px;border-top:1px solid #eef2f6;padding-top:12px;font-size:13px;color:#6c757d;">
         <p style="margin:6px 0 8px 0;font-weight:700;color:#0b3a66;">Stay connected</p>

@@ -1108,6 +1108,14 @@
                                                 <button class="btn btn-outline-info btn-sm mb-1" onclick="viewBookingDetails({{ $booking->id }})" title="View Details">
                                                     <i class="bi bi-eye"></i> View Details
                                                 </button>
+                                                @if($booking->confirmation_code)
+                                                    <a class="btn btn-outline-primary btn-sm mb-1"
+                                                       href="{{ url('/bookings/confirm/' . $booking->id . '/' . $booking->confirmation_code) }}"
+                                                       target="_blank" rel="noopener"
+                                                       title="Edit Booking (public link)">
+                                                        <i class="bi bi-pencil-square"></i> Edit Booking
+                                                    </a>
+                                                @endif
                                                 @if($booking->status === 'pending')
                                                     <button class="btn btn-success btn-sm mb-1" onclick="updateStatusQuick({{ $booking->id }}, 'confirmed')">
                                                         <i class="bi bi-check"></i> Confirm
@@ -1228,6 +1236,14 @@
                                     <button class="btn btn-outline-info btn-sm" onclick="viewBookingDetails({{ $booking->id }})">
                                         <i class="bi bi-eye"></i> View
                                     </button>
+                                    @if($booking->confirmation_code)
+                                        <a class="btn btn-outline-primary btn-sm"
+                                           href="{{ url('/bookings/confirm/' . $booking->id . '/' . $booking->confirmation_code) }}"
+                                           target="_blank" rel="noopener"
+                                           title="Edit Booking (public link)">
+                                            <i class="bi bi-pencil-square"></i> Edit
+                                        </a>
+                                    @endif
                                     @if($booking->status === 'pending')
                                         <button class="btn btn-success btn-sm" onclick="updateStatusQuick({{ $booking->id }}, 'confirmed')">
                                             <i class="bi bi-check"></i> Confirm
@@ -1871,6 +1887,10 @@
             };
 
             const bookingId = booking.booking_id || booking.id;
+            const confirmationCode = booking.confirmation_code ? String(booking.confirmation_code).trim() : '';
+            const editUrl = (booking.id && confirmationCode)
+                ? (`/bookings/confirm/${booking.id}/${encodeURIComponent(confirmationCode)}`)
+                : null;
             const apptDate = booking.appointment_date
                 ? new Date(String(booking.appointment_date).slice(0, 10) + 'T00:00:00').toLocaleDateString()
                 : 'N/A';
@@ -2033,6 +2053,11 @@
             const footerHtml = `
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    ${editUrl ? `
+                        <a href="${editUrl}" target="_blank" rel="noopener" class="btn btn-primary">
+                            <i class="bi bi-pencil-square me-1"></i> Edit Booking
+                        </a>
+                    ` : ''}
                     ${booking.status !== 'completed' && booking.status !== 'cancelled' ? `
                         <button type="button" class="btn btn-info" onclick="updateStatusQuick(${booking.id}, 'completed')">
                             <i class="bi bi-award me-1"></i> Complete Service
