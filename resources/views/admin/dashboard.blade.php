@@ -963,6 +963,49 @@
                 </div>
             </div>
 
+            <!-- Reschedule Booking Modal (Admin-only) -->
+            <div class="modal fade" id="rescheduleBookingModal" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content" style="border-radius: 14px; overflow: hidden;">
+                        <div class="modal-header" style="background: linear-gradient(135deg, #0ea5e9 0%, #4a8bc2 100%); color: white;">
+                            <h5 class="modal-title" style="font-weight: 800;">
+                                <i class="bi bi-calendar2-week me-2"></i>Reschedule Booking
+                            </h5>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="alert alert-info">
+                                <i class="bi bi-info-circle me-2"></i>
+                                Select a new <strong>date</strong> and <strong>time</strong>. This updates the booking and sends the customer a reschedule email.
+                            </div>
+
+                            <input type="hidden" id="rescheduleBookingId" value="">
+
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">New Date</label>
+                                <input type="date" class="form-control" id="rescheduleDate" />
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">New Time</label>
+                                <select class="form-select" id="rescheduleTime">
+                                    <option value="">Select a time</option>
+                                </select>
+                                <div class="form-text">Only shows available times (not booked + not blocked).</div>
+                            </div>
+
+                            <div id="rescheduleError" class="alert alert-danger" style="display:none;"></div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="button" class="btn btn-primary" id="confirmRescheduleBtn">
+                                <i class="bi bi-check2-circle me-1"></i>Reschedule
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
 
             <!-- Filters -->
         <div class="filter-section px-4 px-md-4 px-3 py-3">
@@ -2058,6 +2101,11 @@
                             <i class="bi bi-pencil-square me-1"></i> Edit Booking
                         </a>
                     ` : ''}
+                    ${(booking.status !== 'completed' && booking.status !== 'cancelled') ? `
+                        <button type="button" class="btn btn-outline-primary" onclick="openRescheduleModal(${booking.id}, '${String(booking.appointment_date || '').slice(0,10)}', '${safe(booking.appointment_time, '')}')">
+                            <i class="bi bi-calendar2-week me-1"></i> Reschedule
+                        </button>
+                    ` : ''}
                     ${booking.status !== 'completed' && booking.status !== 'cancelled' ? `
                         <button type="button" class="btn btn-info" onclick="updateStatusQuick(${booking.id}, 'completed')">
                             <i class="bi bi-award me-1"></i> Complete Service
@@ -2070,6 +2118,142 @@
             const modal = new bootstrap.Modal(document.getElementById('detailsModal'));
             modal.show();
         }
+
+        // --- Admin reschedule modal ---
+        window.openRescheduleModal = async function(bookingId, currentDateRaw, currentTimeRaw) {
+            const modalEl = document.getElementById('rescheduleBookingModal');
+            if (!modalEl) return;
+
+            const idEl = document.getElementById('rescheduleBookingId');
+            const dateEl = document.getElementById('rescheduleDate');
+            const timeEl = document.getElementById('rescheduleTime');
+            const errEl = document.getElementById('rescheduleError');
+
+            if (errEl) { errEl.style.display = 'none'; errEl.textContent = ''; }
+            if (idEl) idEl.value = bookingId;
+            if (dateEl && currentDateRaw) dateEl.value = String(currentDateRaw).slice(0,10);
+
+            // Normalize time to H:i where possible
+            const normalizeTime = (t) => {
+                const s = (t || '').toString().trim();
+                if (!s) return '';
+                // Already H:i
+                if (/^\d{2}:\d{2}$/.test(s)) return s;
+                // Try parse "h:mm AM/PM"
+                const m = s.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
+                if (m) {
+                    let hh = parseInt(m[1], 10);
+                    const mm = parseInt(m[2], 10);
+                    const ap = m[3].toUpperCase();
+                    if (ap === 'PM' && hh < 12) hh += 12;
+                    if (ap === 'AM' && hh === 12) hh = 0;
+                    return String(hh).padStart(2,'0') + ':' + String(mm).padStart(2,'0');
+                }
+                return '';
+            };
+
+            const currentTime = normalizeTime(currentTimeRaw);
+
+            const loadSlots = async (ymd) => {
+                if (!timeEl) return;
+                timeEl.innerHTML = '<option value="">Loading...</option>';
+                try {
+                    const resp = await fetch(`/bookings/slots?date=${encodeURIComponent(ymd)}`);
+                    const data = await resp.json();
+                    if (!data.success) throw new Error(data.message || 'Failed to load slots');
+                    const slots = Array.isArray(data.slots) ? data.slots : [];
+                    if (!slots.length) {
+                        timeEl.innerHTML = '<option value="">No available times</option>';
+                        return;
+                    }
+                    timeEl.innerHTML = '<option value="">Select a time</option>' + slots.map(s => {
+                        const val = s.time || '';
+                        const label = s.formatted_time || val;
+                        return `<option value="${val}">${label}</option>`;
+                    }).join('');
+
+                    // Preselect current time if present and available; otherwise leave blank
+                    if (currentTime) {
+                        const opt = Array.from(timeEl.options).find(o => o.value === currentTime);
+                        if (opt) timeEl.value = currentTime;
+                    }
+                } catch (e) {
+                    timeEl.innerHTML = '<option value="">Failed to load times</option>';
+                    if (errEl) { errEl.style.display = 'block'; errEl.textContent = 'Failed to load available times.'; }
+                }
+            };
+
+            const initialDate = dateEl ? dateEl.value : '';
+            if (initialDate) await loadSlots(initialDate);
+
+            if (dateEl) {
+                dateEl.onchange = async function() {
+                    const ymd = dateEl.value;
+                    if (!ymd) return;
+                    await loadSlots(ymd);
+                };
+            }
+
+            const modal = new bootstrap.Modal(modalEl);
+            modal.show();
+        };
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const btn = document.getElementById('confirmRescheduleBtn');
+            if (!btn) return;
+
+            btn.addEventListener('click', async function() {
+                const bookingId = document.getElementById('rescheduleBookingId')?.value;
+                const dateVal = document.getElementById('rescheduleDate')?.value;
+                const timeVal = document.getElementById('rescheduleTime')?.value;
+                const errEl = document.getElementById('rescheduleError');
+
+                if (errEl) { errEl.style.display = 'none'; errEl.textContent = ''; }
+                if (!bookingId || !dateVal || !timeVal) {
+                    if (errEl) { errEl.style.display = 'block'; errEl.textContent = 'Please select both a date and a time.'; }
+                    return;
+                }
+
+                // Build UTC ISO start to match FullCalendar admin settings
+                const [y, m, d] = dateVal.split('-').map(n => parseInt(n, 10));
+                const [hh, mm] = timeVal.split(':').map(n => parseInt(n, 10));
+                const start = new Date(Date.UTC(y, m - 1, d, hh, mm, 0, 0));
+                const end = new Date(start.getTime() + 60 * 60 * 1000);
+
+                const calendarEl = document.getElementById('adminCalendar');
+                const rescheduleUrl = calendarEl?.dataset?.rescheduleUrl || @json(route('admin.schedules.reschedule'));
+                const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+
+                const originalText = btn.innerHTML;
+                btn.disabled = true;
+                btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Rescheduling...';
+
+                try {
+                    const resp = await fetch(rescheduleUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrf, 'Accept': 'application/json' },
+                        body: JSON.stringify({ booking_id: parseInt(bookingId, 10), start: start.toISOString(), end: end.toISOString() })
+                    });
+                    const data = await resp.json();
+                    if (!resp.ok || !data.success) {
+                        throw new Error(data.message || `Failed (HTTP ${resp.status})`);
+                    }
+
+                    // Close modal
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('rescheduleBookingModal'));
+                    if (modal) modal.hide();
+
+                    // Refresh calendar events and reload table
+                    try { window.adminCalendar?.refetchEvents(); } catch (e) {}
+                    window.location.reload();
+                } catch (e) {
+                    if (errEl) { errEl.style.display = 'block'; errEl.textContent = e.message || 'Failed to reschedule.'; }
+                } finally {
+                    btn.disabled = false;
+                    btn.innerHTML = originalText;
+                }
+            });
+        });
 
         function updateAppointmentStatus(appointmentId) {
             currentAppointmentId = appointmentId;
