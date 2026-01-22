@@ -253,7 +253,6 @@
               <td>Manage booking</td>
               <td>
                 <a href="{{ $publicUrl }}" class="btn">Edit Booking</a>
-                <a href="{{ $publicUrl }}" class="btn btn-secondary">View Booking Details</a>
               </td>
             </tr>
           @endif
