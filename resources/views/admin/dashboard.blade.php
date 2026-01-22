@@ -793,6 +793,13 @@
                                         </div>
                                     </div>
 
+                                    <div id="editingBlockNotice" class="alert alert-warning d-flex align-items-start mb-4" style="display:none; background:#fff3cd; border-left: 4px solid #ffc107; border-radius: 6px;">
+                                        <i class="bi bi-pencil-square me-2" style="color:#b45309; font-size: 1.2rem;"></i>
+                                        <div>
+                                            <strong>Editing block:</strong> update the title/reason, date, or time and click <strong>Update Block</strong> to save.
+                                        </div>
+                                    </div>
+
                                     <div class="mb-4">
                                         <label class="form-label fw-semibold mb-2">
                                             <i class="bi bi-tag me-1"></i>Title / Reason
