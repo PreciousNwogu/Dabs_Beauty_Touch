@@ -19,8 +19,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        // Force HTTPS in production
-        if (config('app.env') === 'production') {
+        // Force HTTPS in any non-local environment.
+        // This prevents Render/staging from generating http:// form actions/links which triggers browser "not secure" warnings.
+        if (!app()->environment('local')) {
             \Illuminate\Support\Facades\URL::forceScheme('https');
         }
     }

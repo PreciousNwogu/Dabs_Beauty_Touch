@@ -3374,7 +3374,7 @@
                                 </div>
                                 <div class="modal-body p-4">
                     <!-- Single Booking Form -->
-                    <form id="bookingForm" action="{{ route('bookings.store') }}" method="POST" autocomplete="on" novalidate enctype="multipart/form-data">
+                    <form id="bookingForm" action="/bookings" method="POST" autocomplete="on" novalidate enctype="multipart/form-data">
                         @csrf
                         <input type="hidden" id="appointment_date" name="appointment_date">
                         <input type="hidden" id="appointment_time_hidden" name="appointment_time">
@@ -6863,7 +6863,7 @@ function clearImagePreview() {
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body p-4">
-                    <form id="kidsBookingForm" action="{{ route('bookings.store') }}" method="POST" autocomplete="on" novalidate enctype="multipart/form-data">
+                    <form id="kidsBookingForm" action="/bookings" method="POST" autocomplete="on" novalidate enctype="multipart/form-data">
                         @csrf
                         <input type="hidden" id="kids_service_input" name="service" value="">
                         <input type="hidden" id="kids_service_type_input" name="service_type" value="kids-braids">
