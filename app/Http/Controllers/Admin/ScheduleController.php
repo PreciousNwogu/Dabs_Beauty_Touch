@@ -62,6 +62,10 @@ class ScheduleController extends Controller
                                 'extendedProps' => [
                                     'type' => 'blocked',
                                     'orig_slot_id' => $slot->id,
+                                    // Preserve original stored range so the admin UI can edit the block
+                                    // without relying on the per-day expanded event's start/end.
+                                    'orig_start' => $startParsed->toIso8601String(),
+                                    'orig_end' => $endParsed->toIso8601String(),
                                     'meta' => $slot->meta,
                                 ],
                                 'editable' => false,
