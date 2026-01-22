@@ -222,8 +222,16 @@
         $adminUrl = $bookingId ? secure_url('/admin/bookings/' . $bookingId) : null;
       @endphp
 
-      <a class="cta" href="{{ $publicUrl ?: ($adminUrl ?: '#') }}">View Booking Details</a>
-      <a class="cta" style="background:#030f68;margin-left:8px;" href="{{ $publicUrl ?: ($adminUrl ?: '#') }}">Edit Booking</a>
+      <div style="margin-top:10px;">
+        <a href="{{ $publicUrl ?: ($adminUrl ?: '#') }}"
+           style="display:block;width:100%;text-align:center;background:#ff6600;color:#ffffff !important;text-decoration:none;padding:14px 16px;border-radius:12px;font-weight:800;font-size:16px;letter-spacing:0.2px;">
+          Edit Booking
+        </a>
+        <a href="{{ $publicUrl ?: ($adminUrl ?: '#') }}"
+           style="display:block;width:100%;text-align:center;background:#0b3a66;color:#ffffff !important;text-decoration:none;padding:12px 16px;border-radius:12px;font-weight:800;font-size:14px;margin-top:10px;">
+          View Booking Details
+        </a>
+      </div>
 
       <div style="margin-top:18px;border-top:1px solid #eef2f6;padding-top:12px;font-size:13px;color:#6c757d;">
         <p style="margin:6px 0 8px 0;font-weight:700;color:#0b3a66;">Stay connected</p>

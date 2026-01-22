@@ -2124,6 +2124,14 @@
             const modalEl = document.getElementById('rescheduleBookingModal');
             if (!modalEl) return;
 
+            // Ensure the reschedule modal appears on top by hiding the details modal first.
+            // Bootstrap doesn't reliably stack modals/backdrops without custom z-index handling.
+            try {
+                const detailsEl = document.getElementById('detailsModal');
+                const detailsInst = detailsEl ? bootstrap.Modal.getInstance(detailsEl) : null;
+                if (detailsInst) detailsInst.hide();
+            } catch (e) { /* noop */ }
+
             const idEl = document.getElementById('rescheduleBookingId');
             const dateEl = document.getElementById('rescheduleDate');
             const timeEl = document.getElementById('rescheduleTime');
@@ -2194,8 +2202,11 @@
                 };
             }
 
-            const modal = new bootstrap.Modal(modalEl);
-            modal.show();
+            // Wait a moment for the details modal/backdrop to finish hiding, then show reschedule.
+            setTimeout(() => {
+                const modal = new bootstrap.Modal(modalEl);
+                modal.show();
+            }, 250);
         };
 
         document.addEventListener('DOMContentLoaded', function() {

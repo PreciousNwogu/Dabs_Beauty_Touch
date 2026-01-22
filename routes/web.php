@@ -1794,11 +1794,23 @@ Route::post('/bookings/confirm/{id}/{code}/modify', function(\Illuminate\Http\Re
             ->with(['booking_error' => true, 'error_message' => 'This booking can no longer be modified.']);
     }
 
+    // Allowed braid services for user self-edit (keeps scope tight & avoids needing additional fields)
+    $allowedBraidServices = [
+        'Small Knotless Braids',
+        'Smedium Knotless Braids',
+        'Medium Knotless Braids',
+        'Jumbo Knotless Braids',
+        '8–10 Rows Stitch Braids',
+        'Smedium Boho Braids',
+    ];
+
     $data = $request->validate([
         'length' => 'nullable|string|in:neck,shoulder,armpit,bra_strap,mid_back,waist,hip,tailbone,classic',
         'kb_braid_type' => 'nullable|string|in:protective,cornrows,knotless_small,knotless_med,box_small,box_med,stitch',
         // Allow kids length override (accept the same canonical set used elsewhere)
         'kb_length' => 'nullable|string|in:neck,shoulder,armpit,bra_strap,mid_back,waist,hip,tailbone,classic',
+        // For non-kids braid bookings, allow changing the braid style (service)
+        'service' => 'nullable|string|max:255',
     ]);
 
     $before = [
@@ -1814,6 +1826,16 @@ Route::post('/bookings/confirm/{id}/{code}/modify', function(\Illuminate\Http\Re
         stripos((string)$booking->service, 'kids') !== false ||
         !empty($booking->kb_braid_type) ||
         !empty($booking->kb_length)
+    );
+
+    // Determine whether this is a braid service (non-kids)
+    $serviceNameNormalized = strtolower((string)($booking->service ?? ''));
+    $isBraidService = (
+        str_contains($serviceNameNormalized, 'braid') ||
+        str_contains($serviceNameNormalized, 'braids') ||
+        str_contains($serviceNameNormalized, 'knotless') ||
+        str_contains($serviceNameNormalized, 'stitch') ||
+        str_contains($serviceNameNormalized, 'boho')
     );
 
     // Normalize length strings
@@ -1897,6 +1919,15 @@ Route::post('/bookings/confirm/{id}/{code}/modify', function(\Illuminate\Http\Re
             }
         } else {
             // Non-kids: only allow length changes
+            // If it's a braid booking, allow changing the braid style (service) among a safe allowlist.
+            if (!empty($data['service']) && $isBraidService) {
+                if (!in_array($data['service'], $allowedBraidServices, true)) {
+                    return redirect()->route('bookings.confirm', ['id' => $id, 'code' => $code])
+                        ->with(['booking_error' => true, 'error_message' => 'Invalid braid style selection.']);
+                }
+                $booking->service = $data['service'];
+            }
+
             if (!empty($data['length'])) {
                 $booking->length = $normalizeLen($data['length']);
             }
@@ -1908,7 +1939,8 @@ Route::post('/bookings/confirm/{id}/{code}/modify', function(\Illuminate\Http\Re
                 'service_type' => $booking->service,
                 'length' => $booking->length,
                 'hair_mask_option' => $booking->hair_mask_option,
-                'stitch_rows_option' => $booking->stitch_rows_option,
+                // Keep stitch add-on behavior consistent: if not set, default to ten_or_less
+                'stitch_rows_option' => $booking->stitch_rows_option ?: 'ten_or_less',
             ]);
             $booking->base_price = $break['base_price'] ?? $booking->base_price;
             $booking->length_adjustment = $break['length_adjustment'] ?? $booking->length_adjustment;

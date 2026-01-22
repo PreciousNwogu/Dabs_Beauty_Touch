@@ -135,6 +135,14 @@
                             return '$' . number_format((float)$v, 2);
                         };
                         $isKids = !empty($bd['kb_braid_type']) || !empty($bd['kb_length']) || (isset($bd['service']) && stripos((string)$bd['service'], 'kids') !== false);
+                        $serviceNameLower = strtolower((string)($bd['service'] ?? ''));
+                        $isBraidService = (
+                            str_contains($serviceNameLower, 'braid') ||
+                            str_contains($serviceNameLower, 'braids') ||
+                            str_contains($serviceNameLower, 'knotless') ||
+                            str_contains($serviceNameLower, 'stitch') ||
+                            str_contains($serviceNameLower, 'boho')
+                        );
                         $currentLen = $bd['kb_length'] ?? $bd['length'] ?? null;
                     @endphp
 
@@ -233,6 +241,29 @@
                                     </div>
                                 </div>
                             @else
+                                @if($isBraidService)
+                                    <div class="mb-3">
+                                        <label class="form-label detail-label">Braid type / style</label>
+                                        @php
+                                            $allowedBraidServices = [
+                                                'Small Knotless Braids',
+                                                'Smedium Knotless Braids',
+                                                'Medium Knotless Braids',
+                                                'Jumbo Knotless Braids',
+                                                '8–10 Rows Stitch Braids',
+                                                'Smedium Boho Braids',
+                                            ];
+                                            $curSvc = $bd['service'] ?? null;
+                                        @endphp
+                                        <select class="form-select" name="service">
+                                            <option value="">Keep current</option>
+                                            @foreach($allowedBraidServices as $svc)
+                                                <option value="{{ $svc }}" {{ $curSvc === $svc ? 'selected' : '' }}>{{ $svc }}</option>
+                                            @endforeach
+                                        </select>
+                                        <div class="form-text">Changing braid style will automatically recalculate pricing.</div>
+                                    </div>
+                                @endif
                                 <div class="mb-3">
                                     <label class="form-label detail-label">Length</label>
                                     <select class="form-select" name="length">
