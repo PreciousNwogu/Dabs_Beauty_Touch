@@ -194,7 +194,16 @@
                             Changes will automatically recalculate pricing and email an update to you and the admin.
                         </div>
 
-                        <form method="POST" action="{{ route('bookings.modify', ['id' => $confirmId ?? ($bd['id'] ?? null), 'code' => $confirmCode ?? ($bd['confirmation_code'] ?? null)]) }}">
+                        @php
+                            $editId = $confirmId ?? ($bd['id'] ?? null);
+                            $editCode = $confirmCode ?? ($bd['confirmation_code'] ?? null);
+                            // Force HTTPS for the modify POST to avoid browser “not secure” warnings on staging
+                            // when behind a proxy / forwarded proto is misdetected.
+                            $modifyUrl = ($editId && $editCode)
+                                ? secure_url('/bookings/confirm/' . $editId . '/' . $editCode . '/modify')
+                                : '#';
+                        @endphp
+                        <form method="POST" action="{{ $modifyUrl }}">
                             @csrf
 
                             @if($isKids)
