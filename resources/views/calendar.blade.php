@@ -11,6 +11,7 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, #f8f9fa 0%, #e3eafc 100%);
             min-height: 100vh;
+            -webkit-tap-highlight-color: transparent;
         }
 
         .navbar {
@@ -47,7 +48,7 @@
         /* Weekday header row */
         .calendar-weekdays {
             display: grid;
-            grid-template-columns: repeat(7, 1fr);
+            grid-template-columns: repeat(7, minmax(0, 1fr));
             gap: 12px;
             margin-bottom: 12px;
         }
@@ -56,12 +57,13 @@
             text-align: center;
             font-weight: 700;
             color: #212529;
+            min-width: 0;
         }
 
         /* Day cells grid */
         #calendarDays.calendar-days {
             display: grid;
-            grid-template-columns: repeat(7, 1fr);
+            grid-template-columns: repeat(7, minmax(0, 1fr));
             gap: 12px;
         }
 
@@ -78,6 +80,10 @@
             align-items: center;
             width: 100%;
             box-sizing: border-box;
+            touch-action: manipulation;
+            border-radius: 12px;
+            position: relative;
+            min-width: 0; /* prevent min-content overflow from widening columns */
         }
 
         .calendar-day:hover {
@@ -176,6 +182,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            touch-action: manipulation;
         }
 
         .time-slot:hover {
@@ -266,10 +273,51 @@
         }
 
         @media (max-width: 768px) {
+            .container {
+                padding-left: 12px;
+                padding-right: 12px;
+            }
+
+            .calendar-container,
+            .time-slots,
+            .booking-form {
+                border-radius: 16px;
+            }
+
+            .calendar-header {
+                padding: 18px 14px;
+            }
+
+            .calendar-header h1 {
+                font-size: 1.4rem;
+                margin-bottom: 6px !important;
+            }
+
+            .calendar-header p {
+                font-size: 0.95rem;
+            }
+
+            .calendar-nav {
+                padding: 12px;
+            }
+
+            .calendar-nav .row > [class^="col-"] {
+                margin-bottom: 8px;
+            }
+
+            .calendar-nav .row > [class^="col-"]:last-child {
+                margin-bottom: 0;
+            }
+
+            #currentMonth {
+                font-size: 1.2rem;
+            }
+
             .calendar-day {
-                min-height: 60px;
-                padding: 10px;
-                font-size: 0.9rem;
+                min-height: 52px;
+                padding: 10px 6px;
+                font-size: 0.95rem;
+                aspect-ratio: 1 / 1;
             }
 
             .calendar-grid {
@@ -283,6 +331,84 @@
 
             #calendarDays.calendar-days {
                 gap: 8px;
+            }
+
+            .calendar-weekday {
+                font-size: 0.8rem;
+            }
+
+            .time-slot {
+                padding: 14px 14px;
+                font-size: 0.95rem;
+            }
+
+            .form-header {
+                padding: 18px 14px;
+            }
+
+            .form-body {
+                padding: 16px;
+            }
+
+            .btn-primary {
+                width: 100%;
+            }
+        }
+
+        /* Extra-small phones */
+        @media (max-width: 576px) {
+            /* Reduce gaps so 7 columns fit comfortably */
+            .calendar-weekdays { gap: 6px; }
+            #calendarDays.calendar-days { gap: 6px; }
+
+            .calendar-weekday {
+                font-size: 0.72rem;
+                letter-spacing: 0.02em;
+            }
+
+            .calendar-day {
+                min-height: 46px;
+                padding: 8px 4px;
+                border-radius: 10px;
+                aspect-ratio: 1 / 1;
+            }
+
+            .calendar-day .blocked-text {
+                font-size: 0.6rem;
+                margin-top: 4px;
+                position: absolute;
+                left: 6px;
+                right: 6px;
+                bottom: 6px;
+                margin-top: 0;
+                /* Let text wrap without affecting grid sizing */
+                white-space: normal;
+                display: -webkit-box;
+                -webkit-line-clamp: 2;
+                -webkit-box-orient: vertical;
+                overflow: hidden;
+            }
+
+            /* Disable hover lift on touch devices */
+            .calendar-day:hover {
+                transform: none;
+                box-shadow: none;
+            }
+
+            .time-slot {
+                border-radius: 0;
+            }
+
+            .time-slot span:last-child {
+                margin-left: 10px;
+                font-size: 0.85rem;
+                opacity: 0.9;
+            }
+
+            /* Make nav buttons easier to tap */
+            .calendar-nav button {
+                width: 100%;
+                padding: 12px 14px;
             }
         }
     </style>
@@ -321,17 +447,17 @@
 
             <!-- Calendar Navigation -->
             <div class="calendar-nav">
-                <div class="row align-items-center">
-                    <div class="col-md-4">
-                        <button class="btn btn-outline-primary" onclick="previousMonth()">
+                <div class="row align-items-center g-2">
+                    <div class="col-6 col-md-4">
+                        <button class="btn btn-outline-primary w-100" onclick="previousMonth()">
                             <i class="bi bi-chevron-left"></i> Previous
                         </button>
                     </div>
-                    <div class="col-md-4 text-center">
+                    <div class="col-12 col-md-4 text-center order-3 order-md-2">
                         <h3 id="currentMonth" class="mb-0"></h3>
                     </div>
-                    <div class="col-md-4 text-end">
-                        <button class="btn btn-outline-primary" onclick="nextMonth()">
+                    <div class="col-6 col-md-4 text-end order-2 order-md-3">
+                        <button class="btn btn-outline-primary w-100" onclick="nextMonth()">
                             Next <i class="bi bi-chevron-right"></i>
                         </button>
                     </div>
