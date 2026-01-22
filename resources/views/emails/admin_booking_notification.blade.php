@@ -155,14 +155,14 @@
           }
         }
 
-        // Stitch braids tiny rows (>10) add-on (+$20)
+        // Stitch braids tiny rows (>10) add-on (+$30)
         $stitchAddon = 0.00;
         $hasStitchAddon = false;
         $svcLower = strtolower((string)($booking->service ?? ''));
         $isStitchSvc = str_contains($svcLower, 'stitch');
         $stitchChoice = $booking->stitch_rows_option ?? null;
         if ($isStitchSvc && $stitchChoice === 'more_than_ten') {
-          $stitchAddon = 20.00;
+          $stitchAddon = 30.00;
           $hasStitchAddon = true;
         }
 
@@ -179,7 +179,7 @@
             <td style="font-weight:700;">Stitch rows</td>
             <td>
               @if($stitchChoice === 'more_than_ten')
-                More than 10 rows (tiny) +$20
+                More than 10 rows (tiny) +$30
               @elseif($stitchChoice === 'ten_or_less')
                 8–10 rows (base price)
               @else
@@ -222,7 +222,16 @@
         $adminUrl = $bookingId ? secure_url('/admin/bookings/' . $bookingId) : null;
       @endphp
 
-      <a class="cta" href="{{ $publicUrl ?: ($adminUrl ?: '#') }}">View Booking Details</a>
+      <div style="margin-top:10px;">
+        <a href="{{ $publicUrl ?: ($adminUrl ?: '#') }}"
+           style="display:block;width:100%;text-align:center;background:#ff6600;color:#ffffff !important;text-decoration:none;padding:14px 16px;border-radius:12px;font-weight:800;font-size:16px;letter-spacing:0.2px;">
+          Edit Booking
+        </a>
+        <a href="{{ $publicUrl ?: ($adminUrl ?: '#') }}"
+           style="display:block;width:100%;text-align:center;background:#0b3a66;color:#ffffff !important;text-decoration:none;padding:12px 16px;border-radius:12px;font-weight:800;font-size:14px;margin-top:10px;">
+          View Booking Details
+        </a>
+      </div>
 
       <div style="margin-top:18px;border-top:1px solid #eef2f6;padding-top:12px;font-size:13px;color:#6c757d;">
         <p style="margin:6px 0 8px 0;font-weight:700;color:#0b3a66;">Stay connected</p>

@@ -244,6 +244,21 @@
           </tr>
 
           @php
+            $bookingId = $booking->id ?? null;
+            $code = $booking->confirmation_code ?? null;
+            $publicUrl = ($bookingId && $code) ? secure_url('/bookings/confirm/' . $bookingId . '/' . $code) : null;
+          @endphp
+          @if($publicUrl)
+            <tr>
+              <td>Manage booking</td>
+              <td>
+                <a href="{{ $publicUrl }}" class="btn">Edit Booking</a>
+                <a href="{{ $publicUrl }}" class="btn btn-secondary">View Booking Details</a>
+              </td>
+            </tr>
+          @endif
+
+          @php
             $selector = $selector ?? null;
             if(!$selector && preg_match('/Selector:\s*(\{.*\})/s', $booking->notes ?? '', $m)){
               $selector = json_decode($m[1], true);
@@ -305,7 +320,7 @@
             <td>Stitch rows</td>
             <td>
               @if($stitchChoice === 'more_than_ten')
-                More than 10 rows (tiny) +$20
+                More than 10 rows (tiny) +$30
               @elseif($stitchChoice === 'ten_or_less')
                 8–10 rows (base price)
               @else
@@ -366,11 +381,11 @@
           }
         }
         
-        // Stitch braids tiny rows (>10) add-on (+$20)
+        // Stitch braids tiny rows (>10) add-on (+$30)
         $stitchAddon = 0.00;
         $hasStitchAddon = false;
         if ($isStitchSvc && ($stitchChoice === 'more_than_ten')) {
-          $stitchAddon = 20.00;
+          $stitchAddon = 30.00;
           $hasStitchAddon = true;
         }
 
