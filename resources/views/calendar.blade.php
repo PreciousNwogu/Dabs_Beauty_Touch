@@ -1116,7 +1116,6 @@
                 const hasAccepted = () => { try { return localStorage.getItem(KEY) === '1'; } catch(e) { return false; } };
                 const setAccepted = () => { try { localStorage.setItem(KEY, '1'); } catch(e) {} };
                 if (hasAccepted()) {
-                    try { const chk = document.getElementById('termsAcceptedCal'); if (chk) chk.checked = true; } catch(e) {}
                     return next();
                 }
 
@@ -1131,7 +1130,6 @@
                 contBtn.onclick = () => {
                     if (!agreeEl.checked) return;
                     setAccepted();
-                    try { const chk = document.getElementById('termsAcceptedCal'); if (chk) chk.checked = true; } catch(e) {}
                     try { (bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl)).hide(); } catch(e) {}
                     next();
                 };
@@ -1277,6 +1275,14 @@
             const sync = () => { btn.disabled = !cb.checked; };
             sync();
             cb.addEventListener('change', sync);
+        });
+
+        // Always start unchecked on page load / refresh.
+        document.addEventListener('DOMContentLoaded', function(){
+            try {
+                const cb = document.getElementById('termsAcceptedCal');
+                if (cb) cb.checked = false;
+            } catch(e) {}
         });
 
         function showConfirmation(appointment) {
