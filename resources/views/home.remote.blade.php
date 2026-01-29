@@ -3058,16 +3058,16 @@
                                             <strong>Notice Required:</strong> Minimum 48 hours notice required for cancellations
                                         </li>
                                         <li class="mb-3">
-                                            <i class="bi bi-exclamation-triangle-fill text-warning me-2"></i>
-                                            <strong>Late Cancellation:</strong> Cancellations within 48 hours forfeit the deposit
-                                        </li>
-                                        <li class="mb-3">
                                             <i class="bi bi-x-circle-fill text-danger me-2"></i>
                                             <strong>No Show:</strong> No-shows will result in full charge and may affect future bookings
                                         </li>
                                         <li class="mb-3">
                                             <i class="bi bi-arrow-clockwise text-success me-2"></i>
-                                            <strong>Rescheduling:</strong> Rescheduling is allowed with 24 hours notice
+                                            <strong>Rescheduling:</strong> Rescheduling is allowed with 48 hours notice
+                                        </li>
+                                        <li class="mb-3">
+                                            <i class="bi bi-calendar2-week-fill text-primary me-2"></i>
+                                            <strong>Reschedule Window:</strong> Reschedules must be within 1 month of the initial appointment date
                                         </li>
                                     </ul>
                                 </div>
@@ -3089,7 +3089,7 @@
                                         </li>
                                         <li class="mb-3">
                                             <i class="bi bi-car-front-fill text-info me-2"></i>
-                                            <strong>Transportation:</strong> Clients are responsible for providing transportation for the stylist
+                                            <strong>Transportation:</strong> Clients are responsible for covering the cost of fueling the stylist’s transportation. Fees vary based on the distance to the service location.
                                         </li>
                                         <li class="mb-3">
                                             <i class="bi bi-geo-alt-fill text-warning me-2"></i>
