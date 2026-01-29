@@ -7509,18 +7509,6 @@ document.addEventListener('DOMContentLoaded', function(){
                 return next();
             }
 
-            const cleanupStrayBackdrops = () => {
-                try {
-                    // If no modals are actually showing, but backdrops exist, remove them.
-                    const anyShownModal = document.querySelector('.modal.show');
-                    if (!anyShownModal) {
-                        document.querySelectorAll('.modal-backdrop').forEach(b => b.remove());
-                        document.body.classList.remove('modal-open');
-                        document.body.style.removeProperty('padding-right');
-                    }
-                } catch (e) { /* noop */ }
-            };
-
             agreeEl.checked = false;
             contBtn.disabled = true;
             window.__dbtTermsGateNext = next;
@@ -7538,36 +7526,15 @@ document.addEventListener('DOMContentLoaded', function(){
                     const inst = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
                     inst.hide();
                 } catch(e) {}
-                // Ensure we never leave a stuck backdrop behind
-                setTimeout(cleanupStrayBackdrops, 50);
                 const fn = window.__dbtTermsGateNext;
                 window.__dbtTermsGateNext = null;
                 if (typeof fn === 'function') fn();
             };
 
             try {
-                cleanupStrayBackdrops();
                 const inst = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
                 inst.show();
-
-                // Watchdog: if backdrop appears but modal doesn't show (z-index/markup issues),
-                // clean up and fail open so the page doesn't feel "frozen".
-                setTimeout(function(){
-                    try {
-                        const shown = modalEl.classList.contains('show');
-                        if (shown) return;
-                        // remove any backdrops that might be blocking interaction
-                        document.querySelectorAll('.modal-backdrop').forEach(b => b.remove());
-                        document.body.classList.remove('modal-open');
-                        document.body.style.removeProperty('padding-right');
-                        modalEl.classList.remove('show');
-                        modalEl.style.display = 'none';
-                        modalEl.setAttribute('aria-hidden', 'true');
-                    } catch(e) { /* ignore */ }
-                    try { next(); } catch(e) { /* ignore */ }
-                }, 450);
             } catch(e) {
-                cleanupStrayBackdrops();
                 next();
             }
         };
