@@ -1482,24 +1482,42 @@
             flex: 0 0 auto;
         }
 
-        /* Terms checkbox row: custom layout to avoid Bootstrap's negative margin overlap */
+        /* Terms checkbox row: grid layout to guarantee no overlap */
         #bookingModal .dbt-terms-consent,
         #kidsBookingModal .dbt-terms-consent {
-            display: flex;
-            align-items: flex-start;
-            justify-content: center;
-            gap: 12px;
+            display: grid;
+            grid-template-columns: 22px 1fr;
+            column-gap: 12px;
+            align-items: start;
+            width: 100%;
+            max-width: 100%;
+            justify-content: start;
+            padding: 0 10px;
+            box-sizing: border-box;
         }
         #bookingModal .dbt-terms-consent input[type="checkbox"],
         #kidsBookingModal .dbt-terms-consent input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
             margin: 0.25rem 0 0 0 !important;
             float: none !important;
-            flex: 0 0 auto;
         }
         #bookingModal .dbt-terms-consent label,
         #kidsBookingModal .dbt-terms-consent label {
+            display: block;
             margin: 0 !important;
             line-height: 1.4;
+            word-break: normal;
+            overflow-wrap: normal;
+        }
+
+        /* Force Terms copy into exactly 2 lines for the kids modal */
+        #kidsBookingModal .dbt-terms-consent label {
+            white-space: normal;
+        }
+        #kidsBookingModal .dbt-terms-consent .dbt-terms-line2 {
+            white-space: nowrap;
+            display: inline-block;
         }
 
         /* Service Selection Modal Styles */
@@ -3656,9 +3674,11 @@
                             <input type="hidden" name="terms_accepted" value="0">
                             <div class="dbt-terms-consent mb-3">
                                 <input class="form-check-input" type="checkbox" id="termsAcceptedMain" name="terms_accepted" value="1" required autocomplete="off">
-                                <label for="termsAcceptedMain" style="max-width: 520px; text-align:left;">
-                                    I agree to the <a href="#terms" style="color:#030f68; font-weight:600; text-decoration:none;" onclick="closeModalAndGoToTerms(event)">Terms &amp; Conditions</a>.
-                                </label>
+                                <div>
+                                    <label for="termsAcceptedMain" style="text-align:left;">
+                                        I agree to the <a href="#terms" style="color:#030f68; font-weight:600; text-decoration:none;" onclick="closeModalAndGoToTerms(event)">Terms &amp; Conditions</a>.
+                                    </label>
+                                </div>
                             </div>
                             <button type="submit" class="btn btn-warning" id="bookAppointmentBtn" style="font-size:1.1rem; padding:12px 40px; font-weight:600; transition: all 0.3s ease; box-shadow: 0 4px 12px rgba(255, 193, 7, 0.3);">
                                 <i class="bi bi-calendar-check me-2"></i>Book Appointment
@@ -6994,9 +7014,14 @@ function clearImagePreview() {
                                         <input type="hidden" name="terms_accepted" value="0">
                                         <div class="dbt-terms-consent mb-2">
                                             <input class="form-check-input" type="checkbox" id="termsAcceptedKids" name="terms_accepted" value="1" required autocomplete="off">
-                                            <label for="termsAcceptedKids" style="font-size:0.95rem;">
-                                                I agree to the <a href="#terms" style="color:#030f68; font-weight:600; text-decoration:none;" onclick="closeModalAndGoToTerms(event)">Terms &amp; Conditions</a>.
-                                            </label>
+                                            <div>
+                                                <label for="termsAcceptedKids" style="font-size:0.95rem;">
+                                                    I agree to the<br>
+                                                    <span class="dbt-terms-line2">
+                                                        <a href="#terms" style="color:#030f68; font-weight:600; text-decoration:none;" onclick="closeModalAndGoToTerms(event)">Terms &amp; Conditions</a>.
+                                                    </span>
+                                                </label>
+                                            </div>
                                         </div>
                                     <div class="d-flex gap-2">
                                         <button type="button" id="kidsBackToSelectorBtn" class="btn btn-secondary" style="font-weight:600;" onclick="backToKidsSelector()">Back to selector</button>
@@ -7468,18 +7493,8 @@ document.addEventListener('DOMContentLoaded', function(){
             try { window.localStorage && localStorage.setItem(KEY, '1'); } catch(e) {}
         };
 
-        const syncFormCheckboxes = () => {
-            try {
-                const m = document.getElementById('termsAcceptedMain');
-                const k = document.getElementById('termsAcceptedKids');
-                if (m) m.checked = true;
-                if (k) k.checked = true;
-            } catch(e) {}
-        };
-
         window.__dbtEnsureTermsAccepted = function(next){
             if (hasAccepted()) {
-                syncFormCheckboxes();
                 return next();
             }
 
@@ -7504,7 +7519,6 @@ document.addEventListener('DOMContentLoaded', function(){
             contBtn.onclick = function(){
                 if (!agreeEl.checked) return;
                 setAccepted();
-                syncFormCheckboxes();
                 try {
                     const inst = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
                     inst.hide();
@@ -7761,13 +7775,15 @@ document.addEventListener('DOMContentLoaded', function(){
         setup('termsAcceptedKids', 'kidsBookAppointmentBtn');
     });
 
-    // Always start unchecked on initial page load (prevents browser restore/autofill from showing a tick immediately).
-    try {
-        const t1 = document.getElementById('termsAcceptedMain');
-        const t2 = document.getElementById('termsAcceptedKids');
-        if (t1) t1.checked = false;
-        if (t2) t2.checked = false;
-    } catch (e) { /* noop */ }
+    // Always start unchecked on initial page load / refresh.
+    document.addEventListener('DOMContentLoaded', function(){
+        try {
+            const t1 = document.getElementById('termsAcceptedMain');
+            const t2 = document.getElementById('termsAcceptedKids');
+            if (t1) t1.checked = false;
+            if (t2) t2.checked = false;
+        } catch (e) { /* noop */ }
+    });
 
     // Update price when length changes
     function handleLengthChange(e) {

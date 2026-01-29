@@ -94,6 +94,8 @@
                 // When accessed via /bookings/confirm/{id}/{code}, render as a booking details page
                 // (so admin/customer don't see the "Booking Confirmed!" marketing success message).
                 $isDetailsMode = isset($confirmId) && isset($confirmCode);
+                // Read-only mode: hide the modify form (used by admin/staff email "View Booking Details")
+                $isReadOnly = $isDetailsMode && request()->query('view') === '1';
             @endphp
             <div class="success-header" style="{{ $isDetailsMode ? 'background: linear-gradient(135deg, #0ea5e9 0%, #4a8bc2 100%);' : '' }}">
                 <div class="success-icon" style="{{ $isDetailsMode ? 'animation:none;' : '' }}">
@@ -192,15 +194,16 @@
                         </div>
                     </div>
 
-                    <div class="booking-details">
-                        <h6 class="mb-3 text-warning">
-                            <i class="fas fa-pen-to-square me-2"></i>
-                            Modify your booking (length / braid type)
-                        </h6>
-                        <div class="alert alert-info">
-                            <i class="fas fa-circle-info me-2"></i>
-                            Changes will automatically recalculate pricing and email an update to you and the admin.
-                        </div>
+                    @if(!$isReadOnly)
+                        <div class="booking-details">
+                            <h6 class="mb-3 text-warning">
+                                <i class="fas fa-pen-to-square me-2"></i>
+                                Modify your booking (length / braid type)
+                            </h6>
+                            <div class="alert alert-info">
+                                <i class="fas fa-circle-info me-2"></i>
+                                Changes will automatically recalculate pricing and email an update to you and the admin.
+                            </div>
 
                         @php
                             $editId = $confirmId ?? ($bd['id'] ?? null);
@@ -282,8 +285,9 @@
                             <button type="submit" class="btn btn-primary w-100" style="border-radius: 25px; font-weight: 700;">
                                 <i class="fas fa-save me-2"></i>Save Changes
                             </button>
-                        </form>
-                    </div>
+                            </form>
+                        </div>
+                    @endif
                 @endif
 
                 <div class="alert alert-info">
