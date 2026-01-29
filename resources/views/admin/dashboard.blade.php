@@ -1911,7 +1911,7 @@
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
-                        showBookingDetails(data.booking);
+                        showBookingDetails(data.booking, data.breakdown || null);
                     } else {
                         alert('Error loading booking details: ' + (data.message || 'Unknown error'));
                     }
@@ -1922,7 +1922,7 @@
                 });
         }
 
-        function showBookingDetails(booking) {
+        function showBookingDetails(booking, breakdown) {
             const safe = (v, fallback = 'Not provided') => {
                 if (v === null || typeof v === 'undefined') return fallback;
                 const s = String(v).trim();
@@ -1943,6 +1943,50 @@
             const sampleUrl = booking.sample_picture
                 ? (String(booking.sample_picture).startsWith('http') ? booking.sample_picture : '/storage/' + booking.sample_picture)
                 : null;
+
+            const isKids = !!(booking.kb_braid_type || booking.kb_length || (String(booking.service || '').toLowerCase().includes('kids')));
+            const stitchRows = booking.stitch_rows_option ? String(booking.stitch_rows_option) : '';
+            const hairMaskOpt = booking.hair_mask_option ? String(booking.hair_mask_option) : (booking.selectedHairMaskOption ? String(booking.selectedHairMaskOption) : '');
+
+            const pretty = (raw) => {
+                const s = (raw || '').toString();
+                return s.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+            };
+
+            const breakdownHtml = (breakdown && typeof breakdown === 'object' && Object.keys(breakdown).length)
+                ? `
+                    <div class="col-12">
+                        <div class="bd-card">
+                            <div class="bd-card-header" style="background:#0ea5e9;color:white;">
+                                <i class="bi bi-cash-coin"></i>
+                                <span>Pricing Breakdown</span>
+                            </div>
+                            <div class="bd-panel">
+                                <div class="bd-row">
+                                    <div class="bd-label">Resolved Base:</div>
+                                    <div class="bd-value">${(breakdown.resolved_base !== null && typeof breakdown.resolved_base !== 'undefined') ? ('$' + parseFloat(breakdown.resolved_base).toFixed(2)) : 'N/A'}</div>
+                                </div>
+                                <div class="bd-row">
+                                    <div class="bd-label">Length Adjust:</div>
+                                    <div class="bd-value">${(breakdown.length_adjust !== null && typeof breakdown.length_adjust !== 'undefined') ? ('$' + parseFloat(breakdown.length_adjust).toFixed(2)) : 'N/A'}</div>
+                                </div>
+                                <div class="bd-row">
+                                    <div class="bd-label">Add-ons Total:</div>
+                                    <div class="bd-value">${(breakdown.addons_total !== null && typeof breakdown.addons_total !== 'undefined') ? ('$' + parseFloat(breakdown.addons_total).toFixed(2)) : 'N/A'}</div>
+                                </div>
+                                <div class="bd-row">
+                                    <div class="bd-label">Computed Total:</div>
+                                    <div class="bd-value">${(breakdown.computed_total !== null && typeof breakdown.computed_total !== 'undefined') ? ('$' + parseFloat(breakdown.computed_total).toFixed(2)) : 'N/A'}</div>
+                                </div>
+                                <div class="bd-row">
+                                    <div class="bd-label">Final Price Saved:</div>
+                                    <div class="bd-value">${finalPrice}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `
+                : '';
 
             const detailsHtml = `
                 <div class="row g-3">
@@ -2025,6 +2069,18 @@
                                     <div class="bd-label">Length:</div>
                                     <div class="bd-value">${safe(booking.length, 'Not specified')}</div>
                                 </div>
+                                ${hairMaskOpt ? `
+                                    <div class="bd-row">
+                                        <div class="bd-label">Hair Mask Option:</div>
+                                        <div class="bd-value">${pretty(hairMaskOpt)}</div>
+                                    </div>
+                                ` : ''}
+                                ${stitchRows ? `
+                                    <div class="bd-row">
+                                        <div class="bd-label">Stitch Rows:</div>
+                                        <div class="bd-value">${pretty(stitchRows)}</div>
+                                    </div>
+                                ` : ''}
                                 <div class="bd-row">
                                     <div class="bd-label">Final Price:</div>
                                     <div class="bd-value">${finalPrice}</div>
@@ -2048,6 +2104,35 @@
                             </div>
                         </div>
                     </div>
+
+                    ${isKids ? `
+                        <div class="col-12">
+                            <div class="bd-card">
+                                <div class="bd-card-header" style="background:#7c3aed;color:white;">
+                                    <i class="bi bi-people"></i>
+                                    <span>Kids Booking Details</span>
+                                </div>
+                                <div class="bd-panel">
+                                    <div class="bd-row">
+                                        <div class="bd-label">Braid Type:</div>
+                                        <div class="bd-value">${safe(pretty(booking.kb_braid_type), '—')}</div>
+                                    </div>
+                                    <div class="bd-row">
+                                        <div class="bd-label">Finish:</div>
+                                        <div class="bd-value">${safe(pretty(booking.kb_finish), '—')}</div>
+                                    </div>
+                                    <div class="bd-row">
+                                        <div class="bd-label">Kids Length:</div>
+                                        <div class="bd-value">${safe(pretty(booking.kb_length), '—')}</div>
+                                    </div>
+                                    <div class="bd-row">
+                                        <div class="bd-label">Extras:</div>
+                                        <div class="bd-value">${safe(pretty(booking.kb_extras), '—')}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    ` : ''}
 
                     ${booking.message ? `
                         <div class="col-12">
@@ -2089,6 +2174,8 @@
                             </div>
                         </div>
                     ` : ''}
+
+                    ${breakdownHtml}
                 </div>
             `;
 
