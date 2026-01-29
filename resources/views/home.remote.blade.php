@@ -1469,6 +1469,39 @@
             transform: none !important;
         }
 
+        /* Fix checkbox/label overlap when using Bootstrap .form-check with flex */
+        #bookingModal .form-check.d-flex,
+        #kidsBookingModal .form-check.d-flex {
+            padding-left: 0 !important;
+        }
+        #bookingModal .form-check.d-flex .form-check-input,
+        #kidsBookingModal .form-check.d-flex .form-check-input {
+            margin-left: 0 !important;
+            margin-right: 10px !important;
+            margin-top: 0.2rem;
+            flex: 0 0 auto;
+        }
+
+        /* Terms checkbox row: custom layout to avoid Bootstrap's negative margin overlap */
+        #bookingModal .dbt-terms-consent,
+        #kidsBookingModal .dbt-terms-consent {
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+            gap: 12px;
+        }
+        #bookingModal .dbt-terms-consent input[type="checkbox"],
+        #kidsBookingModal .dbt-terms-consent input[type="checkbox"] {
+            margin: 0.25rem 0 0 0 !important;
+            float: none !important;
+            flex: 0 0 auto;
+        }
+        #bookingModal .dbt-terms-consent label,
+        #kidsBookingModal .dbt-terms-consent label {
+            margin: 0 !important;
+            line-height: 1.4;
+        }
+
         /* Service Selection Modal Styles */
         .service-quick-btn {
             transition: all 0.3s ease;
@@ -3621,9 +3654,9 @@
                         <div class="text-center mt-4">
                             <!-- Terms acceptance (required) -->
                             <input type="hidden" name="terms_accepted" value="0">
-                            <div class="form-check d-flex justify-content-center mb-3" style="gap:10px; align-items:flex-start;">
+                            <div class="dbt-terms-consent mb-3">
                                 <input class="form-check-input" type="checkbox" id="termsAcceptedMain" name="terms_accepted" value="1" required autocomplete="off">
-                                <label class="form-check-label" for="termsAcceptedMain" style="max-width: 520px; text-align:left;">
+                                <label for="termsAcceptedMain" style="max-width: 520px; text-align:left;">
                                     I agree to the <a href="#terms" style="color:#030f68; font-weight:600; text-decoration:none;" onclick="closeModalAndGoToTerms(event)">Terms &amp; Conditions</a>.
                                 </label>
                             </div>
@@ -6959,9 +6992,9 @@ function clearImagePreview() {
                                 <div class="d-grid mt-3">
                                         <!-- Terms acceptance (required) -->
                                         <input type="hidden" name="terms_accepted" value="0">
-                                        <div class="form-check mb-2">
+                                        <div class="dbt-terms-consent mb-2">
                                             <input class="form-check-input" type="checkbox" id="termsAcceptedKids" name="terms_accepted" value="1" required autocomplete="off">
-                                            <label class="form-check-label" for="termsAcceptedKids" style="font-size:0.95rem;">
+                                            <label for="termsAcceptedKids" style="font-size:0.95rem;">
                                                 I agree to the <a href="#terms" style="color:#030f68; font-weight:600; text-decoration:none;" onclick="closeModalAndGoToTerms(event)">Terms &amp; Conditions</a>.
                                             </label>
                                         </div>
