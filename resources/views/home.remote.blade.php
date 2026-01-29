@@ -6967,7 +6967,7 @@ function clearImagePreview() {
                                         </div>
                                     <div class="d-flex gap-2">
                                         <button type="button" id="kidsBackToSelectorBtn" class="btn btn-secondary" style="font-weight:600;" onclick="backToKidsSelector()">Back to selector</button>
-                                        <button type="submit" class="btn btn-warning" style="font-weight:600;">Confirm Booking</button>
+                                        <button type="submit" class="btn btn-warning" id="kidsBookAppointmentBtn" style="font-weight:600;">Confirm Booking</button>
                                     </div>
                                 </div>
                             </div>
@@ -7712,6 +7712,22 @@ document.addEventListener('DOMContentLoaded', function(){
         }
         return run();
     };
+
+    // Disable submit until Terms is checked (main + kids)
+    document.addEventListener('DOMContentLoaded', function(){
+        const setup = (checkboxId, buttonId) => {
+            const cb = document.getElementById(checkboxId);
+            const btn = document.getElementById(buttonId);
+            if (!cb || !btn) return;
+            const sync = () => {
+                btn.disabled = !cb.checked;
+            };
+            sync();
+            cb.addEventListener('change', sync);
+        };
+        setup('termsAcceptedMain', 'bookAppointmentBtn');
+        setup('termsAcceptedKids', 'kidsBookAppointmentBtn');
+    });
 
     // Update price when length changes
     function handleLengthChange(e) {
