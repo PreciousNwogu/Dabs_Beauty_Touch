@@ -7534,6 +7534,23 @@ document.addEventListener('DOMContentLoaded', function(){
             try {
                 const inst = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
                 inst.show();
+
+                // Watchdog: if backdrop appears but modal doesn't show (z-index/markup issues),
+                // clean up and fail open so the page doesn't feel "frozen".
+                setTimeout(function(){
+                    try {
+                        const shown = modalEl.classList.contains('show');
+                        if (shown) return;
+                        // remove any backdrops that might be blocking interaction
+                        document.querySelectorAll('.modal-backdrop').forEach(b => b.remove());
+                        document.body.classList.remove('modal-open');
+                        document.body.style.removeProperty('padding-right');
+                        modalEl.classList.remove('show');
+                        modalEl.style.display = 'none';
+                        modalEl.setAttribute('aria-hidden', 'true');
+                    } catch(e) { /* ignore */ }
+                    try { next(); } catch(e) { /* ignore */ }
+                }, 450);
             } catch(e) {
                 next();
             }
