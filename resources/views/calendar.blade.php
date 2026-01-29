@@ -1158,6 +1158,14 @@
         document.getElementById('bookingForm').addEventListener('submit', function(e) {
             e.preventDefault();
 
+            // Terms must be accepted (required). Since we preventDefault, enforce it manually.
+            const termsCb = document.getElementById('termsAcceptedCal');
+            if (termsCb && !termsCb.checked) {
+                alert('Please accept the Terms & Conditions to continue.');
+                try { termsCb.focus(); } catch(e) {}
+                return;
+            }
+
             // Ensure a service is selected via the guided flow
             const svc = document.getElementById('service');
             if (!svc || !svc.value) {
@@ -1257,6 +1265,18 @@
                 submitBtn.innerHTML = originalText;
                 submitBtn.disabled = false;
             });
+        });
+
+        // Disable submit until Terms is checked (calendar)
+        document.addEventListener('DOMContentLoaded', function(){
+            const form = document.getElementById('bookingForm');
+            const cb = document.getElementById('termsAcceptedCal');
+            if (!form || !cb) return;
+            const btn = form.querySelector('button[type="submit"]');
+            if (!btn) return;
+            const sync = () => { btn.disabled = !cb.checked; };
+            sync();
+            cb.addEventListener('change', sync);
         });
 
         function showConfirmation(appointment) {
