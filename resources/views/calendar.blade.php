@@ -569,6 +569,14 @@
                         <label for="notes" class="form-label">Special Requests or Notes</label>
                         <textarea class="form-control" id="notes" name="notes" rows="3"></textarea>
                     </div>
+                    <!-- Terms acceptance (required) -->
+                    <input type="hidden" name="terms_accepted" value="0">
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="termsAcceptedCal" name="terms_accepted" value="1" required>
+                        <label class="form-check-label" for="termsAcceptedCal">
+                            I agree to the <a href="{{ route('home') }}#terms" target="_blank" rel="noopener" style="font-weight:600; text-decoration:none;">Terms &amp; Conditions</a>.
+                        </label>
+                    </div>
                     <div class="text-center">
                         <button type="submit" class="btn btn-primary btn-lg">
                             <i class="bi bi-calendar-check me-2"></i>
@@ -639,6 +647,50 @@
                 </div>
                 <div class="modal-footer" style="border-top: none;">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Terms Gate Modal (Calendar page) -->
+    <div class="modal fade" id="termsGateModalCal" tabindex="-1" aria-labelledby="termsGateModalCalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content" style="border-radius: 18px; overflow: hidden;">
+                <div class="modal-header" style="background: linear-gradient(135deg, #030f68 0%, #4a8bc2 100%); color: white;">
+                    <h5 class="modal-title" id="termsGateModalCalLabel" style="font-weight: 800;">
+                        <i class="bi bi-shield-check me-2"></i>Terms &amp; Policies
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <p class="mb-3" style="color:#0b3a66; font-weight: 600;">
+                        Please review and accept our Terms &amp; Conditions before booking.
+                    </p>
+                    <div class="alert alert-info" style="border-left: 5px solid #0ea5e9; border-radius: 12px;">
+                        <div class="mb-1" style="font-weight:800;">Quick summary</div>
+                        <ul class="mb-0" style="padding-left: 18px;">
+                            <li>Deposits are non-refundable once the appointment is confirmed.</li>
+                            <li>Minimum 48 hours notice is required for cancellations.</li>
+                            <li>Rescheduling requires 48 hours notice and must be within 1 month of the initial appointment date.</li>
+                            <li>No-shows may result in a full charge and may affect future bookings.</li>
+                            <li>For home service: clients cover fueling for the stylist’s transportation; fees vary by distance.</li>
+                        </ul>
+                    </div>
+                    <div class="form-check mt-3">
+                        <input class="form-check-input" type="checkbox" id="termsGateAgreeCal">
+                        <label class="form-check-label" for="termsGateAgreeCal" style="font-weight: 700; color:#0b3a66;">
+                            I agree to the Terms &amp; Conditions
+                        </label>
+                    </div>
+                    <div class="mt-3">
+                        <a href="{{ route('home') }}#terms" target="_blank" rel="noopener" style="color:#030f68; font-weight:600; text-decoration:none;">
+                            View full Terms &amp; Conditions
+                        </a>
+                    </div>
+                </div>
+                <div class="modal-footer" style="border-top: none;">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="termsGateContinueBtnCal" disabled>Continue</button>
                 </div>
             </div>
         </div>
@@ -1058,18 +1110,48 @@
         }
 
         function showBookingForm() {
+            // Terms gate: show once per device before allowing booking UI
+            const ensureTermsAccepted = (next) => {
+                const KEY = 'dbt_terms_accepted_v1';
+                const hasAccepted = () => { try { return localStorage.getItem(KEY) === '1'; } catch(e) { return false; } };
+                const setAccepted = () => { try { localStorage.setItem(KEY, '1'); } catch(e) {} };
+                if (hasAccepted()) {
+                    try { const chk = document.getElementById('termsAcceptedCal'); if (chk) chk.checked = true; } catch(e) {}
+                    return next();
+                }
+
+                const modalEl = document.getElementById('termsGateModalCal');
+                const agreeEl = document.getElementById('termsGateAgreeCal');
+                const contBtn = document.getElementById('termsGateContinueBtnCal');
+                if (!modalEl || !agreeEl || !contBtn) return next();
+
+                agreeEl.checked = false;
+                contBtn.disabled = true;
+                agreeEl.onchange = () => { contBtn.disabled = !agreeEl.checked; };
+                contBtn.onclick = () => {
+                    if (!agreeEl.checked) return;
+                    setAccepted();
+                    try { const chk = document.getElementById('termsAcceptedCal'); if (chk) chk.checked = true; } catch(e) {}
+                    try { (bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl)).hide(); } catch(e) {}
+                    next();
+                };
+                try { (bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl)).show(); } catch(e) { next(); }
+            };
+
             const bookingFormContainer = document.getElementById('bookingFormContainer');
             const bookingSummary = document.getElementById('bookingSummary');
 
-            bookingSummary.textContent = `${selectedDate.toLocaleDateString('en-US', {
-                weekday: 'long',
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric'
-            })} at ${selectedTime.formatted_time}`;
+            ensureTermsAccepted(() => {
+                bookingSummary.textContent = `${selectedDate.toLocaleDateString('en-US', {
+                    weekday: 'long',
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                })} at ${selectedTime.formatted_time}`;
 
-            bookingFormContainer.style.display = 'block';
-            bookingFormContainer.scrollIntoView({ behavior: 'smooth' });
+                bookingFormContainer.style.display = 'block';
+                bookingFormContainer.scrollIntoView({ behavior: 'smooth' });
+            });
         }
 
         // Handle form submission
@@ -1131,19 +1213,41 @@
             submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Processing...';
             submitBtn.disabled = true;
 
-            fetch('/appointments/book', {
+            fetch('/bookings', {
                 method: 'POST',
                 body: formData,
                 headers: {
-                    'X-CSRF-TOKEN': document.querySelector('input[name="_token"]').value
+                    'X-CSRF-TOKEN': document.querySelector('input[name="_token"]').value,
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json'
                 }
             })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
+            .then(async (response) => {
+                const data = await response.json().catch(() => null);
+                if (!response.ok) {
+                    // Laravel validation errors typically come back as { errors: { field: [...] } }
+                    const msg = (data && data.message) ? data.message : 'Unable to complete booking.';
+                    const errors = data && data.errors ? data.errors : null;
+                    if (errors && errors.terms_accepted && errors.terms_accepted.length) {
+                        alert(errors.terms_accepted[0]);
+                        // Prompt terms checkbox focus
+                        try { document.getElementById('termsAcceptedCal')?.focus(); } catch(e) {}
+                        return;
+                    }
+                    if (errors) {
+                        const firstKey = Object.keys(errors)[0];
+                        if (firstKey && errors[firstKey] && errors[firstKey][0]) {
+                            alert(errors[firstKey][0]);
+                            return;
+                        }
+                    }
+                    alert(msg);
+                    return;
+                }
+                if (data && data.success) {
                     showConfirmation(data.appointment);
                 } else {
-                    alert('Error: ' + data.message);
+                    alert('Error: ' + ((data && data.message) ? data.message : 'Unknown error'));
                 }
             })
             .catch(error => {
