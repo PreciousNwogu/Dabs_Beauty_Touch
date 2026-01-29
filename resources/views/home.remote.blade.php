@@ -3622,7 +3622,7 @@
                             <!-- Terms acceptance (required) -->
                             <input type="hidden" name="terms_accepted" value="0">
                             <div class="form-check d-flex justify-content-center mb-3" style="gap:10px; align-items:flex-start;">
-                                <input class="form-check-input" type="checkbox" id="termsAcceptedMain" name="terms_accepted" value="1" required>
+                                <input class="form-check-input" type="checkbox" id="termsAcceptedMain" name="terms_accepted" value="1" required autocomplete="off">
                                 <label class="form-check-label" for="termsAcceptedMain" style="max-width: 520px; text-align:left;">
                                     I agree to the <a href="#terms" style="color:#030f68; font-weight:600; text-decoration:none;" onclick="closeModalAndGoToTerms(event)">Terms &amp; Conditions</a>.
                                 </label>
@@ -6960,7 +6960,7 @@ function clearImagePreview() {
                                         <!-- Terms acceptance (required) -->
                                         <input type="hidden" name="terms_accepted" value="0">
                                         <div class="form-check mb-2">
-                                            <input class="form-check-input" type="checkbox" id="termsAcceptedKids" name="terms_accepted" value="1" required>
+                                            <input class="form-check-input" type="checkbox" id="termsAcceptedKids" name="terms_accepted" value="1" required autocomplete="off">
                                             <label class="form-check-label" for="termsAcceptedKids" style="font-size:0.95rem;">
                                                 I agree to the <a href="#terms" style="color:#030f68; font-weight:600; text-decoration:none;" onclick="closeModalAndGoToTerms(event)">Terms &amp; Conditions</a>.
                                             </label>
@@ -7489,9 +7489,8 @@ document.addEventListener('DOMContentLoaded', function(){
             }
         };
 
-        document.addEventListener('DOMContentLoaded', function(){
-            if (hasAccepted()) syncFormCheckboxes();
-        });
+        // IMPORTANT: do NOT auto-check the form checkbox on page load.
+        // We only sync the checkbox after the user accepts via the Terms gate modal.
     })();
 
     // Wrap existing openBookingModal
@@ -7728,6 +7727,14 @@ document.addEventListener('DOMContentLoaded', function(){
         setup('termsAcceptedMain', 'bookAppointmentBtn');
         setup('termsAcceptedKids', 'kidsBookAppointmentBtn');
     });
+
+    // Always start unchecked on initial page load (prevents browser restore/autofill from showing a tick immediately).
+    try {
+        const t1 = document.getElementById('termsAcceptedMain');
+        const t2 = document.getElementById('termsAcceptedKids');
+        if (t1) t1.checked = false;
+        if (t2) t2.checked = false;
+    } catch (e) { /* noop */ }
 
     // Update price when length changes
     function handleLengthChange(e) {
