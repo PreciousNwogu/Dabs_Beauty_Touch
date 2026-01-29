@@ -218,6 +218,10 @@
         $publicUrl = ($bookingId && $code)
           ? secure_url('/bookings/confirm/' . $bookingId . '/' . $code)
           : null;
+        // Read-only view link (no edit form)
+        $viewUrl = ($bookingId && $code)
+          ? secure_url('/bookings/confirm/' . $bookingId . '/' . $code . '?view=1')
+          : null;
         // Fallback: admin view (requires login)
         $adminUrl = $bookingId ? secure_url('/admin/bookings/' . $bookingId) : null;
       @endphp
@@ -227,7 +231,7 @@
            style="display:block;width:100%;text-align:center;background:#ff6600;color:#ffffff !important;text-decoration:none;padding:14px 16px;border-radius:12px;font-weight:800;font-size:16px;letter-spacing:0.2px;">
           Edit Booking
         </a>
-        <a href="{{ $publicUrl ?: ($adminUrl ?: '#') }}"
+        <a href="{{ $viewUrl ?: ($adminUrl ?: '#') }}"
            style="display:block;width:100%;text-align:center;background:#0b3a66;color:#ffffff !important;text-decoration:none;padding:12px 16px;border-radius:12px;font-weight:800;font-size:14px;margin-top:10px;">
           View Booking Details
         </a>
