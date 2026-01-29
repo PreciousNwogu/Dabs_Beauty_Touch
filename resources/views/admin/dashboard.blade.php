@@ -232,6 +232,11 @@
             max-width: 90%;
         }
 
+        /* Ensure bookings table stays readable and scrolls on small screens */
+        .admin-bookings-table {
+            min-width: 1100px;
+        }
+
         .sample-image {
             width: 50px;
             height: 50px;
@@ -1052,9 +1057,9 @@
                     </button>
                 </div>
 
-                <!-- Desktop Table View -->
-                <div class="table-responsive mt-4 table-mobile-hide d-none d-md-block">
-                    <table class="table table-hover">
+                <!-- Bookings Table (all screen sizes; scrolls horizontally on small screens) -->
+                <div class="table-responsive mt-4">
+                    <table class="table table-hover admin-bookings-table">
                         <thead>
                             <tr>
                                 <th class="cursor-pointer" onclick="sortTable('id')">Booking ID <i class="bi bi-arrow-down-up text-muted"></i></th>
@@ -1189,8 +1194,8 @@
                     </table>
                 </div>
 
-                <!-- Mobile Card View -->
-                <div class="d-md-none mt-4 px-3" id="appointmentsMobileCards">
+                <!-- Mobile Card View (disabled; keeping markup for now) -->
+                <div class="d-none mt-4 px-3" id="appointmentsMobileCards">
                     @if($bookings->count() > 0)
                         @foreach($bookings as $booking)
                             <div class="appointment-mobile-card">
@@ -1314,7 +1319,7 @@
 
                 <!-- Pagination -->
                 @if($bookings->hasPages())
-                <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mt-4 px-3 px-md-0">
+                <div id="bookingsPaginationBar" class="d-flex flex-column flex-md-row justify-content-between align-items-center mt-4 px-3 px-md-0">
                     <div class="pagination-info mb-3 mb-md-0">
                         <small class="text-muted">
                             Showing {{ $bookings->firstItem() }} to {{ $bookings->lastItem() }} of {{ $bookings->total() }} bookings
@@ -1322,17 +1327,32 @@
                     </div>
                     <nav aria-label="Bookings pagination">
                         <ul class="pagination pagination-sm mb-0">
+                            @php
+                                $paginated = $bookings->appends(request()->except('page'));
+                                $current = $bookings->currentPage();
+                                $last = $bookings->lastPage();
+                                $start = max(1, $current - 3);
+                                $end = min($last, $current + 3);
+                            @endphp
                             {{-- Previous Page Link --}}
                             @if ($bookings->onFirstPage())
                                 <li class="page-item disabled"><span class="page-link">Previous</span></li>
                             @else
                                 <li class="page-item">
-                                    <a class="page-link" href="{{ $bookings->appends(request()->except('page'))->previousPageUrl() }}">Previous</a>
+                                    <a class="page-link" href="{{ $paginated->previousPageUrl() }}">Previous</a>
                                 </li>
                             @endif
 
-                            {{-- Pagination Elements --}}
-                            @foreach ($bookings->appends(request()->except('page'))->getUrlRange(1, $bookings->lastPage()) as $page => $url)
+                            {{-- First page + leading ellipsis --}}
+                            @if($start > 1)
+                                <li class="page-item"><a class="page-link" href="{{ $paginated->url(1) }}">1</a></li>
+                                @if($start > 2)
+                                    <li class="page-item disabled"><span class="page-link">…</span></li>
+                                @endif
+                            @endif
+
+                            {{-- Page window --}}
+                            @foreach ($paginated->getUrlRange($start, $end) as $page => $url)
                                 @if ($page == $bookings->currentPage())
                                     <li class="page-item active"><span class="page-link">{{ $page }}</span></li>
                                 @else
@@ -1340,10 +1360,18 @@
                                 @endif
                             @endforeach
 
+                            {{-- Trailing ellipsis + last page --}}
+                            @if($end < $last)
+                                @if($end < ($last - 1))
+                                    <li class="page-item disabled"><span class="page-link">…</span></li>
+                                @endif
+                                <li class="page-item"><a class="page-link" href="{{ $paginated->url($last) }}">{{ $last }}</a></li>
+                            @endif
+
                             {{-- Next Page Link --}}
                             @if ($bookings->hasMorePages())
                                 <li class="page-item">
-                                    <a class="page-link" href="{{ $bookings->appends(request()->except('page'))->nextPageUrl() }}">Next</a>
+                                    <a class="page-link" href="{{ $paginated->nextPageUrl() }}">Next</a>
                                 </li>
                             @else
                                 <li class="page-item disabled"><span class="page-link">Next</span></li>
@@ -1742,6 +1770,13 @@
                             currentPaginationInfo.innerHTML = paginationInfo.innerHTML;
                         }
                     }
+
+                    // Update pagination bar (page numbers / prev-next)
+                    const newPaginationBar = tempDiv.querySelector('#bookingsPaginationBar');
+                    const currentPaginationBar = document.getElementById('bookingsPaginationBar');
+                    if (newPaginationBar && currentPaginationBar) {
+                        currentPaginationBar.innerHTML = newPaginationBar.innerHTML;
+                    }
                 })
                 .catch(error => {
                     console.error('Error sorting table:', error);
@@ -1830,6 +1865,13 @@
                             currentPaginationInfo.innerHTML = paginationInfo.innerHTML;
                         }
                     }
+
+                    // Update pagination bar (page numbers / prev-next)
+                    const newPaginationBar = tempDiv.querySelector('#bookingsPaginationBar');
+                    const currentPaginationBar = document.getElementById('bookingsPaginationBar');
+                    if (newPaginationBar && currentPaginationBar) {
+                        currentPaginationBar.innerHTML = newPaginationBar.innerHTML;
+                    }
                 })
                 .catch(error => {
                     console.error('Error applying filters:', error);
@@ -1896,6 +1938,13 @@
                         if (currentPaginationInfo) {
                             currentPaginationInfo.innerHTML = paginationInfo.innerHTML;
                         }
+                    }
+
+                    // Update pagination bar (page numbers / prev-next)
+                    const newPaginationBar = tempDiv.querySelector('#bookingsPaginationBar');
+                    const currentPaginationBar = document.getElementById('bookingsPaginationBar');
+                    if (newPaginationBar && currentPaginationBar) {
+                        currentPaginationBar.innerHTML = newPaginationBar.innerHTML;
                     }
                 })
                 .catch(error => {

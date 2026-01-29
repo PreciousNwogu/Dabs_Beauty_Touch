@@ -422,10 +422,10 @@ Route::prefix('admin')->name('admin.')->group(function () {
                 $query->where('service', 'LIKE', '%' . request('service') . '%');
             }
 
-            // Paginate bookings (50 per page to show more bookings)
+            // Paginate bookings (10 per page)
             $bookings = $query->orderBy('appointment_date', 'desc')
                 ->orderBy('appointment_time', 'desc')
-                ->paginate(50);
+                ->paginate(10);
 
             $stats = [
                 'total_bookings' => \App\Models\Booking::count(),
