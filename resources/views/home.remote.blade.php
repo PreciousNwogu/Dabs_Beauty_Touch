@@ -3676,7 +3676,7 @@
                                 <input class="form-check-input" type="checkbox" id="termsAcceptedMain" name="terms_accepted" value="1" required autocomplete="off">
                                 <div>
                                     <label for="termsAcceptedMain" style="text-align:left;">
-                                        I agree
+                                        I agree to the <a href="#terms" style="color:#030f68; font-weight:600; text-decoration:none;" onclick="closeModalAndGoToTerms(event)">Terms &amp; Conditions</a>.
                                     </label>
                                 </div>
                             </div>
@@ -7016,11 +7016,11 @@ function clearImagePreview() {
                                             <input class="form-check-input" type="checkbox" id="termsAcceptedKids" name="terms_accepted" value="1" required autocomplete="off">
                                             <div>
                                                 <label for="termsAcceptedKids" style="font-size:0.95rem;">
-                                                    I agree
+                                                    I agree to the<br>
+                                                    <span class="dbt-terms-line2">
+                                                        <a href="#terms" style="color:#030f68; font-weight:600; text-decoration:none;" onclick="closeModalAndGoToTerms(event)">Terms &amp; Conditions</a>.
+                                                    </span>
                                                 </label>
-                                                <div class="mt-1">
-                                                    <a href="#terms" style="color:#030f68; font-weight:600; text-decoration:none;" onclick="closeModalAndGoToTerms(event)">View Terms &amp; Conditions</a>
-                                                </div>
                                             </div>
                                         </div>
                                     <div class="d-flex gap-2">
@@ -7065,7 +7065,7 @@ function clearImagePreview() {
                     <div class="form-check mt-3">
                         <input class="form-check-input" type="checkbox" id="termsGateAgree">
                         <label class="form-check-label" for="termsGateAgree" style="font-weight: 700; color:#0b3a66;">
-                            I agree
+                            I agree to the Terms &amp; Conditions
                         </label>
                     </div>
                     <div class="mt-3">
