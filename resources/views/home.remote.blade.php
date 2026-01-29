@@ -3570,7 +3570,7 @@
                                 </div>
                                 <div class="modal-body p-4">
                     <!-- Single Booking Form -->
-                    <form id="bookingForm" action="{{ route('bookings.store') }}" method="POST" autocomplete="on" novalidate enctype="multipart/form-data">
+                    <form id="bookingForm" action="/bookings" method="POST" autocomplete="on" novalidate enctype="multipart/form-data">
                         @csrf
                         <input type="hidden" id="appointment_date" name="appointment_date">
                         <input type="hidden" id="appointment_time_hidden" name="appointment_time">
@@ -4418,7 +4418,7 @@
                 </div>
                 <div class="modal-body p-4">
                     <div class="alert alert-info" style="background:#e7f3ff; border-left: 4px solid #17a2b8; border-radius: 10px;">
-                        <strong>Note:</strong> Tiny Stitch Braids (more than 10 rows) attracts an extra <strong>$20</strong>.
+                        <strong>Note:</strong> Tiny Stitch Braids (more than 10 rows) attracts an extra <strong>$30</strong>.
                     </div>
                     <div class="d-grid gap-3">
                         <button type="button" class="btn btn-primary btn-lg"
@@ -4429,7 +4429,7 @@
                         <button type="button" class="btn btn-outline-primary btn-lg"
                                 onclick="window.selectStitchRowsOption('more_than_ten')"
                                 style="border-radius: 14px; font-weight: 800; padding: 14px 16px;">
-                            More than 10 rows (tiny) +$20
+                            More than 10 rows (tiny) +$30
                         </button>
                     </div>
                 </div>
@@ -6149,7 +6149,7 @@ console.log('=== LOADING BOOKING FUNCTIONS ===');
             const serviceTypeLower = (serviceTypeHidden || '').toLowerCase();
             const serviceNameLower = (serviceNameHidden || '').toLowerCase();
 
-            // Stitch braids rows choice is required and affects pricing (+$20 for >10 rows)
+            // Stitch braids rows choice is required and affects pricing (+$30 for >10 rows)
             const isStitch = serviceTypeLower.includes('stitch') || serviceNameLower.includes('stitch');
             if (isStitch) {
                 const stitchOpt = (document.getElementById('stitch_rows_option') || {}).value || '';
@@ -7059,7 +7059,7 @@ function clearImagePreview() {
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body p-4">
-                    <form id="kidsBookingForm" action="{{ route('bookings.store') }}" method="POST" autocomplete="on" novalidate enctype="multipart/form-data">
+                    <form id="kidsBookingForm" action="/bookings" method="POST" autocomplete="on" novalidate enctype="multipart/form-data">
                         @csrf
                         <input type="hidden" id="kids_service_input" name="service" value="">
                         <input type="hidden" id="kids_service_type_input" name="service_type" value="kids-braids">
@@ -7483,14 +7483,14 @@ document.addEventListener('DOMContentLoaded', function(){
             console.log('Popular service detected - using base price only (mid-back length)');
         }
 
-        // Stitch braids: tiny stitch (>10 rows) adds +$20
+        // Stitch braids: tiny stitch (>10 rows) adds +$30
         try {
             const stLower = (''+serviceType).toLowerCase();
             const snLower = (''+serviceNameDisplay).toLowerCase();
             const isStitch = stLower.includes('stitch') || snLower.includes('stitch');
             const stitchOpt = (document.getElementById('stitch_rows_option') || {}).value || '';
             if (isStitch && stitchOpt === 'more_than_ten') {
-                finalPrice = (typeof finalPrice === 'number' ? finalPrice : (parseFloat(finalPrice) || 0)) + 20;
+                finalPrice = (typeof finalPrice === 'number' ? finalPrice : (parseFloat(finalPrice) || 0)) + 30;
             }
         } catch (e) { /* noop */ }
 

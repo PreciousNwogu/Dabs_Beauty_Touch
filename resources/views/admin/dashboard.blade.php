@@ -793,6 +793,13 @@
                                         </div>
                                     </div>
 
+                                    <div id="editingBlockNotice" class="alert alert-warning d-flex align-items-start mb-4" style="display:none; background:#fff3cd; border-left: 4px solid #ffc107; border-radius: 6px;">
+                                        <i class="bi bi-pencil-square me-2" style="color:#b45309; font-size: 1.2rem;"></i>
+                                        <div>
+                                            <strong>Editing block:</strong> update the title/reason, date, or time and click <strong>Update Block</strong> to save.
+                                        </div>
+                                    </div>
+
                                     <div class="mb-4">
                                         <label class="form-label fw-semibold mb-2">
                                             <i class="bi bi-tag me-1"></i>Title / Reason
@@ -956,6 +963,49 @@
                 </div>
             </div>
 
+            <!-- Reschedule Booking Modal (Admin-only) -->
+            <div class="modal fade" id="rescheduleBookingModal" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content" style="border-radius: 14px; overflow: hidden;">
+                        <div class="modal-header" style="background: linear-gradient(135deg, #0ea5e9 0%, #4a8bc2 100%); color: white;">
+                            <h5 class="modal-title" style="font-weight: 800;">
+                                <i class="bi bi-calendar2-week me-2"></i>Reschedule Booking
+                            </h5>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="alert alert-info">
+                                <i class="bi bi-info-circle me-2"></i>
+                                Select a new <strong>date</strong> and <strong>time</strong>. This updates the booking and sends the customer a reschedule email.
+                            </div>
+
+                            <input type="hidden" id="rescheduleBookingId" value="">
+
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">New Date</label>
+                                <input type="date" class="form-control" id="rescheduleDate" />
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">New Time</label>
+                                <select class="form-select" id="rescheduleTime">
+                                    <option value="">Select a time</option>
+                                </select>
+                                <div class="form-text">Only shows available times (not booked + not blocked).</div>
+                            </div>
+
+                            <div id="rescheduleError" class="alert alert-danger" style="display:none;"></div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="button" class="btn btn-primary" id="confirmRescheduleBtn">
+                                <i class="bi bi-check2-circle me-1"></i>Reschedule
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
 
             <!-- Filters -->
         <div class="filter-section px-4 px-md-4 px-3 py-3">
@@ -1101,6 +1151,14 @@
                                                 <button class="btn btn-outline-info btn-sm mb-1" onclick="viewBookingDetails({{ $booking->id }})" title="View Details">
                                                     <i class="bi bi-eye"></i> View Details
                                                 </button>
+                                                @if($booking->confirmation_code)
+                                                    <a class="btn btn-outline-primary btn-sm mb-1"
+                                                       href="{{ url('/bookings/confirm/' . $booking->id . '/' . $booking->confirmation_code) }}"
+                                                       target="_blank" rel="noopener"
+                                                       title="Edit Booking (public link)">
+                                                        <i class="bi bi-pencil-square"></i> Edit Booking
+                                                    </a>
+                                                @endif
                                                 @if($booking->status === 'pending')
                                                     <button class="btn btn-success btn-sm mb-1" onclick="updateStatusQuick({{ $booking->id }}, 'confirmed')">
                                                         <i class="bi bi-check"></i> Confirm
@@ -1221,6 +1279,14 @@
                                     <button class="btn btn-outline-info btn-sm" onclick="viewBookingDetails({{ $booking->id }})">
                                         <i class="bi bi-eye"></i> View
                                     </button>
+                                    @if($booking->confirmation_code)
+                                        <a class="btn btn-outline-primary btn-sm"
+                                           href="{{ url('/bookings/confirm/' . $booking->id . '/' . $booking->confirmation_code) }}"
+                                           target="_blank" rel="noopener"
+                                           title="Edit Booking (public link)">
+                                            <i class="bi bi-pencil-square"></i> Edit
+                                        </a>
+                                    @endif
                                     @if($booking->status === 'pending')
                                         <button class="btn btn-success btn-sm" onclick="updateStatusQuick({{ $booking->id }}, 'confirmed')">
                                             <i class="bi bi-check"></i> Confirm
@@ -1840,11 +1906,23 @@
         }
 
         function viewBookingDetails(bookingId) {
-            // Navigate to booking details page
-            window.location.href = `/admin/bookings/${bookingId}`;
+            // Fetch booking details
+            fetch(`/admin/booking-details/${bookingId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        showBookingDetails(data.booking, data.breakdown || null);
+                    } else {
+                        alert('Error loading booking details: ' + (data.message || 'Unknown error'));
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading booking details:', error);
+                    alert('Error loading booking details. Please try again.');
+                });
         }
 
-        function showBookingDetails(booking) {
+        function showBookingDetails(booking, breakdown) {
             const safe = (v, fallback = 'Not provided') => {
                 if (v === null || typeof v === 'undefined') return fallback;
                 const s = String(v).trim();
@@ -1852,6 +1930,10 @@
             };
 
             const bookingId = booking.booking_id || booking.id;
+            const confirmationCode = booking.confirmation_code ? String(booking.confirmation_code).trim() : '';
+            const editUrl = (booking.id && confirmationCode)
+                ? (`/bookings/confirm/${booking.id}/${encodeURIComponent(confirmationCode)}`)
+                : null;
             const apptDate = booking.appointment_date
                 ? new Date(String(booking.appointment_date).slice(0, 10) + 'T00:00:00').toLocaleDateString()
                 : 'N/A';
@@ -1861,6 +1943,50 @@
             const sampleUrl = booking.sample_picture
                 ? (String(booking.sample_picture).startsWith('http') ? booking.sample_picture : '/storage/' + booking.sample_picture)
                 : null;
+
+            const isKids = !!(booking.kb_braid_type || booking.kb_length || (String(booking.service || '').toLowerCase().includes('kids')));
+            const stitchRows = booking.stitch_rows_option ? String(booking.stitch_rows_option) : '';
+            const hairMaskOpt = booking.hair_mask_option ? String(booking.hair_mask_option) : (booking.selectedHairMaskOption ? String(booking.selectedHairMaskOption) : '');
+
+            const pretty = (raw) => {
+                const s = (raw || '').toString();
+                return s.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+            };
+
+            const breakdownHtml = (breakdown && typeof breakdown === 'object' && Object.keys(breakdown).length)
+                ? `
+                    <div class="col-12">
+                        <div class="bd-card">
+                            <div class="bd-card-header" style="background:#0ea5e9;color:white;">
+                                <i class="bi bi-cash-coin"></i>
+                                <span>Pricing Breakdown</span>
+                            </div>
+                            <div class="bd-panel">
+                                <div class="bd-row">
+                                    <div class="bd-label">Resolved Base:</div>
+                                    <div class="bd-value">${(breakdown.resolved_base !== null && typeof breakdown.resolved_base !== 'undefined') ? ('$' + parseFloat(breakdown.resolved_base).toFixed(2)) : 'N/A'}</div>
+                                </div>
+                                <div class="bd-row">
+                                    <div class="bd-label">Length Adjust:</div>
+                                    <div class="bd-value">${(breakdown.length_adjust !== null && typeof breakdown.length_adjust !== 'undefined') ? ('$' + parseFloat(breakdown.length_adjust).toFixed(2)) : 'N/A'}</div>
+                                </div>
+                                <div class="bd-row">
+                                    <div class="bd-label">Add-ons Total:</div>
+                                    <div class="bd-value">${(breakdown.addons_total !== null && typeof breakdown.addons_total !== 'undefined') ? ('$' + parseFloat(breakdown.addons_total).toFixed(2)) : 'N/A'}</div>
+                                </div>
+                                <div class="bd-row">
+                                    <div class="bd-label">Computed Total:</div>
+                                    <div class="bd-value">${(breakdown.computed_total !== null && typeof breakdown.computed_total !== 'undefined') ? ('$' + parseFloat(breakdown.computed_total).toFixed(2)) : 'N/A'}</div>
+                                </div>
+                                <div class="bd-row">
+                                    <div class="bd-label">Final Price Saved:</div>
+                                    <div class="bd-value">${finalPrice}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `
+                : '';
 
             const detailsHtml = `
                 <div class="row g-3">
@@ -1943,6 +2069,18 @@
                                     <div class="bd-label">Length:</div>
                                     <div class="bd-value">${safe(booking.length, 'Not specified')}</div>
                                 </div>
+                                ${hairMaskOpt ? `
+                                    <div class="bd-row">
+                                        <div class="bd-label">Hair Mask Option:</div>
+                                        <div class="bd-value">${pretty(hairMaskOpt)}</div>
+                                    </div>
+                                ` : ''}
+                                ${stitchRows ? `
+                                    <div class="bd-row">
+                                        <div class="bd-label">Stitch Rows:</div>
+                                        <div class="bd-value">${pretty(stitchRows)}</div>
+                                    </div>
+                                ` : ''}
                                 <div class="bd-row">
                                     <div class="bd-label">Final Price:</div>
                                     <div class="bd-value">${finalPrice}</div>
@@ -1966,6 +2104,35 @@
                             </div>
                         </div>
                     </div>
+
+                    ${isKids ? `
+                        <div class="col-12">
+                            <div class="bd-card">
+                                <div class="bd-card-header" style="background:#7c3aed;color:white;">
+                                    <i class="bi bi-people"></i>
+                                    <span>Kids Booking Details</span>
+                                </div>
+                                <div class="bd-panel">
+                                    <div class="bd-row">
+                                        <div class="bd-label">Braid Type:</div>
+                                        <div class="bd-value">${safe(pretty(booking.kb_braid_type), '—')}</div>
+                                    </div>
+                                    <div class="bd-row">
+                                        <div class="bd-label">Finish:</div>
+                                        <div class="bd-value">${safe(pretty(booking.kb_finish), '—')}</div>
+                                    </div>
+                                    <div class="bd-row">
+                                        <div class="bd-label">Kids Length:</div>
+                                        <div class="bd-value">${safe(pretty(booking.kb_length), '—')}</div>
+                                    </div>
+                                    <div class="bd-row">
+                                        <div class="bd-label">Extras:</div>
+                                        <div class="bd-value">${safe(pretty(booking.kb_extras), '—')}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    ` : ''}
 
                     ${booking.message ? `
                         <div class="col-12">
@@ -2007,6 +2174,8 @@
                             </div>
                         </div>
                     ` : ''}
+
+                    ${breakdownHtml}
                 </div>
             `;
 
@@ -2014,6 +2183,16 @@
             const footerHtml = `
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    ${editUrl ? `
+                        <a href="${editUrl}" target="_blank" rel="noopener" class="btn btn-primary">
+                            <i class="bi bi-pencil-square me-1"></i> Edit Booking
+                        </a>
+                    ` : ''}
+                    ${(booking.status !== 'completed' && booking.status !== 'cancelled') ? `
+                        <button type="button" class="btn btn-outline-primary" onclick="openRescheduleModal(${booking.id}, '${String(booking.appointment_date || '').slice(0,10)}', '${safe(booking.appointment_time, '')}')">
+                            <i class="bi bi-calendar2-week me-1"></i> Reschedule
+                        </button>
+                    ` : ''}
                     ${booking.status !== 'completed' && booking.status !== 'cancelled' ? `
                         <button type="button" class="btn btn-info" onclick="updateStatusQuick(${booking.id}, 'completed')">
                             <i class="bi bi-award me-1"></i> Complete Service
@@ -2026,6 +2205,153 @@
             const modal = new bootstrap.Modal(document.getElementById('detailsModal'));
             modal.show();
         }
+
+        // --- Admin reschedule modal ---
+        window.openRescheduleModal = async function(bookingId, currentDateRaw, currentTimeRaw) {
+            const modalEl = document.getElementById('rescheduleBookingModal');
+            if (!modalEl) return;
+
+            // Ensure the reschedule modal appears on top by hiding the details modal first.
+            // Bootstrap doesn't reliably stack modals/backdrops without custom z-index handling.
+            try {
+                const detailsEl = document.getElementById('detailsModal');
+                const detailsInst = detailsEl ? bootstrap.Modal.getInstance(detailsEl) : null;
+                if (detailsInst) detailsInst.hide();
+            } catch (e) { /* noop */ }
+
+            const idEl = document.getElementById('rescheduleBookingId');
+            const dateEl = document.getElementById('rescheduleDate');
+            const timeEl = document.getElementById('rescheduleTime');
+            const errEl = document.getElementById('rescheduleError');
+
+            if (errEl) { errEl.style.display = 'none'; errEl.textContent = ''; }
+            if (idEl) idEl.value = bookingId;
+            if (dateEl && currentDateRaw) dateEl.value = String(currentDateRaw).slice(0,10);
+
+            // Normalize time to H:i where possible
+            const normalizeTime = (t) => {
+                const s = (t || '').toString().trim();
+                if (!s) return '';
+                // Already H:i
+                if (/^\d{2}:\d{2}$/.test(s)) return s;
+                // Try parse "h:mm AM/PM"
+                const m = s.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
+                if (m) {
+                    let hh = parseInt(m[1], 10);
+                    const mm = parseInt(m[2], 10);
+                    const ap = m[3].toUpperCase();
+                    if (ap === 'PM' && hh < 12) hh += 12;
+                    if (ap === 'AM' && hh === 12) hh = 0;
+                    return String(hh).padStart(2,'0') + ':' + String(mm).padStart(2,'0');
+                }
+                return '';
+            };
+
+            const currentTime = normalizeTime(currentTimeRaw);
+
+            const loadSlots = async (ymd) => {
+                if (!timeEl) return;
+                timeEl.innerHTML = '<option value="">Loading...</option>';
+                try {
+                    const resp = await fetch(`/bookings/slots?date=${encodeURIComponent(ymd)}`);
+                    const data = await resp.json();
+                    if (!data.success) throw new Error(data.message || 'Failed to load slots');
+                    const slots = Array.isArray(data.slots) ? data.slots : [];
+                    if (!slots.length) {
+                        timeEl.innerHTML = '<option value="">No available times</option>';
+                        return;
+                    }
+                    timeEl.innerHTML = '<option value="">Select a time</option>' + slots.map(s => {
+                        const val = s.time || '';
+                        const label = s.formatted_time || val;
+                        return `<option value="${val}">${label}</option>`;
+                    }).join('');
+
+                    // Preselect current time if present and available; otherwise leave blank
+                    if (currentTime) {
+                        const opt = Array.from(timeEl.options).find(o => o.value === currentTime);
+                        if (opt) timeEl.value = currentTime;
+                    }
+                } catch (e) {
+                    timeEl.innerHTML = '<option value="">Failed to load times</option>';
+                    if (errEl) { errEl.style.display = 'block'; errEl.textContent = 'Failed to load available times.'; }
+                }
+            };
+
+            const initialDate = dateEl ? dateEl.value : '';
+            if (initialDate) await loadSlots(initialDate);
+
+            if (dateEl) {
+                dateEl.onchange = async function() {
+                    const ymd = dateEl.value;
+                    if (!ymd) return;
+                    await loadSlots(ymd);
+                };
+            }
+
+            // Wait a moment for the details modal/backdrop to finish hiding, then show reschedule.
+            setTimeout(() => {
+                const modal = new bootstrap.Modal(modalEl);
+                modal.show();
+            }, 250);
+        };
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const btn = document.getElementById('confirmRescheduleBtn');
+            if (!btn) return;
+
+            btn.addEventListener('click', async function() {
+                const bookingId = document.getElementById('rescheduleBookingId')?.value;
+                const dateVal = document.getElementById('rescheduleDate')?.value;
+                const timeVal = document.getElementById('rescheduleTime')?.value;
+                const errEl = document.getElementById('rescheduleError');
+
+                if (errEl) { errEl.style.display = 'none'; errEl.textContent = ''; }
+                if (!bookingId || !dateVal || !timeVal) {
+                    if (errEl) { errEl.style.display = 'block'; errEl.textContent = 'Please select both a date and a time.'; }
+                    return;
+                }
+
+                // Build UTC ISO start to match FullCalendar admin settings
+                const [y, m, d] = dateVal.split('-').map(n => parseInt(n, 10));
+                const [hh, mm] = timeVal.split(':').map(n => parseInt(n, 10));
+                const start = new Date(Date.UTC(y, m - 1, d, hh, mm, 0, 0));
+                const end = new Date(start.getTime() + 60 * 60 * 1000);
+
+                const calendarEl = document.getElementById('adminCalendar');
+                const rescheduleUrl = calendarEl?.dataset?.rescheduleUrl || @json(route('admin.schedules.reschedule'));
+                const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+
+                const originalText = btn.innerHTML;
+                btn.disabled = true;
+                btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Rescheduling...';
+
+                try {
+                    const resp = await fetch(rescheduleUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrf, 'Accept': 'application/json' },
+                        body: JSON.stringify({ booking_id: parseInt(bookingId, 10), start: start.toISOString(), end: end.toISOString() })
+                    });
+                    const data = await resp.json();
+                    if (!resp.ok || !data.success) {
+                        throw new Error(data.message || `Failed (HTTP ${resp.status})`);
+                    }
+
+                    // Close modal
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('rescheduleBookingModal'));
+                    if (modal) modal.hide();
+
+                    // Refresh calendar events and reload table
+                    try { window.adminCalendar?.refetchEvents(); } catch (e) {}
+                    window.location.reload();
+                } catch (e) {
+                    if (errEl) { errEl.style.display = 'block'; errEl.textContent = e.message || 'Failed to reschedule.'; }
+                } finally {
+                    btn.disabled = false;
+                    btn.innerHTML = originalText;
+                }
+            });
+        });
 
         function updateAppointmentStatus(appointmentId) {
             currentAppointmentId = appointmentId;
@@ -2385,21 +2711,19 @@
             document.getElementById('completeServicesResults').style.display = 'none';
             document.getElementById('completeServicesEmpty').style.display = 'none';
 
-            // Build search data
-            const searchData = {};
-            if (bookingId) searchData.booking_id = bookingId;
-            if (customerName) searchData.customer_name = customerName;
-            if (date) searchData.date = date;
-            if (service) searchData.service = service;
+            // Build search params
+            const params = new URLSearchParams();
+            if (bookingId) params.append('booking_id', bookingId);
+            if (customerName) params.append('customer_name', customerName);
+            if (date) params.append('date', date);
+            if (service) params.append('service', service);
 
-            fetch('/admin/bookings/search-complete', {
+            fetch('/admin/bookings/search-complete?' + params.toString(), {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                    'Accept': 'application/json'
-                },
-                body: JSON.stringify(searchData)
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                }
             })
             .then(response => response.json())
             .then(data => {
@@ -2504,50 +2828,14 @@
                     return;
                 }
 
-                const bookingId = document.getElementById('completeBookingIdInput').value;
-                const completedBy = document.getElementById('completeStaffMember').value;
-                const serviceDuration = parseInt(document.getElementById('completeServiceDuration').value);
-                const finalPrice = parseFloat(document.getElementById('completeFinalPrice').value);
-                const paymentStatus = document.getElementById('completePaymentStatus').value;
-                const completionNotes = document.getElementById('completeNotes').value;
-
-                // Validate required fields
-                if (!bookingId) {
-                    alert('Booking ID is required');
-                    submitCompleteServiceBtn.disabled = false;
-                    submitCompleteServiceBtn.innerHTML = '<i class="bi bi-award me-2"></i>Complete Service';
-                    return;
-                }
-
-                if (!completedBy || !completedBy.trim()) {
-                    alert('Please enter the staff member who completed the service');
-                    submitCompleteServiceBtn.disabled = false;
-                    submitCompleteServiceBtn.innerHTML = '<i class="bi bi-award me-2"></i>Complete Service';
-                    return;
-                }
-
-                if (isNaN(serviceDuration) || serviceDuration <= 0) {
-                    alert('Please enter a valid service duration');
-                    submitCompleteServiceBtn.disabled = false;
-                    submitCompleteServiceBtn.innerHTML = '<i class="bi bi-award me-2"></i>Complete Service';
-                    return;
-                }
-
-                if (isNaN(finalPrice) || finalPrice < 0) {
-                    alert('Please enter a valid final price');
-                    submitCompleteServiceBtn.disabled = false;
-                    submitCompleteServiceBtn.innerHTML = '<i class="bi bi-award me-2"></i>Complete Service';
-                    return;
-                }
-
                 const formData = {
-                    booking_id: bookingId,
+                    booking_id: document.getElementById('completeBookingIdInput').value,
                     status: 'completed',
-                    completed_by: completedBy.trim(),
-                    service_duration_minutes: serviceDuration,
-                    final_price: finalPrice,
-                    payment_status: paymentStatus,
-                    completion_notes: completionNotes ? completionNotes.trim() : ''
+                    completed_by: document.getElementById('completeStaffMember').value,
+                    service_duration_minutes: parseInt(document.getElementById('completeServiceDuration').value),
+                    final_price: parseFloat(document.getElementById('completeFinalPrice').value),
+                    payment_status: document.getElementById('completePaymentStatus').value,
+                    completion_notes: document.getElementById('completeNotes').value
                 };
 
                 submitCompleteServiceBtn.disabled = true;
@@ -2557,26 +2845,11 @@
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                        'Accept': 'application/json'
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
                     },
                     body: JSON.stringify(formData)
                 })
-                .then(response => {
-                    if (!response.ok) {
-                        return response.text().then(text => {
-                            throw new Error('Server error: ' + response.status + ' - ' + text.substring(0, 200));
-                        });
-                    }
-                    const contentType = response.headers.get('content-type');
-                    if (contentType && contentType.includes('application/json')) {
-                        return response.json();
-                    } else {
-                        return response.text().then(text => {
-                            throw new Error('Expected JSON but got: ' + text.substring(0, 200));
-                        });
-                    }
-                })
+                .then(response => response.json())
                 .then(data => {
                     if (data.success) {
                         alert('Service completed successfully!');
@@ -2589,8 +2862,7 @@
                 })
                 .catch(error => {
                     console.error('Error completing service:', error);
-                    const errorMessage = error.message || 'Unknown error occurred';
-                    alert('Error completing service: ' + errorMessage + '. Please check the console for details.');
+                    alert('Error completing service. Please try again.');
                 })
                 .finally(() => {
                     submitCompleteServiceBtn.disabled = false;

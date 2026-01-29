@@ -488,9 +488,17 @@ Route::prefix('admin')->name('admin.')->group(function () {
             ]);
         }
 
+        $breakdown = [];
+        try {
+            $breakdown = $booking->getPricingBreakdown();
+        } catch (\Throwable $e) {
+            $breakdown = [];
+        }
+
         return response()->json([
             'success' => true,
-            'booking' => $booking
+            'booking' => $booking,
+            'breakdown' => $breakdown
         ]);
     })->name('booking-details');
 
@@ -1790,8 +1798,9 @@ Route::get('/bookings/confirm/{id}/{code}', function($id, $code) {
         return redirect()->route('home')->with(['booking_error' => true, 'error_message' => 'Invalid booking confirmation link.']);
     }
 
-    // Render a simple page showing booking details (or reuse booking.success view)
+    // Render the booking details page (reuse booking.success view but pass richer context)
     $bookingDetails = [
+        'id' => $booking->id,
         'booking_id' => 'BK' . str_pad($booking->id, 6, '0', STR_PAD_LEFT),
         'confirmation_code' => $booking->confirmation_code,
         'service' => $booking->service,
@@ -1803,10 +1812,225 @@ Route::get('/bookings/confirm/{id}/{code}', function($id, $code) {
         'email' => $booking->email,
         'phone' => $booking->phone,
         'message' => $booking->message,
+        // Kids selector fields (if applicable)
+        'kb_braid_type' => $booking->kb_braid_type,
+        'kb_finish' => $booking->kb_finish,
+        'kb_length' => $booking->kb_length,
+        'kb_extras' => $booking->kb_extras,
+        'status' => $booking->status,
     ];
 
-    return view('booking.success', ['bookingDetails' => $bookingDetails]);
+    $breakdown = [];
+    try { $breakdown = $booking->getPricingBreakdown(); } catch (\Throwable $e) { $breakdown = []; }
+
+    return view('booking.success', [
+        'bookingDetails' => $bookingDetails,
+        'booking' => $booking,
+        'breakdown' => $breakdown,
+        'confirmId' => $id,
+        'confirmCode' => $code,
+    ]);
 })->name('bookings.confirm');
+
+// Public booking modification endpoint (requires matching confirmation code)
+Route::post('/bookings/confirm/{id}/{code}/modify', function(\Illuminate\Http\Request $request, $id, $code) {
+    $booking = \App\Models\Booking::find($id);
+    if (!$booking || ($booking->confirmation_code ?? '') !== $code) {
+        return redirect()->route('home')->with(['booking_error' => true, 'error_message' => 'Invalid booking confirmation link.']);
+    }
+
+    // Prevent edits after completion/cancellation
+    if (in_array(($booking->status ?? ''), ['cancelled', 'completed'], true)) {
+        return redirect()->route('bookings.confirm', ['id' => $id, 'code' => $code])
+            ->with(['booking_error' => true, 'error_message' => 'This booking can no longer be modified.']);
+    }
+
+    // Allowed braid services for user self-edit (keeps scope tight & avoids needing additional fields)
+    $allowedBraidServices = [
+        'Small Knotless Braids',
+        'Smedium Knotless Braids',
+        'Medium Knotless Braids',
+        'Jumbo Knotless Braids',
+        '8–10 Rows Stitch Braids',
+        'Smedium Boho Braids',
+    ];
+
+    $data = $request->validate([
+        'length' => 'nullable|string|in:neck,shoulder,armpit,bra_strap,mid_back,waist,hip,tailbone,classic',
+        'kb_braid_type' => 'nullable|string|in:protective,cornrows,knotless_small,knotless_med,box_small,box_med,stitch',
+        // Allow kids length override (accept the same canonical set used elsewhere)
+        'kb_length' => 'nullable|string|in:neck,shoulder,armpit,bra_strap,mid_back,waist,hip,tailbone,classic',
+        // For non-kids braid bookings, allow changing the braid style (service)
+        'service' => 'nullable|string|max:255',
+    ]);
+
+    $before = [
+        'service' => $booking->service,
+        'length' => $booking->length,
+        'kb_braid_type' => $booking->kb_braid_type,
+        'kb_length' => $booking->kb_length,
+        'final_price' => $booking->final_price,
+    ];
+
+    // Determine whether this is a kids booking (do not rely on a service_type column)
+    $isKids = (
+        stripos((string)$booking->service, 'kids') !== false ||
+        !empty($booking->kb_braid_type) ||
+        !empty($booking->kb_length)
+    );
+
+    // Determine whether this is a braid service (non-kids)
+    $serviceNameNormalized = strtolower((string)($booking->service ?? ''));
+    $isBraidService = (
+        str_contains($serviceNameNormalized, 'braid') ||
+        str_contains($serviceNameNormalized, 'braids') ||
+        str_contains($serviceNameNormalized, 'knotless') ||
+        str_contains($serviceNameNormalized, 'stitch') ||
+        str_contains($serviceNameNormalized, 'boho')
+    );
+
+    // Normalize length strings
+    $normalizeLen = function($v) {
+        if (!is_string($v)) return $v;
+        $v = strtolower(trim($v));
+        $v = str_replace([' ', '-'], '_', $v);
+        $v = str_replace(['tail_bone','tailbone'], 'tailbone', $v);
+        $v = str_replace(['bra strap','bra-strap','bra_strap'], 'bra_strap', $v);
+        $v = str_replace(['midback','mid_back'], 'mid_back', $v);
+        return $v;
+    };
+
+    try {
+        if ($isKids) {
+            // Apply updates
+            if (!empty($data['kb_braid_type'])) {
+                $booking->kb_braid_type = $data['kb_braid_type'];
+            }
+            if (!empty($data['kb_length'])) {
+                $booking->kb_length = $normalizeLen($data['kb_length']);
+            } elseif (!empty($data['length'])) {
+                // allow editing length via generic field
+                $booking->kb_length = $normalizeLen($data['length']);
+            }
+
+            // If service label includes a braid type, update it for clarity
+            $braidMap = [
+                'protective' => 'Protective style',
+                'cornrows' => 'Cornrows',
+                'knotless_small' => 'Knotless (small)',
+                'knotless_med' => 'Knotless (medium)',
+                'box_small' => 'Box (small)',
+                'box_med' => 'Box (medium)',
+                'stitch' => 'Stitch',
+            ];
+            if (!empty($booking->kb_braid_type)) {
+                $human = $braidMap[$booking->kb_braid_type] ?? ucwords(str_replace(['_','-'], ' ', $booking->kb_braid_type));
+                $booking->service = 'Kids Braids — ' . $human;
+            }
+
+            // Recompute price (kids selector rules: type + length + finish + extras)
+            $baseConfigured = (float) (config('service_prices.kids_braids', 80));
+            $typeAdj = ['protective'=>-20,'cornrows'=>-40,'knotless_small'=>20,'knotless_med'=>0,'box_small'=>10,'box_med'=>0,'stitch'=>20];
+            $lengthAdj = ['shoulder'=>0,'armpit'=>10,'mid_back'=>20,'waist'=>30];
+            $finishAdj = ['curled'=>-10,'plain'=>0];
+
+            $bt = $booking->kb_braid_type ?? null;
+            $ln = $booking->kb_length ?? $booking->length ?? null;
+            $fi = $booking->kb_finish ?? null;
+            $ex = $booking->kb_extras ?? null;
+
+            $adjustments = 0.0;
+            if ($bt && isset($typeAdj[$bt])) $adjustments += (float) $typeAdj[$bt];
+            if ($ln && isset($lengthAdj[$ln])) $adjustments += (float) $lengthAdj[$ln];
+            if ($fi && isset($finishAdj[$fi])) $adjustments += (float) $finishAdj[$fi];
+
+            $addons = 0.0;
+            if ($ex) {
+                $addonMap = ['kb_add_detangle'=>15,'kb_add_beads'=>10,'kb_add_beads_full'=>15,'kb_add_extension'=>20,'kb_add_rest'=>5];
+                if (is_string($ex) && strpos($ex,'kb_add_')!==false) {
+                    foreach (explode(',', $ex) as $it) { $it = trim($it); if (isset($addonMap[$it])) $addons += (float) $addonMap[$it]; }
+                } elseif (is_string($ex) && preg_match('/^\d+(?:\.\d+)?(,\d+(?:\.\d+)?)*$/', $ex)) {
+                    foreach (explode(',', $ex) as $n) { $addons += (float) floatval($n); }
+                }
+            }
+
+            $final = round($baseConfigured + $adjustments + $addons, 2);
+
+            // Persist breakdown in both kids-specific and generic fields for compatibility
+            $booking->kb_base_price = $baseConfigured;
+            $booking->kb_length_adjustment = $adjustments; // total adjustments for kids (type+length+finish)
+            $booking->kb_final_price = $final;
+            $booking->base_price = $baseConfigured;
+            $booking->length_adjustment = $adjustments;
+            $booking->final_price = $final;
+
+            // For display consistency, also mirror length field
+            if (!empty($booking->kb_length)) {
+                $booking->length = $booking->kb_length;
+            }
+        } else {
+            // Non-kids: only allow length changes
+            // If it's a braid booking, allow changing the braid style (service) among a safe allowlist.
+            if (!empty($data['service']) && $isBraidService) {
+                if (!in_array($data['service'], $allowedBraidServices, true)) {
+                    return redirect()->route('bookings.confirm', ['id' => $id, 'code' => $code])
+                        ->with(['booking_error' => true, 'error_message' => 'Invalid braid style selection.']);
+                }
+                $booking->service = $data['service'];
+            }
+
+            if (!empty($data['length'])) {
+                $booking->length = $normalizeLen($data['length']);
+            }
+
+            // Recompute using PriceCalculator
+            $calculator = new \App\Services\PriceCalculator();
+            $break = $calculator->calculate([
+                'service_input' => $booking->service,
+                'service_type' => $booking->service,
+                'length' => $booking->length,
+                'hair_mask_option' => $booking->hair_mask_option,
+                // Keep stitch add-on behavior consistent: if not set, default to ten_or_less
+                'stitch_rows_option' => $booking->stitch_rows_option ?: 'ten_or_less',
+            ]);
+            $booking->base_price = $break['base_price'] ?? $booking->base_price;
+            $booking->length_adjustment = $break['length_adjustment'] ?? $booking->length_adjustment;
+            $booking->final_price = $break['final_price'] ?? $booking->final_price;
+        }
+
+        $booking->save();
+
+        $after = [
+            'service' => $booking->service,
+            'length' => $booking->length,
+            'kb_braid_type' => $booking->kb_braid_type,
+            'kb_length' => $booking->kb_length,
+            'final_price' => $booking->final_price,
+        ];
+
+        // Send modification notifications to customer + admin
+        try {
+            $adminEmail = config('mail.admin_address') ?: env('ADMIN_EMAIL') ?: 'admin@example.com';
+            $notif = new \App\Notifications\BookingModifiedNotification($booking, $before, $after);
+            if (!empty($booking->email) && $booking->email !== 'no-email@example.com') {
+                \Illuminate\Support\Facades\Notification::route('mail', $booking->email)->notify($notif);
+            }
+            \Illuminate\Support\Facades\Notification::route('mail', $adminEmail)->notify($notif);
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('Failed to send booking modified notifications', [
+                'booking_id' => $booking->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
+
+        return redirect()->route('bookings.confirm', ['id' => $id, 'code' => $code])
+            ->with(['success' => true, 'message' => '✅ Your booking has been updated.']);
+    } catch (\Throwable $e) {
+        \Illuminate\Support\Facades\Log::error('Booking modify failed', ['booking_id' => $booking->id, 'error' => $e->getMessage()]);
+        return redirect()->route('bookings.confirm', ['id' => $id, 'code' => $code])
+            ->with(['booking_error' => true, 'error_message' => 'Failed to update booking. Please try again or contact us.']);
+    }
+})->name('bookings.modify');
 
 // Temporary debug route to inspect mail configuration from the running web process.
 // Use this to verify which MAIL_* values the server process is using (Mailtrap vs Zoho).

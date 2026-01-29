@@ -62,6 +62,10 @@ class ScheduleController extends Controller
                                 'extendedProps' => [
                                     'type' => 'blocked',
                                     'orig_slot_id' => $slot->id,
+                                    // Preserve original stored range so the admin UI can edit the block
+                                    // without relying on the per-day expanded event's start/end.
+                                    'orig_start' => $startParsed->toIso8601String(),
+                                    'orig_end' => $endParsed->toIso8601String(),
                                     'meta' => $slot->meta,
                                 ],
                                 'editable' => false,
@@ -346,6 +350,11 @@ class ScheduleController extends Controller
 
         $booking = Booking::findOrFail($data['booking_id']);
 
+        // Prevent rescheduling cancelled/completed bookings
+        if (in_array(($booking->status ?? ''), ['cancelled', 'completed'], true)) {
+            return response()->json(['success' => false, 'message' => 'This booking cannot be rescheduled (already cancelled/completed).'], 422);
+        }
+
         // Format the old date/time using application timezone for clarity
         $oldTimeFormatted = null;
         try {
@@ -373,8 +382,33 @@ class ScheduleController extends Controller
             return response()->json(['success' => false, 'message' => 'Selected time overlaps a blocked date/range'], 422);
         }
 
-        $booking->appointment_date = $start->toDateString();
-        $booking->appointment_time = $start->format('h:i A');
+        // Also prevent rescheduling into an already-booked slot (pending/confirmed)
+        // Normalize time to H:i for comparison.
+        $newDate = $start->toDateString();
+        $newTime = $start->format('H:i');
+        $sameDayBookings = Booking::whereDate('appointment_date', $newDate)
+            ->whereNotIn('status', ['completed', 'cancelled'])
+            ->where('id', '!=', $booking->id)
+            ->get(['id', 'name', 'appointment_time']);
+
+        foreach ($sameDayBookings as $b) {
+            try {
+                $t = $b->appointment_time ? Carbon::parse($b->appointment_time)->format('H:i') : null;
+                if ($t && $t === $newTime) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Selected slot is already booked',
+                        'conflict' => ['booking_id' => $b->id, 'name' => $b->name, 'time' => $b->appointment_time],
+                    ], 422);
+                }
+            } catch (\Exception $e) {
+                // ignore parse errors and continue
+            }
+        }
+
+        $booking->appointment_date = $newDate;
+        // Store appointment_time as 24h "H:i" (matches slot APIs and avoids SQL concat issues)
+        $booking->appointment_time = $newTime;
         $booking->save();
 
         $new = [
