@@ -6661,8 +6661,8 @@ document.addEventListener('DOMContentLoaded', function(){
 }
 </style>
 
-<style>
-/* Accessible kids modal styles */
+<script>
+/* Accessible kids modal styles (moved out of JS) */
 .accessible-kids-modal .form-label { font-size: 1.02rem; color: #03253f; }
 .accessible-kids-modal .form-control { font-size: 1.03rem; padding: .65rem .8rem; border-radius: 8px; }
 .accessible-kids-modal .btn { min-height: 44px; padding: .6rem 1rem; font-size: 1rem; }
@@ -6678,9 +6678,6 @@ document.addEventListener('DOMContentLoaded', function(){
 .visually-hidden { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
 .accessible-kids-modal #kidsPricePreview { box-shadow: 0 6px 18px rgba(3,15,104,0.06); }
 .accessible-kids-modal [role="status"]:focus { outline: 3px solid #ffb703; }
-</style>
-
-<script>
 // Handle booking success modal
 document.addEventListener('DOMContentLoaded', function() {
     const successModal = document.getElementById('successModal');
@@ -7509,18 +7506,6 @@ document.addEventListener('DOMContentLoaded', function(){
                 return next();
             }
 
-            const cleanupStrayBackdrops = () => {
-                try {
-                    // If no modals are actually showing, but backdrops exist, remove them.
-                    const anyShownModal = document.querySelector('.modal.show');
-                    if (!anyShownModal) {
-                        document.querySelectorAll('.modal-backdrop').forEach(b => b.remove());
-                        document.body.classList.remove('modal-open');
-                        document.body.style.removeProperty('padding-right');
-                    }
-                } catch (e) { /* noop */ }
-            };
-
             agreeEl.checked = false;
             contBtn.disabled = true;
             window.__dbtTermsGateNext = next;
@@ -7538,36 +7523,15 @@ document.addEventListener('DOMContentLoaded', function(){
                     const inst = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
                     inst.hide();
                 } catch(e) {}
-                // Ensure we never leave a stuck backdrop behind
-                setTimeout(cleanupStrayBackdrops, 50);
                 const fn = window.__dbtTermsGateNext;
                 window.__dbtTermsGateNext = null;
                 if (typeof fn === 'function') fn();
             };
 
             try {
-                cleanupStrayBackdrops();
                 const inst = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
                 inst.show();
-
-                // Watchdog: if backdrop appears but modal doesn't show (z-index/markup issues),
-                // clean up and fail open so the page doesn't feel "frozen".
-                setTimeout(function(){
-                    try {
-                        const shown = modalEl.classList.contains('show');
-                        if (shown) return;
-                        // remove any backdrops that might be blocking interaction
-                        document.querySelectorAll('.modal-backdrop').forEach(b => b.remove());
-                        document.body.classList.remove('modal-open');
-                        document.body.style.removeProperty('padding-right');
-                        modalEl.classList.remove('show');
-                        modalEl.style.display = 'none';
-                        modalEl.setAttribute('aria-hidden', 'true');
-                    } catch(e) { /* ignore */ }
-                    try { next(); } catch(e) { /* ignore */ }
-                }, 450);
             } catch(e) {
-                cleanupStrayBackdrops();
                 next();
             }
         };
