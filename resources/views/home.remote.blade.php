@@ -3619,6 +3619,14 @@
                         </div>
 
                         <div class="text-center mt-4">
+                            <!-- Terms acceptance (required) -->
+                            <input type="hidden" name="terms_accepted" value="0">
+                            <div class="form-check d-flex justify-content-center mb-3" style="gap:10px; align-items:flex-start;">
+                                <input class="form-check-input" type="checkbox" id="termsAcceptedMain" name="terms_accepted" value="1" required>
+                                <label class="form-check-label" for="termsAcceptedMain" style="max-width: 520px; text-align:left;">
+                                    I agree to the <a href="#terms" style="color:#030f68; font-weight:600; text-decoration:none;" onclick="closeModalAndGoToTerms(event)">Terms &amp; Conditions</a>.
+                                </label>
+                            </div>
                             <button type="submit" class="btn btn-warning" id="bookAppointmentBtn" style="font-size:1.1rem; padding:12px 40px; font-weight:600; transition: all 0.3s ease; box-shadow: 0 4px 12px rgba(255, 193, 7, 0.3);">
                                 <i class="bi bi-calendar-check me-2"></i>Book Appointment
                             </button>
@@ -6949,6 +6957,14 @@ function clearImagePreview() {
                                     </div>
                                 </div>
                                 <div class="d-grid mt-3">
+                                        <!-- Terms acceptance (required) -->
+                                        <input type="hidden" name="terms_accepted" value="0">
+                                        <div class="form-check mb-2">
+                                            <input class="form-check-input" type="checkbox" id="termsAcceptedKids" name="terms_accepted" value="1" required>
+                                            <label class="form-check-label" for="termsAcceptedKids" style="font-size:0.95rem;">
+                                                I agree to the <a href="#terms" style="color:#030f68; font-weight:600; text-decoration:none;" onclick="closeModalAndGoToTerms(event)">Terms &amp; Conditions</a>.
+                                            </label>
+                                        </div>
                                     <div class="d-flex gap-2">
                                         <button type="button" id="kidsBackToSelectorBtn" class="btn btn-secondary" style="font-weight:600;" onclick="backToKidsSelector()">Back to selector</button>
                                         <button type="submit" class="btn btn-warning" style="font-weight:600;">Confirm Booking</button>
@@ -6957,6 +6973,55 @@ function clearImagePreview() {
                             </div>
                         </div>
                     </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Terms Gate Modal (shown on first "Book Now" click) -->
+    <div class="modal fade" id="termsGateModal" tabindex="-1" aria-labelledby="termsGateModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content" style="border-radius: 18px; overflow: hidden;">
+                <div class="modal-header" style="background: linear-gradient(135deg, #030f68 0%, #4a8bc2 100%); color: white;">
+                    <h5 class="modal-title" id="termsGateModalLabel" style="font-weight: 800;">
+                        <i class="bi bi-shield-check me-2"></i>Terms &amp; Policies
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <p class="mb-3" style="color:#0b3a66; font-weight: 600;">
+                        Please review and accept our Terms &amp; Conditions before booking.
+                    </p>
+
+                    <div class="alert alert-info" style="border-left: 5px solid #0ea5e9; border-radius: 12px;">
+                        <div class="mb-1" style="font-weight:800;">Quick summary</div>
+                        <ul class="mb-0" style="padding-left: 18px;">
+                            <li>Deposits are non-refundable once the appointment is confirmed.</li>
+                            <li>Minimum 48 hours notice is required for cancellations.</li>
+                            <li>Rescheduling requires 48 hours notice and must be within 1 month of the initial appointment date.</li>
+                            <li>No-shows may result in a full charge and may affect future bookings.</li>
+                            <li>For home service: clients cover fueling for the stylist’s transportation; fees vary by distance.</li>
+                        </ul>
+                    </div>
+
+                    <div class="form-check mt-3">
+                        <input class="form-check-input" type="checkbox" id="termsGateAgree">
+                        <label class="form-check-label" for="termsGateAgree" style="font-weight: 700; color:#0b3a66;">
+                            I agree to the Terms &amp; Conditions
+                        </label>
+                    </div>
+                    <div class="mt-3">
+                        <a href="#terms" onclick="try{document.getElementById('terms')?.scrollIntoView({behavior:'smooth'});}catch(e){}"
+                           style="color:#030f68; font-weight:600; text-decoration:none;">
+                            View full Terms &amp; Conditions
+                        </a>
+                    </div>
+                </div>
+                <div class="modal-footer" style="border-top: none;">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="termsGateContinueBtn" disabled>
+                        Continue
+                    </button>
                 </div>
             </div>
         </div>
@@ -7360,42 +7425,112 @@ document.addEventListener('DOMContentLoaded', function(){
     // Store current service info globally for easy access
     window.currentServiceInfo = { serviceName: '', serviceType: '', basePrice: 0 };
 
+    // --- Terms gate (first "Book Now" click) ---
+    (function(){
+        const KEY = 'dbt_terms_accepted_v1';
+        const hasAccepted = () => {
+            try { return window.localStorage && localStorage.getItem(KEY) === '1'; } catch(e) { return false; }
+        };
+        const setAccepted = () => {
+            try { window.localStorage && localStorage.setItem(KEY, '1'); } catch(e) {}
+        };
+
+        const syncFormCheckboxes = () => {
+            try {
+                const m = document.getElementById('termsAcceptedMain');
+                const k = document.getElementById('termsAcceptedKids');
+                if (m) m.checked = true;
+                if (k) k.checked = true;
+            } catch(e) {}
+        };
+
+        window.__dbtEnsureTermsAccepted = function(next){
+            if (hasAccepted()) {
+                syncFormCheckboxes();
+                return next();
+            }
+
+            const modalEl = document.getElementById('termsGateModal');
+            const agreeEl = document.getElementById('termsGateAgree');
+            const contBtn = document.getElementById('termsGateContinueBtn');
+            if (!modalEl || !agreeEl || !contBtn) {
+                // Fail open if modal missing (submit checkbox is still enforced)
+                return next();
+            }
+
+            agreeEl.checked = false;
+            contBtn.disabled = true;
+            window.__dbtTermsGateNext = next;
+
+            const onAgreeChange = () => { contBtn.disabled = !agreeEl.checked; };
+            try {
+                agreeEl.removeEventListener('change', onAgreeChange);
+                agreeEl.addEventListener('change', onAgreeChange);
+            } catch(e) {}
+
+            contBtn.onclick = function(){
+                if (!agreeEl.checked) return;
+                setAccepted();
+                syncFormCheckboxes();
+                try {
+                    const inst = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+                    inst.hide();
+                } catch(e) {}
+                const fn = window.__dbtTermsGateNext;
+                window.__dbtTermsGateNext = null;
+                if (typeof fn === 'function') fn();
+            };
+
+            try {
+                const inst = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+                inst.show();
+            } catch(e) {
+                next();
+            }
+        };
+
+        document.addEventListener('DOMContentLoaded', function(){
+            if (hasAccepted()) syncFormCheckboxes();
+        });
+    })();
+
     // Wrap existing openBookingModal
     const prevOpen = window.openBookingModal;
     window.openBookingModal = function(serviceName, serviceType) {
-        console.log('Opening booking modal for:', serviceName, serviceType);
+        const run = () => {
+            console.log('Opening booking modal for:', serviceName, serviceType);
 
-        // Track where the booking came from:
-        // - service cards/carousel pass a non-null serviceType slug
-        // - calendar page redirects are marked earlier via window.__bookingOrigin = 'calendar'
-        try {
-            // If serviceType is provided, this is a service-card/inline booking and should override any prior origin.
-            // If serviceType is null, keep whatever origin we already have (e.g., calendar deep-link).
-            window.__bookingOrigin = serviceType ? 'service-card' : (window.__bookingOrigin || 'other');
-        } catch (e) { /* noop */ }
-
-        // Store service info globally
-        window.currentServiceInfo = {
-            serviceName: serviceName,
-            serviceType: serviceType,
-            basePrice: (serviceType && priceMap[serviceType])
-                ? priceMap[serviceType]
-                : ((serviceName && priceByServiceName[serviceName]) ? priceByServiceName[serviceName] : priceMap['custom'])
-        };
-
-        // Call original modal opener first (it may clear the form)
-        if (typeof prevOpen === 'function') {
+            // Track where the booking came from:
+            // - service cards/carousel pass a non-null serviceType slug
+            // - calendar page redirects are marked earlier via window.__bookingOrigin = 'calendar'
             try {
-                prevOpen(serviceName, serviceType);
-            } catch(e) {
-                console.error('openBookingModal inner error', e);
-            }
-        }
+                // If serviceType is provided, this is a service-card/inline booking and should override any prior origin.
+                // If serviceType is null, keep whatever origin we already have (e.g., calendar deep-link).
+                window.__bookingOrigin = serviceType ? 'service-card' : (window.__bookingOrigin || 'other');
+            } catch (e) { /* noop */ }
 
-        // Now set/restore hidden inputs and update UI (do this after prevOpen which may reset the form)
-        try {
-            const st = document.getElementById('selectedServiceType');
-            if (st) st.value = serviceType || '';
+            // Store service info globally
+            window.currentServiceInfo = {
+                serviceName: serviceName,
+                serviceType: serviceType,
+                basePrice: (serviceType && priceMap[serviceType])
+                    ? priceMap[serviceType]
+                    : ((serviceName && priceByServiceName[serviceName]) ? priceByServiceName[serviceName] : priceMap['custom'])
+            };
+
+            // Call original modal opener first (it may clear the form)
+            if (typeof prevOpen === 'function') {
+                try {
+                    prevOpen(serviceName, serviceType);
+                } catch(e) {
+                    console.error('openBookingModal inner error', e);
+                }
+            }
+
+            // Now set/restore hidden inputs and update UI (do this after prevOpen which may reset the form)
+            try {
+                const st = document.getElementById('selectedServiceType');
+                if (st) st.value = serviceType || '';
 
             const sd = document.getElementById('selectedService');
             if (sd) sd.value = serviceName || '';
@@ -7564,11 +7699,18 @@ document.addEventListener('DOMContentLoaded', function(){
                 }
             } catch (e) { /* ignore */ }
 
-            // Now that modal UI is set up (radios, defaults, hidden inputs), update the price display using authoritative base
-            try { updatePriceDisplay(base); } catch (e) { console.warn('updatePriceDisplay failed after modal setup', e); }
-        } catch (e) {
-            console.warn('Error toggling hair mask UI:', e);
+                // Now that modal UI is set up (radios, defaults, hidden inputs), update the price display using authoritative base
+                try { updatePriceDisplay(base); } catch (e) { console.warn('updatePriceDisplay failed after modal setup', e); }
+            } catch (e) {
+                console.warn('Error toggling hair mask UI:', e);
+            }
+        };
+
+        // Gate on first-time visitors: show Terms modal before opening booking flow.
+        if (typeof window.__dbtEnsureTermsAccepted === 'function') {
+            return window.__dbtEnsureTermsAccepted(run);
         }
+        return run();
     };
 
     // Update price when length changes
