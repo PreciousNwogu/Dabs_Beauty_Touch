@@ -7549,6 +7549,8 @@ document.addEventListener('DOMContentLoaded', function(){
                     console.error('openBookingModal inner error', e);
                 }
             }
+            // If the modal opener reset the form, re-sync Terms buttons (reset doesn't fire change)
+            try { window.__dbtSyncTermsButtons && window.__dbtSyncTermsButtons(); } catch(e) {}
 
             // Now set/restore hidden inputs and update UI (do this after prevOpen which may reset the form)
             try {
@@ -7738,7 +7740,7 @@ document.addEventListener('DOMContentLoaded', function(){
 
     // Disable submit until Terms is checked (main + kids)
     document.addEventListener('DOMContentLoaded', function(){
-        const setup = (checkboxId, buttonId) => {
+        const setup = (checkboxId, buttonId, formId) => {
             const cb = document.getElementById(checkboxId);
             const btn = document.getElementById(buttonId);
             if (!cb || !btn) return;
@@ -7746,9 +7748,32 @@ document.addEventListener('DOMContentLoaded', function(){
             cb.checked = false;
             sync();
             cb.addEventListener('change', sync);
+
+            // Keep button state in sync after form.reset() (opening modal clears the form)
+            try {
+                const form = document.getElementById(formId);
+                if (form && !form.__dbtTermsResetHooked) {
+                    form.addEventListener('reset', function(){ setTimeout(sync, 0); });
+                    form.__dbtTermsResetHooked = true;
+                }
+            } catch(e) {}
         };
-        setup('termsAcceptedMain', 'bookAppointmentBtn');
-        setup('termsAcceptedKids', 'kidsBookAppointmentBtn');
+        setup('termsAcceptedMain', 'bookAppointmentBtn', 'bookingForm');
+        setup('termsAcceptedKids', 'kidsBookAppointmentBtn', 'kidsBookingForm');
+
+        // Expose a manual sync hook so modal open flows can re-sync after they clear/reset.
+        window.__dbtSyncTermsButtons = function(){
+            try {
+                const cb1 = document.getElementById('termsAcceptedMain');
+                const b1 = document.getElementById('bookAppointmentBtn');
+                if (cb1 && b1) b1.disabled = !cb1.checked;
+            } catch(e) {}
+            try {
+                const cb2 = document.getElementById('termsAcceptedKids');
+                const b2 = document.getElementById('kidsBookAppointmentBtn');
+                if (cb2 && b2) b2.disabled = !cb2.checked;
+            } catch(e) {}
+        };
     });
 
     // Update price when length changes
