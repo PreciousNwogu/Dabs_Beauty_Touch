@@ -975,8 +975,6 @@ Route::post('/bookings', function(Request $request) {
         'appointment_date' => 'required|date|after_or_equal:today',
         'appointment_time' => 'required|string',
         'message' => 'nullable|string|max:1000',
-        // Must accept terms at submit time (server-side enforcement)
-        'terms_accepted' => 'accepted',
     ];
 
     // Only validate sample_picture if a file was actually uploaded
