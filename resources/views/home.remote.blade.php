@@ -1707,7 +1707,12 @@
                 var inputs = form.querySelectorAll('input, textarea, select');
                 inputs.forEach(function(input) {
                     if (input.name !== '_token') {
-                        input.value = '';
+                        // IMPORTANT: do not overwrite checkbox/radio values (breaks terms_accepted='accepted' validation)
+                        if (input.type === 'checkbox' || input.type === 'radio') {
+                            input.checked = false;
+                        } else {
+                            input.value = '';
+                        }
                     }
                 });
                 console.log('Booking form cleared');
@@ -5940,6 +5945,11 @@ console.log('=== LOADING BOOKING FUNCTIONS ===');
 
         bookingForm.addEventListener('submit', function(e) {
             // Minimal submit handler: basic validation + keep hair-mask hidden-field behavior.
+            // Ensure terms checkbox posts a valid "accepted" value when checked (some resets previously blanked values)
+            try {
+                const terms = document.getElementById('termsAcceptedMain');
+                if (terms) terms.value = '1';
+            } catch(err) {}
             const requiredFields = ['name', 'phone', 'bookingDate', 'timeInput'];
             const missingFields = [];
 
