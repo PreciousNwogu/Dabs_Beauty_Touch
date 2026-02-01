@@ -4919,8 +4919,8 @@
     }
 
 </script>
-<script src="{{ asset('js/core.min.js') }}"></script>
-<script src="{{ asset('js/script.js') }}"></script>
+<script src="{{ asset('js/core.min.js') }}?v={{ @filemtime(public_path('js/core.min.js')) }}"></script>
+<script src="{{ asset('js/script.js') }}?v={{ @filemtime(public_path('js/script.js')) }}"></script>
 
 <!-- Bootstrap JS (if not included in core.min.js) -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
