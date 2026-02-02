@@ -7508,6 +7508,17 @@ document.addEventListener('DOMContentLoaded', function(){
             const contBtn = document.getElementById('termsGateContinueBtn');
             if (!modalEl || !agreeEl || !contBtn) return next();
 
+            const cleanupStrayBackdrops = () => {
+                try {
+                    const anyShownModal = document.querySelector('.modal.show');
+                    if (!anyShownModal) {
+                        document.querySelectorAll('.modal-backdrop').forEach(b => b.remove());
+                        document.body.classList.remove('modal-open');
+                        document.body.style.removeProperty('padding-right');
+                    }
+                } catch (e) {}
+            };
+
             agreeEl.checked = false;
             contBtn.disabled = true;
             const onAgreeChange = () => { contBtn.disabled = !agreeEl.checked; };
@@ -7520,10 +7531,29 @@ document.addEventListener('DOMContentLoaded', function(){
                 if (!agreeEl.checked) return;
                 setAccepted();
                 try { (bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl)).hide(); } catch(e) {}
+                setTimeout(cleanupStrayBackdrops, 50);
                 if (typeof next === 'function') next();
             };
 
-            try { (bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl)).show(); } catch(e) { next(); }
+            try {
+                cleanupStrayBackdrops();
+                (bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl)).show();
+
+                // Watchdog: if backdrop appears but modal doesn't show, fail open and cleanup
+                setTimeout(function(){
+                    try {
+                        if (modalEl.classList.contains('show')) return;
+                        cleanupStrayBackdrops();
+                        modalEl.classList.remove('show');
+                        modalEl.style.display = 'none';
+                        modalEl.setAttribute('aria-hidden', 'true');
+                    } catch(e) {}
+                    try { next(); } catch(e) {}
+                }, 450);
+            } catch(e) {
+                cleanupStrayBackdrops();
+                next();
+            }
         };
     })();
 
