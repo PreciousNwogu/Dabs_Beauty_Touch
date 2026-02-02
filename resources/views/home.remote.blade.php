@@ -42,7 +42,7 @@
     <!-- Structured Data (JSON-LD) -->
     <script type="application/ld+json">
     {
-        "@context": "https://schema.org",
+        "@@context": "https://schema.org",
         "@type": "BeautySalon",
         "name": "Dab's Beauty Touch",
         "description": "Professional hair braiding services in Ottawa. Expert stylists specializing in knotless braids, box braids, wig installation, and custom styles.",
