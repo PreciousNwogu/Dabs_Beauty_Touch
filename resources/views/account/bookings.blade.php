@@ -49,7 +49,7 @@
                                         @if(!empty($b->confirmation_code))
                                             <a class="btn btn-sm btn-primary"
                                                style="border-radius:10px;font-weight:700;"
-                                               href="{{ route('bookings.confirm', ['id' => $b->id, 'code' => $b->confirmation_code, 'view' => 1]) }}">
+                                               href="{{ route('account.bookings.show', ['booking' => $b->id]) }}">
                                                 View
                                             </a>
                                         @else

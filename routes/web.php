@@ -271,6 +271,7 @@ Route::middleware('guest')->group(function () {
 
 Route::post('/logout', [PublicAuthController::class, 'logout'])->middleware('auth')->name('logout');
 Route::get('/my-bookings', [AccountController::class, 'myBookings'])->middleware('auth')->name('account.bookings');
+Route::get('/my-bookings/{booking}', [AccountController::class, 'showBooking'])->middleware('auth')->name('account.bookings.show');
 
 // Kids Braids Selector page
 Route::get('/kids-selector', function () {
