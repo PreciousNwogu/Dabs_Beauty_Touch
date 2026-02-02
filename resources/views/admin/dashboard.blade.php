@@ -839,22 +839,76 @@
                                         </div>
                                     </div>
 
-                                    <div class="row g-3">
-                                        <div class="col-md-6">
-                                            <label class="form-label fw-semibold mb-2">
-                                                <i class="bi bi-calendar-event me-1"></i><span id="startLabel">Start Date</span>
-                                                <span class="text-danger">*</span>
+                                    <div class="mb-4">
+                                        <label class="form-label fw-semibold mb-2">
+                                            <i class="bi bi-ui-checks me-1"></i>Block Mode
+                                        </label>
+                                        <div class="btn-group w-100" role="group" aria-label="Block mode">
+                                            <input type="radio" class="btn-check" name="blockMode" id="blockModeRange" autocomplete="off" checked>
+                                            <label class="btn btn-outline-danger" for="blockModeRange">
+                                                <i class="bi bi-calendar-range me-1"></i>Date range
                                             </label>
-                                            <input id="blockStart" type="datetime-local" class="form-control form-control-lg" required>
-                                            <small id="startHelpText" class="form-text text-muted">Select the first day to block</small>
+                                            <input type="radio" class="btn-check" name="blockMode" id="blockModeSelected" autocomplete="off">
+                                            <label class="btn btn-outline-danger" for="blockModeSelected">
+                                                <i class="bi bi-calendar2-plus me-1"></i>Selected dates
+                                            </label>
                                         </div>
-                                        <div class="col-md-6">
-                                            <label class="form-label fw-semibold mb-2">
-                                                <i class="bi bi-calendar-x me-1"></i><span id="endLabel">End Date</span>
-                                                <span class="text-danger">*</span>
-                                            </label>
-                                            <input id="blockEnd" type="datetime-local" class="form-control form-control-lg" required>
-                                            <small id="endHelpText" class="form-text text-muted">Select the last day to block (inclusive)</small>
+                                        <div id="blockModeHelpText" class="form-text text-muted mt-2">
+                                            Use <strong>Date range</strong> for continuous blocks (e.g., vacation). Use <strong>Selected dates</strong> for non‑continuous days (e.g., every Saturday).
+                                        </div>
+                                    </div>
+
+                                    <div class="row g-3">
+                                        <div class="col-12" id="blockRangeWrap">
+                                            <div class="row g-3">
+                                                <div class="col-md-6">
+                                                    <label class="form-label fw-semibold mb-2">
+                                                        <i class="bi bi-calendar-event me-1"></i><span id="startLabel">Start Date</span>
+                                                        <span class="text-danger">*</span>
+                                                    </label>
+                                                    <input id="blockStart" type="datetime-local" class="form-control form-control-lg" required>
+                                                    <small id="startHelpText" class="form-text text-muted">Select the first day to block</small>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <label class="form-label fw-semibold mb-2">
+                                                        <i class="bi bi-calendar-x me-1"></i><span id="endLabel">End Date</span>
+                                                        <span class="text-danger">*</span>
+                                                    </label>
+                                                    <input id="blockEnd" type="datetime-local" class="form-control form-control-lg" required>
+                                                    <small id="endHelpText" class="form-text text-muted">Select the last day to block (inclusive)</small>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="col-12" id="blockSelectedDatesWrap" style="display:none;">
+                                            <div class="row g-2 align-items-end">
+                                                <div class="col-8">
+                                                    <label class="form-label fw-semibold mb-2">
+                                                        <i class="bi bi-calendar-plus me-1"></i>Add date
+                                                    </label>
+                                                    <input id="blockSelectedDateInput" type="date" class="form-control form-control-lg">
+                                                    <small class="form-text text-muted">Pick a date, click <strong>Add</strong>, repeat as needed.</small>
+                                                </div>
+                                                <div class="col-4">
+                                                    <button type="button" id="addSelectedDateBtn" class="btn btn-outline-danger btn-lg w-100">
+                                                        <i class="bi bi-plus-lg me-1"></i>Add
+                                                    </button>
+                                                </div>
+                                            </div>
+
+                                            <div class="mt-3">
+                                                <div class="d-flex justify-content-between align-items-center">
+                                                    <strong class="text-muted small">Selected dates</strong>
+                                                    <button type="button" class="btn btn-sm btn-outline-secondary" id="clearSelectedDatesBtn">
+                                                        <i class="bi bi-x-circle me-1"></i>Clear
+                                                    </button>
+                                                </div>
+                                                <div id="selectedDatesEmpty" class="text-muted small mt-2">No dates selected yet.</div>
+                                                <ul id="selectedDatesList" class="list-group mt-2"></ul>
+                                                <small class="form-text text-muted mt-2 d-block">
+                                                    Selected dates are blocked as <strong>full‑day</strong> blocks.
+                                                </small>
+                                            </div>
                                         </div>
                                     </div>
 
@@ -919,6 +973,31 @@
                                                     <i class="bi bi-info-circle-fill me-2" style="color: #0ea5e9; font-size: 1.2rem;"></i>
                                                     <div>
                                                         <strong>Manage your blocked date ranges:</strong> View all active blocked periods and remove them if needed.
+                                                    </div>
+                                                </div>
+                                                <!-- Blocked dates filter (client-side) -->
+                                                <div class="mb-3" style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:12px;">
+                                                    <div class="row g-2 align-items-end">
+                                                        <div class="col-12 col-md-6">
+                                                            <label for="manageBlocksSearch" class="form-label mb-1">Search</label>
+                                                            <input type="text" id="manageBlocksSearch" class="form-control" placeholder="Search by title (e.g., Lunch, Holiday, Afternoon)">
+                                                        </div>
+                                                        <div class="col-6 col-md-3">
+                                                            <label for="manageBlocksFrom" class="form-label mb-1">From</label>
+                                                            <input type="date" id="manageBlocksFrom" class="form-control">
+                                                        </div>
+                                                        <div class="col-6 col-md-3">
+                                                            <label for="manageBlocksTo" class="form-label mb-1">To</label>
+                                                            <input type="date" id="manageBlocksTo" class="form-control">
+                                                        </div>
+                                                        <div class="col-12 d-flex justify-content-end gap-2">
+                                                            <button type="button" class="btn btn-primary btn-sm" id="manageBlocksApplyBtn">
+                                                                <i class="bi bi-search me-1"></i>Search
+                                                            </button>
+                                                            <button type="button" class="btn btn-outline-secondary btn-sm" id="manageBlocksClearBtn" title="Clear filter">
+                                                                <i class="bi bi-x-circle me-1"></i>Clear
+                                                            </button>
+                                                        </div>
                                                     </div>
                                                 </div>
                                                 <div id="blocksList" class="list-group" style="border-radius: 8px; overflow: hidden;">
@@ -2921,6 +3000,25 @@
         }
 
         // FullCalendar is bundled via Vite (resources/js/admin-calendar.js). See Vite build for the asset.
+    </script>
+    <script>
+      // Fallback: ensure Manage Blocks "Search" button always works even if the Vite bundle is stale.
+      document.addEventListener('click', function(e){
+        try{
+          const btn = e.target && (e.target.closest ? e.target.closest('#manageBlocksApplyBtn') : null);
+          if (!btn) return;
+          e.preventDefault();
+          if (typeof window.__applyManageBlocksFilter === 'function') {
+            window.__applyManageBlocksFilter();
+            return;
+          }
+          // fallback: trigger input event on search field (if live filter binding exists)
+          const s = document.getElementById('manageBlocksSearch');
+          if (s) {
+            try { s.dispatchEvent(new Event('input', { bubbles: true })); } catch(err) {}
+          }
+        }catch(err){}
+      }, true);
     </script>
     @vite(['resources/css/app.css', 'resources/js/admin-calendar.js'])
 </body>

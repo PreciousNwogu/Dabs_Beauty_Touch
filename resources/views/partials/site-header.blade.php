@@ -35,10 +35,10 @@
 
                 @guest
                     <li class="nav-item">
-                        <a class="nav-link px-3" href="{{ route('login') }}" style="font-weight:700;">Sign In</a>
+                        <a class="nav-link px-3" href="{{ route('login') }}" style="font-weight:500; opacity:0.75;">Sign In</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link px-3" href="{{ route('register') }}" style="font-weight:700;">Create Account</a>
+                        <a class="nav-link px-3" href="{{ route('register') }}" style="font-weight:500; opacity:0.75;">Create Account</a>
                     </li>
                 @endguest
             </ul>

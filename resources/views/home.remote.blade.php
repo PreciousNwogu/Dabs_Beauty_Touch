@@ -2798,6 +2798,18 @@
             <div class="hero-content">
                 <h1>Dab's Beauty Touch</h1>
                 <p>Flawless Results - Looking for a stylist who delivers neat, long-lasting braids? Experience the expert touch at Dab's Beauty Touch today!</p>
+                <div class="d-flex flex-column flex-sm-row gap-3 justify-content-center align-items-stretch align-items-sm-center">
+                    <a href="{{ route('calendar') }}" class="btn btn-warning btn-lg px-4" style="font-weight: 800; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.25);">
+                        <i class="bi bi-calendar-check me-2"></i>Book an appointment
+                    </a>
+                    <button type="button" class="btn btn-outline-light btn-lg px-4" style="font-weight: 700; border-radius: 12px;"
+                            onclick="(window.openCalendarModal ? window.openCalendarModal() : window.location.assign('{{ route('calendar') }}'))">
+                        <i class="bi bi-calendar3 me-2"></i>View Availability
+                    </button>
+                </div>
+                <div class="mt-3 small text-white-50">
+                    Choose a date & time, then complete your booking.
+                </div>
             </div>
         </div>
     </section>

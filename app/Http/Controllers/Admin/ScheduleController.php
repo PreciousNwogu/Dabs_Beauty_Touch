@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Models\Schedule;
 use App\Models\Booking;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
 use App\Notifications\BookingRescheduledNotification;
 use Carbon\Carbon;
@@ -143,6 +144,82 @@ class ScheduleController extends Controller
     public function store(Request $request)
     {
         try {
+            // Support blocking multiple non-continuous selected dates (one all-day block per date)
+            $selectedDates = $request->input('selected_dates');
+            if (is_array($selectedDates) && count($selectedDates) > 0) {
+                $data = $request->validate([
+                    'title' => 'nullable|string|max:255',
+                    'staff_id' => 'nullable|integer',
+                    'type' => 'nullable|string',
+                    'selected_dates' => 'required|array|min:1',
+                    'selected_dates.*' => 'required|date_format:Y-m-d',
+                ]);
+
+                $title = $data['title'] ?? 'Blocked';
+                $type = 'blocked';
+
+                $dates = collect($data['selected_dates'])
+                    ->map(fn($d) => (string) $d)
+                    ->filter()
+                    ->unique()
+                    ->values();
+
+                $bookingConflicts = [];
+                $existingBlockConflicts = [];
+
+                // Validate all dates first (atomic: if any date can't be blocked, block none)
+                foreach ($dates as $ymd) {
+                    $s = Carbon::createFromFormat('Y-m-d H:i:s', $ymd . ' 00:00:00', 'UTC')->startOfDay();
+                    $e = $s->copy()->addDay();
+
+                    $overlapsExistingBlock = Schedule::where('type', 'blocked')
+                        ->where('start', '<', $e->toDateTimeString())
+                        ->where('end', '>', $s->toDateTimeString())
+                        ->exists();
+
+                    if ($overlapsExistingBlock) {
+                        $existingBlockConflicts[] = $ymd;
+                        continue;
+                    }
+
+                    $hasBooking = Booking::whereIn('status', ['pending', 'confirmed'])
+                        ->whereDate('appointment_date', '=', $ymd)
+                        ->exists();
+
+                    if ($hasBooking) {
+                        $bookingConflicts[] = $ymd;
+                    }
+                }
+
+                if (!empty($bookingConflicts) || !empty($existingBlockConflicts)) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Some selected dates could not be blocked (already booked or already blocked).',
+                        'booking_conflicts' => array_values($bookingConflicts),
+                        'already_blocked' => array_values($existingBlockConflicts),
+                    ], 422);
+                }
+
+                $created = [];
+                DB::transaction(function () use ($dates, $title, $type, &$created) {
+                    foreach ($dates as $ymd) {
+                        $s = Carbon::createFromFormat('Y-m-d H:i:s', $ymd . ' 00:00:00', 'UTC')->startOfDay();
+                        $e = $s->copy()->addDay();
+                        $created[] = Schedule::create([
+                            'title' => $title,
+                            'start' => $s->toDateTimeString(),
+                            'end' => $e->toDateTimeString(),
+                            'type' => $type,
+                        ]);
+                    }
+                });
+
+                return response()->json([
+                    'success' => true,
+                    'slots' => $created,
+                ]);
+            }
+
             $data = $request->validate([
                 'title' => 'nullable|string|max:255',
                 'start' => 'required|date',
