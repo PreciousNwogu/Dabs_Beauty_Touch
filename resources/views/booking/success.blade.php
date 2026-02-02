@@ -201,10 +201,20 @@
                             <div class="detail-value">{{ $currentLen ? ucwords(str_replace(['_','-'], ' ', $currentLen)) : '—' }}</div>
                         </div>
                         @if(isset($bd['appointment_date']) || isset($bd['appointment_time']))
+                            @php
+                                $formattedTime = null;
+                                try {
+                                    if (!empty($bd['appointment_time'])) {
+                                        $formattedTime = \Carbon\Carbon::parse($bd['appointment_time'])->format('g:i A');
+                                    }
+                                } catch (\Throwable $e) {
+                                    $formattedTime = $bd['appointment_time'] ?? null;
+                                }
+                            @endphp
                             <div class="detail-row">
                                 <div class="detail-label">Date / Time</div>
                                 <div class="detail-value">
-                                    {{ $bd['appointment_date'] ?? '—' }}{{ !empty($bd['appointment_time']) ? (' at ' . $bd['appointment_time']) : '' }}
+                                    {{ $bd['appointment_date'] ?? '—' }}{{ !empty($formattedTime) ? (' at ' . $formattedTime) : '' }}
                                 </div>
                             </div>
                         @endif
@@ -213,6 +223,27 @@
                             <div class="detail-value">{{ $fmtMoney($bd['final_price'] ?? null) }}</div>
                         </div>
                     </div>
+
+                    @php
+                        $imgPath = $bd['sample_picture'] ?? ($booking->sample_picture ?? null);
+                        $imgUrl = null;
+                        if ($imgPath) {
+                            // stored via disk('public') as sample_pictures/...
+                            $imgUrl = asset('storage/' . ltrim($imgPath, '/'));
+                        }
+                    @endphp
+                    @if($imgUrl)
+                        <div class="booking-details">
+                            <h6 class="mb-3 text-primary">
+                                <i class="fas fa-image me-2"></i>
+                                Reference Image
+                            </h6>
+                            <a href="{{ $imgUrl }}" target="_blank" rel="noopener" style="text-decoration:none;">
+                                <img src="{{ $imgUrl }}" alt="Reference image" style="width:100%;max-width:520px;border-radius:14px;border:1px solid #e9ecef;display:block;">
+                            </a>
+                            <div class="form-text mt-2">Tap the image to open full size.</div>
+                        </div>
+                    @endif
 
                     @if(!$isReadOnly)
                         <div class="booking-details">

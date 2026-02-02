@@ -1814,6 +1814,7 @@ Route::get('/bookings/confirm/{id}/{code}', function($id, $code) {
         'email' => $booking->email,
         'phone' => $booking->phone,
         'message' => $booking->message,
+        'sample_picture' => $booking->sample_picture,
         // Kids selector fields (if applicable)
         'kb_braid_type' => $booking->kb_braid_type,
         'kb_finish' => $booking->kb_finish,
