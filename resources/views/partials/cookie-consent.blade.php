@@ -3,12 +3,11 @@
     <div class="cookie-consent-container">
         <div class="cookie-consent-content">
             <div class="cookie-consent-icon">
-                <i class="bi bi-cookie" style="font-size: 2rem; color: #ff6600;"></i>
+                <i class="bi bi-cookie" style="font-size: 1.25rem; color: #ff8533;"></i>
             </div>
             <div class="cookie-consent-text">
-                <h5 class="cookie-consent-title">We Use Cookies</h5>
                 <p class="cookie-consent-message">
-                    We use cookies to enhance your browsing experience, analyze site traffic, and personalize content. By clicking "Accept All", you consent to our use of cookies. 
+                    We use cookies to improve your experience.
                     <a href="{{ route('home') }}#terms" class="cookie-consent-link">Learn more</a>
                 </p>
             </div>
@@ -16,7 +15,7 @@
                 <button type="button" class="btn btn-outline-light btn-sm cookie-consent-decline" id="cookieDeclineBtn">
                     Decline
                 </button>
-                <button type="button" class="btn btn-warning btn-sm cookie-consent-accept" id="cookieAcceptBtn" style="background: linear-gradient(135deg, #ff6600 0%, #ff8533 100%); border: none; color: white; font-weight: 600;">
+                <button type="button" class="btn btn-warning btn-sm cookie-consent-accept" id="cookieAcceptBtn" style="background: linear-gradient(135deg, #ff6600 0%, #ff8533 100%); border: none; color: white; font-weight: 700;">
                     Accept All
                 </button>
             </div>
@@ -27,17 +26,21 @@
 <style>
 .cookie-consent-banner {
     position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    background: linear-gradient(135deg, #030f68 0%, #05137c 100%);
+    bottom: 12px;
+    left: 12px;
+    right: 12px;
+    margin: 0 auto;
+    max-width: 880px;
+    background: rgba(3, 15, 104, 0.94);
+    backdrop-filter: blur(10px);
     color: white;
-    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
     z-index: 9999;
-    padding: 20px;
+    padding: 12px 14px;
     transform: translateY(100%);
     transition: transform 0.4s ease-in-out;
-    border-top: 3px solid #ff6600;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 14px;
 }
 
 .cookie-consent-banner.show {
@@ -53,7 +56,7 @@
 .cookie-consent-content {
     display: flex;
     align-items: center;
-    gap: 20px;
+    gap: 12px;
     flex-wrap: wrap;
 }
 
@@ -66,18 +69,11 @@
     min-width: 250px;
 }
 
-.cookie-consent-title {
-    margin: 0 0 8px 0;
-    font-size: 1.2rem;
-    font-weight: 700;
-    color: #ff6600;
-}
-
 .cookie-consent-message {
     margin: 0;
-    font-size: 0.95rem;
-    line-height: 1.5;
-    color: rgba(255, 255, 255, 0.9);
+    font-size: 0.9rem;
+    line-height: 1.35;
+    color: rgba(255, 255, 255, 0.88);
 }
 
 .cookie-consent-link {
@@ -93,21 +89,21 @@
 
 .cookie-consent-buttons {
     display: flex;
-    gap: 12px;
+    gap: 10px;
     flex-shrink: 0;
 }
 
 .cookie-consent-buttons .btn {
-    padding: 10px 24px;
-    border-radius: 8px;
-    font-weight: 600;
+    padding: 8px 14px;
+    border-radius: 10px;
+    font-weight: 700;
     transition: all 0.3s;
     white-space: nowrap;
 }
 
 .cookie-consent-buttons .btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    transform: none;
+    box-shadow: none;
 }
 
 .cookie-consent-decline {
@@ -124,13 +120,16 @@
 /* Mobile Responsive */
 @media (max-width: 768px) {
     .cookie-consent-banner {
-        padding: 16px;
+        padding: 10px 12px;
+        bottom: 10px;
+        left: 10px;
+        right: 10px;
     }
     
     .cookie-consent-content {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 16px;
+        flex-direction: row;
+        align-items: center;
+        gap: 10px;
     }
     
     .cookie-consent-text {
@@ -139,19 +138,16 @@
     
     .cookie-consent-buttons {
         width: 100%;
-        flex-direction: column;
+        flex-direction: row;
+        justify-content: flex-end;
     }
     
     .cookie-consent-buttons .btn {
-        width: 100%;
-    }
-    
-    .cookie-consent-title {
-        font-size: 1.1rem;
+        width: auto;
     }
     
     .cookie-consent-message {
-        font-size: 0.9rem;
+        font-size: 0.85rem;
     }
 }
 
