@@ -4,7 +4,33 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Dab's Beauty Touch - Professional Hair Braiding Services</title>
+    
+    <!-- Primary Meta Tags -->
+    <title>Dab's Beauty Touch - Professional Hair Braiding Services | Ottawa</title>
+    <meta name="title" content="Dab's Beauty Touch - Professional Hair Braiding Services | Ottawa">
+    <meta name="description" content="Professional hair braiding services in Ottawa. Expert stylists specializing in knotless braids, box braids, wig installation, and custom styles. Book your appointment today for flawless, long-lasting results.">
+    <meta name="keywords" content="hair braiding Ottawa, knotless braids, box braids, wig installation, hair styling, professional braiding services, Ottawa hair salon, braiding salon">
+    <meta name="author" content="Dab's Beauty Touch">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="{{ url('/') }}">
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="{{ url('/') }}">
+    <meta property="og:title" content="Dab's Beauty Touch - Professional Hair Braiding Services | Ottawa">
+    <meta property="og:description" content="Professional hair braiding services in Ottawa. Expert stylists specializing in knotless braids, box braids, wig installation, and custom styles. Book your appointment today.">
+    <meta property="og:image" content="{{ asset('images/logo.jpg') }}">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:site_name" content="Dab's Beauty Touch">
+    <meta property="og:locale" content="en_CA">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:url" content="{{ url('/') }}">
+    <meta name="twitter:title" content="Dab's Beauty Touch - Professional Hair Braiding Services">
+    <meta name="twitter:description" content="Professional hair braiding services in Ottawa. Expert stylists specializing in knotless braids, box braids, wig installation, and custom styles.">
+    <meta name="twitter:image" content="{{ asset('images/logo.jpg') }}">
 
     <!-- Favicon -->
     <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
@@ -13,6 +39,174 @@
     <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('images/icon.ico.jpg') }}">
     <meta name="msapplication-TileImage" content="{{ asset('images/icon.ico.jpg') }}">
 
+    <!-- Structured Data (JSON-LD) -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "BeautySalon",
+        "name": "Dab's Beauty Touch",
+        "description": "Professional hair braiding services in Ottawa. Expert stylists specializing in knotless braids, box braids, wig installation, and custom styles.",
+        "url": "{{ url('/') }}",
+        "logo": "{{ asset('images/logo.jpg') }}",
+        "image": "{{ asset('images/logo.jpg') }}",
+        "telephone": "(647) 834-8549",
+        "priceRange": "$$",
+        "address": {
+            "@type": "PostalAddress",
+            "addressLocality": "Ottawa",
+            "addressRegion": "ON",
+            "addressCountry": "CA"
+        },
+        "geo": {
+            "@type": "GeoCoordinates",
+            "latitude": "45.4215",
+            "longitude": "-75.6972"
+        },
+        "openingHoursSpecification": [
+            {
+                "@type": "OpeningHoursSpecification",
+                "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
+                "opens": "09:00",
+                "closes": "18:00"
+            }
+        ],
+        "sameAs": [],
+        "aggregateRating": {
+            "@type": "AggregateRating",
+            "ratingValue": "5",
+            "reviewCount": "4"
+        },
+        "review": [
+            {
+                "@type": "Review",
+                "author": {
+                    "@type": "Person",
+                    "name": "Client 1"
+                },
+                "reviewRating": {
+                    "@type": "Rating",
+                    "ratingValue": "5"
+                },
+                "reviewBody": "DBT offers great services and she delivers excellently."
+            },
+            {
+                "@type": "Review",
+                "author": {
+                    "@type": "Person",
+                    "name": "Client 2"
+                },
+                "reviewRating": {
+                    "@type": "Rating",
+                    "ratingValue": "5"
+                },
+                "reviewBody": "Excellent service and attention to detail."
+            },
+            {
+                "@type": "Review",
+                "author": {
+                    "@type": "Person",
+                    "name": "Client 3"
+                },
+                "reviewRating": {
+                    "@type": "Rating",
+                    "ratingValue": "5"
+                },
+                "reviewBody": "Amazing work! Highly recommend."
+            },
+            {
+                "@type": "Review",
+                "author": {
+                    "@type": "Person",
+                    "name": "Client 4"
+                },
+                "reviewRating": {
+                    "@type": "Rating",
+                    "ratingValue": "5"
+                },
+                "reviewBody": "Best braiding service in Ottawa!"
+            }
+        ],
+        "hasOfferCatalog": {
+            "@type": "OfferCatalog",
+            "name": "Hair Braiding Services",
+            "itemListElement": [
+                {
+                    "@type": "Offer",
+                    "itemOffered": {
+                        "@type": "Service",
+                        "name": "Small Knotless Braids",
+                        "description": "Ultra-fine knotless braids that blend seamlessly with your natural hair. Perfect for a sleek, professional look."
+                    }
+                },
+                {
+                    "@type": "Offer",
+                    "itemOffered": {
+                        "@type": "Service",
+                        "name": "Smedium Knotless Braids",
+                        "description": "Medium-sized knotless braids offering the perfect balance between style and manageability."
+                    }
+                },
+                {
+                    "@type": "Offer",
+                    "itemOffered": {
+                        "@type": "Service",
+                        "name": "Wig Installation",
+                        "description": "Professional wig installation services for a natural, secure fit."
+                    }
+                },
+                {
+                    "@type": "Offer",
+                    "itemOffered": {
+                        "@type": "Service",
+                        "name": "Medium Knotless Braids",
+                        "description": "Classic medium-sized knotless braids for a timeless look."
+                    }
+                },
+                {
+                    "@type": "Offer",
+                    "itemOffered": {
+                        "@type": "Service",
+                        "name": "Jumbo Knotless Braids",
+                        "description": "Bold, statement-making jumbo knotless braids for a dramatic look."
+                    }
+                },
+                {
+                    "@type": "Offer",
+                    "itemOffered": {
+                        "@type": "Service",
+                        "name": "Kids Braids",
+                        "description": "Specialized braiding services for children with gentle techniques."
+                    }
+                },
+                {
+                    "@type": "Offer",
+                    "itemOffered": {
+                        "@type": "Service",
+                        "name": "Stitch Braids",
+                        "description": "Elegant 8-row stitch braids for a sophisticated style."
+                    }
+                },
+                {
+                    "@type": "Offer",
+                    "itemOffered": {
+                        "@type": "Service",
+                        "name": "Hair Mask/Relaxing",
+                        "description": "Deep conditioning and relaxing treatments for healthy, manageable hair."
+                    }
+                },
+                {
+                    "@type": "Offer",
+                    "itemOffered": {
+                        "@type": "Service",
+                        "name": "Boho Braids",
+                        "description": "Trendy boho-style braids for a free-spirited, bohemian look."
+                    }
+                }
+            ]
+        }
+    }
+    </script>
+
     <!-- CSS Files -->
     <link rel="stylesheet" href="{{ asset('css/bootstrap.css') }}">
     <link rel="stylesheet" href="{{ asset('css/style.css') }}">
@@ -20,6 +214,7 @@
 
     <!-- Bootstrap CDN (backup) -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
         <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
 
 
@@ -2594,6 +2789,7 @@
     </div>
     @endif
 
+    @include('partials.cookie-consent')
     @include('partials.site-header')
 
     <!-- Hero Section -->
@@ -2639,7 +2835,7 @@
                                 <div class="slide-content" style="padding: 40px;">
                                     <h3 style="color: #030f68; font-weight: 700; font-size: 2rem; margin-bottom: 20px;">Small Knotless Braids</h3>
                                     <p style="color: #666; font-size: 1.1rem; line-height: 1.6; margin-bottom: 25px;">
-                                        Ultra-fine knotless braids that blend seamlessly with your natural hair. Perfect for a sleek, professional look with minimal tension and maximum comfort.
+                                        Ultra-fine knotless braids that blend seamlessly with your natural hair. Perfect for a sleek, professional look with minimal tension and maximum comfort. Our expert Ottawa braiding stylists use premium techniques to create these delicate, long-lasting braids that protect your natural hair while giving you a stunning, low-maintenance style. Ideal for professional settings, special events, or everyday elegance.
                                     </p>
                                     <div class="slide-features">
                                         <div class="feature-item" style="display: flex; align-items: center; margin-bottom: 15px;">
@@ -2717,7 +2913,7 @@
                                 <div class="slide-content" style="padding: 40px;">
                                     <h3 style="color: #030f68; font-weight: 700; font-size: 2rem; margin-bottom: 20px;">Wig Installation</h3>
                                     <p style="color: #666; font-size: 1.1rem; line-height: 1.6; margin-bottom: 25px;">
-                                        Professional wig installation with custom fitting and styling. Sleek natural hairline blending, and personalized styling to match your desired look.
+                                        Professional wig installation with custom fitting and styling. Our Ottawa hair specialists provide sleek natural hairline blending and personalized styling to match your desired look. We offer secure, comfortable wig installations using advanced techniques that ensure your wig stays in place while looking completely natural. Perfect for protective styling, hair loss solutions, or simply wanting to change your look instantly.
                                     </p>
                                     <div class="slide-features">
                                         <div class="feature-item" style="display: flex; align-items: center; margin-bottom: 15px;">
@@ -2756,7 +2952,7 @@
                                 <div class="slide-content" style="padding: 40px;">
                                     <h3 style="color: #030f68; font-weight: 700; font-size: 2rem; margin-bottom: 20px;">Medium Knotless Braids</h3>
                                     <p style="color: #666; font-size: 1.1rem; line-height: 1.6; margin-bottom: 25px;">
-                                        Bold, statement-making braids that create a dramatic, eye-catching look. Perfect for those who want to make a strong fashion statement with their hair.
+                                        Classic medium-sized knotless braids for a timeless, elegant look. These versatile braids offer the perfect balance between style and manageability, making them ideal for everyday wear. Our skilled Ottawa braiding artists create these medium braids with precision, ensuring even distribution and a polished finish. Perfect for those seeking a sophisticated style that's both trendy and practical.
                                     </p>
                                     <div class="slide-features">
                                         <div class="feature-item" style="display: flex; align-items: center; margin-bottom: 15px;">
@@ -3246,25 +3442,25 @@
         <div class="owl-carousel owl-theme-1" data-items="1" data-sm-items="1" data-md-items="1" data-lg-items="1" data-xl-items="2" data-xxl-items="3" data-margin="15px" data-nav="false" data-dots="true" data-autoplay="5000">
             <div class="testimonial-box" style="background:linear-gradient(135deg,#e3eafc 0%,#f8f9fa 100%); border-radius:18px; box-shadow:0 8px 32px rgba(0,0,0,0.12); padding:38px 28px; margin:0 12px; position:relative;">
                 <div class="testimonial-title" style="font-size:1.3rem; color:#ff6600; font-weight:700; margin-top:32px;">Cool!</div>
-                <div class="testimonial-rate"><img src="{{ asset('images/star-ratings.webp') }}" alt="" width="120" height="22"/></div>
+                <div class="testimonial-rate"><img src="{{ asset('images/star-ratings.webp') }}" alt="5 Star Rating" width="120" height="22"/></div>
                 <div class="testimonial-text" style="font-size:1.12rem; color:#222; margin:18px 0; font-style:italic;">"DBT offers great services and she delivers excellently. </div>
                 <div class="testimonial-name" style="font-size:1rem; color:#030f68; font-weight:500;">Client 1</div>
             </div>
             <div class="testimonial-box" style="background:linear-gradient(135deg,#fff6e3 0%,#ffe3e3 100%); border-radius:18px; box-shadow:0 8px 32px rgba(0,0,0,0.12); padding:38px 28px; margin:0 12px; position:relative;">
                 <div class="testimonial-title" style="font-size:1.3rem; color:#ff6600; font-weight:700; margin-top:32px;">Excellent!</div>
-                <div class="testimonial-rate"><img src="{{ asset('images/star-ratings.webp') }}" alt="" width="120" height="22"/></div>
+                <div class="testimonial-rate"><img src="{{ asset('images/star-ratings.webp') }}" alt="5 Star Rating" width="120" height="22"/></div>
                 <div class="testimonial-text" style="font-size:1.12rem; color:#222; margin:18px 0; font-style:italic;">"Very patient and time conscious. She follows up and ensures customer comfortability. I always leave happy!"</div>
                 <div class="testimonial-name" style="font-size:1rem; color:#030f68; font-weight:500;">Client 2</div>
             </div>
             <div class="testimonial-box" style="background:linear-gradient(135deg,#e3ffe3 0%,#e3f8ff 100%); border-radius:18px; box-shadow:0 8px 32px rgba(0,0,0,0.12); padding:38px 28px; margin:0 12px; position:relative;">
                 <div class="testimonial-title" style="font-size:1.3rem; color:#ff6600; font-weight:700; margin-top:32px;">Amazing!</div>
-                <div class="testimonial-rate"><img src="{{ asset('images/star-ratings.webp') }}" alt="" width="120" height="22"/></div>
+                <div class="testimonial-rate"><img src="{{ asset('images/star-ratings.webp') }}" alt="5 Star Rating" width="120" height="22"/></div>
                 <div class="testimonial-text" style="font-size:1.12rem; color:#222; margin:18px 0; font-style:italic;">"DBT braided my child's hair and my child was very comfortable. Her braids don't hurt much and last long!"</div>
                 <div class="testimonial-name" style="font-size:1rem; color:#030f68; font-weight:500;">Client 3</div>
             </div>
             <div class="testimonial-box" style="background:linear-gradient(135deg,#f8e3ff 0%,#e3eaff 100%); border-radius:18px; box-shadow:0 8px 32px rgba(0,0,0,0.12); padding:38px 28px; margin:0 12px; position:relative;">
                 <div class="testimonial-title" style="font-size:1.3rem; color:#ff6600; font-weight:700; margin-top:32px;">Excellent!</div>
-                <div class="testimonial-rate"><img src="{{ asset('images/star-ratings.webp') }}" alt="" width="120" height="22"/></div>
+                <div class="testimonial-rate"><img src="{{ asset('images/star-ratings.webp') }}" alt="5 Star Rating" width="120" height="22"/></div>
                 <div class="testimonial-text" style="font-size:1.12rem; color:#222; margin:18px 0; font-style:italic;"> "Customer relationship is amazing. Very professional and very affordable service. Highly recommend DBT!"</div>
                 <div class="testimonial-name" style="font-size:1rem; color:#030f68; font-weight:500;">Client 4</div>
             </div>
@@ -4723,8 +4919,8 @@
     }
 
 </script>
-<script src="{{ asset('js/core.min.js') }}"></script>
-<script src="{{ asset('js/script.js') }}"></script>
+<script src="{{ asset('js/core.min.js') }}?v={{ @filemtime(public_path('js/core.min.js')) }}"></script>
+<script src="{{ asset('js/script.js') }}?v={{ @filemtime(public_path('js/script.js')) }}"></script>
 
 <!-- Bootstrap JS (if not included in core.min.js) -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
@@ -7508,6 +7704,17 @@ document.addEventListener('DOMContentLoaded', function(){
             const contBtn = document.getElementById('termsGateContinueBtn');
             if (!modalEl || !agreeEl || !contBtn) return next();
 
+            const cleanupStrayBackdrops = () => {
+                try {
+                    const anyShownModal = document.querySelector('.modal.show');
+                    if (!anyShownModal) {
+                        document.querySelectorAll('.modal-backdrop').forEach(b => b.remove());
+                        document.body.classList.remove('modal-open');
+                        document.body.style.removeProperty('padding-right');
+                    }
+                } catch (e) {}
+            };
+
             agreeEl.checked = false;
             contBtn.disabled = true;
             const onAgreeChange = () => { contBtn.disabled = !agreeEl.checked; };
@@ -7520,10 +7727,29 @@ document.addEventListener('DOMContentLoaded', function(){
                 if (!agreeEl.checked) return;
                 setAccepted();
                 try { (bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl)).hide(); } catch(e) {}
+                setTimeout(cleanupStrayBackdrops, 50);
                 if (typeof next === 'function') next();
             };
 
-            try { (bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl)).show(); } catch(e) { next(); }
+            try {
+                cleanupStrayBackdrops();
+                (bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl)).show();
+
+                // Watchdog: if backdrop appears but modal doesn't show, fail open and cleanup
+                setTimeout(function(){
+                    try {
+                        if (modalEl.classList.contains('show')) return;
+                        cleanupStrayBackdrops();
+                        modalEl.classList.remove('show');
+                        modalEl.style.display = 'none';
+                        modalEl.setAttribute('aria-hidden', 'true');
+                    } catch(e) {}
+                    try { next(); } catch(e) {}
+                }, 450);
+            } catch(e) {
+                cleanupStrayBackdrops();
+                next();
+            }
         };
     })();
 
@@ -8168,8 +8394,6 @@ document.addEventListener('DOMContentLoaded', function(){
     }
 
 })();
-</script>
-
 </script>
 
 <script>

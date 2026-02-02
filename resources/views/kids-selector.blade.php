@@ -1,6 +1,16 @@
 @extends('layouts.app')
 
 @section('title', "Kids Braids Selector - Dab's Beauty Touch")
+@section('meta_title', "Kids Braids Selector - Dab's Beauty Touch | Customize Your Child's Braids")
+@section('meta_description', "Customize your child's braiding service with our interactive kids braids selector. Choose braid type, length, finish, and extras. Professional, gentle braiding services for children in Ottawa.")
+@section('meta_keywords', 'kids braids, children braiding, kids hair braiding Ottawa, customize braids, kids hair styles')
+@section('canonical', url('/kids-selector'))
+@section('og_url', url('/kids-selector'))
+@section('og_title', "Kids Braids Selector - Dab's Beauty Touch")
+@section('og_description', "Customize your child's braiding service with our interactive kids braids selector. Professional, gentle braiding services for children.")
+@section('twitter_url', url('/kids-selector'))
+@section('twitter_title', "Kids Braids Selector - Dab's Beauty Touch")
+@section('twitter_description', "Customize your child's braiding service with our interactive kids braids selector.")
 
 @push('styles')
 <style>

@@ -4,7 +4,34 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@yield('title', "Dab's Beauty Touch")</title>
+    
+    <!-- Primary Meta Tags -->
+    <title>@yield('title', "Dab's Beauty Touch - Professional Hair Braiding Services")</title>
+    <meta name="title" content="@yield('meta_title', "Dab's Beauty Touch - Professional Hair Braiding Services")">
+    <meta name="description" content="@yield('meta_description', "Professional hair braiding services in Ottawa. Expert stylists specializing in knotless braids, box braids, wig installation, and custom styles.")">
+    <meta name="keywords" content="@yield('meta_keywords', 'hair braiding Ottawa, knotless braids, box braids, wig installation, hair styling')">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="@yield('canonical', url('/'))">
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="@yield('og_type', 'website')">
+    <meta property="og:url" content="@yield('og_url', url('/'))">
+    <meta property="og:title" content="@yield('og_title', "Dab's Beauty Touch - Professional Hair Braiding Services")">
+    <meta property="og:description" content="@yield('og_description', "Professional hair braiding services in Ottawa. Expert stylists specializing in knotless braids, box braids, wig installation, and custom styles.")">
+    <meta property="og:image" content="@yield('og_image', asset('images/logo.jpg'))">
+    <meta property="og:site_name" content="Dab's Beauty Touch">
+    <meta property="og:locale" content="en_CA">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:url" content="@yield('twitter_url', url('/'))">
+    <meta name="twitter:title" content="@yield('twitter_title', "Dab's Beauty Touch - Professional Hair Braiding Services")">
+    <meta name="twitter:description" content="@yield('twitter_description', "Professional hair braiding services in Ottawa. Expert stylists specializing in knotless braids, box braids, wig installation, and custom styles.")">
+    <meta name="twitter:image" content="@yield('twitter_image', asset('images/logo.jpg'))">
+
+    <!-- Additional Meta Tags -->
+    @stack('meta')
+    
     <link rel="stylesheet" href="{{ asset('css/bootstrap.css') }}">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     @stack('styles')
@@ -14,6 +41,7 @@
 </head>
 <body>
 
+@include('partials.cookie-consent')
 @include('partials.site-header')
 
 <main class="py-4">

@@ -101,7 +101,18 @@
                         <h5>Request Details</h5>
                         <p>
                             <strong>Service:</strong> {{ $customRequest->service ?: 'Custom' }}<br>
-                            <strong>Requested Date:</strong> {{ $customRequest->appointment_date ? \\Carbon\\Carbon::parse($customRequest->appointment_date)->format('F j, Y') : 'N/A' }}<br>
+                            <strong>Requested Date:</strong> 
+                            @if($customRequest->appointment_date)
+                                @php
+                                    $date = is_string($customRequest->appointment_date) 
+                                        ? \Carbon\Carbon::parse($customRequest->appointment_date) 
+                                        : $customRequest->appointment_date;
+                                @endphp
+                                {{ $date->format('F j, Y') }}
+                            @else
+                                N/A
+                            @endif
+                            <br>
                             <strong>Requested Time:</strong> {{ $customRequest->appointment_time ?: 'N/A' }}
                         </p>
 
