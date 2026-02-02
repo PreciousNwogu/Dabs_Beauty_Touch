@@ -10,6 +10,8 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Http\Request;
 use Illuminate\Http\Request as HttpRequest;
 use Illuminate\Support\Facades\Artisan;
+use App\Http\Controllers\PublicAuthController;
+use App\Http\Controllers\AccountController;
 
 // TEMPORARY: clear application caches.
 // This is protected by a secret key. Remove when done.
@@ -258,6 +260,17 @@ Route::get('/booking/success', function () {
 Route::get('/calendar', function () {
     return view('calendar');
 })->name('calendar');
+
+// Public auth (optional accounts)
+Route::middleware('guest')->group(function () {
+    Route::get('/login', [PublicAuthController::class, 'showLogin'])->name('login');
+    Route::post('/login', [PublicAuthController::class, 'login'])->name('login.submit');
+    Route::get('/register', [PublicAuthController::class, 'showRegister'])->name('register');
+    Route::post('/register', [PublicAuthController::class, 'register'])->name('register.submit');
+});
+
+Route::post('/logout', [PublicAuthController::class, 'logout'])->middleware('auth')->name('logout');
+Route::get('/my-bookings', [AccountController::class, 'myBookings'])->middleware('auth')->name('account.bookings');
 
 // Kids Braids Selector page
 Route::get('/kids-selector', function () {
@@ -1379,6 +1392,17 @@ Route::post('/bookings', function(Request $request) {
             } catch (\Exception $e) {
                 Log::warning('Failed to check blocked date for booking: ' . $e->getMessage());
                 // Continue with booking creation if date check fails
+            }
+        }
+
+        // Link booking to logged-in user (optional accounts)
+        if (Auth::check()) {
+            $bookingData['user_id'] = Auth::id();
+
+            // If the booking email is empty/placeholder, use the account email
+            $currentEmail = $bookingData['email'] ?? null;
+            if (!$currentEmail || $currentEmail === 'no-email@example.com') {
+                $bookingData['email'] = Auth::user()->email;
             }
         }
 

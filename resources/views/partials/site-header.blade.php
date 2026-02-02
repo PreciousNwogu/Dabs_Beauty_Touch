@@ -17,6 +17,31 @@
                 <li class="nav-item"><a class="nav-link px-3" href="{{ route('home') }}#terms">Terms</a></li>
                 <li class="nav-item"><a class="nav-link px-3" href="{{ route('calendar') }}" style="background: linear-gradient(135deg, #ff6600 0%, #ff8533 100%); color: white; border-radius: 20px; padding: 8px 20px !important;">Book Now</a></li>
             </ul>
+
+            <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+                @auth
+                    <li class="nav-item">
+                        <a class="nav-link px-3" href="{{ route('account.bookings') }}" style="font-weight:700;">My Bookings</a>
+                    </li>
+                    <li class="nav-item">
+                        <form method="POST" action="{{ route('logout') }}" class="d-inline">
+                            @csrf
+                            <button type="submit" class="nav-link px-3 btn btn-link" style="text-decoration:none;font-weight:700;">
+                                Logout
+                            </button>
+                        </form>
+                    </li>
+                @endauth
+
+                @guest
+                    <li class="nav-item">
+                        <a class="nav-link px-3" href="{{ route('login') }}" style="font-weight:700;">Sign In</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link px-3" href="{{ route('register') }}" style="font-weight:700;">Create Account</a>
+                    </li>
+                @endguest
+            </ul>
         </div>
     </div>
 </nav>
