@@ -3,7 +3,27 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Booking Confirmed - Dab's Beauty Touch</title>
+    
+    <!-- Primary Meta Tags -->
+    <title>Booking Confirmed - Dab's Beauty Touch | Appointment Success</title>
+    <meta name="title" content="Booking Confirmed - Dab's Beauty Touch | Appointment Success">
+    <meta name="description" content="Your appointment has been successfully booked. Booking confirmation details and next steps for your hair braiding service at Dab's Beauty Touch.">
+    <meta name="robots" content="noindex, nofollow">
+    <link rel="canonical" href="{{ url('/booking/success') }}">
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="{{ url('/booking/success') }}">
+    <meta property="og:title" content="Booking Confirmed - Dab's Beauty Touch">
+    <meta property="og:description" content="Your appointment has been successfully booked.">
+    <meta property="og:image" content="{{ asset('images/logo.jpg') }}">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="{{ url('/booking/success') }}">
+    <meta name="twitter:title" content="Booking Confirmed - Dab's Beauty Touch">
+    <meta name="twitter:description" content="Your appointment has been successfully booked.">
+    <meta name="twitter:image" content="{{ asset('images/logo.jpg') }}">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
     <style>
@@ -181,10 +201,20 @@
                             <div class="detail-value">{{ $currentLen ? ucwords(str_replace(['_','-'], ' ', $currentLen)) : '—' }}</div>
                         </div>
                         @if(isset($bd['appointment_date']) || isset($bd['appointment_time']))
+                            @php
+                                $formattedTime = null;
+                                try {
+                                    if (!empty($bd['appointment_time'])) {
+                                        $formattedTime = \Carbon\Carbon::parse($bd['appointment_time'])->format('g:i A');
+                                    }
+                                } catch (\Throwable $e) {
+                                    $formattedTime = $bd['appointment_time'] ?? null;
+                                }
+                            @endphp
                             <div class="detail-row">
                                 <div class="detail-label">Date / Time</div>
                                 <div class="detail-value">
-                                    {{ $bd['appointment_date'] ?? '—' }}{{ !empty($bd['appointment_time']) ? (' at ' . $bd['appointment_time']) : '' }}
+                                    {{ $bd['appointment_date'] ?? '—' }}{{ !empty($formattedTime) ? (' at ' . $formattedTime) : '' }}
                                 </div>
                             </div>
                         @endif
@@ -193,6 +223,27 @@
                             <div class="detail-value">{{ $fmtMoney($bd['final_price'] ?? null) }}</div>
                         </div>
                     </div>
+
+                    @php
+                        $imgPath = $bd['sample_picture'] ?? ($booking->sample_picture ?? null);
+                        $imgUrl = null;
+                        if ($imgPath) {
+                            // stored via disk('public') as sample_pictures/...
+                            $imgUrl = asset('storage/' . ltrim($imgPath, '/'));
+                        }
+                    @endphp
+                    @if($imgUrl)
+                        <div class="booking-details">
+                            <h6 class="mb-3 text-primary">
+                                <i class="fas fa-image me-2"></i>
+                                Reference Image
+                            </h6>
+                            <a href="{{ $imgUrl }}" target="_blank" rel="noopener" style="text-decoration:none;">
+                                <img src="{{ $imgUrl }}" alt="Reference image" style="width:100%;max-width:520px;border-radius:14px;border:1px solid #e9ecef;display:block;">
+                            </a>
+                            <div class="form-text mt-2">Tap the image to open full size.</div>
+                        </div>
+                    @endif
 
                     @if(!$isReadOnly)
                         <div class="booking-details">
