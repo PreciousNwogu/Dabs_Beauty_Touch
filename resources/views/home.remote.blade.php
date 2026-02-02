@@ -8396,8 +8396,6 @@ document.addEventListener('DOMContentLoaded', function(){
 })();
 </script>
 
-</script>
-
 <script>
 // If user was redirected from a selector page, pick up params and open booking modal
 (function(){
