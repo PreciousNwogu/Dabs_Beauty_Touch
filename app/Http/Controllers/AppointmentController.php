@@ -279,27 +279,50 @@ class AppointmentController extends Controller
         }
 
         try {
-            // Check if this date is already booked with non-completed appointment
-            $existingBooking = \App\Models\Booking::where('appointment_date', $request->appointment_date)
-                ->where('status', '!=', 'completed')
-                ->first();
+            // Booking capacity rule:
+            // - Allow up to 2 bookings per day
+            // - Each booking blocks a 5-hour window from its start time
+            $appTz = config('app.timezone') ?: date_default_timezone_get();
+            $bookingBlockMinutes = 5 * 60;
 
-            if ($existingBooking) {
-                // Check if this is an API request or a web request
+            $existingBookingsForDay = \App\Models\Booking::where('appointment_date', $request->appointment_date)
+                ->whereNotIn('status', ['completed', 'cancelled'])
+                ->whereNotNull('appointment_time')
+                ->get(['appointment_time']);
+
+            // If there are already 2 bookings, block the day
+            if ($existingBookingsForDay->count() >= 2) {
                 $isApiRequest = $request->expectsJson() || $request->is('api/*') || $request->header('X-Requested-With') === 'XMLHttpRequest';
-
+                $msg = 'This date is fully booked. Please select a different date.';
                 if ($isApiRequest) {
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'This date is already booked with another appointment. Please select a different date.'
-                    ], 422);
-                } else {
-                    return redirect()->route('home')
-                        ->with([
-                            'booking_error' => true,
-                            'error_message' => 'This date is already booked. Please select a different date.'
-                        ]);
+                    return response()->json(['success' => false, 'message' => $msg], 422);
                 }
+                return redirect()->route('home')->with(['booking_error' => true, 'error_message' => $msg]);
+            }
+
+            // Enforce 5-hour window overlap rule on the server
+            try {
+                $reqStart = Carbon::createFromFormat('Y-m-d H:i', $request->appointment_date . ' ' . $request->appointment_time, $appTz);
+                $reqEnd = $reqStart->copy()->addMinutes($bookingBlockMinutes);
+
+                foreach ($existingBookingsForDay as $b) {
+                    $existingTimeStr = \Carbon\Carbon::parse($b->appointment_time)->format('H:i');
+                    $exStart = Carbon::createFromFormat('Y-m-d H:i', $request->appointment_date . ' ' . $existingTimeStr, $appTz);
+                    $exEnd = $exStart->copy()->addMinutes($bookingBlockMinutes);
+
+                    // overlap if [reqStart, reqEnd) intersects [exStart, exEnd)
+                    if ($reqStart->lt($exEnd) && $reqEnd->gt($exStart)) {
+                        $isApiRequest = $request->expectsJson() || $request->is('api/*') || $request->header('X-Requested-With') === 'XMLHttpRequest';
+                        $msg = 'That time is not available. Please choose a later time on the same day.';
+                        if ($isApiRequest) {
+                            return response()->json(['success' => false, 'message' => $msg], 422);
+                        }
+                        return redirect()->route('home')->with(['booking_error' => true, 'error_message' => $msg]);
+                    }
+                }
+            } catch (\Throwable $e) {
+                // If parsing fails, fall back to safety: do not block the whole day, but allow normal flow.
+                Log::warning('Failed to enforce 5-hour overlap rule', ['error' => $e->getMessage()]);
             }
 
             // Check if this date/time is blocked (only block full-day blocks or if time falls within blocked range)

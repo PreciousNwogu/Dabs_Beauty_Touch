@@ -66,19 +66,25 @@ Route::get('/clear-session', function (Request $request) {
 // Get booked dates for calendar
 Route::get('/api/booked-dates', function (Request $request) {
     try {
+        // Business rule: allow up to 2 bookings per day (each booking blocks a 5-hour window).
+        // So a date should only be "disabled" on the calendar once it has 2 pending/confirmed bookings,
+        // or if it is blocked via schedules (handled separately by /schedules/blocked-dates).
+        $maxBookingsPerDay = 2;
+
         // Only get dates with pending or confirmed bookings (exclude cancelled and completed)
         $bookedDates = \App\Models\Booking::whereIn('status', ['pending', 'confirmed'])
             ->selectRaw('appointment_date, COUNT(*) as booking_count')
             ->groupBy('appointment_date')
             ->get()
-            ->map(function ($booking) {
+            ->map(function ($booking) use ($maxBookingsPerDay) {
                 // Format date as YYYY-MM-DD for JavaScript
                 $formattedDate = \Carbon\Carbon::parse($booking->appointment_date)->format('Y-m-d');
                 return [
                     'date' => $formattedDate,
                     'original_date' => $booking->appointment_date,
                     'count' => $booking->booking_count,
-                    'disabled' => true // Disable all dates with pending or confirmed bookings
+                    // Disable only when fully booked for the day.
+                    'disabled' => ((int)($booking->booking_count ?? 0) >= (int)$maxBookingsPerDay)
                 ];
             });
 
