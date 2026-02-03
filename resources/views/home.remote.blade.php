@@ -3575,81 +3575,99 @@
                     <div class="service-card h-100" onclick="openBookingModal('Small Knotless Braids', 'small-knotless')">
                         <img src="{{ asset('images/small braid.jpg') }}" alt="Small Knotless Braids">
                         <h4>Small Knotless Braids</h4>
-                        <p>Ultra-fine braids for a sleek look. Size: pencil-thin braids, ~150-200 braids total. Hair not included. Time: 6-8 hours. Price varies by length (+$20 longer, -$20 shorter than mid-back).</p>
-                        <p class="price"><strong>Starting at ${{ number_format(config('service_prices.small_knotless', 170),0) }}</strong></p>
-                        <button class="btn btn-warning mt-3">Book Now</button>
+                        <p class="mb-2">Ultra-fine pencil-thin braids for a sleek, professional look.</p>
+                        <p class="mb-1"><strong>Time:</strong> 6–7 hrs • <strong>Length:</strong> Choose in booking</p>
+                        <p class="mb-3"><strong>Hair:</strong> Not included</p>
+                        <p class="price"><strong>From ${{ number_format(config('service_prices.small_knotless', 170),0) }}</strong> <small class="text-muted">(varies by length)</small></p>
+                        <button class="btn btn-warning mt-3">Book this style</button>
                     </div>
                 </div>
                 <div class="col-lg-4 col-md-6 col-6 service-item" data-category="knotless">
                     <div class="service-card h-100" onclick="openBookingModal('Smedium Knotless Braids', 'smedium-knotless')">
                         <img src="{{ asset('images/webbraids2.jpg') }}" alt="Smedium Knotless Braids">
                         <h4>Smedium Knotless Braids</h4>
-                        <p>Versatile everyday style. Size: between small & medium, ~100-120 braids. Hair not included. Time: 5-6 hours. Price varies by length (+$20 longer, -$20 shorter than mid-back).</p>
-                        <p class="price"><strong>Starting at ${{ number_format(config('service_prices.smedium_knotless', 150),0) }}</strong></p>
-                        <button class="btn btn-warning mt-3">Book Now</button>
+                        <p class="mb-2">Versatile everyday style—smaller than medium parts for a refined look.</p>
+                        <p class="mb-1"><strong>Time:</strong> 5–6 hrs • <strong>Length:</strong> Choose in booking</p>
+                        <p class="mb-3"><strong>Hair:</strong> Not included</p>
+                        <p class="price"><strong>From ${{ number_format(config('service_prices.smedium_knotless', 150),0) }}</strong> <small class="text-muted">(varies by length)</small></p>
+                        <button class="btn btn-warning mt-3">Book this style</button>
                     </div>
                 </div>
                 <div class="col-lg-4 col-md-6 col-6 service-item" data-category="wig">
                     <div class="service-card h-100" onclick="openBookingModal('Wig Installation', 'wig-installation')">
                         <img src="{{ asset('images/wig installation.jpg') }}" alt="Smedium Knotless Braids">
                         <h4>Wig Installation</h4>
-                        <p>Professional install with natural hairline. Bring your own wig unit. Includes: braiding, wig placement, styling & blending. Time: 2-3 hours. Price fixed for most wigs.</p>
-                        <p class="price"><strong>Starting at ${{ number_format(config('service_prices.wig_installation', 150),0) }}</strong></p>
-                        <button class="btn btn-warning mt-3">Book Now</button>
+                        <p class="mb-2">Professional install with natural hairline blending. Bring your own wig unit.</p>
+                        <p class="mb-1"><strong>Time:</strong> 2–3 hrs • <strong>Includes:</strong> Braiding, placement, styling</p>
+                        <p class="mb-3"><strong>Hair:</strong> Bring your own wig</p>
+                        <p class="price"><strong>From ${{ number_format(config('service_prices.wig_installation', 150),0) }}</strong> <small class="text-muted">(fixed for most wigs)</small></p>
+                        <button class="btn btn-warning mt-3">Book this style</button>
                     </div>
                 </div>
                 <div class="col-lg-4 col-md-6 col-6 service-item" data-category="knotless">
                     <div class="service-card h-100" onclick="openBookingModal('Medium Knotless Braids', 'medium-knotless')">
                         <img src="{{ asset('images/large braid.jpg') }}" alt="Medium Knotless Braids">
                         <h4>Medium Knotless Braids</h4>
-                        <p>Bold, statement braids. Size: medium thickness, ~70-90 braids. Hair not included. Time: 4-5 hours. Price varies by length (+$20 longer, -$20 shorter than mid-back).</p>
-                        <p class="price"><strong>Starting at ${{ number_format(config('service_prices.medium_knotless', 130),0) }}</strong></p>
-                        <button class="btn btn-warning mt-3">Book Now</button>
+                        <p class="mb-2">Bold, statement-making braids with medium-thickness parts.</p>
+                        <p class="mb-1"><strong>Time:</strong> 4–4.5 hrs • <strong>Length:</strong> Choose in booking</p>
+                        <p class="mb-3"><strong>Hair:</strong> Not included</p>
+                        <p class="price"><strong>From ${{ number_format(config('service_prices.medium_knotless', 130),0) }}</strong> <small class="text-muted">(varies by length/size)</small></p>
+                        <button class="btn btn-warning mt-3">Book this style</button>
                     </div>
                 </div>
                 <div class="col-lg-4 col-md-6 col-6 service-item" data-category="knotless">
                     <div class="service-card h-100" onclick="openBookingModal('Jumbo Knotless Braids', 'jumbo-knotless')">
                         <img src="{{ asset('images/jumbo braid.jpg') }}" alt="Jumbo Knotless Braids">
                         <h4>Jumbo Knotless Braids</h4>
-                        <p>Extra-large voluminous braids. Size: jumbo thickness, ~40-60 braids. Hair not included. Time: 3-4 hours (quickest option). Price varies by length (+$20 longer, -$20 shorter).</p>
-                        <p class="price"><strong>Starting at ${{ number_format(config('service_prices.jumbo_knotless', 100),0) }}</strong></p>
-                        <button class="btn btn-warning mt-3">Book Now</button>
+                        <p class="mb-2">Extra-large voluminous braids—fastest install with biggest parts.</p>
+                        <p class="mb-1"><strong>Time:</strong> 2–3 hrs • <strong>Length:</strong> Choose in booking</p>
+                        <p class="mb-3"><strong>Hair:</strong> Not included</p>
+                        <p class="price"><strong>From ${{ number_format(config('service_prices.jumbo_knotless', 100),0) }}</strong> <small class="text-muted">(varies by length)</small></p>
+                        <button class="btn btn-warning mt-3">Book this style</button>
                     </div>
                 </div>
                 <div class="col-lg-4 col-md-6 col-6 service-item" data-category="kids">
                     <div class="service-card h-100" onclick="window.location='{{ route('kids.selector') }}'">
                         <img src="{{ asset('images/kids hair style.webp') }}" alt="Kids Braids">
-                        <h4>Kids Braids(3-8yrs)</h4>
-                        <p>Gentle age-appropriate styles for ages 3-8. Multiple braid types & sizes available. Hair typically included. Time: 2-4 hours depending on style. Price varies by complexity & length.</p>
-                        <p class="price"><strong>Starting at ${{ number_format(config('service_prices.kids_braids', 80),0) }}</strong></p>
-                        <button class="btn btn-warning mt-3">Book Now</button>
+                        <h4>Kids Braids (3–8 yrs)</h4>
+                        <p class="mb-2">Gentle, age-appropriate styles with adorable results.</p>
+                        <p class="mb-1"><strong>Time:</strong> 2–4 hrs • <strong>Length:</strong> Choose in booking</p>
+                        <p class="mb-3"><strong>Hair:</strong> Not included • <strong>Note:</strong> Parent/guardian must stay</p>
+                        <p class="price"><strong>From ${{ number_format(config('service_prices.kids_braids', 80),0) }}</strong> <small class="text-muted">(varies by style/complexity)</small></p>
+                        <button class="btn btn-warning mt-3">Book this style</button>
                     </div>
                 </div>
                 <div class="col-lg-4 col-md-6 col-6 service-item" data-category="stitch">
-                    <div class="service-card h-100" onclick="openBookingModal('8–10 Rows Stitch Braids', 'stitch-braids')">
-                        <img src="{{ asset('images/stitch braid.jpg') }}" alt="8–10 Rows Stitch Braids">
-                        <h4>8–10 Rows Stitch Braids</h4>
-                        <p>Cornrows with unique feed-in stitch pattern. 8-10 rows total for protective styling. Hair not included. Time: 4-5 hours. Price varies by complexity & extensions used.</p>
-                        <p class="price"><strong>Starting at ${{ number_format(config('service_prices.stitch_braids', 120),0) }}</strong></p>
-                        <button class="btn btn-warning mt-3">Book Now</button>
+                    <div class="service-card h-100" onclick="openBookingModal('Stitch Braids', 'stitch-braids')">
+                        <img src="{{ asset('images/stitch braid.jpg') }}" alt="Stitch Braids">
+                        <h4>Stitch Braids</h4>
+                        <p class="mb-2">Feed-in cornrows with unique stitch pattern for protective styling.</p>
+                        <p class="mb-1"><strong>Time:</strong> 4–5 hrs • <strong>Length:</strong> Choose in booking</p>
+                        <p class="mb-3"><strong>Hair:</strong> Not included</p>
+                        <p class="price"><strong>From ${{ number_format(config('service_prices.stitch_braids', 120),0) }}</strong> <small class="text-muted">(varies by complexity)</small></p>
+                        <button class="btn btn-warning mt-3">Book this style</button>
                     </div>
                 </div>
                 <div class="col-lg-4 col-md-6 col-6 service-item" data-category="other">
-                    <div class="service-card h-100" onclick="openBookingModal('Hair Mask/Relaxing', 'hair-mask')">
-                        <img src="{{ asset('images/hair_mask.png') }}" alt="Hair Mask/Relaxing">
-                        <h4>Hair Mask/Relaxing</h4>
-                        <p>Deep conditioning treatment for damaged or dry hair. Restores moisture & shine. Perfect pre-braid prep. Time: 45-60 minutes. Price fixed for most hair lengths.</p>
-                        <p class="price"><strong>Starting at ${{ number_format(config('service_prices.hair_mask', 50),0) }}</strong></p>
-                        <button class="btn btn-warning mt-3">Book Now</button>
+                    <div class="service-card h-100" onclick="openBookingModal('Deep Conditioning Hair Mask', 'hair-mask')">
+                        <img src="{{ asset('images/hair_mask.png') }}" alt="Deep Conditioning Hair Mask">
+                        <h4>Deep Conditioning Hair Mask</h4>
+                        <p class="mb-2">Intensive moisture treatment for damaged or dry hair. Perfect pre-braid prep.</p>
+                        <p class="mb-1"><strong>Time:</strong> 45 min–1 hr • <strong>Best for:</strong> All hair types</p>
+                        <p class="mb-3"><strong>Includes:</strong> Wash, mask application, blow-dry</p>
+                        <p class="price"><strong>From ${{ number_format(config('service_prices.hair_mask', 50),0) }}</strong> <small class="text-muted">(fixed price)</small></p>
+                        <button class="btn btn-warning mt-3">Book this style</button>
                     </div>
                 </div>
                 <div class="col-lg-4 col-md-6 col-6 service-item" data-category="other">
                     <div class="service-card h-100" onclick="openBookingModal('Smedium Boho Braids', 'boho-braids')">
                         <img src="{{ asset('images/boho braid.jpg') }}" alt="Smedium Boho Braids">
                         <h4>Smedium Boho Braids</h4>
-                        <p>Knotless braids with curly ends left out. Size: smedium thickness, ~100-120 braids with bohemian flair. Hair not included. Time: 6-7 hours. Price varies by length & curl pattern.</p>
-                        <p class="price"><strong>Starting at ${{ number_format(config('service_prices.boho_braids', 150),0) }}</strong></p>
-                        <button class="btn btn-warning mt-3">Book Now</button>
+                        <p class="mb-2">Knotless braids with curly ends left out for a free-spirited, bohemian look.</p>
+                        <p class="mb-1"><strong>Time:</strong> 5–6 hrs • <strong>Length:</strong> Choose in booking</p>
+                        <p class="mb-3"><strong>Hair:</strong> Not included</p>
+                        <p class="price"><strong>From ${{ number_format(config('service_prices.boho_braids', 150),0) }}</strong> <small class="text-muted">(varies by length/curl pattern)</small></p>
+                        <button class="btn btn-warning mt-3">Book this style</button>
                     </div>
                 </div>
             </div>
