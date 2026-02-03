@@ -242,6 +242,24 @@
               </strong>
             </td>
           </tr>
+          <tr>
+            <td>Location</td>
+            <td>
+              <strong>
+                @if($booking->appointment_type === 'mobile')
+                  Mobile Service
+                @else
+                  Stylist Address
+                @endif
+              </strong>
+            </td>
+          </tr>
+          @if($booking->appointment_type === 'mobile' && $booking->address)
+          <tr>
+            <td>Service Address</td>
+            <td><strong>{{ $booking->address }}</strong></td>
+          </tr>
+          @endif
 
           @php
             $bookingId = $booking->id ?? null;

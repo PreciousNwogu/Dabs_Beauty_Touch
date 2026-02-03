@@ -22,6 +22,7 @@ class Booking extends Model
         'email',
         'phone',
         'address',
+        'appointment_type',
         'service',
         'length',
         'appointment_date',

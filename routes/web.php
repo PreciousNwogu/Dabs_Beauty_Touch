@@ -1076,6 +1076,7 @@ Route::post('/bookings', function(Request $request) {
             'email' => $request->email ?: 'no-email@example.com',
             'phone' => $normalizedPhone,
             'address' => $request->address,
+            'appointment_type' => $request->appointment_type,
             'service' => $request->service ?: 'General Service',
             'appointment_date' => $request->appointment_date,
             'appointment_time' => $request->appointment_time,
