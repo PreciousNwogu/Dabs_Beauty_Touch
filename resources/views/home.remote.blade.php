@@ -3762,11 +3762,6 @@
                                     @endphp
                                     <p style="margin:0;color:#0b3a66;"><strong>💡 Example:</strong> Small Knotless Braids (<strong>${{ number_format($exBase, 0) }}</strong>) + Waist (+<strong>$20</strong>) = <strong style="color:#0b3a66;">${{ number_format($exTotal, 0) }} total</strong></p>
                                 </div>
-
-                                <div style="background:#e7f3ff;border-radius:10px;padding:14px;border-left:6px solid #0d6efd;">
-                                    <p style="margin:0;color:#0b3a66;font-weight:700;">ℹ️ Hair Mask / Relax / Retouch:</p>
-                                    <p style="margin:6px 0 0 0;color:#0b3a66;">Mask only: <strong>${{ number_format((float) config('service_prices.hair_mask', 50), 0) }}</strong>. With weave add-on: <strong>$80</strong>.</p>
-                                </div>
                             </div>
                         </div>
 
@@ -3832,7 +3827,7 @@
                                                     <label class="form-check-label" for="length_classic">Classic length</label>
                                                 </div>
                                             </div>
-                                            <small class="form-text text-muted d-block mt-2">Default: Mid-back. Length adjustment affects pricing(+$20 long / -$20 short).</small>
+                                            <small class="form-text text-muted d-block mt-2">Default: Mid-back. Length adjustment affects pricing (+$20 long / -$40 short).</small>
                                         </div>
                                     </div>
                                 </div>
@@ -3841,6 +3836,10 @@
                             <!-- Hair Mask Options - shown only for Hair Mask/Relaxing service -->
                             <div class="col-12 mt-3" id="hairMaskOptions" style="display:none;">
                                 <div class="mb-3">
+                                    <div style="background:#e7f3ff;border-radius:10px;padding:14px;border-left:6px solid #0d6efd;margin-bottom:15px;">
+                                        <p style="margin:0;color:#0b3a66;font-weight:700;">ℹ️ Hair Mask / Relax / Retouch:</p>
+                                        <p style="margin:6px 0 0 0;color:#0b3a66;">Mask only: <strong>${{ number_format((float) config('service_prices.hair_mask', 50), 0) }}</strong>. With weave add-on: <strong>$80</strong>.</p>
+                                    </div>
                                     <label class="form-label">Hair Mask/Relaxing Options *</label>
                                     <div class="form-check">
                                         <input class="form-check-input" type="radio" name="hair_mask_option" id="mask_only" value="mask-only" checked>
@@ -3924,12 +3923,42 @@
                                     <input type="email" class="form-control" id="email" name="email" placeholder="Enter your email address" autocomplete="off">
                                 </div>
                             </div>
-                            <div class="col-md-6">
+
+                            <!-- Appointment Type -->
+                            <div class="col-12">
                                 <div class="form-group">
-                                    <label for="address" class="form-label">Home Address</label>
-                                    <input type="text" class="form-control" id="address" name="address" placeholder="Enter your address" autocomplete="off">
+                                    <label class="form-label">Appointment Type *</label>
+                                    <div class="d-flex gap-3">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="appointment_type" id="appointment_type_in_studio" value="in-studio" checked onclick="toggleAddressField()">
+                                            <label class="form-check-label" for="appointment_type_in_studio">
+                                                <i class="bi bi-house-door me-1"></i>Stylist address
+                                            </label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="appointment_type" id="appointment_type_mobile" value="mobile" onclick="toggleAddressField()">
+                                            <label class="form-check-label" for="appointment_type_mobile">
+                                                <i class="bi bi-truck me-1"></i>Mobile (I want you to come to me)
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <small class="form-text text-muted mt-2">
+                                        <i class="bi bi-info-circle me-1"></i>Mobile service available in Ottawa/Gatineau. Travel fee may apply based on distance.
+                                    </small>
                                 </div>
                             </div>
+
+                            <!-- Service Address (conditional) -->
+                            <div class="col-12 d-none" id="addressFieldContainer">
+                                <div class="form-group">
+                                    <label for="address" class="form-label">Mobile Service Address (Ottawa) *</label>
+                                    <input type="text" class="form-control" id="address" name="address" placeholder="Enter your complete address" autocomplete="off">
+                                    <small class="form-text text-muted mt-2">
+                                        <i class="bi bi-geo-alt me-1"></i>Required for mobile appointments so we can confirm travel availability and any travel fee.
+                                    </small>
+                                </div>
+                            </div>
+
                             <div class="col-12">
                                 <div class="form-group">
                                     <label for="message" class="form-label">Special Requests or Notes</label>
@@ -3978,7 +4007,7 @@
                             <div class="mt-3">
                                 <small class="text-muted">
                                     <i class="bi bi-info-circle me-1"></i>
-                                    A $20 deposit is required to confirm your appointment
+                                    A $20 deposit is required to confirm your appointment. Mobile appointments are confirmed after deposit + address verification.
                                     (<a href="#terms" class="text-decoration-none" style="color: #030f68; font-weight: 500;" onclick="closeModalAndGoToTerms(event)">Terms & Conditions</a>)
                                 </small>
                             </div>
@@ -4205,7 +4234,7 @@
                                             <strong style="color: #0b3a66;">Custom Service Information</strong>
                                             <ul class="mb-0 mt-2" style="color: #0b3a66; font-size: 0.9rem; padding-left: 20px;">
                                                 <li>Prices vary based on <strong>hair length, thickness, and design complexity</strong></li>
-                                                <li>Length adjustments apply: <strong>+$20 for longer, -$20 for shorter</strong> than mid-back</li>
+                                                <li>Length adjustments apply: <strong>+$20 for longer, -$40 for shorter</strong> than mid-back</li>
                                                 <li>Final pricing will be <strong>confirmed during consultation</strong> before service</li>
                                                 <li>You'll receive email confirmation with estimated pricing</li>
                                             </ul>
@@ -6893,7 +6922,9 @@ document.addEventListener('DOMContentLoaded', function() {
         opacity: 1;
     }
 }
+</style>
 
+<script>
 // Persist current kids modal selector state and navigate back to selector page
 function backToKidsSelector(){
     try{
@@ -7094,6 +7125,35 @@ document.addEventListener('DOMContentLoaded', function() {
 
             if (file) {
                 // Validate file type
+                const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
+                if (!allowedTypes.includes(file.type)) {
+                    alert('Please select a valid image file (JPG, PNG, or GIF)');
+                    e.target.value = '';
+                    return;
+                }
+
+                // Validate file size (5MB)
+                const maxSize = 5 * 1024 * 1024; // 5MB in bytes
+                if (file.size > maxSize) {
+                    alert('File size must be less than 5MB');
+                    e.target.value = '';
+                    return;
+                }
+
+                // Create preview
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    previewImg.src = e.target.result;
+                    fileName.textContent = file.name + ' (' + (file.size / 1024 / 1024).toFixed(2) + ' MB)';
+                    imagePreview.style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            } else {
+                clearImagePreview();
+            }
+        });
+    }
+}, 100);
 
 // Attempt to attach success modal buttons immediately (in case DOMContentLoaded already fired)
 (function attachSuccessButtonsNow() {
@@ -7169,35 +7229,54 @@ document.addEventListener('keydown', function(e) {
         console.warn('Success modal key handler error', err);
     }
 });
-                const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
-                if (!allowedTypes.includes(file.type)) {
-                    alert('Please select a valid image file (JPG, PNG, or GIF)');
-                    e.target.value = '';
-                    return;
-                }
 
-                // Validate file size (5MB)
-                const maxSize = 5 * 1024 * 1024; // 5MB in bytes
-                if (file.size > maxSize) {
-                    alert('File size must be less than 5MB');
-                    e.target.value = '';
-                    return;
-                }
-
-                // Create preview
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    previewImg.src = e.target.result;
-                    fileName.textContent = file.name + ' (' + (file.size / 1024 / 1024).toFixed(2) + ' MB)';
-                    imagePreview.style.display = 'block';
-                };
-                reader.readAsDataURL(file);
-            } else {
-                clearImagePreview();
-            }
-        });
+// Function to toggle address field based on appointment type
+function toggleAddressField() {
+    const mobileRadio = document.getElementById('appointment_type_mobile');
+    const addressContainer = document.getElementById('addressFieldContainer');
+    const addressInput = document.getElementById('address');
+    
+    if (mobileRadio && mobileRadio.checked) {
+        if (addressContainer) {
+            addressContainer.classList.remove('d-none');
+            addressContainer.style.display = 'block';
+        }
+        if (addressInput) addressInput.required = true;
+    } else {
+        if (addressContainer) {
+            addressContainer.classList.add('d-none');
+            addressContainer.style.display = 'none';
+        }
+        if (addressInput) {
+            addressInput.required = false;
+            addressInput.value = ''; // Clear address when switching to in-studio
+        }
     }
-});
+}
+
+// Function to toggle address field for kids form
+function toggleAddressFieldKids() {
+    const mobileRadio = document.getElementById('appointment_type_mobile_kids');
+    const addressContainer = document.getElementById('addressFieldContainerKids');
+    const addressInput = document.getElementById('kids_address');
+    
+    if (mobileRadio && mobileRadio.checked) {
+        if (addressContainer) {
+            addressContainer.classList.remove('d-none');
+            addressContainer.style.display = 'block';
+        }
+        if (addressInput) addressInput.required = true;
+    } else {
+        if (addressContainer) {
+            addressContainer.classList.add('d-none');
+            addressContainer.style.display = 'none';
+        }
+        if (addressInput) {
+            addressInput.required = false;
+            addressInput.value = ''; // Clear address when switching to in-studio
+        }
+    }
+}
 
 // Function to clear image preview
 function clearImagePreview() {
@@ -7211,6 +7290,24 @@ function clearImagePreview() {
     if (previewImg) previewImg.src = '';
     if (fileName) fileName.textContent = '';
 }
+
+// Initialize address field visibility when modals open
+document.addEventListener('DOMContentLoaded', function() {
+    const bookingModal = document.getElementById('bookingModal');
+    const kidsBookingModal = document.getElementById('kidsBookingModal');
+    
+    if (bookingModal) {
+        bookingModal.addEventListener('shown.bs.modal', function() {
+            toggleAddressField();
+        });
+    }
+    
+    if (kidsBookingModal) {
+        kidsBookingModal.addEventListener('shown.bs.modal', function() {
+            toggleAddressFieldKids();
+        });
+    }
+});
 </script>
     <!-- Kids Booking Modal (placed at end to ensure it is top-level) -->
     <div class="modal fade" id="kidsBookingModal" tabindex="-1" aria-labelledby="kidsBookingModalLabel" aria-hidden="true">
@@ -7271,6 +7368,37 @@ function clearImagePreview() {
                                     <label class="form-label">Time *</label>
                                     <input id="kidsBookingTime" type="text" class="form-control" readonly />
                                     <div id="kidsBookingTime_error" class="text-danger small mt-1" style="display:none;"></div>
+                                </div>
+
+                                <!-- Appointment Type -->
+                                <div class="mb-3">
+                                    <label class="form-label">Appointment Type *</label>
+                                    <div class="d-flex gap-3">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="appointment_type" id="appointment_type_in_studio_kids" value="in-studio" checked onclick="toggleAddressFieldKids()">
+                                            <label class="form-check-label" for="appointment_type_in_studio_kids">
+                                                <i class="bi bi-house-door me-1"></i>Stylist address
+                                            </label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="appointment_type" id="appointment_type_mobile_kids" value="mobile" onclick="toggleAddressFieldKids()">
+                                            <label class="form-check-label" for="appointment_type_mobile_kids">
+                                                <i class="bi bi-truck me-1"></i>Mobile (I want you to come to me)
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <small class="form-text text-muted mt-2">
+                                        <i class="bi bi-info-circle me-1"></i>Mobile service available in Ottawa/Gatineau. Travel fee may apply based on distance.
+                                    </small>
+                                </div>
+
+                                <!-- Mobile Service Address (conditional) -->
+                                <div class="mb-3 d-none" id="addressFieldContainerKids">
+                                    <label for="kids_address" class="form-label">Mobile Service Address (Ottawa) *</label>
+                                    <input type="text" class="form-control" id="kids_address" name="address" placeholder="Enter your complete address" autocomplete="off">
+                                    <small class="form-text text-muted mt-2">
+                                        <i class="bi bi-geo-alt me-1"></i>Required for mobile appointments so we can confirm travel availability and any travel fee.
+                                    </small>
                                 </div>
 
                                 <div class="mb-3">
@@ -7349,11 +7477,12 @@ function clearImagePreview() {
                         <div class="mb-1" style="font-weight:800;">Quick summary</div>
                         <ul class="mb-0" style="padding-left: 18px;">
                             <li>Deposits are non-refundable once the appointment is confirmed.</li>
+                            <li>Mobile appointments are confirmed after deposit + address verification.</li>
                             <li>Minimum 48 hours notice is required for cancellations.</li>
                             <li>Rescheduling requires 48 hours notice and must be within 1 month of the initial appointment date.</li>
                             <li>No-shows may result in a full charge and may affect future bookings.</li>
                             <li>For home service: clients cover fueling for the stylist’s transportation; fees vary by distance.</li>
-                        </ul>
+                            <li>For mobile service: travel fee may apply based on distance in Ottawa/Gatineau area.</li>
                     </div>
 
                     <div class="form-check mt-3">
