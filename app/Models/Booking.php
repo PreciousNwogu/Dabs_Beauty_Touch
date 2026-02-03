@@ -440,16 +440,15 @@ class Booking extends Model
             $resolvedBase = 0.0;
         }
 
-        // determine final_price to pass
-        // For kids bookings, prefer computed_total_final which includes all adjustments correctly
-        // Only fall back to stored final_price if computed_total_final is not available
-        if (!is_null($computed_total_final)) {
-            $final_price_to_pass = $computed_total_final;
-        } elseif (!empty($b->kb_final_price) && is_numeric($b->kb_final_price)) {
-            // For kids bookings, prefer kb_final_price over final_price
+        // Determine authoritative final_price for display in emails/pages.
+        // IMPORTANT: Prefer persisted values (what the customer actually booked at that time).
+        // Only compute if missing.
+        if (!empty($b->kb_final_price) && is_numeric($b->kb_final_price)) {
             $final_price_to_pass = (float) $b->kb_final_price;
         } elseif (!empty($b->final_price) && is_numeric($b->final_price)) {
             $final_price_to_pass = (float) $b->final_price;
+        } elseif (!is_null($computed_total_final)) {
+            $final_price_to_pass = (float) $computed_total_final;
         } else {
             $final_price_to_pass = round($resolvedBase + $lengthAdjust + $addonsTotal, 2);
         }
