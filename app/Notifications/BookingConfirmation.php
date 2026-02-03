@@ -267,15 +267,16 @@ class BookingConfirmation extends Notification
             }
         }
         
-        // Determine final_price to pass: prefer computed_total_final, then booking final_price, else compute from components
-        // For hair mask services, ensure weaving addon is included (for legacy bookings)
-        if (!is_null($computed_total_final)) {
-            $final_price_to_pass = $computed_total_final;
+        // Determine final_price to pass (authoritative): prefer persisted values.
+        // Only compute if missing.
+        if (!empty($b->kb_final_price) && is_numeric($b->kb_final_price)) {
+            $final_price_to_pass = (float) $b->kb_final_price;
         } elseif (!empty($b->final_price) && is_numeric($b->final_price)) {
-            // Use stored final_price (it should already include correct price for new/old pricing)
             $final_price_to_pass = (float) $b->final_price;
+        } elseif (!is_null($computed_total_final)) {
+            $final_price_to_pass = (float) $computed_total_final;
         } else {
-            // Compute from components including weaving addon (for legacy bookings)
+            // Compute from components including weaving addon (legacy)
             $final_price_to_pass = round($resolvedBase + $lengthAdjust + $addonsTotal + $weavingAddon, 2);
         }
 
