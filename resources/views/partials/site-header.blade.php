@@ -15,7 +15,7 @@
                 <li class="nav-item"><a class="nav-link px-3" id="navServicesLink" href="{{ route('home') }}#services">Services</a></li>
                 <li class="nav-item"><a class="nav-link px-3" href="{{ route('home') }}#contact">Contact</a></li>
                 <li class="nav-item"><a class="nav-link px-3" href="{{ route('home') }}#terms">Terms</a></li>
-                <li class="nav-item"><a class="nav-link px-3" href="{{ route('calendar') }}" style="background: linear-gradient(135deg, #ff6600 0%, #ff8533 100%); color: white; border-radius: 20px; padding: 8px 20px !important;">Book Now</a></li>
+                <li class="nav-item"><a class="nav-link px-3" href="{{ route('calendar') }}" style="background: linear-gradient(135deg, #ff6600 0%, #ff8533 100%); color: white; border-radius: 20px; padding: 8px 20px !important;">Book Appointment</a></li>
             </ul>
 
             <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
@@ -34,11 +34,14 @@
                 @endauth
 
                 @guest
-                    <li class="nav-item">
-                        <a class="nav-link px-3" href="{{ route('login') }}" style="font-weight:500; opacity:0.75;">Sign In</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link px-3" href="{{ route('register') }}" style="font-weight:500; opacity:0.75;">Create Account</a>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle px-3" href="#" id="accountDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false" style="font-weight:500; opacity:0.75;">
+                            <i class="bi bi-person-circle me-1"></i>Account
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="accountDropdown">
+                            <li><a class="dropdown-item" href="{{ route('login') }}"><i class="bi bi-box-arrow-in-right me-2"></i>Sign In</a></li>
+                            <li><a class="dropdown-item" href="{{ route('register') }}"><i class="bi bi-person-plus me-2"></i>Create Account</a></li>
+                        </ul>
                     </li>
                 @endguest
             </ul>

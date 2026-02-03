@@ -617,6 +617,35 @@
             cursor: pointer;
             transition: all 0.3s ease;
         }
+
+        /* Filter Chip Styles */
+        .filter-chip {
+            border-radius: 20px;
+            padding: 6px 16px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            border: 2px solid #030f68;
+            color: #030f68;
+        }
+        .filter-chip:hover {
+            background-color: #030f68;
+            color: white;
+        }
+        .filter-chip.active {
+            background-color: #030f68;
+            color: white;
+            border-color: #030f68;
+        }
+
+        /* Service Item Animation */
+        .service-item {
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+        .service-item.hidden {
+            display: none !important;
+        }
+
         .service-card img {
             width: 220px;
             height: 220px;
@@ -2797,19 +2826,24 @@
         <div class="container" style="padding-top: 120px; padding-bottom: 80px;">
             <div class="hero-content">
                 <h1>Dab's Beauty Touch</h1>
-                <p>Flawless Results - Looking for a stylist who delivers neat, long-lasting braids? Experience the expert touch at Dab's Beauty Touch today!</p>
-                <div class="d-flex flex-column flex-sm-row gap-3 justify-content-center align-items-stretch align-items-sm-center">
-                    <a href="{{ route('calendar') }}" class="btn btn-warning btn-lg px-4" style="font-weight: 800; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.25);">
-                        <i class="bi bi-calendar-check me-2"></i>Book an appointment
+                <p style="margin-bottom: 1.5rem;">Flawless Results - Looking for a stylist who delivers neat, long-lasting braids? Experience the expert touch at Dab's Beauty Touch today!</p>
+                <div class="text-center">
+                    <a href="{{ route('calendar') }}" class="btn btn-warning btn-lg px-5 py-3" style="font-weight: 700; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.25); font-size: 1.2rem;">
+                        <i class="bi bi-calendar-check me-2"></i>Book Appointment
                     </a>
-                    <button type="button" class="btn btn-outline-light btn-lg px-4" style="font-weight: 700; border-radius: 12px;"
-                            onclick="(window.openCalendarModal ? window.openCalendarModal() : window.location.assign('{{ route('calendar') }}'))">
-                        <i class="bi bi-calendar3 me-2"></i>View Availability
-                    </button>
                 </div>
                 <div class="mt-3 small text-white-50">
-                    Choose a date & time, then complete your booking.
+                    Choose a date/time → confirm your style → get instant confirmation.
+                    <br>
+                    <a href="javascript:void(0)" onclick="(window.openCalendarModal ? window.openCalendarModal() : window.location.assign('{{ route('calendar') }}'))" style="color: rgba(255,255,255,0.8); text-decoration: underline; font-weight: 500;">View Availability</a>
                 </div>
+                <p style="font-size: 0.95rem; opacity: 0.9; font-weight: 500; margin-top: 1rem;">
+                    <i class="bi bi-geo-alt-fill me-2"></i>Ottawa
+                    <span class="mx-2">•</span>
+                    <i class="bi bi-telephone-fill me-2"></i><a href="tel:+13432548848" style="color: #fff; text-decoration: none;">343-254-8848</a>
+                    <span class="mx-2">•</span>
+                    By Appointment Only
+                </p>
             </div>
         </div>
     </section>
@@ -3507,86 +3541,113 @@
                 <h2 class="section-title" style="font-weight: 700;">Our Services</h2>
                 <p class="lead">Professional hair braiding and styling services</p>
             </div>
+
+            <!-- Quick Pick Filter -->
+            <div class="mb-4 text-center">
+                <div class="d-inline-flex flex-wrap gap-2 justify-content-center" role="group" aria-label="Service filter">
+                    <button class="btn btn-sm btn-outline-primary filter-chip active" data-filter="all" onclick="filterServices('all')">
+                        All Services
+                    </button>
+                    <button class="btn btn-sm btn-outline-primary filter-chip" data-filter="knotless" onclick="filterServices('knotless')">
+                        Knotless Braids
+                    </button>
+                    <button class="btn btn-sm btn-outline-primary filter-chip" data-filter="box" onclick="filterServices('box')">
+                        Box Braids
+                    </button>
+                    <button class="btn btn-sm btn-outline-primary filter-chip" data-filter="wig" onclick="filterServices('wig')">
+                        Wig Install
+                    </button>
+                    <button class="btn btn-sm btn-outline-primary filter-chip" data-filter="kids" onclick="filterServices('kids')">
+                        Kids
+                    </button>
+                    <button class="btn btn-sm btn-outline-primary filter-chip" data-filter="stitch" onclick="filterServices('stitch')">
+                        Stitch Braids
+                    </button>
+                    <button class="btn btn-sm btn-outline-primary filter-chip" data-filter="other" onclick="filterServices('other')">
+                        Other
+                    </button>
+                </div>
+            </div>
                         <!-- length guide removed from services section (moved into booking form) -->
 
-                        <div class="row g-4">
-                <div class="col-lg-4 col-md-6 col-6">
+                        <div class="row g-4" id="servicesGrid">
+                <div class="col-lg-4 col-md-6 col-6 service-item" data-category="knotless">
                     <div class="service-card h-100" onclick="openBookingModal('Small Knotless Braids', 'small-knotless')">
                         <img src="{{ asset('images/small braid.jpg') }}" alt="Small Knotless Braids">
                         <h4>Small Knotless Braids</h4>
-                        <p>Ultra-fine knotless braids that blend seamlessly with your natural hair. Perfect for a sleek, professional look with minimal tension and maximum comfort.</p>
+                        <p>Ultra-fine braids for a sleek look. Size: pencil-thin braids, ~150-200 braids total. Hair not included. Time: 6-8 hours. Price varies by length (+$20 longer, -$20 shorter than mid-back).</p>
                         <p class="price"><strong>Starting at ${{ number_format(config('service_prices.small_knotless', 170),0) }}</strong></p>
                         <button class="btn btn-warning mt-3">Book Now</button>
                     </div>
                 </div>
-                <div class="col-lg-4 col-md-6 col-6">
+                <div class="col-lg-4 col-md-6 col-6 service-item" data-category="knotless">
                     <div class="service-card h-100" onclick="openBookingModal('Smedium Knotless Braids', 'smedium-knotless')">
                         <img src="{{ asset('images/webbraids2.jpg') }}" alt="Smedium Knotless Braids">
                         <h4>Smedium Knotless Braids</h4>
-                        <p>Perfect balance between small and medium braids for a versatile, everyday style. Offers excellent durability while maintaining a natural, lightweight feel.</p>
+                        <p>Versatile everyday style. Size: between small & medium, ~100-120 braids. Hair not included. Time: 5-6 hours. Price varies by length (+$20 longer, -$20 shorter than mid-back).</p>
                         <p class="price"><strong>Starting at ${{ number_format(config('service_prices.smedium_knotless', 150),0) }}</strong></p>
                         <button class="btn btn-warning mt-3">Book Now</button>
                     </div>
                 </div>
-                <div class="col-lg-4 col-md-6 col-6">
+                <div class="col-lg-4 col-md-6 col-6 service-item" data-category="wig">
                     <div class="service-card h-100" onclick="openBookingModal('Wig Installation', 'wig-installation')">
                         <img src="{{ asset('images/wig installation.jpg') }}" alt="Smedium Knotless Braids">
                         <h4>Wig Installation</h4>
-                        <p>Professional wig installation with custom fitting and styling. Sleek natural hairline blending, and personalized styling to match your desired look.</p>
+                        <p>Professional install with natural hairline. Bring your own wig unit. Includes: braiding, wig placement, styling & blending. Time: 2-3 hours. Price fixed for most wigs.</p>
                         <p class="price"><strong>Starting at ${{ number_format(config('service_prices.wig_installation', 150),0) }}</strong></p>
                         <button class="btn btn-warning mt-3">Book Now</button>
                     </div>
                 </div>
-                <div class="col-lg-4 col-md-6 col-6">
+                <div class="col-lg-4 col-md-6 col-6 service-item" data-category="knotless">
                     <div class="service-card h-100" onclick="openBookingModal('Medium Knotless Braids', 'medium-knotless')">
                         <img src="{{ asset('images/large braid.jpg') }}" alt="Medium Knotless Braids">
                         <h4>Medium Knotless Braids</h4>
-                        <p>Bold, statement-making braids that create a dramatic, eye-catching look. Perfect for those who want to make a strong fashion statement with their hair.</p>
+                        <p>Bold, statement braids. Size: medium thickness, ~70-90 braids. Hair not included. Time: 4-5 hours. Price varies by length (+$20 longer, -$20 shorter than mid-back).</p>
                         <p class="price"><strong>Starting at ${{ number_format(config('service_prices.medium_knotless', 130),0) }}</strong></p>
                         <button class="btn btn-warning mt-3">Book Now</button>
                     </div>
                 </div>
-                <div class="col-lg-4 col-md-6 col-6">
+                <div class="col-lg-4 col-md-6 col-6 service-item" data-category="knotless">
                     <div class="service-card h-100" onclick="openBookingModal('Jumbo Knotless Braids', 'jumbo-knotless')">
                         <img src="{{ asset('images/jumbo braid.jpg') }}" alt="Jumbo Knotless Braids">
                         <h4>Jumbo Knotless Braids</h4>
-                        <p>Extra large, voluminous braids for maximum impact and style. Creates a bold, confident look that's perfect for special occasions and fashion-forward individuals.</p>
+                        <p>Extra-large voluminous braids. Size: jumbo thickness, ~40-60 braids. Hair not included. Time: 3-4 hours (quickest option). Price varies by length (+$20 longer, -$20 shorter).</p>
                         <p class="price"><strong>Starting at ${{ number_format(config('service_prices.jumbo_knotless', 100),0) }}</strong></p>
                         <button class="btn btn-warning mt-3">Book Now</button>
                     </div>
                 </div>
-                <div class="col-lg-4 col-md-6 col-6">
+                <div class="col-lg-4 col-md-6 col-6 service-item" data-category="kids">
                     <div class="service-card h-100" onclick="window.location='{{ route('kids.selector') }}'">
                         <img src="{{ asset('images/kids hair style.webp') }}" alt="Kids Braids">
                         <h4>Kids Braids(3-8yrs)</h4>
-                        <p>Specialized braiding services for children with gentle, age-appropriate techniques. Creates adorable, manageable styles that are comfortable and long-lasting for active kids.</p>
+                        <p>Gentle age-appropriate styles for ages 3-8. Multiple braid types & sizes available. Hair typically included. Time: 2-4 hours depending on style. Price varies by complexity & length.</p>
                         <p class="price"><strong>Starting at ${{ number_format(config('service_prices.kids_braids', 80),0) }}</strong></p>
                         <button class="btn btn-warning mt-3">Book Now</button>
                     </div>
                 </div>
-                <div class="col-lg-4 col-md-6 col-6">
+                <div class="col-lg-4 col-md-6 col-6 service-item" data-category="stitch">
                     <div class="service-card h-100" onclick="openBookingModal('8–10 Rows Stitch Braids', 'stitch-braids')">
                         <img src="{{ asset('images/stitch braid.jpg') }}" alt="8–10 Rows Stitch Braids">
                         <h4>8–10 Rows Stitch Braids</h4>
-                        <p>Unique stitch pattern braids that create a distinctive, textured look. Features a special weaving technique that adds dimension and style to your braided hairstyle.</p>
+                        <p>Cornrows with unique feed-in stitch pattern. 8-10 rows total for protective styling. Hair not included. Time: 4-5 hours. Price varies by complexity & extensions used.</p>
                         <p class="price"><strong>Starting at ${{ number_format(config('service_prices.stitch_braids', 120),0) }}</strong></p>
                         <button class="btn btn-warning mt-3">Book Now</button>
                     </div>
                 </div>
-                <div class="col-lg-4 col-md-6 col-6">
+                <div class="col-lg-4 col-md-6 col-6 service-item" data-category="other">
                     <div class="service-card h-100" onclick="openBookingModal('Hair Mask/Relaxing', 'hair-mask')">
                         <img src="{{ asset('images/hair_mask.png') }}" alt="Hair Mask/Relaxing">
                         <h4>Hair Mask/Relaxing</h4>
-                        <p>Professional hair mask treatment and relaxing services to restore moisture, shine, and manageability.</p>
+                        <p>Deep conditioning treatment for damaged or dry hair. Restores moisture & shine. Perfect pre-braid prep. Time: 45-60 minutes. Price fixed for most hair lengths.</p>
                         <p class="price"><strong>Starting at ${{ number_format(config('service_prices.hair_mask', 50),0) }}</strong></p>
                         <button class="btn btn-warning mt-3">Book Now</button>
                     </div>
                 </div>
-                <div class="col-lg-4 col-md-6 col-6">
+                <div class="col-lg-4 col-md-6 col-6 service-item" data-category="other">
                     <div class="service-card h-100" onclick="openBookingModal('Smedium Boho Braids', 'boho-braids')">
                         <img src="{{ asset('images/boho braid.jpg') }}" alt="Smedium Boho Braids">
                         <h4>Smedium Boho Braids</h4>
-                        <p>Bohemian-inspired braids with a free-spirited, artistic touch. Features unique styling elements and accessories for a trendy, fashion-forward look.</p>
+                        <p>Knotless braids with curly ends left out. Size: smedium thickness, ~100-120 braids with bohemian flair. Hair not included. Time: 6-7 hours. Price varies by length & curl pattern.</p>
                         <p class="price"><strong>Starting at ${{ number_format(config('service_prices.boho_braids', 150),0) }}</strong></p>
                         <button class="btn btn-warning mt-3">Book Now</button>
                     </div>
@@ -8739,6 +8800,36 @@ document.addEventListener('DOMContentLoaded', function(){
         }
     });
 })();
+</script>
+
+<script>
+// Service Filter Functionality
+function filterServices(category) {
+    const serviceItems = document.querySelectorAll('.service-item');
+    const filterChips = document.querySelectorAll('.filter-chip');
+    
+    // Update active chip
+    filterChips.forEach(chip => {
+        if (chip.dataset.filter === category) {
+            chip.classList.add('active');
+        } else {
+            chip.classList.remove('active');
+        }
+    });
+    
+    // Filter service cards
+    serviceItems.forEach(item => {
+        if (category === 'all') {
+            item.classList.remove('hidden');
+        } else {
+            if (item.dataset.category === category) {
+                item.classList.remove('hidden');
+            } else {
+                item.classList.add('hidden');
+            }
+        }
+    });
+}
 </script>
 
 </body>
