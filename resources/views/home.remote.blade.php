@@ -3957,7 +3957,7 @@
                     <div id="timeSlotsContainer" style="display: none;">
                         <h6 class="mb-3" style="font-weight: 600; color: #0b3a66;">Available Time Slots for <span id="selectedDateText"></span></h6>
                         <div id="timeSlotsInstruction" class="alert alert-info mb-3" style="display: none; background: #e7f3ff; border-left: 4px solid #17a2b8; border-radius: 8px;">
-                            <i class="bi bi-info-circle me-2"></i>Click on a time slot below to select it, then click "CONFIRM SELECTION" to book your appointment.
+                            <i class="bi bi-info-circle me-2"></i>Click a time slot to select it. <strong>Each booking reserves a 5‑hour window</strong>, so the next available time may be later in the day.
                         </div>
                         <div id="timeSlots" class="row g-2 row-cols-2 row-cols-md-3 row-cols-lg-4"></div>
                     </div>

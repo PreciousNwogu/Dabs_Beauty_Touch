@@ -1473,15 +1473,34 @@ class AppointmentController extends Controller
             // Note: Lunch/break time is controlled via blocked schedules, not hardcoded exclusions.
             $defaultSlots = ['09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00'];
 
-            // Get booked time slots
-            $bookedTimeSlots = \App\Models\Booking::where('appointment_date', $date)
+            // Get booked time ranges for the day.
+            // Business rule: each booking blocks a 5-hour window from its start time, so the same day can accept
+            // at most two bookings (e.g., 9:00 blocks 9:00–14:00, allowing another booking from 14:00 onward).
+            $bookingBlockMinutes = 5 * 60;
+            $bookedTimeRanges = [];
+            $bookingsForDay = \App\Models\Booking::where('appointment_date', $date)
                 ->whereNotIn('status', ['completed', 'cancelled'])
                 ->whereNotNull('appointment_time')
-                ->pluck('appointment_time')
-                ->map(function($time) {
-                    return \Carbon\Carbon::parse($time)->format('H:i');
-                })
-                ->toArray();
+                ->get(['appointment_time']);
+
+            foreach ($bookingsForDay as $b) {
+                try {
+                    $t = $b->appointment_time;
+                    if (!$t) continue;
+                    // Normalize appointment_time to HH:MM
+                    $timeStr = \Carbon\Carbon::parse($t)->format('H:i');
+                    $start = Carbon::createFromFormat('Y-m-d H:i', $date . ' ' . $timeStr, $appTz);
+                    $end = $start->copy()->addMinutes($bookingBlockMinutes);
+                    $bookedTimeRanges[] = [
+                        'start' => $start,
+                        'end' => $end,
+                        'start_hm' => $start->format('H:i'),
+                        'end_hm' => $end->format('H:i'),
+                    ];
+                } catch (\Throwable $e) {
+                    // ignore malformed times
+                }
+            }
 
             // Get blocked time ranges for this date
             $blockedTimeRanges = [];
@@ -1556,7 +1575,19 @@ class AppointmentController extends Controller
             // Filter out blocked and booked slots
             $availableSlots = [];
             foreach ($defaultSlots as $slotTime) {
-                $isBooked = in_array($slotTime, $bookedTimeSlots);
+                // Check if slot falls within any booked window [start, end)
+                $isBooked = false;
+                foreach ($bookedTimeRanges as $br) {
+                    $slotDateTime = Carbon::createFromFormat('Y-m-d H:i', $date . ' ' . $slotTime, $appTz);
+                    /** @var \Carbon\Carbon $rangeStart */
+                    $rangeStart = $br['start'];
+                    /** @var \Carbon\Carbon $rangeEnd */
+                    $rangeEnd = $br['end'];
+                    if ($slotDateTime->gte($rangeStart) && $slotDateTime->lt($rangeEnd)) {
+                        $isBooked = true;
+                        break;
+                    }
+                }
 
                 // Check if slot falls within any blocked time range
                 $isBlocked = false;
