@@ -1939,7 +1939,33 @@
                         }
                     }
                 });
+                
+                // Reset appointment type to in-studio and hide address field
+                var inStudioRadio = document.getElementById('appointment_type_in_studio');
+                if (inStudioRadio) {
+                    inStudioRadio.checked = true;
+                }
+                
+                // Hide address field
+                var addressContainer = document.getElementById('addressFieldContainer');
+                if (addressContainer) {
+                    addressContainer.classList.add('d-none');
+                    addressContainer.style.display = 'none';
+                }
+                
+                // Clear address input
+                var addressInput = document.getElementById('address');
+                if (addressInput) {
+                    addressInput.value = '';
+                    addressInput.required = false;
+                }
+                
                 console.log('Booking form cleared');
+                
+                // Call toggle function to ensure proper state
+                if (typeof toggleAddressField === 'function') {
+                    toggleAddressField();
+                }
             }
         };
 
@@ -3461,10 +3487,14 @@
                                         </div>
                                         <div class="col-md-6">
                                             <ul class="list-unstyled" style="font-size: 1rem; line-height: 1.8;">
-
-
-
-
+                                                <li class="mb-3">
+                                                    <i class="bi bi-exclamation-circle-fill text-warning me-2"></i>
+                                                    <strong>Style Changes:</strong> No style changes allowed on the day of appointment or after confirmation, as a time window is reserved for your service
+                                                </li>
+                                                <li class="mb-3">
+                                                    <i class="bi bi-calendar-check-fill text-info me-2"></i>
+                                                    <strong>Time Reservation:</strong> Once confirmed, your appointment slot is exclusively reserved, preventing other bookings
+                                                </li>
                                             </ul>
                                         </div>
                                     </div>
@@ -4065,7 +4095,7 @@
                     <div id="timeSlotsContainer" style="display: none;">
                         <h6 class="mb-3" style="font-weight: 600; color: #0b3a66;">Available Time Slots for <span id="selectedDateText"></span></h6>
                         <div id="timeSlotsInstruction" class="alert alert-info mb-3" style="display: none; background: #e7f3ff; border-left: 4px solid #17a2b8; border-radius: 8px;">
-                            <i class="bi bi-info-circle me-2"></i>Click a time slot to select it. <strong>Each booking reserves a 5‑hour window</strong>, so the next available time may be later in the day.
+                            <i class="bi bi-info-circle me-2"></i>Click a time slot to select it.
                         </div>
                         <div id="timeSlots" class="row g-2 row-cols-2 row-cols-md-3 row-cols-lg-4"></div>
                     </div>
@@ -5681,6 +5711,29 @@ console.log('=== LOADING BOOKING FUNCTIONS ===');
                 if(bookingPanel) bookingPanel.style.display = '';
             }catch(e){ /* noop */ }
 
+            // Initialize address field state (ensure it's hidden by default for in-studio)
+            try{
+                const inStudioKids = document.getElementById('appointment_type_in_studio_kids');
+                if(inStudioKids) inStudioKids.checked = true;
+                
+                const addressContainerKids = document.getElementById('addressFieldContainerKids');
+                if(addressContainerKids) {
+                    addressContainerKids.classList.add('d-none');
+                    addressContainerKids.style.display = 'none';
+                }
+                
+                const kidsAddress = document.getElementById('kids_address');
+                if(kidsAddress) {
+                    kidsAddress.value = '';
+                    kidsAddress.required = false;
+                }
+                
+                // Call toggle function to ensure proper state
+                if (typeof toggleAddressFieldKids === 'function') {
+                    toggleAddressFieldKids();
+                }
+            }catch(e){ console.warn('Kids address field init failed', e); }
+
             // accessibility: focus first input when modal shown
             try{
                 const modalEl = document.getElementById('kidsBookingModal');
@@ -7232,20 +7285,32 @@ document.addEventListener('keydown', function(e) {
 
 // Function to toggle address field based on appointment type
 function toggleAddressField() {
+    console.log('toggleAddressField called');
     const mobileRadio = document.getElementById('appointment_type_mobile');
     const addressContainer = document.getElementById('addressFieldContainer');
     const addressInput = document.getElementById('address');
     
+    console.log('Elements found:', {
+        mobileRadio: !!mobileRadio,
+        addressContainer: !!addressContainer,
+        addressInput: !!addressInput,
+        mobileChecked: mobileRadio ? mobileRadio.checked : 'N/A'
+    });
+    
     if (mobileRadio && mobileRadio.checked) {
+        console.log('Mobile selected - showing address field');
         if (addressContainer) {
             addressContainer.classList.remove('d-none');
             addressContainer.style.display = 'block';
+            console.log('Address container display set to block');
         }
         if (addressInput) addressInput.required = true;
     } else {
+        console.log('In-studio selected - hiding address field');
         if (addressContainer) {
             addressContainer.classList.add('d-none');
             addressContainer.style.display = 'none';
+            console.log('Address container display set to none');
         }
         if (addressInput) {
             addressInput.required = false;
@@ -7256,20 +7321,32 @@ function toggleAddressField() {
 
 // Function to toggle address field for kids form
 function toggleAddressFieldKids() {
+    console.log('toggleAddressFieldKids called');
     const mobileRadio = document.getElementById('appointment_type_mobile_kids');
     const addressContainer = document.getElementById('addressFieldContainerKids');
     const addressInput = document.getElementById('kids_address');
     
+    console.log('Kids elements found:', {
+        mobileRadio: !!mobileRadio,
+        addressContainer: !!addressContainer,
+        addressInput: !!addressInput,
+        mobileChecked: mobileRadio ? mobileRadio.checked : 'N/A'
+    });
+    
     if (mobileRadio && mobileRadio.checked) {
+        console.log('Kids Mobile selected - showing address field');
         if (addressContainer) {
             addressContainer.classList.remove('d-none');
             addressContainer.style.display = 'block';
+            console.log('Kids address container display set to block');
         }
         if (addressInput) addressInput.required = true;
     } else {
+        console.log('Kids In-studio selected - hiding address field');
         if (addressContainer) {
             addressContainer.classList.add('d-none');
             addressContainer.style.display = 'none';
+            console.log('Kids address container display set to none');
         }
         if (addressInput) {
             addressInput.required = false;
@@ -7478,10 +7555,11 @@ document.addEventListener('DOMContentLoaded', function() {
                         <ul class="mb-0" style="padding-left: 18px;">
                             <li>Deposits are non-refundable once the appointment is confirmed.</li>
                             <li>Mobile appointments are confirmed after deposit + address verification.</li>
+                            <li>No style changes allowed on the day of appointment or after confirmation (time window is reserved).</li>
                             <li>Minimum 48 hours notice is required for cancellations.</li>
                             <li>Rescheduling requires 48 hours notice and must be within 1 month of the initial appointment date.</li>
                             <li>No-shows may result in a full charge and may affect future bookings.</li>
-                            <li>For home service: clients cover fueling for the stylist’s transportation; fees vary by distance.</li>
+                            <li>For home service: clients cover fueling for the stylist's transportation; fees vary by distance.</li>
                             <li>For mobile service: travel fee may apply based on distance in Ottawa/Gatineau area.</li>
                     </div>
 

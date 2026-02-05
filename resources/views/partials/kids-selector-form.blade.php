@@ -131,78 +131,60 @@
 document.addEventListener('DOMContentLoaded', function(){
     function setFinishAndLengthDisabled(disabled, braidTypeValue){
         console.log('setFinishAndLengthDisabled called with disabled:', disabled, 'braidType:', braidTypeValue);
-        // finish radios
+        
+        // HIDE/SHOW FINISH SECTION
+        const finishHeader = document.getElementById('kb-finish-header');
+        const finishBlock = document.getElementById('kb-finish-block');
+        
+        if(finishHeader) {
+            finishHeader.style.display = disabled ? 'none' : '';
+        }
+        if(finishBlock) {
+            finishBlock.style.display = disabled ? 'none' : '';
+        }
+        
+        // Disable/enable finish radio buttons
         document.querySelectorAll('input[name="kb_finish"]').forEach(function(i){
             i.disabled = disabled;
         });
-        // hide/show finish header and block wrapper
-        try{
-            const finishHeader = document.getElementById('kb-finish-header');
-            console.log('finishHeader found:', !!finishHeader);
-            if(finishHeader) {
-                finishHeader.style.display = disabled ? 'none' : 'block';
-                finishHeader.style.visibility = disabled ? 'hidden' : 'visible';
-                console.log('finishHeader display set to:', finishHeader.style.display);
-            }
-            const finishBlock = document.getElementById('kb-finish-block');
-            console.log('finishBlock found:', !!finishBlock);
-            if(finishBlock) {
-                finishBlock.style.display = disabled ? 'none' : 'block';
-                finishBlock.style.visibility = disabled ? 'hidden' : 'visible';
-                console.log('finishBlock display set to:', finishBlock.style.display);
-            }
-        }catch(e){ 
-            console.error('Error hiding/showing finish:', e);
-        }
-        // if disabling, ensure a safe default is selected
+        
+        // Set default when disabling
         if(disabled){
-            const plain = document.getElementById('kb_finish_plain'); if(plain) plain.checked = true;
+            const plain = document.getElementById('kb_finish_plain');
+            if(plain) plain.checked = true;
         }
 
-        // length radios
+        // HIDE/SHOW LENGTH SECTION
+        const lengthHeader = document.getElementById('kb-length-header');
+        const lengthBlock = document.getElementById('kb-lengths');
+        
+        if(lengthHeader) {
+            lengthHeader.style.display = disabled ? 'none' : '';
+        }
+        if(lengthBlock) {
+            lengthBlock.style.display = disabled ? 'none' : '';
+        }
+        
+        // Disable/enable length radio buttons
         document.querySelectorAll('input[name="kb_length"]').forEach(function(i){
             i.disabled = disabled;
         });
-        // hide/show length header and wrapper
-        try{
-            const lengthHeader = document.getElementById('kb-length-header');
-            console.log('lengthHeader found:', !!lengthHeader);
-            if(lengthHeader) {
-                lengthHeader.style.display = disabled ? 'none' : 'block';
-                lengthHeader.style.visibility = disabled ? 'hidden' : 'visible';
-                console.log('lengthHeader display set to:', lengthHeader.style.display);
-            }
-            const lengthBlock = document.getElementById('kb-lengths');
-            console.log('lengthBlock found:', !!lengthBlock);
-            if(lengthBlock) {
-                lengthBlock.style.display = disabled ? 'none' : 'block';
-                lengthBlock.style.visibility = disabled ? 'hidden' : 'visible';
-                console.log('lengthBlock display set to:', lengthBlock.style.display);
-            }
-        }catch(e){ 
-            console.error('Error hiding/showing length:', e);
-        }
-        // if disabling, set base shoulder length
+        
+        // Set default when disabling
         if(disabled){
-            const shoulder = document.getElementById('kb_len_shoulder'); if(shoulder) shoulder.checked = true;
+            const shoulder = document.getElementById('kb_len_shoulder');
+            if(shoulder) shoulder.checked = true;
         }
 
-        // visually indicate disabled state on labels (dim)
-        const lengthLabels = document.querySelectorAll('#kb-lengths .form-check-label');
-        const finishLabels = document.querySelectorAll('input[name="kb_finish"]').length ? Array.from(document.querySelectorAll('input[name="kb_finish"]')).map(i=> document.querySelector('label[for="'+i.id+'"]')) : [];
-        lengthLabels.forEach(function(l){ if(disabled) l.classList.add('text-muted','opacity-75'); else { l.classList.remove('text-muted','opacity-75'); } });
-        finishLabels.forEach(function(l){ if(l){ if(disabled) l.classList.add('text-muted','opacity-75'); else { l.classList.remove('text-muted','opacity-75'); } } });
-
-        // show/hide helper note with braid type name
+        // Show/hide helper note
         const note = document.getElementById('kb_disabled_note');
         const noteBraidTypeName = document.getElementById('kb_disabled_braid_type_name');
         if(note) {
             note.style.display = disabled ? 'block' : 'none';
-            // Update the braid type name in the note
             if(noteBraidTypeName && braidTypeValue){
                 const braidTypeNames = {
-                    'protective': 'Protective style',
-                    'cornrows': 'Cornrows'
+                    'protective': 'Protective style (natural hair)',
+                    'cornrows': 'Cornrows with natural hair'
                 };
                 const braidTypeName = braidTypeNames[braidTypeValue] || 'this braid type';
                 noteBraidTypeName.textContent = braidTypeName;

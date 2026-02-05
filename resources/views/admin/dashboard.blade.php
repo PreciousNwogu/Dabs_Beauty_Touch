@@ -839,27 +839,8 @@
                                         </div>
                                     </div>
 
-                                    <div class="mb-4">
-                                        <label class="form-label fw-semibold mb-2">
-                                            <i class="bi bi-ui-checks me-1"></i>Block Mode
-                                        </label>
-                                        <div class="btn-group w-100" role="group" aria-label="Block mode">
-                                            <input type="radio" class="btn-check" name="blockMode" id="blockModeRange" autocomplete="off" checked>
-                                            <label class="btn btn-outline-danger" for="blockModeRange">
-                                                <i class="bi bi-calendar-range me-1"></i>Date range
-                                            </label>
-                                            <input type="radio" class="btn-check" name="blockMode" id="blockModeSelected" autocomplete="off">
-                                            <label class="btn btn-outline-danger" for="blockModeSelected">
-                                                <i class="bi bi-calendar2-plus me-1"></i>Selected dates
-                                            </label>
-                                        </div>
-                                        <div id="blockModeHelpText" class="form-text text-muted mt-2">
-                                            Use <strong>Date range</strong> for continuous blocks (e.g., vacation). Use <strong>Selected dates</strong> for non‑continuous days (e.g., every Saturday).
-                                        </div>
-                                    </div>
-
                                     <div class="row g-3">
-                                        <div class="col-12" id="blockRangeWrap">
+                                        <div class="col-12">
                                             <div class="row g-3">
                                                 <div class="col-md-6">
                                                     <label class="form-label fw-semibold mb-2">
@@ -877,37 +858,6 @@
                                                     <input id="blockEnd" type="datetime-local" class="form-control form-control-lg" required>
                                                     <small id="endHelpText" class="form-text text-muted">Select the last day to block (inclusive)</small>
                                                 </div>
-                                            </div>
-                                        </div>
-
-                                        <div class="col-12" id="blockSelectedDatesWrap" style="display:none;">
-                                            <div class="row g-2 align-items-end">
-                                                <div class="col-8">
-                                                    <label class="form-label fw-semibold mb-2">
-                                                        <i class="bi bi-calendar-plus me-1"></i>Add date
-                                                    </label>
-                                                    <input id="blockSelectedDateInput" type="date" class="form-control form-control-lg">
-                                                    <small class="form-text text-muted">Pick a date, click <strong>Add</strong>, repeat as needed.</small>
-                                                </div>
-                                                <div class="col-4">
-                                                    <button type="button" id="addSelectedDateBtn" class="btn btn-outline-danger btn-lg w-100">
-                                                        <i class="bi bi-plus-lg me-1"></i>Add
-                                                    </button>
-                                                </div>
-                                            </div>
-
-                                            <div class="mt-3">
-                                                <div class="d-flex justify-content-between align-items-center">
-                                                    <strong class="text-muted small">Selected dates</strong>
-                                                    <button type="button" class="btn btn-sm btn-outline-secondary" id="clearSelectedDatesBtn">
-                                                        <i class="bi bi-x-circle me-1"></i>Clear
-                                                    </button>
-                                                </div>
-                                                <div id="selectedDatesEmpty" class="text-muted small mt-2">No dates selected yet.</div>
-                                                <ul id="selectedDatesList" class="list-group mt-2"></ul>
-                                                <small class="form-text text-muted mt-2 d-block">
-                                                    Selected dates are blocked as <strong>full‑day</strong> blocks.
-                                                </small>
                                             </div>
                                         </div>
                                     </div>
@@ -2668,12 +2618,12 @@
             let fullUpdateUrl = updateStatusUrl;
             if (updateStatusUrl.startsWith('/')) {
                 // Relative URL - make it absolute using current origin
-                // Force HTTPS to prevent mixed content errors
-                const protocol = window.location.protocol === 'https:' ? 'https:' : 'https:';
+                // Use the same protocol as the current page (don't force HTTPS on local dev)
+                const protocol = window.location.protocol;
                 const host = window.location.host;
                 fullUpdateUrl = protocol + '//' + host + updateStatusUrl;
-            } else if (updateStatusUrl.startsWith('http://')) {
-                // If URL is HTTP, convert to HTTPS to prevent mixed content errors
+            } else if (updateStatusUrl.startsWith('http://') && window.location.protocol === 'https:') {
+                // Only convert HTTP to HTTPS if we're on HTTPS to prevent mixed content errors
                 fullUpdateUrl = updateStatusUrl.replace('http://', 'https://');
             }
 

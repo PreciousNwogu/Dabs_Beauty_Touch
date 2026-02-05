@@ -166,7 +166,6 @@ document.addEventListener('DOMContentLoaded', () => {
             if (modalEl) {
                 // Reset edit mode
                 window._editingBlockId = null;
-                window._blockSelectedDates = [];
 
                 // Reset form
                 const blockTitle = document.getElementById('blockTitle');
@@ -176,9 +175,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 const blockPreview = document.getElementById('blockPreview');
                 const editingNotice = document.getElementById('editingBlockNotice');
                 const submitBtn = document.getElementById('submitBlock');
-                const modeRange = document.getElementById('blockModeRange');
-                const modeSelected = document.getElementById('blockModeSelected');
-                const selectedDateInput = document.getElementById('blockSelectedDateInput');
                 
                 if (blockTitle) blockTitle.value = '';
                 if (blockStart) blockStart.value = '';
@@ -187,13 +183,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (blockPreview) blockPreview.style.display = 'none';
                 if (editingNotice) editingNotice.style.display = 'none';
                 if (submitBtn) submitBtn.innerHTML = '<i class="bi bi-slash-circle me-2"></i>Create Block';
-                if (modeRange) { modeRange.checked = true; modeRange.disabled = false; }
-                if (modeSelected) { modeSelected.checked = false; modeSelected.disabled = false; }
-                if (selectedDateInput) selectedDateInput.value = '';
                 
                 // Initialize mode
                 updateBlockMode();
-                try { if (typeof window.__renderBlockSelectedDates === 'function') window.__renderBlockSelectedDates(); } catch (e) {}
                 
                 // store instance so we can reliably hide it later
                 window._blockModalInstance = new bootstrap.Modal(modalEl);
@@ -262,7 +254,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         window._editingBlockId = origId;
-        window._blockSelectedDates = [];
 
         const blockTitle = document.getElementById('blockTitle');
         const blockStart = document.getElementById('blockStart');
@@ -271,17 +262,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const editingNotice = document.getElementById('editingBlockNotice');
         const submitBtn = document.getElementById('submitBlock');
         const blockPreview = document.getElementById('blockPreview');
-        const modeRange = document.getElementById('blockModeRange');
-        const modeSelected = document.getElementById('blockModeSelected');
 
         if (blockPreview) blockPreview.style.display = 'none';
 
         const isAllDay = looksAllDayUTC(startIso, endIso);
         if (blockAllDay) blockAllDay.checked = !!isAllDay;
 
-        // Editing supports range blocks only (selected-dates blocks are created as multiple rows)
-        if (modeRange) { modeRange.checked = true; modeRange.disabled = true; }
-        if (modeSelected) { modeSelected.checked = false; modeSelected.disabled = true; }
         updateBlockMode();
 
         if (blockTitle) blockTitle.value = slotObj.title || 'Blocked';
@@ -314,119 +300,6 @@ document.addEventListener('DOMContentLoaded', () => {
         try { updateBlockPreview(); } catch (e) {}
     };
 
-    // Selected dates mode (non-continuous all-day blocks)
-    window._blockSelectedDates = window._blockSelectedDates || [];
-    const __normalizeYmd = (s) => (typeof s === 'string' ? s.trim() : '');
-    const __sortYmd = (a, b) => (a < b ? -1 : (a > b ? 1 : 0));
-
-    window.__renderBlockSelectedDates = function () {
-        const listEl = document.getElementById('selectedDatesList');
-        const emptyEl = document.getElementById('selectedDatesEmpty');
-        if (!listEl || !emptyEl) return;
-
-        const dates = (window._blockSelectedDates || []).slice().map(__normalizeYmd).filter(Boolean).sort(__sortYmd);
-        window._blockSelectedDates = dates;
-
-        listEl.innerHTML = '';
-        emptyEl.style.display = dates.length ? 'none' : 'block';
-
-        dates.forEach((ymd) => {
-            const li = document.createElement('li');
-            li.className = 'list-group-item d-flex justify-content-between align-items-center';
-            li.innerHTML = `
-                <div class="d-flex align-items-center gap-2">
-                    <i class="bi bi-calendar2-check text-danger"></i>
-                    <span>${ymd}</span>
-                </div>
-                <button type="button" class="btn btn-sm btn-outline-secondary" data-remove-date="${ymd}" title="Remove">
-                    <i class="bi bi-trash"></i>
-                </button>
-            `;
-            listEl.appendChild(li);
-        });
-    };
-
-    window.__addBlockSelectedDate = function (ymdRaw) {
-        const ymd = __normalizeYmd(ymdRaw);
-        if (!ymd) return false;
-        if (!/^\d{4}-\d{2}-\d{2}$/.test(ymd)) return false;
-        const set = new Set(window._blockSelectedDates || []);
-        set.add(ymd);
-        window._blockSelectedDates = Array.from(set).sort(__sortYmd);
-        window.__renderBlockSelectedDates();
-        try { updateBlockPreview(); } catch (e) {}
-        return true;
-    };
-
-    window.__removeBlockSelectedDate = function (ymdRaw) {
-        const ymd = __normalizeYmd(ymdRaw);
-        window._blockSelectedDates = (window._blockSelectedDates || []).filter(d => d !== ymd);
-        window.__renderBlockSelectedDates();
-        try { updateBlockPreview(); } catch (e) {}
-    };
-
-    // Wire selected dates controls
-    try {
-        const addBtn = document.getElementById('addSelectedDateBtn');
-        const clearBtn = document.getElementById('clearSelectedDatesBtn');
-        const dateInput = document.getElementById('blockSelectedDateInput');
-        const listEl = document.getElementById('selectedDatesList');
-        const modeRange = document.getElementById('blockModeRange');
-        const modeSelected = document.getElementById('blockModeSelected');
-
-        const onAdd = () => {
-            const v = dateInput?.value || '';
-            if (!window.__addBlockSelectedDate(v)) {
-                alert('⚠️ Please choose a valid date to add.');
-                return;
-            }
-            if (dateInput) dateInput.value = '';
-        };
-
-        if (addBtn && !addBtn.dataset.bound) {
-            addBtn.dataset.bound = '1';
-            addBtn.addEventListener('click', onAdd);
-        }
-        if (dateInput && !dateInput.dataset.bound) {
-            dateInput.dataset.bound = '1';
-            dateInput.addEventListener('keydown', (e) => {
-                if (e.key === 'Enter') { e.preventDefault(); onAdd(); }
-            });
-        }
-        if (clearBtn && !clearBtn.dataset.bound) {
-            clearBtn.dataset.bound = '1';
-            clearBtn.addEventListener('click', () => {
-                window._blockSelectedDates = [];
-                window.__renderBlockSelectedDates();
-                try { updateBlockPreview(); } catch (e) {}
-            });
-        }
-        if (listEl && !listEl.dataset.bound) {
-            listEl.dataset.bound = '1';
-            listEl.addEventListener('click', (e) => {
-                const btn = e.target && (e.target.closest ? e.target.closest('[data-remove-date]') : null);
-                if (!btn) return;
-                const ymd = btn.getAttribute('data-remove-date');
-                window.__removeBlockSelectedDate(ymd);
-            });
-        }
-        if (modeRange && !modeRange.dataset.bound) {
-            modeRange.dataset.bound = '1';
-            modeRange.addEventListener('change', () => { updateBlockMode(); try { updateBlockPreview(); } catch (e) {} });
-        }
-        if (modeSelected && !modeSelected.dataset.bound) {
-            modeSelected.dataset.bound = '1';
-            modeSelected.addEventListener('change', () => {
-                // selected mode forces all-day
-                const allDayCheck = document.getElementById('blockAllDay');
-                if (allDayCheck) { allDayCheck.checked = true; }
-                updateBlockMode();
-                window.__renderBlockSelectedDates();
-                try { updateBlockPreview(); } catch (e) {}
-            });
-        }
-    } catch (e) {}
-
     // Update preview when inputs change
     const updateBlockPreview = () => {
         const startInput = document.getElementById('blockStart');
@@ -442,33 +315,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const endVal = endInput.value;
         const titleVal = titleInput?.value || 'Blocked';
         const allDay = allDayCheck?.checked ?? true;
-        const modeSelected = document.getElementById('blockModeSelected');
-        const isSelectedMode = !!(modeSelected && modeSelected.checked);
-
-        if (isSelectedMode) {
-            const dates = (window._blockSelectedDates || []).slice().map(__normalizeYmd).filter(Boolean).sort(__sortYmd);
-            if (!dates.length) {
-                previewDiv.style.display = 'none';
-                return;
-            }
-
-            const chips = dates.slice(0, 8).map(d => `<span class="badge bg-light text-dark border me-1 mb-1">${d}</span>`).join('');
-            const more = dates.length > 8 ? `<div class="text-muted small mt-2">+ ${dates.length - 8} more</div>` : '';
-            previewContent.innerHTML = `
-                <div class="mb-2">
-                    <strong class="text-dark" style="font-size: 1.05rem;">${titleVal}</strong>
-                </div>
-                <div class="mb-2 text-muted small">
-                    <i class="bi bi-calendar2-check me-1"></i>${dates.length} selected date(s) (full-day)
-                </div>
-                <div class="d-flex flex-wrap">${chips}</div>
-                ${more}
-            `;
-            previewDiv.style.display = 'block';
-            previewDiv.style.borderColor = '#ff6600';
-            previewDiv.style.borderLeftColor = '#ff6600';
-            return;
-        }
 
         if (startVal && endVal) {
             try {
@@ -630,38 +476,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const timeSpecificHelpText = document.getElementById('timeSpecificHelpText');
         const blockStart = document.getElementById('blockStart');
         const blockEnd = document.getElementById('blockEnd');
-        const modeSelected = document.getElementById('blockModeSelected');
-        const rangeWrap = document.getElementById('blockRangeWrap');
-        const selectedWrap = document.getElementById('blockSelectedDatesWrap');
-        const modeHelp = document.getElementById('blockModeHelpText');
 
         if (!allDayCheck) return;
-
-        const isSelectedMode = !!(modeSelected && modeSelected.checked);
-        if (rangeWrap) rangeWrap.style.display = isSelectedMode ? 'none' : '';
-        if (selectedWrap) selectedWrap.style.display = isSelectedMode ? '' : 'none';
-
-        // Selected-dates mode always creates all-day blocks
-        if (isSelectedMode) {
-            allDayCheck.checked = true;
-            allDayCheck.disabled = true;
-            if (modeHelp) modeHelp.innerHTML = 'Selected dates are blocked as <strong>full‑day</strong> blocks. Add multiple non‑continuous dates.';
-            if (allDayHelpText) allDayHelpText.style.display = 'block';
-            if (timeSpecificHelpText) timeSpecificHelpText.style.display = 'none';
-            if (blockStart) blockStart.required = false;
-            if (blockEnd) blockEnd.required = false;
-            // Labels/help are irrelevant when range inputs are hidden
-            if (startLabel) startLabel.textContent = 'Start Date';
-            if (endLabel) endLabel.textContent = 'End Date';
-            if (startHelpText) startHelpText.textContent = 'Not used in Selected dates mode';
-            if (endHelpText) endHelpText.textContent = 'Not used in Selected dates mode';
-            return;
-        } else {
-            allDayCheck.disabled = false;
-            if (modeHelp) modeHelp.innerHTML = 'Use <strong>Date range</strong> for continuous blocks (e.g., vacation). Use <strong>Selected dates</strong> for non‑continuous days (e.g., every Saturday).';
-            if (blockStart) blockStart.required = true;
-            if (blockEnd) blockEnd.required = true;
-        }
 
         const isAllDay = allDayCheck.checked;
 
@@ -712,26 +528,17 @@ document.addEventListener('DOMContentLoaded', () => {
             const allDay = document.getElementById('blockAllDay').checked;
             const startInput = document.getElementById('blockStart').value;
             const endInput = document.getElementById('blockEnd').value;
-            const isSelectedMode = !!document.getElementById('blockModeSelected')?.checked;
-            const selectedDates = (window._blockSelectedDates || []).slice().map(__normalizeYmd).filter(Boolean).sort(__sortYmd);
 
-            if (isSelectedMode) {
-                if (!selectedDates.length) {
-                    alert('⚠️ Please add at least one date to block.');
-                    return;
-                }
-            } else {
-                if (!startInput || !endInput) { 
-                    alert('⚠️ Please provide both start and end date/time'); 
-                    return; 
-                }
+            if (!startInput || !endInput) { 
+                alert('⚠️ Please provide both start and end date/time'); 
+                return; 
             }
 
             // Parse datetime-local input directly to avoid timezone conversion issues
             // datetime-local format: "YYYY-MM-DDTHH:mm" (no timezone, local time)
             let start, end;
             
-            if (!isSelectedMode && allDay) {
+            if (allDay) {
                 // For all-day blocks, parse the date part directly from the input string
                 // Format: "YYYY-MM-DDTHH:mm" - we only care about the date part
                 const startMatch = startInput.match(/^(\d{4})-(\d{2})-(\d{2})/);
@@ -775,7 +582,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     },
                     utc: { start: start.toISOString(), end: end.toISOString() }
                 });
-            } else if (!isSelectedMode) {
+            } else {
                 // For time-specific blocks, parse the datetime-local input
                 // datetime-local format: "YYYY-MM-DDTHH:mm" (local time, no timezone)
                 // We need to extract the date and time components and construct UTC dates
@@ -886,11 +693,12 @@ document.addEventListener('DOMContentLoaded', () => {
                         'X-CSRF-TOKEN': csrf,
                         'Accept': 'application/json'
                     },
-                    body: JSON.stringify(
-                        isSelectedMode
-                            ? { title, type: 'blocked', selected_dates: selectedDates }
-                            : { title, start: start.toISOString(), end: end.toISOString(), type: 'blocked' }
-                    )
+                    body: JSON.stringify({
+                        title,
+                        start: start.toISOString(),
+                        end: end.toISOString(),
+                        type: 'blocked'
+                    })
                 });
                 
                 console.log('Response status:', res.status, res.statusText);
@@ -916,11 +724,12 @@ document.addEventListener('DOMContentLoaded', () => {
                                     'X-CSRF-TOKEN': csrf,
                                     'Accept': 'application/json'
                                 },
-                                body: JSON.stringify(
-                                    isSelectedMode
-                                        ? { title, type: 'blocked', selected_dates: selectedDates }
-                                        : { title, start: start.toISOString(), end: end.toISOString(), type: 'blocked' }
-                                )
+                                body: JSON.stringify({
+                                    title,
+                                    start: start.toISOString(),
+                                    end: end.toISOString(),
+                                    type: 'blocked'
+                                })
                             });
                             
                             if (!retryRes.ok) {
@@ -942,8 +751,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 try { window._blockModalInstance?.hide(); } catch (e) {}
                                 calendar.refetchEvents();
                                 try {
-                                    const jumpTo = isSelectedMode ? (selectedDates[0] || null) : start;
-                                    if (jumpTo) calendar.gotoDate(jumpTo);
+                                    if (start) calendar.gotoDate(start);
                                 } catch (e) {}
                                 window._editingBlockId = null;
                                 
@@ -998,8 +806,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     // refresh calendar and jump to the start of the block to make it visible
                     calendar.refetchEvents();
                     try {
-                        const jumpTo = isSelectedMode ? (selectedDates[0] || null) : start;
-                        if (jumpTo) calendar.gotoDate(jumpTo);
+                        if (start) calendar.gotoDate(start);
                     } catch (e) {}
                     window._editingBlockId = null;
                     

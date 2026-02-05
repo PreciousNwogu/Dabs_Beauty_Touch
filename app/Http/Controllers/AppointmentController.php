@@ -1497,14 +1497,80 @@ class AppointmentController extends Controller
             $defaultSlots = ['09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00'];
 
             // Get booked time ranges for the day.
-            // Business rule: each booking blocks a 5-hour window from its start time, so the same day can accept
-            // at most two bookings (e.g., 9:00 blocks 9:00–14:00, allowing another booking from 14:00 onward).
-            $bookingBlockMinutes = 5 * 60;
+            // Business rule: each booking blocks a 6-hour window from its start time (5 hours service + 1 hour travel/transition).
+            // This ensures the stylist has time to complete the service and travel to the next appointment location.
+            // Example: 9:00 AM booking blocks 9:00 AM–3:00 PM, next available slot is 3:00 PM.
+            $bookingBlockMinutes = 6 * 60; // 6 hours = 360 minutes
             $bookedTimeRanges = [];
             $bookingsForDay = \App\Models\Booking::where('appointment_date', $date)
                 ->whereNotIn('status', ['completed', 'cancelled'])
                 ->whereNotNull('appointment_time')
                 ->get(['appointment_time']);
+
+            // Check if the requested date is today and if we're within 5 hours of any existing booking
+            $now = Carbon::now($appTz);
+            $isToday = $dateCarbon->isSameDay($now);
+            
+            if ($isToday) {
+                // Check if there's less than 3 hours remaining in the business day
+                // Last slot is 18:00 (6:00 PM), so check time until then
+                $lastSlotTime = Carbon::createFromFormat('Y-m-d H:i', $date . ' 18:00', $appTz);
+                $hoursUntilEndOfDay = $now->diffInHours($lastSlotTime, false);
+                
+                if ($hoursUntilEndOfDay < 3) {
+                    Log::info('Blocking entire day - less than 3 hours remaining in business day', [
+                        'date' => $date,
+                        'current_time' => $now->format('Y-m-d H:i:s'),
+                        'last_slot_time' => $lastSlotTime->format('Y-m-d H:i:s'),
+                        'hours_remaining' => $hoursUntilEndOfDay
+                    ]);
+                    
+                    return response()->json([
+                        'success' => true,
+                        'slots' => [],
+                        'message' => 'No available slots - insufficient time remaining today (minimum 3 hours required)',
+                        'date' => $date
+                    ]);
+                }
+                
+                foreach ($bookingsForDay as $b) {
+                    try {
+                        $t = $b->appointment_time;
+                        if (!$t) continue;
+                        
+                        // Get the booking time
+                        $timeStr = \Carbon\Carbon::parse($t)->format('H:i');
+                        $bookingDateTime = Carbon::createFromFormat('Y-m-d H:i', $date . ' ' . $timeStr, $appTz);
+                        
+                        // Calculate hours until this booking
+                        $hoursUntilBooking = $now->diffInHours($bookingDateTime, false);
+                        
+                        // If we're less than 6 hours before any booking, block the entire day
+                        // (5 hours service + 1 hour travel/setup time)
+                        if ($hoursUntilBooking >= 0 && $hoursUntilBooking < 6) {
+                            Log::info('Blocking entire day - within 6-hour window of existing booking', [
+                                'date' => $date,
+                                'current_time' => $now->format('Y-m-d H:i:s'),
+                                'booking_time' => $bookingDateTime->format('Y-m-d H:i:s'),
+                                'hours_until_booking' => $hoursUntilBooking
+                            ]);
+                            
+                            return response()->json([
+                                'success' => true,
+                                'slots' => [],
+                                'message' => 'No available slots - insufficient time before existing appointment (minimum 6 hours required for service and travel)',
+                                'date' => $date
+                            ]);
+                        }
+                    } catch (\Throwable $e) {
+                        // ignore malformed times
+                        Log::warning('Error checking 5-hour window', [
+                            'error' => $e->getMessage(),
+                            'date' => $date
+                        ]);
+                    }
+                }
+            }
 
             foreach ($bookingsForDay as $b) {
                 try {

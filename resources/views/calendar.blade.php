@@ -573,7 +573,7 @@
                             <div class="form-check">
                                 <input class="form-check-input" type="radio" name="appointment_type" id="appointment_type_in_studio_cal" value="in-studio" checked onclick="toggleAddressFieldCal()">
                                 <label class="form-check-label" for="appointment_type_in_studio_cal">
-                                    <i class="bi bi-house-door me-1"></i>In-studio
+                                    <i class="bi bi-house-door me-1"></i>Stylist address
                                 </label>
                             </div>
                             <div class="form-check">
@@ -703,10 +703,11 @@
                         <ul class="mb-0" style="padding-left: 18px;">
                             <li>Deposits are non-refundable once the appointment is confirmed.</li>
                             <li>Mobile appointments are confirmed after deposit + address verification.</li>
+                            <li>No style changes allowed on the day of appointment or after confirmation (time window is reserved).</li>
                             <li>Minimum 48 hours notice is required for cancellations.</li>
                             <li>Rescheduling requires 48 hours notice and must be within 1 month of the initial appointment date.</li>
                             <li>For mobile service: travel fee may apply based on distance in Ottawa/Gatineau area.</li>
-                            <li>For home service: clients cover fueling for the stylist’s transportation; fees vary by distance.</li>
+                            <li>For home service: clients cover fueling for the stylist's transportation; fees vary by distance.</li>
                         </ul>
                     </div>
                     <div class="form-check mt-3">
