@@ -3,7 +3,7 @@
     <div class="cookie-consent-container">
         <div class="cookie-consent-content">
             <div class="cookie-consent-icon">
-                <i class="bi bi-cookie" style="font-size: 1.25rem; color: #ff8533;"></i>
+                <i class="bi bi-cookie" style="font-size: 1rem; color: #ff6600;"></i>
             </div>
             <div class="cookie-consent-text">
                 <p class="cookie-consent-message">
@@ -15,8 +15,8 @@
                 <button type="button" class="btn btn-outline-light btn-sm cookie-consent-decline" id="cookieDeclineBtn">
                     Decline
                 </button>
-                <button type="button" class="btn btn-warning btn-sm cookie-consent-accept" id="cookieAcceptBtn" style="background: linear-gradient(135deg, #ff6600 0%, #ff8533 100%); border: none; color: white; font-weight: 700;">
-                    Accept All
+                <button type="button" class="btn btn-warning btn-sm cookie-consent-accept" id="cookieAcceptBtn">
+                    Accept
                 </button>
             </div>
         </div>
@@ -26,38 +26,37 @@
 <style>
 .cookie-consent-banner {
     position: fixed;
-    bottom: 12px;
-    left: 12px;
-    right: 12px;
-    margin: 0 auto;
-    max-width: 880px;
-    background: rgba(3, 15, 104, 0.94);
-    backdrop-filter: blur(10px);
-    color: white;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+    bottom: 16px;
+    left: 16px;
+    right: auto;
+    max-width: 420px;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(8px);
+    color: #333;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
     z-index: 9999;
-    padding: 12px 14px;
-    transform: translateY(100%);
-    transition: transform 0.4s ease-in-out;
-    border: 1px solid rgba(255, 255, 255, 0.14);
-    border-radius: 14px;
+    padding: 10px 12px;
+    transform: translateX(-120%);
+    transition: transform 0.35s ease-in-out;
+    border: 1px solid rgba(0, 0, 0, 0.06);
+    border-radius: 8px;
 }
 
 .cookie-consent-banner.show {
-    transform: translateY(0);
+    transform: translateX(0);
     display: block !important;
 }
 
 .cookie-consent-container {
-    max-width: 1200px;
+    max-width: 100%;
     margin: 0 auto;
 }
 
 .cookie-consent-content {
     display: flex;
     align-items: center;
-    gap: 12px;
-    flex-wrap: wrap;
+    gap: 8px;
+    flex-wrap: nowrap;
 }
 
 .cookie-consent-icon {
@@ -66,38 +65,41 @@
 
 .cookie-consent-text {
     flex: 1;
-    min-width: 250px;
+    min-width: 0;
 }
 
 .cookie-consent-message {
     margin: 0;
-    font-size: 0.9rem;
-    line-height: 1.35;
-    color: rgba(255, 255, 255, 0.88);
+    font-size: 0.8rem;
+    line-height: 1.3;
+    color: #555;
 }
 
 .cookie-consent-link {
-    color: #ff6600;
-    text-decoration: underline;
+    color: #030f68;
+    text-decoration: none;
     font-weight: 500;
-    transition: color 0.3s;
+    transition: color 0.2s;
+    border-bottom: 1px solid #030f68;
 }
 
 .cookie-consent-link:hover {
-    color: #ff8533;
+    color: #ff6600;
+    border-bottom-color: #ff6600;
 }
 
 .cookie-consent-buttons {
     display: flex;
-    gap: 10px;
+    gap: 6px;
     flex-shrink: 0;
 }
 
 .cookie-consent-buttons .btn {
-    padding: 8px 14px;
-    border-radius: 10px;
-    font-weight: 700;
-    transition: all 0.3s;
+    padding: 5px 10px;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 0.8rem;
+    transition: all 0.2s;
     white-space: nowrap;
 }
 
@@ -107,47 +109,63 @@
 }
 
 .cookie-consent-decline {
-    border-color: rgba(255, 255, 255, 0.5);
-    color: white;
+    border-color: #d0d0d0;
+    color: #666;
+    background: transparent;
 }
 
 .cookie-consent-decline:hover {
-    background: rgba(255, 255, 255, 0.1);
-    border-color: rgba(255, 255, 255, 0.8);
-    color: white;
+    background: #f5f5f5;
+    border-color: #999;
+    color: #333;
+}
+
+.cookie-consent-accept {
+    background: #ff6600 !important;
+    border: none !important;
+    color: white !important;
+}
+
+.cookie-consent-accept:hover {
+    background: #ff7722 !important;
 }
 
 /* Mobile Responsive */
 @media (max-width: 768px) {
     .cookie-consent-banner {
-        padding: 10px 12px;
-        bottom: 10px;
-        left: 10px;
-        right: 10px;
+        padding: 8px 10px;
+        bottom: 12px;
+        left: 12px;
+        right: 12px;
+        max-width: none;
     }
     
     .cookie-consent-content {
-        flex-direction: row;
-        align-items: center;
-        gap: 10px;
+        flex-wrap: wrap;
+        gap: 6px;
+    }
+    
+    .cookie-consent-icon {
+        display: none;
     }
     
     .cookie-consent-text {
-        min-width: 100%;
+        width: 100%;
+        margin-bottom: 4px;
     }
     
     .cookie-consent-buttons {
         width: 100%;
-        flex-direction: row;
         justify-content: flex-end;
     }
     
     .cookie-consent-buttons .btn {
-        width: auto;
+        font-size: 0.75rem;
+        padding: 4px 9px;
     }
     
     .cookie-consent-message {
-        font-size: 0.85rem;
+        font-size: 0.75rem;
     }
 }
 

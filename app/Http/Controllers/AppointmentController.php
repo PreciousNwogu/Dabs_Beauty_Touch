@@ -1578,14 +1578,36 @@ class AppointmentController extends Controller
                     if (!$t) continue;
                     // Normalize appointment_time to HH:MM
                     $timeStr = \Carbon\Carbon::parse($t)->format('H:i');
-                    $start = Carbon::createFromFormat('Y-m-d H:i', $date . ' ' . $timeStr, $appTz);
-                    $end = $start->copy()->addMinutes($bookingBlockMinutes);
+                    $bookingStart = Carbon::createFromFormat('Y-m-d H:i', $date . ' ' . $timeStr, $appTz);
+                    
+                    // Block forward: booking time + 6 hours (e.g., 10am blocks until 4pm)
+                    $forwardEnd = $bookingStart->copy()->addMinutes($bookingBlockMinutes);
                     $bookedTimeRanges[] = [
-                        'start' => $start,
-                        'end' => $end,
-                        'start_hm' => $start->format('H:i'),
-                        'end_hm' => $end->format('H:i'),
+                        'start' => $bookingStart,
+                        'end' => $forwardEnd,
+                        'start_hm' => $bookingStart->format('H:i'),
+                        'end_hm' => $forwardEnd->format('H:i'),
                     ];
+                    
+                    // Block backward: any earlier slot that would overlap with this booking
+                    // If someone books at 10am, a 9am slot would end at 3pm (9am + 6hrs), 
+                    // which overlaps with the 10am booking. So we need to block backwards.
+                    // Block from (booking time - 6 hours) to booking time
+                    $backwardStart = $bookingStart->copy()->subMinutes($bookingBlockMinutes);
+                    // Only block backward within business hours (don't go before 9am)
+                    $dayStart = Carbon::createFromFormat('Y-m-d H:i', $date . ' 09:00', $appTz);
+                    if ($backwardStart->lt($dayStart)) {
+                        $backwardStart = $dayStart;
+                    }
+                    
+                    if ($backwardStart->lt($bookingStart)) {
+                        $bookedTimeRanges[] = [
+                            'start' => $backwardStart,
+                            'end' => $bookingStart,
+                            'start_hm' => $backwardStart->format('H:i'),
+                            'end_hm' => $bookingStart->format('H:i'),
+                        ];
+                    }
                 } catch (\Throwable $e) {
                     // ignore malformed times
                 }
@@ -1660,6 +1682,79 @@ class AppointmentController extends Controller
                 'date' => $date,
                 'blocked_ranges' => $blockedTimeRanges,
             ]);
+
+            // Check if there's at least a 3-hour continuous window available
+            // Combine all booked and blocked ranges, then check for gaps
+            $allBlockedRanges = [];
+            foreach ($bookedTimeRanges as $br) {
+                $allBlockedRanges[] = [
+                    'start' => $br['start'],
+                    'end' => $br['end']
+                ];
+            }
+            foreach ($blockedTimeRanges as $range) {
+                $allBlockedRanges[] = [
+                    'start' => Carbon::createFromFormat('Y-m-d H:i', $date . ' ' . $range['start'], $appTz),
+                    'end' => Carbon::createFromFormat('Y-m-d H:i', $date . ' ' . $range['end'], $appTz)
+                ];
+            }
+            
+            // Sort ranges by start time
+            usort($allBlockedRanges, function($a, $b) {
+                return $a['start']->timestamp <=> $b['start']->timestamp;
+            });
+            
+            // Check for continuous 3-hour window
+            $businessDayStart = Carbon::createFromFormat('Y-m-d H:i', $date . ' 09:00', $appTz);
+            $businessDayEnd = Carbon::createFromFormat('Y-m-d H:i', $date . ' 18:00', $appTz);
+            $minimumWindowMinutes = 3 * 60; // 3 hours = 180 minutes
+            
+            // Check from business start to first blocked range
+            $hasThreeHourWindow = false;
+            $previousEnd = $businessDayStart->copy();
+            
+            foreach ($allBlockedRanges as $range) {
+                $gapStart = $previousEnd;
+                $gapEnd = $range['start'];
+                
+                // Calculate gap in minutes
+                $gapMinutes = $gapStart->diffInMinutes($gapEnd, false);
+                
+                if ($gapMinutes >= $minimumWindowMinutes) {
+                    $hasThreeHourWindow = true;
+                    break;
+                }
+                
+                // Update previous end to be the maximum of current end and previous end
+                // (handles overlapping ranges)
+                if ($range['end']->gt($previousEnd)) {
+                    $previousEnd = $range['end']->copy();
+                }
+            }
+            
+            // Check gap from last blocked range to end of business day
+            if (!$hasThreeHourWindow) {
+                $finalGapMinutes = $previousEnd->diffInMinutes($businessDayEnd, false);
+                if ($finalGapMinutes >= $minimumWindowMinutes) {
+                    $hasThreeHourWindow = true;
+                }
+            }
+            
+            // If no 3-hour window exists, block the entire day
+            if (!$hasThreeHourWindow) {
+                Log::info('Blocking entire day - no 3-hour continuous window available', [
+                    'date' => $date,
+                    'booked_ranges_count' => count($bookedTimeRanges),
+                    'blocked_ranges_count' => count($blockedTimeRanges),
+                ]);
+                
+                return response()->json([
+                    'success' => true,
+                    'slots' => [],
+                    'message' => 'No available slots - insufficient available time (minimum 3-hour window required)',
+                    'date' => $date
+                ]);
+            }
 
             // Filter out blocked and booked slots
             $availableSlots = [];
