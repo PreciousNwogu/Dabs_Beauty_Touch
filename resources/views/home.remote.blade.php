@@ -3459,12 +3459,12 @@
     <section class="image-slider-section" style="padding: 50px 0; background: linear-gradient(135deg, #f8f9fa 0%, #e3eafc 100%);">
         <div class="container">
             <div class="text-center mb-5">
-                <h2 class="section-title" style="font-size: 2.5rem; font-weight: 700; color: #030f68;">Customer Transformations</h2>
-                <p class="lead" style="color: #666; font-size: 1.2rem;">See Real Results from Our Satisfied Clients</p>
+                <h2 class="section-title" style="font-size: 2.5rem; font-weight: 700; color: #030f68;">Why DBT Beauty Touch</h2>
+                <p class="lead" style="color: #666; font-size: 1.2rem;">Your Trusted Hair Care Experience in Ottawa</p>
             </div>
 
             {{-- Prices are stored in config/service_prices.php --}}
-            <div id="workSlider" class="carousel slide" data-bs-ride="carousel" data-bs-interval="5000">
+            <div id="workSlider" class="carousel slide" data-bs-ride="carousel" data-bs-interval="6000">
                 <!-- Carousel Indicators -->
                 <div class="carousel-indicators">
                     <button type="button" data-bs-target="#workSlider" data-bs-slide-to="0" class="active" aria-current="true" aria-label="Slide 1"></button>
@@ -3473,402 +3473,297 @@
                     <button type="button" data-bs-target="#workSlider" data-bs-slide-to="3" aria-label="Slide 4"></button>
                     <button type="button" data-bs-target="#workSlider" data-bs-slide-to="4" aria-label="Slide 5"></button>
                     <button type="button" data-bs-target="#workSlider" data-bs-slide-to="5" aria-label="Slide 6"></button>
-                    <button type="button" data-bs-target="#workSlider" data-bs-slide-to="6" aria-label="Slide 7"></button>
-                    <button type="button" data-bs-target="#workSlider" data-bs-slide-to="7" aria-label="Slide 8"></button>
-                    <button type="button" data-bs-target="#workSlider" data-bs-slide-to="8" aria-label="Slide 9"></button>
-                    <button type="button" data-bs-target="#workSlider" data-bs-slide-to="9" aria-label="Slide 10"></button>
                 </div>
 
                 <!-- Carousel Items -->
                 <div class="carousel-inner">
-                    <!-- Slide 1: Small Knotless Braids -->
+                    <!-- Slide 1: Why Choose DBT -->
                     <div class="carousel-item active">
                         <div class="row align-items-center">
                             <div class="col-lg-6">
                                 <div class="slide-content" style="padding: 40px;">
-                                    <h3 style="color: #030f68; font-weight: 700; font-size: 2rem; margin-bottom: 20px;">Small Knotless Braids</h3>
+                                    <h3 style="color: #030f68; font-weight: 700; font-size: 2rem; margin-bottom: 20px;">Why Clients Choose DBT Beauty Touch</h3>
                                     <p style="color: #666; font-size: 1.1rem; line-height: 1.6; margin-bottom: 25px;">
-                                        Ultra-fine knotless braids that blend seamlessly with your natural hair. Perfect for a sleek, professional look with minimal tension and maximum comfort. Our expert Ottawa braiding stylists use premium techniques to create these delicate, long-lasting braids that protect your natural hair while giving you a stunning, low-maintenance style. Ideal for professional settings, special events, or everyday elegance.
+                                        Experience Ottawa's premier hair braiding and styling destination. We combine years of expertise with genuine care for your hair's health and your personal style vision. Every client receives personalized attention in a welcoming, professional environment.
                                     </p>
                                     <div class="slide-features">
                                         <div class="feature-item" style="display: flex; align-items: center; margin-bottom: 15px;">
-                                            <i class="bi bi-check-circle-fill" style="color: #ff6600; margin-right: 10px;"></i>
-                                            <span style="color: #333; font-weight: 500;">Seamless blend</span>
+                                            <i class="bi bi-award-fill" style="color: #ff6600; margin-right: 10px; font-size: 1.3rem;"></i>
+                                            <span style="color: #333; font-weight: 500;">Expert stylists with 10+ years experience</span>
                                         </div>
                                         <div class="feature-item" style="display: flex; align-items: center; margin-bottom: 15px;">
-                                            <i class="bi bi-check-circle-fill" style="color: #ff6600; margin-right: 10px;"></i>
-                                            <span style="color: #333; font-weight: 500;">Professional look</span>
+                                            <i class="bi bi-heart-fill" style="color: #ff6600; margin-right: 10px; font-size: 1.3rem;"></i>
+                                            <span style="color: #333; font-weight: 500;">Hair health focused techniques</span>
                                         </div>
                                         <div class="feature-item" style="display: flex; align-items: center; margin-bottom: 15px;">
-                                            <i class="bi bi-check-circle-fill" style="color: #ff6600; margin-right: 10px;"></i>
-                                            <span style="color: #333; font-weight: 500;">Minimal tension</span>
+                                            <i class="bi bi-star-fill" style="color: #ff6600; margin-right: 10px; font-size: 1.3rem;"></i>
+                                            <span style="color: #333; font-weight: 500;">500+ 5-star reviews</span>
+                                        </div>
+                                        <div class="feature-item" style="display: flex; align-items: center; margin-bottom: 15px;">
+                                            <i class="bi bi-shield-check" style="color: #ff6600; margin-right: 10px; font-size: 1.3rem;"></i>
+                                            <span style="color: #333; font-weight: 500;">Premium products & sanitized tools</span>
                                         </div>
                                     </div>
-                                    <div class="pricing-info mb-3" style="background: rgba(255, 102, 0, 0.1); padding: 15px; border-radius: 10px; border-left: 4px solid #ff6600;">
-                                        <p class="price" style="margin: 0; color: #030f68; font-weight: 700; font-size: 1.2rem;">Starting at ${{ number_format(config('service_prices.small_knotless', 170),0) }}</p>
-                                    </div>
-                                    <button class="btn btn-warning mt-3" onclick="openBookingModal('Small Knotless Braids', 'small-knotless')" style="font-weight: 600; padding: 12px 30px;">
-                                        <i class="bi bi-calendar-check me-2"></i>Book This Style
+                                    <button class="btn btn-warning mt-3" onclick="document.getElementById('services').scrollIntoView({behavior: 'smooth'});" style="font-weight: 600; padding: 12px 30px;">
+                                        <i class="bi bi-eye me-2"></i>View Our Services
                                     </button>
                                 </div>
                             </div>
                             <div class="col-lg-6">
                                 <div class="slide-image" style="text-align: center;">
-                                    <img src="{{ asset('images/small braid.jpg') }}" alt="Small Knotless Braids" style="width: 100%; max-width: 500px; height: 400px; object-fit: cover; border-radius: 20px; box-shadow: 0 15px 40px rgba(0,0,0,0.15);">
+                                    <img src="{{ asset('images/small braid.jpg') }}" alt="Professional Braiding Service" style="width: 100%; max-width: 500px; height: 400px; object-fit: cover; border-radius: 20px; box-shadow: 0 15px 40px rgba(0,0,0,0.15);">
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Slide 2: Smedium Knotless Braids -->
+                    <!-- Slide 2: What to Expect -->
                     <div class="carousel-item">
                         <div class="row align-items-center">
                             <div class="col-lg-6">
                                 <div class="slide-content" style="padding: 40px;">
-                                    <h3 style="color: #030f68; font-weight: 700; font-size: 2rem; margin-bottom: 20px;">Smedium Knotless Braids</h3>
+                                    <h3 style="color: #030f68; font-weight: 700; font-size: 2rem; margin-bottom: 20px;">Your Appointment Experience</h3>
                                     <p style="color: #666; font-size: 1.1rem; line-height: 1.6; margin-bottom: 25px;">
-                                        Perfect balance between small and medium braids for a versatile, everyday style. Offers excellent durability while maintaining a natural, lightweight feel.
+                                        From booking to your final look, we've designed every step to be comfortable, convenient, and stress-free. Here's what you can expect when you visit DBT Beauty Touch.
                                     </p>
                                     <div class="slide-features">
-                                        <div class="feature-item" style="display: flex; align-items: center; margin-bottom: 15px;">
-                                            <i class="bi bi-check-circle-fill" style="color: #ff6600; margin-right: 10px;"></i>
-                                            <span style="color: #333; font-weight: 500;">Perfect balance</span>
+                                        <div class="feature-item" style="display: flex; align-items: start; margin-bottom: 18px;">
+                                            <div style="background: #ff6600; color: white; border-radius: 50%; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; font-weight: 700; margin-right: 12px; flex-shrink: 0;">1</div>
+                                            <div>
+                                                <strong style="color: #030f68;">Easy Online Booking</strong>
+                                                <p style="margin: 5px 0 0 0; color: #666; font-size: 0.95rem;">Select your service, choose your preferred time, and book instantly</p>
+                                            </div>
                                         </div>
-                                        <div class="feature-item" style="display: flex; align-items: center; margin-bottom: 15px;">
-                                            <i class="bi bi-check-circle-fill" style="color: #ff6600; margin-right: 10px;"></i>
-                                            <span style="color: #333; font-weight: 500;">Excellent durability</span>
+                                        <div class="feature-item" style="display: flex; align-items: start; margin-bottom: 18px;">
+                                            <div style="background: #ff6600; color: white; border-radius: 50%; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; font-weight: 700; margin-right: 12px; flex-shrink: 0;">2</div>
+                                            <div>
+                                                <strong style="color: #030f68;">Personal Consultation</strong>
+                                                <p style="margin: 5px 0 0 0; color: #666; font-size: 0.95rem;">We discuss your vision, hair type, and lifestyle needs</p>
+                                            </div>
                                         </div>
-                                        <div class="feature-item" style="display: flex; align-items: center; margin-bottom: 15px;">
-                                            <i class="bi bi-check-circle-fill" style="color: #ff6600; margin-right: 10px;"></i>
-                                            <span style="color: #333; font-weight: 500;">Lightweight feel</span>
+                                        <div class="feature-item" style="display: flex; align-items: start; margin-bottom: 18px;">
+                                            <div style="background: #ff6600; color: white; border-radius: 50%; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; font-weight: 700; margin-right: 12px; flex-shrink: 0;">3</div>
+                                            <div>
+                                                <strong style="color: #030f68;">Relaxing Service</strong>
+                                                <p style="margin: 5px 0 0 0; color: #666; font-size: 0.95rem;">Enjoy refreshments while we create your perfect style</p>
+                                            </div>
+                                        </div>
+                                        <div class="feature-item" style="display: flex; align-items: start; margin-bottom: 18px;">
+                                            <div style="background: #ff6600; color: white; border-radius: 50%; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; font-weight: 700; margin-right: 12px; flex-shrink: 0;">4</div>
+                                            <div>
+                                                <strong style="color: #030f68;">Aftercare Guidance</strong>
+                                                <p style="margin: 5px 0 0 0; color: #666; font-size: 0.95rem;">Get personalized tips to maintain your style longer</p>
+                                            </div>
                                         </div>
                                     </div>
-                                    <div class="pricing-info mb-3" style="background: rgba(255, 102, 0, 0.1); padding: 15px; border-radius: 10px; border-left: 4px solid #ff6600;">
-                                        <p class="price" style="margin: 0; color: #030f68; font-weight: 700; font-size: 1.2rem;">Starting at ${{ number_format(config('service_prices.smedium_knotless', 150),0) }}</p>
-                                    </div>
-                                    <button class="btn btn-warning mt-3" onclick="openBookingModal('Smedium Knotless Braids', 'smedium-knotless')" style="font-weight: 600; padding: 12px 30px;">
-                                        <i class="bi bi-calendar-check me-2"></i>Book This Style
+                                    <button class="btn btn-warning mt-3" onclick="window.scrollTo({top: 0, behavior: 'smooth'});" style="font-weight: 600; padding: 12px 30px;">
+                                        <i class="bi bi-calendar-check me-2"></i>Book Your Appointment
                                     </button>
                                 </div>
                             </div>
                             <div class="col-lg-6">
                                 <div class="slide-image" style="text-align: center;">
-                                    <img src="{{ asset('images/webbraids2.jpg') }}" alt="Smedium Knotless Braids" style="width: 100%; max-width: 500px; height: 400px; object-fit: cover; border-radius: 20px; box-shadow: 0 15px 40px rgba(0,0,0,0.15);">
+                                    <img src="{{ asset('images/webbraids2.jpg') }}" alt="Professional Service Experience" style="width: 100%; max-width: 500px; height: 400px; object-fit: cover; border-radius: 20px; box-shadow: 0 15px 40px rgba(0,0,0,0.15);">
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Slide 3: Wig Installation -->
+                    <!-- Slide 3: Hair Care Tips -->
                     <div class="carousel-item">
                         <div class="row align-items-center">
                             <div class="col-lg-6">
                                 <div class="slide-content" style="padding: 40px;">
-                                    <h3 style="color: #030f68; font-weight: 700; font-size: 2rem; margin-bottom: 20px;">Wig Installation</h3>
+                                    <h3 style="color: #030f68; font-weight: 700; font-size: 2rem; margin-bottom: 20px;">Keep Your Braids Looking Fresh</h3>
                                     <p style="color: #666; font-size: 1.1rem; line-height: 1.6; margin-bottom: 25px;">
-                                        Professional wig installation with custom fitting and styling. Our Ottawa hair specialists provide sleek natural hairline blending and personalized styling to match your desired look. We offer secure, comfortable wig installations using advanced techniques that ensure your wig stays in place while looking completely natural. Perfect for protective styling, hair loss solutions, or simply wanting to change your look instantly.
+                                        Proper care extends the life of your protective style and keeps your natural hair healthy underneath. Follow these expert tips from our stylists.
+                                    </p>
+                                    <div class="slide-features">
+                                        <div class="feature-item" style="display: flex; align-items: start; margin-bottom: 15px;">
+                                            <i class="bi bi-droplet-fill" style="color: #ff6600; margin-right: 10px; font-size: 1.2rem; margin-top: 3px;"></i>
+                                            <div>
+                                                <strong style="color: #030f68;">Moisturize regularly</strong>
+                                                <p style="margin: 3px 0 0 0; color: #666; font-size: 0.95rem;">Apply light oil to your scalp 2-3 times per week</p>
+                                            </div>
+                                        </div>
+                                        <div class="feature-item" style="display: flex; align-items: start; margin-bottom: 15px;">
+                                            <i class="bi bi-moon-stars-fill" style="color: #ff6600; margin-right: 10px; font-size: 1.2rem; margin-top: 3px;"></i>
+                                            <div>
+                                                <strong style="color: #030f68;">Protect at night</strong>
+                                                <p style="margin: 3px 0 0 0; color: #666; font-size: 0.95rem;">Use a satin bonnet or pillowcase to prevent frizz</p>
+                                            </div>
+                                        </div>
+                                        <div class="feature-item" style="display: flex; align-items: start; margin-bottom: 15px;">
+                                            <i class="bi bi-water" style="color: #ff6600; margin-right: 10px; font-size: 1.2rem; margin-top: 3px;"></i>
+                                            <div>
+                                                <strong style="color: #030f68;">Wash gently</strong>
+                                                <p style="margin: 3px 0 0 0; color: #666; font-size: 0.95rem;">Cleanse your scalp weekly with diluted shampoo</p>
+                                            </div>
+                                        </div>
+                                        <div class="feature-item" style="display: flex; align-items: start; margin-bottom: 15px;">
+                                            <i class="bi bi-calendar2-check" style="color: #ff6600; margin-right: 10px; font-size: 1.2rem; margin-top: 3px;"></i>
+                                            <div>
+                                                <strong style="color: #030f68;">Don't overdo it</strong>
+                                                <p style="margin: 3px 0 0 0; color: #666; font-size: 0.95rem;">Keep braids for 4-8 weeks max to avoid damage</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="mt-4" style="background: rgba(255, 102, 0, 0.1); padding: 15px; border-radius: 10px; border-left: 4px solid #ff6600;">
+                                        <p style="margin: 0; color: #030f68; font-size: 0.95rem;"><i class="bi bi-info-circle-fill me-2"></i><strong>Pro Tip:</strong> Schedule touch-ups every 6-8 weeks to maintain your look and keep your edges healthy.</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-lg-6">
+                                <div class="slide-image" style="text-align: center;">
+                                    <img src="{{ asset('images/large braid.jpg') }}" alt="Hair Care Tips" style="width: 100%; max-width: 500px; height: 400px; object-fit: cover; border-radius: 20px; box-shadow: 0 15px 40px rgba(0,0,0,0.15);">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Slide 4: Real Transformations -->
+                    <div class="carousel-item">
+                        <div class="row align-items-center">
+                            <div class="col-lg-6">
+                                <div class="slide-content" style="padding: 40px;">
+                                    <h3 style="color: #030f68; font-weight: 700; font-size: 2rem; margin-bottom: 20px;">Real Clients, Real Results</h3>
+                                    <p style="color: #666; font-size: 1.1rem; line-height: 1.6; margin-bottom: 25px;">
+                                        See the stunning transformations our clients experience at DBT Beauty Touch. From intricate braiding to elegant updos, we bring your hair vision to life with precision and care.
+                                    </p>
+                                    <div class="slide-features">
+                                        <div style="background: linear-gradient(135deg, #f8f9fa 0%, #e3eafc 100%); border-radius: 12px; padding: 20px; margin-bottom: 15px;">
+                                            <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                                                <div style="color: #ff6600; font-size: 1.8rem; margin-right: 15px;"><i class="bi bi-chat-quote-fill"></i></div>
+                                                <div>
+                                                    <div style="color: #666; font-style: italic; font-size: 0.95rem;">"The best braiding experience in Ottawa! My knotless braids lasted 8 weeks and looked fresh the entire time."</div>
+                                                    <div style="color: #030f68; font-weight: 600; font-size: 0.9rem; margin-top: 8px;">— Sarah M.</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div style="background: linear-gradient(135deg, #f8f9fa 0%, #e3eafc 100%); border-radius: 12px; padding: 20px; margin-bottom: 15px;">
+                                            <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                                                <div style="color: #ff6600; font-size: 1.8rem; margin-right: 15px;"><i class="bi bi-chat-quote-fill"></i></div>
+                                                <div>
+                                                    <div style="color: #666; font-style: italic; font-size: 0.95rem;">"Professional, clean, and talented! My daughter's hair has never looked better."</div>
+                                                    <div style="color: #030f68; font-weight: 600; font-size: 0.9rem; margin-top: 8px;">— Jennifer T.</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="mt-3">
+                                        <div style="display: flex; gap: 10px; align-items: center; color: #ff6600; font-size: 1.3rem;">
+                                            <i class="bi bi-star-fill"></i>
+                                            <i class="bi bi-star-fill"></i>
+                                            <i class="bi bi-star-fill"></i>
+                                            <i class="bi bi-star-fill"></i>
+                                            <i class="bi bi-star-fill"></i>
+                                            <span style="color: #030f68; font-weight: 700; font-size: 1.1rem; margin-left: 10px;">4.9/5 Average Rating</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-lg-6">
+                                <div class="slide-image" style="text-align: center;">
+                                    <img src="{{ asset('images/jumbo braid.jpg') }}" alt="Client Transformations" style="width: 100%; max-width: 500px; height: 400px; object-fit: cover; border-radius: 20px; box-shadow: 0 15px 40px rgba(0,0,0,0.15);">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Slide 5: Mobile Service -->
+                    <div class="carousel-item">
+                        <div class="row align-items-center">
+                            <div class="col-lg-6">
+                                <div class="slide-content" style="padding: 40px;">
+                                    <h3 style="color: #030f68; font-weight: 700; font-size: 2rem; margin-bottom: 20px;">We Come to You!</h3>
+                                    <p style="color: #666; font-size: 1.1rem; line-height: 1.6; margin-bottom: 25px;">
+                                        Can't make it to our studio? No problem! We offer mobile braiding services throughout Ottawa. Enjoy professional hair styling in the comfort of your own home.
                                     </p>
                                     <div class="slide-features">
                                         <div class="feature-item" style="display: flex; align-items: center; margin-bottom: 15px;">
-                                            <i class="bi bi-check-circle-fill" style="color: #ff6600; margin-right: 10px;"></i>
-                                            <span style="color: #333; font-weight: 500;">Custom fitting</span>
+                                            <i class="bi bi-house-heart-fill" style="color: #ff6600; margin-right: 10px; font-size: 1.3rem;"></i>
+                                            <span style="color: #333; font-weight: 500;">Convenient at-home service</span>
                                         </div>
                                         <div class="feature-item" style="display: flex; align-items: center; margin-bottom: 15px;">
-                                            <i class="bi bi-check-circle-fill" style="color: #ff6600; margin-right: 10px;"></i>
-                                            <span style="color: #333; font-weight: 500;">Natural hairline</span>
+                                            <i class="bi bi-clock-fill" style="color: #ff6600; margin-right: 10px; font-size: 1.3rem;"></i>
+                                            <span style="color: #333; font-weight: 500;">Flexible scheduling options</span>
                                         </div>
                                         <div class="feature-item" style="display: flex; align-items: center; margin-bottom: 15px;">
-                                            <i class="bi bi-check-circle-fill" style="color: #ff6600; margin-right: 10px;"></i>
-                                            <span style="color: #333; font-weight: 500;">Personalized styling</span>
+                                            <i class="bi bi-geo-alt-fill" style="color: #ff6600; margin-right: 10px; font-size: 1.3rem;"></i>
+                                            <span style="color: #333; font-weight: 500;">Serving all of Ottawa</span>
+                                        </div>
+                                        <div class="feature-item" style="display: flex; align-items: center; margin-bottom: 15px;">
+                                            <i class="bi bi-people-fill" style="color: #ff6600; margin-right: 10px; font-size: 1.3rem;"></i>
+                                            <span style="color: #333; font-weight: 500;">Great for groups & parties</span>
                                         </div>
                                     </div>
-                                    <div class="pricing-info mb-3" style="background: rgba(255, 102, 0, 0.1); padding: 15px; border-radius: 10px; border-left: 4px solid #ff6600;">
-                                        <p class="price" style="margin: 0; color: #030f68; font-weight: 700; font-size: 1.2rem;">Starting at ${{ number_format(config('service_prices.wig_installation', 150),0) }}</p>
+                                    <div class="mt-4" style="background: linear-gradient(135deg, rgba(255,102,0,0.1) 0%, rgba(3,15,104,0.05) 100%); padding: 18px; border-radius: 12px; border-left: 4px solid #ff6600;">
+                                        <p style="margin: 0; color: #030f68; font-weight: 600; font-size: 1rem;">Select "Mobile Service" when booking to have us come to your location!</p>
                                     </div>
-                                    <button class="btn btn-warning mt-3" onclick="openBookingModal('Wig Installation', 'wig-installation')" style="font-weight: 600; padding: 12px 30px;">
-                                        <i class="bi bi-calendar-check me-2"></i>Book Now
+                                    <button class="btn btn-warning mt-3" onclick="window.scrollTo({top: 0, behavior: 'smooth'});" style="font-weight: 600; padding: 12px 30px;">
+                                        <i class="bi bi-calendar-check me-2"></i>Book Mobile Service
                                     </button>
                                 </div>
                             </div>
                             <div class="col-lg-6">
                                 <div class="slide-image" style="text-align: center;">
-                                    <img src="{{ asset('images/wig installation.jpg') }}" alt="Wig Installation" style="width: 100%; max-width: 500px; height: 400px; object-fit: cover; border-radius: 20px; box-shadow: 0 15px 40px #00000026;">
+                                    <img src="{{ asset('images/boho braid.jpg') }}" alt="Mobile Braiding Service" style="width: 100%; max-width: 500px; height: 400px; object-fit: cover; border-radius: 20px; box-shadow: 0 15px 40px rgba(0,0,0,0.15);">
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Slide 4: Medium Knotless Braids -->
+                    <!-- Slide 6: Ready to Book CTA -->
                     <div class="carousel-item">
                         <div class="row align-items-center">
                             <div class="col-lg-6">
                                 <div class="slide-content" style="padding: 40px;">
-                                    <h3 style="color: #030f68; font-weight: 700; font-size: 2rem; margin-bottom: 20px;">Medium Knotless Braids</h3>
+                                    <h3 style="color: #030f68; font-weight: 700; font-size: 2rem; margin-bottom: 20px;">Ready for Your Transformation?</h3>
                                     <p style="color: #666; font-size: 1.1rem; line-height: 1.6; margin-bottom: 25px;">
-                                        Classic medium-sized knotless braids for a timeless, elegant look. These versatile braids offer the perfect balance between style and manageability, making them ideal for everyday wear. Our skilled Ottawa braiding artists create these medium braids with precision, ensuring even distribution and a polished finish. Perfect for those seeking a sophisticated style that's both trendy and practical.
+                                        Book your appointment now and experience the DBT Beauty Touch difference. We're here to make you look and feel amazing!
                                     </p>
                                     <div class="slide-features">
-                                        <div class="feature-item" style="display: flex; align-items: center; margin-bottom: 15px;">
-                                            <i class="bi bi-check-circle-fill" style="color: #ff6600; margin-right: 10px;"></i>
-                                            <span style="color: #333; font-weight: 500;">Bold statement</span>
-                                        </div>
-                                        <div class="feature-item" style="display: flex; align-items: center; margin-bottom: 15px;">
-                                            <i class="bi bi-check-circle-fill" style="color: #ff6600; margin-right: 10px;"></i>
-                                            <span style="color: #333; font-weight: 500;">Eye-catching look</span>
-                                        </div>
-                                        <div class="feature-item" style="display: flex; align-items: center; margin-bottom: 15px;">
-                                            <i class="bi bi-check-circle-fill" style="color: #ff6600; margin-right: 10px;"></i>
-                                            <span style="color: #333; font-weight: 500;">Fashion statement</span>
+                                        <div style="background: linear-gradient(135deg, #030f68 0%, #ff6600 100%); border-radius: 15px; padding: 25px; color: white; margin-bottom: 20px;">
+                                            <h4 style="color: white; font-weight: 700; margin-bottom: 15px; font-size: 1.4rem;">What You Get:</h4>
+                                            <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                                                <i class="bi bi-check-circle-fill me-2"></i>
+                                                <span>Expert consultation & styling advice</span>
+                                            </div>
+                                            <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                                                <i class="bi bi-check-circle-fill me-2"></i>
+                                                <span>Premium quality hair extensions</span>
+                                            </div>
+                                            <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                                                <i class="bi bi-check-circle-fill me-2"></i>
+                                                <span>Comfortable, relaxing atmosphere</span>
+                                            </div>
+                                            <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                                                <i class="bi bi-check-circle-fill me-2"></i>
+                                                <span>Aftercare tips & product recommendations</span>
+                                            </div>
+                                            <div style="display: flex; align-items: center;">
+                                                <i class="bi bi-check-circle-fill me-2"></i>
+                                                <span>100% satisfaction guarantee</span>
+                                            </div>
                                         </div>
                                     </div>
-                                    <div class="pricing-info mb-3" style="background: rgba(255, 102, 0, 0.1); padding: 15px; border-radius: 10px; border-left: 4px solid #ff6600;">
-                                        <p class="price" style="margin: 0; color: #030f68; font-weight: 700; font-size: 1.2rem;">Starting at ${{ number_format(config('service_prices.medium_knotless', 130),0) }}</p>
+                                    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                                        <button class="btn btn-warning" onclick="window.scrollTo({top: 0, behavior: 'smooth'});" style="font-weight: 600; padding: 12px 30px;">
+                                            <i class="bi bi-calendar-check me-2"></i>Book Now
+                                        </button>
+                                        <button class="btn btn-outline-primary" onclick="document.getElementById('services').scrollIntoView({behavior: 'smooth'});" style="font-weight: 600; padding: 12px 30px; border: 2px solid #030f68; color: #030f68;">
+                                            <i class="bi bi-grid me-2"></i>View Services
+                                        </button>
                                     </div>
-                                    <button class="btn btn-warning mt-3" onclick="openBookingModal('Medium Knotless Braids', 'medium-knotless')" style="font-weight: 600; padding: 12px 30px;">
-                                        <i class="bi bi-calendar-check me-2"></i>Book Now
-                                    </button>
                                 </div>
                             </div>
                             <div class="col-lg-6">
-                                <div class="slide-image" style="text-align: center;">
-                                    <img src="{{ asset('images/large braid.jpg') }}" alt="Medium Knotless Braids" style="width: 100%; max-width: 500px; height: 400px; object-fit: cover; border-radius: 20px; box-shadow: 0 15px 40px rgba(0,0,0,0.15);">
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Slide 5: Jumbo Knotless Braids -->
-                    <div class="carousel-item">
-                        <div class="row align-items-center">
-                            <div class="col-lg-6">
-                                <div class="slide-content" style="padding: 40px;">
-                                    <h3 style="color: #030f68; font-weight: 700; font-size: 2rem; margin-bottom: 20px;">Jumbo Knotless Braids</h3>
-                                    <p style="color: #666; font-size: 1.1rem; line-height: 1.6; margin-bottom: 25px;">
-                                        Extra large, voluminous braids for maximum impact and style. Creates a bold, confident look that's perfect for special occasions and fashion-forward individuals.
-                                    </p>
-                                    <div class="slide-features">
-                                        <div class="feature-item" style="display: flex; align-items: center; margin-bottom: 15px;">
-                                            <i class="bi bi-check-circle-fill" style="color: #ff6600; margin-right: 10px;"></i>
-                                            <span style="color: #333; font-weight: 500;">Extra large volume</span>
-                                        </div>
-                                        <div class="feature-item" style="display: flex; align-items: center; margin-bottom: 15px;">
-                                            <i class="bi bi-check-circle-fill" style="color: #ff6600; margin-right: 10px;"></i>
-                                            <span style="color: #333; font-weight: 500;">Maximum impact</span>
-                                        </div>
-                                        <div class="feature-item" style="display: flex; align-items: center; margin-bottom: 15px;">
-                                            <i class="bi bi-check-circle-fill" style="color: #ff6600; margin-right: 10px;"></i>
-                                            <span style="color: #333; font-weight: 500;">Special occasions</span>
-                                        </div>
-                                    </div>
-                                    <div class="pricing-info mb-3" style="background: rgba(255, 102, 0, 0.1); padding: 15px; border-radius: 10px; border-left: 4px solid #ff6600;">
-                                        <p class="price" style="margin: 0; color: #030f68; font-weight: 700; font-size: 1.2rem;">Starting at ${{ number_format(config('service_prices.jumbo_knotless', 100),0) }}</p>
-                                    </div>
-                                    <button class="btn btn-warning mt-3" onclick="openBookingModal('Jumbo Knotless Braids', 'jumbo-knotless')" style="font-weight: 600; padding: 12px 30px;">
-                                        <i class="bi bi-calendar-check me-2"></i>Book Now
-                                    </button>
-                                </div>
-                            </div>
-                            <div class="col-lg-6">
-                                <div class="slide-image" style="text-align: center;">
-                                    <img src="{{ asset('images/jumbo braid.jpg') }}" alt="Jumbo Knotless Braids" style="width: 100%; max-width: 500px; height: 400px; object-fit: cover; border-radius: 20px; box-shadow: 0 15px 40px rgba(0,0,0,0.15);">
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Slide 6: Kids Braids -->
-                    <div class="carousel-item">
-                        <div class="row align-items-center">
-                            <div class="col-lg-6">
-                                <div class="slide-content" style="padding: 40px;">
-                                    <h3 style="color: #030f68; font-weight: 700; font-size: 2rem; margin-bottom: 20px;">Kids Braids</h3>
-                                    <p style="color: #666; font-size: 1.1rem; line-height: 1.6; margin-bottom: 25px;">
-                                        Specialized braiding services for children with gentle, age-appropriate techniques. Creates adorable, manageable styles that are comfortable and long-lasting for active kids.
-                                    </p>
-                                    <div class="slide-features">
-                                        <div class="feature-item" style="display: flex; align-items: center; margin-bottom: 15px;">
-                                            <i class="bi bi-check-circle-fill" style="color: #ff6600; margin-right: 10px;"></i>
-                                            <span style="color: #333; font-weight: 500;">Gentle techniques</span>
-                                        </div>
-                                        <div class="feature-item" style="display: flex; align-items: center; margin-bottom: 15px;">
-                                            <i class="bi bi-check-circle-fill" style="color: #ff6600; margin-right: 10px;"></i>
-                                            <span style="color: #333; font-weight: 500;">Adorable styles</span>
-                                        </div>
-                                        <div class="feature-item" style="display: flex; align-items: center; margin-bottom: 15px;">
-                                            <i class="bi bi-check-circle-fill" style="color: #ff6600; margin-right: 10px;"></i>
-                                            <span style="color: #333; font-weight: 500;">Kid-friendly comfort</span>
-                                        </div>
-                                    </div>
-                                    <div class="pricing-info mb-3" style="background: rgba(255, 102, 0, 0.1); padding: 15px; border-radius: 10px; border-left: 4px solid #ff6600;">
-                                        <p class="price" style="margin: 0; color: #030f68; font-weight: 700; font-size: 1.2rem;">Starting at ${{ number_format(config('service_prices.kids_braids', 80),0) }}</p>
-                                    </div>
-                                    <button class="btn btn-warning mt-3" onclick="window.location='{{ route('kids.selector') }}'" style="font-weight: 600; padding: 12px 30px;">
-                                        <i class="bi bi-calendar-check me-2"></i>Book Now
-                                    </button>
-                                </div>
-                            </div>
-                            <div class="col-lg-6">
-                                <div class="slide-image" style="text-align: center;">
-                                    <img src="{{ asset('images/kids hair style.webp') }}" alt="Kids Braids" style="width: 100%; max-width: 500px; height: 400px; object-fit: cover; border-radius: 20px; box-shadow: 0 15px 40px rgba(0,0,0,0.15);">
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Slide 7: Stitch Braids -->
-                    <div class="carousel-item">
-                        <div class="row align-items-center">
-                            <div class="col-lg-6">
-                                <div class="slide-content" style="padding: 40px;">
-                                    <h3 style="color: #030f68; font-weight: 700; font-size: 2rem; margin-bottom: 20px;">8–10 Rows Stitch Braids</h3>
-                                    <p style="color: #666; font-size: 1.1rem; line-height: 1.6; margin-bottom: 25px;">
-                                        Unique stitch pattern braids that create a distinctive, textured look. Features a special weaving technique that adds dimension and style to your braided hairstyle.
-                                    </p>
-                                    <div class="slide-features">
-                                        <div class="feature-item" style="display: flex; align-items: center; margin-bottom: 15px;">
-                                            <i class="bi bi-check-circle-fill" style="color: #ff6600; margin-right: 10px;"></i>
-                                            <span style="color: #333; font-weight: 500;">Unique stitch pattern</span>
-                                        </div>
-                                        <div class="feature-item" style="display: flex; align-items: center; margin-bottom: 15px;">
-                                            <i class="bi bi-check-circle-fill" style="color: #ff6600; margin-right: 10px;"></i>
-                                            <span style="color: #333; font-weight: 500;">Distinctive texture</span>
-                                        </div>
-                                        <div class="feature-item" style="display: flex; align-items: center; margin-bottom: 15px;">
-                                            <i class="bi bi-check-circle-fill" style="color: #ff6600; margin-right: 10px;"></i>
-                                            <span style="color: #333; font-weight: 500;">Special weaving</span>
-                                        </div>
-                                    </div>
-                                    <div class="pricing-info mb-3" style="background: rgba(255, 102, 0, 0.1); padding: 15px; border-radius: 10px; border-left: 4px solid #ff6600;">
-                                        <p class="price" style="margin: 0; color: #030f68; font-weight: 700; font-size: 1.2rem;">Starting at ${{ number_format(config('service_prices.stitch_braids', 120),0) }}</p>
-                                    </div>
-                                    <button class="btn btn-warning mt-3" onclick="openBookingModal('8–10 Rows Stitch Braids', 'stitch-braids')" style="font-weight: 600; padding: 12px 30px;">
-                                        <i class="bi bi-calendar-check me-2"></i>Book Now
-                                    </button>
-                                </div>
-                            </div>
-                            <div class="col-lg-6">
-                                <div class="slide-image" style="text-align: center;">
-                                    <img src="{{ asset('images/stitch braid.jpg') }}" alt="Stitch Braids" style="width: 100%; max-width: 500px; height: 400px; object-fit: cover; border-radius: 20px; box-shadow: 0 15px 40px rgba(0,0,0,0.15);">
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Slide 8: Hair Mask/Relaxing -->
-                    <div class="carousel-item">
-                        <div class="row align-items-center">
-                            <div class="col-lg-6">
-                                <div class="slide-content" style="padding: 40px;">
-                                    <h3 style="color: #030f68; font-weight: 700; font-size: 2rem; margin-bottom: 20px;">Hair Mask/Relaxing</h3>
-                                    <p style="color: #666; font-size: 1.1rem; line-height: 1.6; margin-bottom: 25px;">
-                                        Professional hair mask treatment and relaxing services to restore moisture, shine, and manageability. Perfect for maintaining healthy, beautiful hair.
-                                    </p>
-                                    <div class="slide-features">
-                                        <div class="feature-item" style="display: flex; align-items: center; margin-bottom: 15px;">
-                                            <i class="bi bi-check-circle-fill" style="color: #ff6600; margin-right: 10px;"></i>
-                                            <span style="color: #333; font-weight: 500;">Restore moisture</span>
-                                        </div>
-                                        <div class="feature-item" style="display: flex; align-items: center; margin-bottom: 15px;">
-                                            <i class="bi bi-check-circle-fill" style="color: #ff6600; margin-right: 10px;"></i>
-                                            <span style="color: #333; font-weight: 500;">Add shine</span>
-                                        </div>
-                                        <div class="feature-item" style="display: flex; align-items: center; margin-bottom: 15px;">
-                                            <i class="bi bi-check-circle-fill" style="color: #ff6600; margin-right: 10px;"></i>
-                                            <span style="color: #333; font-weight: 500;">Professional treatment</span>
-                                        </div>
-                                    </div>
-                                    <div class="pricing-info mb-3" style="background: rgba(255, 102, 0, 0.1); padding: 15px; border-radius: 10px; border-left: 4px solid #ff6600;">
-                                        <p class="price" style="margin: 0; color: #030f68; font-weight: 700; font-size: 1.2rem;">Starting at ${{ number_format(config('service_prices.hair_mask', 50),0) }}</p>
-                                    </div>
-                                    <button class="btn btn-warning mt-3" onclick="openBookingModal('Hair Mask/Relaxing', 'hair-mask')" style="font-weight: 600; padding: 12px 30px;">
-                                        <i class="bi bi-calendar-check me-2"></i>Book Now
-                                    </button>
-                                </div>
-                            </div>
-                            <div class="col-lg-6">
-                                <div class="slide-image" style="text-align: center;">
-                                    <img src="{{ asset('images/hair_mask.png') }}" alt="Hair Mask/Relaxing" style="width: 100%; max-width: 500px; height: 400px; object-fit: cover; border-radius: 20px; box-shadow: 0 15px 40px rgba(0,0,0,0.15);">
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Slide 9: Smedium Boho Braids -->
-                    <div class="carousel-item">
-                        <div class="row align-items-center">
-                            <div class="col-lg-6">
-                                <div class="slide-content" style="padding: 40px;">
-                                    <h3 style="color: #030f68; font-weight: 700; font-size: 2rem; margin-bottom: 20px;">Smedium Boho Braids</h3>
-                                    <p style="color: #666; font-size: 1.1rem; line-height: 1.6; margin-bottom: 25px;">
-                                        Bohemian-inspired braids with a free-spirited, artistic touch. Features curly strands for a trendy, fashion-forward look.
-                                    </p>
-                                    <div class="slide-features">
-                                        <div class="feature-item" style="display: flex; align-items: center; margin-bottom: 15px;">
-                                            <i class="bi bi-check-circle-fill" style="color: #ff6600; margin-right: 10px;"></i>
-                                            <span style="color: #333; font-weight: 500;">Bohemian-inspired</span>
-                                        </div>
-                                        <div class="feature-item" style="display: flex; align-items: center; margin-bottom: 15px;">
-                                            <i class="bi bi-check-circle-fill" style="color: #ff6600; margin-right: 10px;"></i>
-                                            <span style="color: #333; font-weight: 500;">Voluminous</span>
-                                        </div>
-                                        <div class="feature-item" style="display: flex; align-items: center; margin-bottom: 15px;">
-                                            <i class="bi bi-check-circle-fill" style="color: #ff6600; margin-right: 10px;"></i>
-                                            <span style="color: #333; font-weight: 500;">Fashionable</span>
-                                        </div>
-                                    </div>
-                                    <div class="pricing-info mb-3" style="background: rgba(255, 102, 0, 0.1); padding: 15px; border-radius: 10px; border-left: 4px solid #ff6600;">
-                                        <p class="price" style="margin: 0; color: #030f68; font-weight: 700; font-size: 1.2rem;">Starting at ${{ number_format(config('service_prices.boho_braids', 150),0) }}</p>
-                                    </div>
-                                    <button class="btn btn-warning mt-3" onclick="openBookingModal('Smedium Boho Braids', 'boho-braids')" style="font-weight: 600; padding: 12px 30px;">
-                                        <i class="bi bi-calendar-check me-2"></i>Book Now
-                                    </button>
-                                </div>
-                            </div>
-                            <div class="col-lg-6">
-                                <div class="slide-image" style="text-align: center;">
-                                    <img src="{{ asset('images/boho braid.jpg') }}" alt="Smedium Boho Braids" style="width: 100%; max-width: 500px; height: 400px; object-fit: cover; border-radius: 20px; box-shadow: 0 15px 40px rgba(0,0,0,0.15);">
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Slide 10: Custom Service -->
-                    <div class="carousel-item">
-                        <div class="row align-items-center">
-                            <div class="col-lg-6">
-                                <div class="slide-content" style="padding: 40px;">
-                                    <h3 style="color: #030f68; font-weight: 700; font-size: 2rem; margin-bottom: 20px;">Custom Styles Available</h3>
-                                    <p style="color: #666; font-size: 1.1rem; line-height: 1.6; margin-bottom: 25px;">
-                                        Don't see what you're looking for? We offer many more services beyond what's listed. Book a consultation and let us know what you need!
-                                    </p>
-                                    <div class="slide-features">
-                                        <div class="feature-item" style="display: flex; align-items: center; margin-bottom: 15px;">
-                                            <i class="bi bi-check-circle-fill" style="color: #ff6600; margin-right: 10px;"></i>
-                                            <span style="color: #333; font-weight: 500;">Custom consultations</span>
-                                        </div>
-                                        <div class="feature-item" style="display: flex; align-items: center; margin-bottom: 15px;">
-                                            <i class="bi bi-check-circle-fill" style="color: #ff6600; margin-right: 10px;"></i>
-                                            <span style="color: #333; font-weight: 500;">Personalized service</span>
-                                        </div>
-                                        <div class="feature-item" style="display: flex; align-items: center; margin-bottom: 15px;">
-                                            <i class="bi bi-check-circle-fill" style="color: #ff6600; margin-right: 10px;"></i>
-                                            <span style="color: #333; font-weight: 500;">Expert guidance</span>
-                                        </div>
-                                    </div>
-                                    <div class="pricing-info mb-3" style="background: rgba(3, 15, 104, 0.1); padding: 15px; border-radius: 10px; border-left: 4px solid #030f68;">
-                                        <p class="price" style="margin: 0; color: #030f68; font-weight: 700; font-size: 1.2rem;">Pricing varies by service</p>
-                                    </div>
-                                    <button class="btn btn-warning mt-3" onclick="openOtherServicesModal()" style="font-weight: 600; padding: 12px 30px;">
-                                        <i class="bi bi-plus-circle me-2"></i>Book Consultation
-                                    </button>
-                                </div>
-                            </div>
-                            <div class="col-lg-6">
-                                <div class="slide-image" style="text-align: center; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #f8f9fa 0%, #e3eafc 100%); border-radius: 20px; height: 400px;">
-                                    <div class="text-center" style="color: #030f68;">
-                                        <i class="bi bi-scissors" style="font-size: 4rem; margin-bottom: 20px; color: #ff6600;"></i>
-                                        <h4 style="font-weight: 700; margin-bottom: 10px;">Tell Us Your Vision</h4>
-                                        <p style="font-size: 1.1rem; color: #666;">We'll make it happen!</p>
+                                <div class="slide-image" style="text-align: center; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #030f68 0%, #ff6600 100%); border-radius: 20px; height: 400px; position: relative; overflow: hidden;">
+                                    <div style="position: absolute; inset: 0; background: url('{{ asset('images/stitch braid.jpg') }}') center/cover; opacity: 0.2;"></div>
+                                    <div class="text-center" style="position: relative; z-index: 1; color: white; padding: 40px;">
+                                        <i class="bi bi-stars" style="font-size: 4rem; margin-bottom: 20px;"></i>
+                                        <h4 style="font-weight: 700; margin-bottom: 15px; font-size: 1.8rem;">Your Hair Deserves the Best</h4>
+                                        <p style="font-size: 1.2rem; margin-bottom: 0;">Professional. Caring. Exceptional.</p>
                                     </div>
                                 </div>
                             </div>
