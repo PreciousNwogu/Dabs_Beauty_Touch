@@ -1926,6 +1926,13 @@
         window.clearBookingForm = function() {
             var form = document.getElementById('bookingForm');
             if (form) {
+                // Check if terms were already accepted before resetting
+                const KEY = 'dbt_terms_accepted_v1';
+                const hasAccepted = () => {
+                    try { return window.localStorage && localStorage.getItem(KEY) === '1'; } catch(e) { return false; }
+                };
+                const termsWereAccepted = hasAccepted();
+                
                 form.reset();
                 // Clear all inputs except CSRF token
                 var inputs = form.querySelectorAll('input, textarea, select');
@@ -1939,6 +1946,14 @@
                         }
                     }
                 });
+                
+                // Restore terms checkbox if terms were already accepted
+                if (termsWereAccepted) {
+                    const termsCheckbox = document.getElementById('termsAcceptedMain');
+                    if (termsCheckbox) {
+                        termsCheckbox.checked = true;
+                    }
+                }
                 
                 // Reset appointment type to in-studio and hide address field
                 var inStudioRadio = document.getElementById('appointment_type_in_studio');
@@ -2006,13 +2021,14 @@
                     { name: 'Small Twists', slug: 'small-twist', price: 150, time: '5–6 hrs' },
                     { name: 'Medium Twists', slug: 'medium-twist', price: 120, time: '4–5 hrs' },
                     { name: 'Jumbo/Large Twists', slug: 'jumbo-twist', price: 100, time: '3–4 hrs' },
-                    { name: 'Natural Hair Twist', slug: 'natural-hair-twist', price: 60, time: '2–3 hrs', noLength: true }
+                    { name: 'Small Natural Hair Twist', slug: 'small-natural-hair-twist', price: 80, time: '2–3 hrs', noLength: true },
+                    { name: 'Medium Natural Hair Twist', slug: 'medium-natural-hair-twist', price: 60, time: '2–3 hrs', noLength: true }
                 ]
             },
             'cornrow': {
                 category: 'Cornrow/Feed-in Braids',
                 sizes: [
-                    { name: 'Stitch Weave', slug: 'stitch-weave', price: 120, time: '4–5 hrs', hasRowOptions: false },
+                    { name: 'Stitch Weave', slug: 'stitch-weave', price: 100, time: '4–5 hrs', hasRowOptions: true },
                     { name: 'Cornrow Weave', slug: 'cornrow-weave', price: 100, time: '4–5 hrs', hasRowOptions: true },
                     { name: 'Under-wig Weave', slug: 'under-wig-weave', price: 30, time: '30 min–1 hr', hasRowOptions: false, noLength: true },
                     { name: 'Weave&Braid Mixed', slug: 'weave-braid-mixed', price: 150, time: '4–5 hrs', hasRowOptions: false }
@@ -2146,7 +2162,10 @@
             }
             // Twist Styles
             if (name.includes('Twist')) {
-                if (name.includes('Natural Hair')) return '{{ asset("images/natural-hair-twist.jpg") }}';
+                if (name.includes('Natural Hair')) {
+                    if (name.includes('Small')) return '{{ asset("images/natural-hair-twist.jpg") }}';
+                    if (name.includes('Medium')) return '{{ asset("images/medium-natural-twist.png") }}';
+                }
                 if (name.includes('Small')) return '{{ asset("images/small-twist.jpg") }}';
                 if (name.includes('Medium')) return '{{ asset("images/medium-twist.jpg") }}';
                 if (name.includes('Jumbo') || name.includes('Large')) return '{{ asset("images/jumbo-twist.jpg") }}';
@@ -2482,12 +2501,6 @@
                 return;
             }
             
-            // Close size modal
-            const sizeModal = bootstrap.Modal.getInstance(document.getElementById('serviceSizeLengthModal'));
-            if (sizeModal) {
-                sizeModal.hide();
-            }
-            
             // Update service name with add-ons
             let serviceName = window.serviceSizeData.serviceName;
             if (window.serviceSizeData.weaveAddon) {
@@ -2500,23 +2513,41 @@
                 serviceName += ' (Front + Back)';
             }
             
-            // Open booking modal with the selected service
-            setTimeout(() => {
-                window.openBookingModal(
-                    serviceName,
-                    window.serviceSizeData.serviceType
-                );
+            // Get the size modal element and instance
+            const sizeModalEl = document.getElementById('serviceSizeLengthModal');
+            const sizeModal = bootstrap.Modal.getInstance(sizeModalEl);
+            
+            // Listen for the modal to fully hide before opening booking modal
+            const openBooking = () => {
+                sizeModalEl.removeEventListener('hidden.bs.modal', openBooking);
                 
-                // Pre-select the length in booking form (skip for crotchet and hair treatment)
-                if (window.serviceSizeData.serviceCategory !== 'crotchet' && window.serviceSizeData.serviceCategory !== 'hair-treatment') {
-                    const lengthRadio = document.getElementById(`length_${window.serviceSizeData.selectedLength.replace('-', '')}`);
-                    if (lengthRadio) {
-                        lengthRadio.checked = true;
-                        // Trigger change event to update price
-                        lengthRadio.dispatchEvent(new Event('change', { bubbles: true }));
+                // Open booking modal with the selected service
+                setTimeout(() => {
+                    window.openBookingModal(
+                        serviceName,
+                        window.serviceSizeData.serviceType
+                    );
+                    
+                    // Pre-select the length in booking form (skip for crotchet and hair treatment)
+                    if (window.serviceSizeData.serviceCategory !== 'crotchet' && window.serviceSizeData.serviceCategory !== 'hair-treatment') {
+                        const lengthRadio = document.getElementById(`length_${window.serviceSizeData.selectedLength.replace('-', '')}`);
+                        if (lengthRadio) {
+                            lengthRadio.checked = true;
+                            // Trigger change event to update price
+                            lengthRadio.dispatchEvent(new Event('change', { bubbles: true }));
+                        }
                     }
-                }
-            }, 300);
+                }, 100);
+            };
+            
+            // Add event listener and hide modal
+            if (sizeModal) {
+                sizeModalEl.addEventListener('hidden.bs.modal', openBooking);
+                sizeModal.hide();
+            } else {
+                // Fallback if modal instance not found
+                openBooking();
+            }
         };
 
         // Main booking modal function
@@ -4184,8 +4215,8 @@
                         <img src="{{ asset('images/twist-main.jpg') }}" alt="Twist Styles">
                         <h4>Twist Styles</h4>
                         <p class="mb-2">Protective two-strand twists in various sizes—low-tension, versatile styling.</p>
-                        <p class="mb-1"><strong>Time:</strong> 2–6 hrs • <strong>Sizes:</strong> Small, Medium, Jumbo/Large, Natural Hair</p>
-                        <p class="mb-3"><strong>Hair:</strong> Not included • <strong>Note:</strong> Natural Hair Twist: $60 (no length)</p>
+                        <p class="mb-1"><strong>Time:</strong> 2–6 hrs • <strong>Sizes:</strong> Small, Medium, Jumbo/Large, Natural Hair (S/M)</p>
+                        <p class="mb-3"><strong>Hair:</strong> Not included • <strong>Note:</strong> Natural Hair Twist - Small: $80, Medium: $60 (no length)</p>
                         <p class="price"><strong>From $60</strong> <small class="text-muted">(varies by size & length)</small></p>
                         <button class="btn btn-warning mt-3">Select Size & Book</button>
                     </div>
@@ -4219,7 +4250,7 @@
                         <p class="mb-2">Classic cornrows and feed-in styles with or without weave extensions.</p>
                         <p class="mb-1"><strong>Time:</strong> 1–5 hrs • <strong>Types:</strong> Stitch Weave, Cornrow Weave, Under-wig Weave, Weave&Braid Mixed</p>
                         <p class="mb-2"><strong>Hair:</strong> Not included</p>
-                        <p class="mb-3" style="font-size: 0.9rem;"><strong>Note:</strong> Stitch: $120. Cornrow: 8-10 rows $100, 10+ rows $130. Under-wig: $30 (no length). Mixed: $150</p>
+                        <p class="mb-3" style="font-size: 0.9rem;"><strong>Note:</strong> Stitch/Cornrow: 8-10 rows $100, 10+ rows $130. Under-wig: $30 (no length). Mixed: $150</p>
                         <p class="price"><strong>From $30</strong> <small class="text-muted">(varies by type)</small></p>
                         <button class="btn btn-warning mt-3">Select Type & Book</button>
                     </div>
@@ -4585,8 +4616,8 @@
                             </div>
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label for="email" class="form-label">Email</label>
-                                    <input type="email" class="form-control" id="email" name="email" placeholder="Enter your email address" autocomplete="off">
+                                    <label for="email" class="form-label">Email *</label>
+                                    <input type="email" class="form-control" id="email" name="email" placeholder="Enter your email address" autocomplete="off" required>
                                 </div>
                             </div>
 
@@ -4596,13 +4627,13 @@
                                     <label class="form-label">Appointment Type *</label>
                                     <div class="d-flex gap-3">
                                         <div class="form-check">
-                                            <input class="form-check-input" type="radio" name="appointment_type" id="appointment_type_in_studio" value="in-studio" checked onclick="toggleAddressField()">
+                                            <input class="form-check-input" type="radio" name="appointment_type" id="appointment_type_in_studio" value="in-studio" checked>
                                             <label class="form-check-label" for="appointment_type_in_studio">
                                                 <i class="bi bi-house-door me-1"></i>Stylist address
                                             </label>
                                         </div>
                                         <div class="form-check">
-                                            <input class="form-check-input" type="radio" name="appointment_type" id="appointment_type_mobile" value="mobile" onclick="toggleAddressField()">
+                                            <input class="form-check-input" type="radio" name="appointment_type" id="appointment_type_mobile" value="mobile">
                                             <label class="form-check-label" for="appointment_type_mobile">
                                                 <i class="bi bi-truck me-1"></i>Mobile (I want you to come to me)
                                             </label>
@@ -4792,9 +4823,9 @@
                             <!-- Email - Full Width on Mobile, Half on Desktop -->
                             <div class="col-12 col-md-6">
                                 <label for="csrEmail" class="form-label fw-semibold">
-                                    <i class="bi bi-envelope me-1"></i>Email Address <span class="text-muted">(Optional)</span>
+                                    <i class="bi bi-envelope me-1"></i>Email Address <span class="text-danger">*</span>
                                 </label>
-                                <input type="email" class="form-control form-control-lg" id="csrEmail" name="email" placeholder="Enter your email address" maxlength="255" style="border-radius: 8px; border: 2px solid #e9ecef; transition: border-color 0.3s ease;">
+                                <input type="email" class="form-control form-control-lg" id="csrEmail" name="email" placeholder="Enter your email address" maxlength="255" required style="border-radius: 8px; border: 2px solid #e9ecef; transition: border-color 0.3s ease;">
                                 <small class="form-text text-muted">
                                     <i class="bi bi-info-circle me-1"></i>We'll send confirmation to this email
                                 </small>
@@ -5786,7 +5817,23 @@ console.log('=== LOADING BOOKING FUNCTIONS ===');
     window.clearBookingForm = function() {
         var form = document.getElementById('bookingForm');
         if (form) {
+            // Check if terms were already accepted before resetting
+            const KEY = 'dbt_terms_accepted_v1';
+            const hasAccepted = () => {
+                try { return window.localStorage && localStorage.getItem(KEY) === '1'; } catch(e) { return false; }
+            };
+            const termsWereAccepted = hasAccepted();
+            
             form.reset();
+            
+            // Restore terms checkbox if terms were already accepted
+            if (termsWereAccepted) {
+                const termsCheckbox = document.getElementById('termsAcceptedMain');
+                if (termsCheckbox) {
+                    termsCheckbox.checked = true;
+                }
+            }
+            
             console.log('Form cleared');
         }
     };
@@ -6375,8 +6422,15 @@ console.log('=== LOADING BOOKING FUNCTIONS ===');
                 const modalEl = document.getElementById('kidsBookingModal');
                 modalEl.addEventListener('shown.bs.modal', function(){
                     const nameField = document.getElementById('kids_name'); if(nameField) nameField.focus();
+                    // Ensure address field state is correct
+                    if(typeof toggleAddressFieldKids === 'function') toggleAddressFieldKids();
                 }, { once: true });
             }catch(e){ /* noop */ }
+            
+            // Also call immediately in case modal is already shown
+            if(typeof toggleAddressFieldKids === 'function') {
+                setTimeout(toggleAddressFieldKids, 100);
+            }
         }catch(e){ console.warn('openKidsBookingModal failed', e); }
     }
 
@@ -6889,6 +6943,13 @@ console.log('=== LOADING BOOKING FUNCTIONS ===');
     function clearBookingForm() {
         const form = document.getElementById('bookingForm');
         if (form) {
+            // Check if terms were already accepted before resetting
+            const KEY = 'dbt_terms_accepted_v1';
+            const hasAccepted = () => {
+                try { return window.localStorage && localStorage.getItem(KEY) === '1'; } catch(e) { return false; }
+            };
+            const termsWereAccepted = hasAccepted();
+            
             // Reset the form
             form.reset();
 
@@ -6911,6 +6972,14 @@ console.log('=== LOADING BOOKING FUNCTIONS ===');
                         break;
                 }
             });
+
+            // Restore terms checkbox if terms were already accepted
+            if (termsWereAccepted) {
+                const termsCheckbox = document.getElementById('termsAcceptedMain');
+                if (termsCheckbox) {
+                    termsCheckbox.checked = true;
+                }
+            }
 
             // Also clear the service display field
             const serviceDisplayInput = document.getElementById('serviceDisplay');
@@ -7919,34 +7988,47 @@ document.addEventListener('keydown', function(e) {
 function toggleAddressField() {
     console.log('toggleAddressField called');
     const mobileRadio = document.getElementById('appointment_type_mobile');
+    const inStudioRadio = document.getElementById('appointment_type_in_studio');
     const addressContainer = document.getElementById('addressFieldContainer');
     const addressInput = document.getElementById('address');
     
+    // Determine which is checked
+    const isMobileSelected = mobileRadio && mobileRadio.checked;
+    
     console.log('Elements found:', {
         mobileRadio: !!mobileRadio,
+        inStudioRadio: !!inStudioRadio,
         addressContainer: !!addressContainer,
         addressInput: !!addressInput,
-        mobileChecked: mobileRadio ? mobileRadio.checked : 'N/A'
+        mobileChecked: isMobileSelected
     });
     
-    if (mobileRadio && mobileRadio.checked) {
+    if (isMobileSelected) {
         console.log('Mobile selected - showing address field');
         if (addressContainer) {
             addressContainer.classList.remove('d-none');
-            addressContainer.style.display = 'block';
-            console.log('Address container display set to block');
+            addressContainer.classList.add('d-block');
+            addressContainer.style.setProperty('display', 'block', 'important');
+            addressContainer.style.setProperty('visibility', 'visible', 'important');
+            addressContainer.style.setProperty('opacity', '1', 'important');
+            console.log('Address container shown with !important');
         }
-        if (addressInput) addressInput.required = true;
+        if (addressInput) {
+            addressInput.required = true;
+            addressInput.disabled = false;
+        }
     } else {
         console.log('In-studio selected - hiding address field');
         if (addressContainer) {
+            addressContainer.classList.remove('d-block');
             addressContainer.classList.add('d-none');
-            addressContainer.style.display = 'none';
-            console.log('Address container display set to none');
+            addressContainer.style.setProperty('display', 'none', 'important');
+            console.log('Address container hidden');
         }
         if (addressInput) {
             addressInput.required = false;
-            addressInput.value = ''; // Clear address when switching to in-studio
+            addressInput.value = '';
+            addressInput.disabled = false;
         }
     }
 }
@@ -7955,34 +8037,47 @@ function toggleAddressField() {
 function toggleAddressFieldKids() {
     console.log('toggleAddressFieldKids called');
     const mobileRadio = document.getElementById('appointment_type_mobile_kids');
+    const inStudioRadio = document.getElementById('appointment_type_in_studio_kids');
     const addressContainer = document.getElementById('addressFieldContainerKids');
     const addressInput = document.getElementById('kids_address');
     
+    // Determine which is checked
+    const isMobileSelected = mobileRadio && mobileRadio.checked;
+    
     console.log('Kids elements found:', {
         mobileRadio: !!mobileRadio,
+        inStudioRadio: !!inStudioRadio,
         addressContainer: !!addressContainer,
         addressInput: !!addressInput,
-        mobileChecked: mobileRadio ? mobileRadio.checked : 'N/A'
+        mobileChecked: isMobileSelected
     });
     
-    if (mobileRadio && mobileRadio.checked) {
+    if (isMobileSelected) {
         console.log('Kids Mobile selected - showing address field');
         if (addressContainer) {
             addressContainer.classList.remove('d-none');
-            addressContainer.style.display = 'block';
-            console.log('Kids address container display set to block');
+            addressContainer.classList.add('d-block');
+            addressContainer.style.setProperty('display', 'block', 'important');
+            addressContainer.style.setProperty('visibility', 'visible', 'important');
+            addressContainer.style.setProperty('opacity', '1', 'important');
+            console.log('Kids address container shown with !important');
         }
-        if (addressInput) addressInput.required = true;
+        if (addressInput) {
+            addressInput.required = true;
+            addressInput.disabled = false;
+        }
     } else {
         console.log('Kids In-studio selected - hiding address field');
         if (addressContainer) {
+            addressContainer.classList.remove('d-block');
             addressContainer.classList.add('d-none');
-            addressContainer.style.display = 'none';
-            console.log('Kids address container display set to none');
+            addressContainer.style.setProperty('display', 'none', 'important');
+            console.log('Kids address container hidden');
         }
         if (addressInput) {
             addressInput.required = false;
-            addressInput.value = ''; // Clear address when switching to in-studio
+            addressInput.value = '';
+            addressInput.disabled = false;
         }
     }
 }
@@ -8016,6 +8111,67 @@ document.addEventListener('DOMContentLoaded', function() {
             toggleAddressFieldKids();
         });
     }
+    
+    // Add change event listeners as backup to onclick handlers
+    // Main booking form
+    const mainInStudio = document.getElementById('appointment_type_in_studio');
+    const mainMobile = document.getElementById('appointment_type_mobile');
+    if (mainInStudio) {
+        mainInStudio.addEventListener('change', function() {
+            console.log('Main in-studio change event fired');
+            toggleAddressField();
+        });
+        mainInStudio.addEventListener('click', function() {
+            console.log('Main in-studio click event fired');
+            setTimeout(toggleAddressField, 50);
+        });
+    }
+    if (mainMobile) {
+        mainMobile.addEventListener('change', function() {
+            console.log('Main mobile change event fired');
+            toggleAddressField();
+        });
+        mainMobile.addEventListener('click', function() {
+            console.log('Main mobile click event fired');
+            setTimeout(toggleAddressField, 50);
+        });
+    }
+    
+    // Kids booking form
+    const kidsInStudio = document.getElementById('appointment_type_in_studio_kids');
+    const kidsMobile = document.getElementById('appointment_type_mobile_kids');
+    if (kidsInStudio) {
+        kidsInStudio.addEventListener('change', function() {
+            console.log('Kids in-studio change event fired');
+            toggleAddressFieldKids();
+        });
+        kidsInStudio.addEventListener('click', function() {
+            console.log('Kids in-studio click event fired');
+            setTimeout(toggleAddressFieldKids, 50);
+        });
+    }
+    if (kidsMobile) {
+        kidsMobile.addEventListener('change', function() {
+            console.log('Kids mobile change event fired');
+            toggleAddressFieldKids();
+        });
+        kidsMobile.addEventListener('click', function() {
+            console.log('Kids mobile click event fired');
+            setTimeout(toggleAddressFieldKids, 50);
+        });
+    }
+    
+    // Initial call on page load
+    setTimeout(function() {
+        if (typeof toggleAddressField === 'function') {
+            console.log('Calling toggleAddressField on page load');
+            toggleAddressField();
+        }
+        if (typeof toggleAddressFieldKids === 'function') {
+            console.log('Calling toggleAddressFieldKids on page load');
+            toggleAddressFieldKids();
+        }
+    }, 500);
 });
 </script>
     <!-- Kids Booking Modal (placed at end to ensure it is top-level) -->
@@ -8048,8 +8204,8 @@ document.addEventListener('DOMContentLoaded', function() {
                                     <div id="kids_name_error" class="text-danger small mt-1" style="display:none;"></div>
                                 </div>
                                 <div class="mb-3">
-                                    <label class="form-label">Parent / Guardian Email</label>
-                                    <input id="kids_email" name="email" type="email" class="form-control" placeholder="you@example.com">
+                                    <label class="form-label">Parent / Guardian Email *</label>
+                                    <input id="kids_email" name="email" type="email" class="form-control" placeholder="you@example.com" required>
                                     <div id="kids_email_error" class="text-danger small mt-1" style="display:none;"></div>
                                 </div>
                                 <div class="mb-3">
@@ -8084,13 +8240,13 @@ document.addEventListener('DOMContentLoaded', function() {
                                     <label class="form-label">Appointment Type *</label>
                                     <div class="d-flex gap-3">
                                         <div class="form-check">
-                                            <input class="form-check-input" type="radio" name="appointment_type" id="appointment_type_in_studio_kids" value="in-studio" checked onclick="toggleAddressFieldKids()">
+                                            <input class="form-check-input" type="radio" name="appointment_type" id="appointment_type_in_studio_kids" value="in-studio" checked>
                                             <label class="form-check-label" for="appointment_type_in_studio_kids">
                                                 <i class="bi bi-house-door me-1"></i>Stylist address
                                             </label>
                                         </div>
                                         <div class="form-check">
-                                            <input class="form-check-input" type="radio" name="appointment_type" id="appointment_type_mobile_kids" value="mobile" onclick="toggleAddressFieldKids()">
+                                            <input class="form-check-input" type="radio" name="appointment_type" id="appointment_type_mobile_kids" value="mobile">
                                             <label class="form-check-label" for="appointment_type_mobile_kids">
                                                 <i class="bi bi-truck me-1"></i>Mobile (I want you to come to me)
                                             </label>
@@ -8683,6 +8839,32 @@ document.addEventListener('DOMContentLoaded', function(){
             }
             // If the modal opener reset the form, re-sync Terms buttons (reset doesn't fire change)
             try { window.__dbtSyncTermsButtons && window.__dbtSyncTermsButtons(); } catch(e) {}
+
+            // Restore terms checkbox if user already accepted terms (from calendar or previous interaction)
+            try {
+                const KEY = 'dbt_terms_accepted_v1';
+                const hasAccepted = () => {
+                    try { return window.localStorage && localStorage.getItem(KEY) === '1'; } catch(e) { return false; }
+                };
+                
+                if (hasAccepted()) {
+                    // Pre-check terms checkboxes if terms were already accepted
+                    const termsMain = document.getElementById('termsAcceptedMain');
+                    const termsKids = document.getElementById('termsAcceptedKids');
+                    if (termsMain && !termsMain.checked) {
+                        termsMain.checked = true;
+                        termsMain.dispatchEvent(new Event('change', { bubbles: true }));
+                    }
+                    if (termsKids && !termsKids.checked) {
+                        termsKids.checked = true;
+                        termsKids.dispatchEvent(new Event('change', { bubbles: true }));
+                    }
+                    // Re-sync buttons after checking terms
+                    try { window.__dbtSyncTermsButtons && window.__dbtSyncTermsButtons(); } catch(e) {}
+                }
+            } catch(e) {
+                console.warn('Failed to restore terms acceptance state', e);
+            }
 
             // Now set/restore hidden inputs and update UI (do this after prevOpen which may reset the form)
             try {
@@ -9432,10 +9614,14 @@ document.addEventListener('DOMContentLoaded', function(){
                     clearFieldError('kids_phone');
                 }
 
-                // Validate Email (optional field, but if provided, must be valid format)
+                // Validate Email (required field)
                 const emailField = document.getElementById('kids_email');
                 const emailValue = emailField ? emailField.value.trim() : '';
-                if(emailValue) {
+                if(!emailValue) {
+                    showFieldError('kids_email', 'Please enter parent/guardian email address.');
+                    isValid = false;
+                    errors.push('Email');
+                } else {
                     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
                     if(!emailRegex.test(emailValue)) {
                         showFieldError('kids_email', 'Please enter a valid email address.');
@@ -9444,8 +9630,6 @@ document.addEventListener('DOMContentLoaded', function(){
                     } else {
                         clearFieldError('kids_email');
                     }
-                } else {
-                    clearFieldError('kids_email');
                 }
 
                 // Validate Date
