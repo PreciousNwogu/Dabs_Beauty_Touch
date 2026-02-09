@@ -3459,7 +3459,7 @@
     <section class="image-slider-section" style="padding: 50px 0; background: linear-gradient(135deg, #f8f9fa 0%, #e3eafc 100%);">
         <div class="container">
             <div class="text-center mb-5">
-                <h2 class="section-title" style="font-size: 2.5rem; font-weight: 700; color: #030f68;">Why DBT Beauty Touch</h2>
+                <h2 class="section-title" style="font-size: 2.5rem; font-weight: 700; color: #030f68;">Why DBT</h2>
                 <p class="lead" style="color: #666; font-size: 1.2rem;">Your Trusted Hair Care Experience in Ottawa</p>
             </div>
 
@@ -3482,9 +3482,9 @@
                         <div class="row align-items-center">
                             <div class="col-lg-6">
                                 <div class="slide-content" style="padding: 40px;">
-                                    <h3 style="color: #030f68; font-weight: 700; font-size: 2rem; margin-bottom: 20px;">Why Clients Choose DBT Beauty Touch</h3>
+                                    <h3 style="color: #030f68; font-weight: 700; font-size: 2rem; margin-bottom: 20px;">Why Clients Choose DBT</h3>
                                     <p style="color: #666; font-size: 1.1rem; line-height: 1.6; margin-bottom: 25px;">
-                                        Experience Ottawa's premier hair braiding and styling destination. We combine years of expertise with genuine care for your hair's health and your personal style vision. Every client receives personalized attention in a welcoming, professional environment.
+                                        Dab's Beauty Touch is where Ottawa clients come for braids and protective styles that look flawless on day one—and still look neat weeks later. With 10+ years of hands-on experience, we focus on clean parts, consistent tension, and a finish that suits your face, lifestyle, and hair goals. You'll get honest guidance, a comfortable appointment, and results you can feel confident wearing.
                                     </p>
                                     <div class="slide-features">
                                         <div class="feature-item" style="display: flex; align-items: center; margin-bottom: 15px;">
@@ -3494,10 +3494,6 @@
                                         <div class="feature-item" style="display: flex; align-items: center; margin-bottom: 15px;">
                                             <i class="bi bi-heart-fill" style="color: #ff6600; margin-right: 10px; font-size: 1.3rem;"></i>
                                             <span style="color: #333; font-weight: 500;">Hair health focused techniques</span>
-                                        </div>
-                                        <div class="feature-item" style="display: flex; align-items: center; margin-bottom: 15px;">
-                                            <i class="bi bi-star-fill" style="color: #ff6600; margin-right: 10px; font-size: 1.3rem;"></i>
-                                            <span style="color: #333; font-weight: 500;">500+ 5-star reviews</span>
                                         </div>
                                         <div class="feature-item" style="display: flex; align-items: center; margin-bottom: 15px;">
                                             <i class="bi bi-shield-check" style="color: #ff6600; margin-right: 10px; font-size: 1.3rem;"></i>
@@ -3511,7 +3507,7 @@
                             </div>
                             <div class="col-lg-6">
                                 <div class="slide-image" style="text-align: center;">
-                                    <img src="{{ asset('images/small braid.jpg') }}" alt="Professional Braiding Service" style="width: 100%; max-width: 500px; height: 400px; object-fit: cover; border-radius: 20px; box-shadow: 0 15px 40px rgba(0,0,0,0.15);">
+                                    <img src="{{ asset('images/why-choose-us.png') }}" alt="Why Choose Us? - Stand out from the crowd" style="width: 100%; max-width: 500px; height: 400px; object-fit: contain; border-radius: 20px;">
                                 </div>
                             </div>
                         </div>
@@ -3524,35 +3520,35 @@
                                 <div class="slide-content" style="padding: 40px;">
                                     <h3 style="color: #030f68; font-weight: 700; font-size: 2rem; margin-bottom: 20px;">Your Appointment Experience</h3>
                                     <p style="color: #666; font-size: 1.1rem; line-height: 1.6; margin-bottom: 25px;">
-                                        From booking to your final look, we've designed every step to be comfortable, convenient, and stress-free. Here's what you can expect when you visit DBT Beauty Touch.
+                                        From booking to your finished style, everything at DBT is set up to be simple, comfortable, and stress-free. Here's what your visit looks like:
                                     </p>
                                     <div class="slide-features">
                                         <div class="feature-item" style="display: flex; align-items: start; margin-bottom: 18px;">
                                             <div style="background: #ff6600; color: white; border-radius: 50%; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; font-weight: 700; margin-right: 12px; flex-shrink: 0;">1</div>
                                             <div>
-                                                <strong style="color: #030f68;">Easy Online Booking</strong>
-                                                <p style="margin: 5px 0 0 0; color: #666; font-size: 0.95rem;">Select your service, choose your preferred time, and book instantly</p>
+                                                <strong style="color: #030f68;">Book in Minutes</strong>
+                                                <p style="margin: 5px 0 0 0; color: #666; font-size: 0.95rem;">Choose your style, select a date/time, and receive instant confirmation.</p>
                                             </div>
                                         </div>
                                         <div class="feature-item" style="display: flex; align-items: start; margin-bottom: 18px;">
                                             <div style="background: #ff6600; color: white; border-radius: 50%; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; font-weight: 700; margin-right: 12px; flex-shrink: 0;">2</div>
                                             <div>
-                                                <strong style="color: #030f68;">Personal Consultation</strong>
-                                                <p style="margin: 5px 0 0 0; color: #666; font-size: 0.95rem;">We discuss your vision, hair type, and lifestyle needs</p>
+                                                <strong style="color: #030f68;">Quick Style Check-In</strong>
+                                                <p style="margin: 5px 0 0 0; color: #666; font-size: 0.95rem;">We confirm your inspo, hair condition, and the right size/length so you get the look you want—without unnecessary tension.</p>
                                             </div>
                                         </div>
                                         <div class="feature-item" style="display: flex; align-items: start; margin-bottom: 18px;">
                                             <div style="background: #ff6600; color: white; border-radius: 50%; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; font-weight: 700; margin-right: 12px; flex-shrink: 0;">3</div>
                                             <div>
-                                                <strong style="color: #030f68;">Relaxing Service</strong>
-                                                <p style="margin: 5px 0 0 0; color: #666; font-size: 0.95rem;">Enjoy refreshments while we create your perfect style</p>
+                                                <strong style="color: #030f68;">Relax & Get Styled</strong>
+                                                <p style="margin: 5px 0 0 0; color: #666; font-size: 0.95rem;">Clean parting, consistent technique, and a comfortable, professional appointment from start to finish.</p>
                                             </div>
                                         </div>
                                         <div class="feature-item" style="display: flex; align-items: start; margin-bottom: 18px;">
                                             <div style="background: #ff6600; color: white; border-radius: 50%; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; font-weight: 700; margin-right: 12px; flex-shrink: 0;">4</div>
                                             <div>
-                                                <strong style="color: #030f68;">Aftercare Guidance</strong>
-                                                <p style="margin: 5px 0 0 0; color: #666; font-size: 0.95rem;">Get personalized tips to maintain your style longer</p>
+                                                <strong style="color: #030f68;">Leave With a Plan</strong>
+                                                <p style="margin: 5px 0 0 0; color: #666; font-size: 0.95rem;">You'll get personalized aftercare tips (and product guidance if needed) to keep your braids neat and long-lasting.</p>
                                             </div>
                                         </div>
                                     </div>
@@ -3563,7 +3559,7 @@
                             </div>
                             <div class="col-lg-6">
                                 <div class="slide-image" style="text-align: center;">
-                                    <img src="{{ asset('images/webbraids2.jpg') }}" alt="Professional Service Experience" style="width: 100%; max-width: 500px; height: 400px; object-fit: cover; border-radius: 20px; box-shadow: 0 15px 40px rgba(0,0,0,0.15);">
+                                    <img src="{{ asset('images/easy-booking.png') }}" alt="Easy Online Booking System" style="width: 100%; max-width: 500px; height: 400px; object-fit: cover; border-radius: 20px; box-shadow: 0 15px 40px rgba(0,0,0,0.15);">
                                 </div>
                             </div>
                         </div>
@@ -3576,46 +3572,49 @@
                                 <div class="slide-content" style="padding: 40px;">
                                     <h3 style="color: #030f68; font-weight: 700; font-size: 2rem; margin-bottom: 20px;">Keep Your Braids Looking Fresh</h3>
                                     <p style="color: #666; font-size: 1.1rem; line-height: 1.6; margin-bottom: 25px;">
-                                        Proper care extends the life of your protective style and keeps your natural hair healthy underneath. Follow these expert tips from our stylists.
+                                        The right routine helps your style stay neat longer—and keeps your natural hair and edges healthy underneath. Here are our go-to tips:
                                     </p>
                                     <div class="slide-features">
                                         <div class="feature-item" style="display: flex; align-items: start; margin-bottom: 15px;">
                                             <i class="bi bi-droplet-fill" style="color: #ff6600; margin-right: 10px; font-size: 1.2rem; margin-top: 3px;"></i>
                                             <div>
-                                                <strong style="color: #030f68;">Moisturize regularly</strong>
-                                                <p style="margin: 3px 0 0 0; color: #666; font-size: 0.95rem;">Apply light oil to your scalp 2-3 times per week</p>
+                                                <strong style="color: #030f68;">Moisturize (lightly, consistently)</strong>
+                                                <p style="margin: 3px 0 0 0; color: #666; font-size: 0.95rem;">Use a braid spray or light oil on the scalp <strong>2–3x per week</strong>. Avoid heavy buildup.</p>
                                             </div>
                                         </div>
                                         <div class="feature-item" style="display: flex; align-items: start; margin-bottom: 15px;">
                                             <i class="bi bi-moon-stars-fill" style="color: #ff6600; margin-right: 10px; font-size: 1.2rem; margin-top: 3px;"></i>
                                             <div>
                                                 <strong style="color: #030f68;">Protect at night</strong>
-                                                <p style="margin: 3px 0 0 0; color: #666; font-size: 0.95rem;">Use a satin bonnet or pillowcase to prevent frizz</p>
+                                                <p style="margin: 3px 0 0 0; color: #666; font-size: 0.95rem;">Sleep in a <strong>satin bonnet/scarf</strong> or use a satin pillowcase to reduce frizz and preserve shine.</p>
                                             </div>
                                         </div>
                                         <div class="feature-item" style="display: flex; align-items: start; margin-bottom: 15px;">
                                             <i class="bi bi-water" style="color: #ff6600; margin-right: 10px; font-size: 1.2rem; margin-top: 3px;"></i>
                                             <div>
-                                                <strong style="color: #030f68;">Wash gently</strong>
-                                                <p style="margin: 3px 0 0 0; color: #666; font-size: 0.95rem;">Cleanse your scalp weekly with diluted shampoo</p>
+                                                <strong style="color: #030f68;">Cleanse your scalp gently</strong>
+                                                <p style="margin: 3px 0 0 0; color: #666; font-size: 0.95rem;">Wash <strong>weekly or as needed</strong> using diluted shampoo or a scalp cleanser. Focus on the scalp, then rinse well.</p>
                                             </div>
                                         </div>
                                         <div class="feature-item" style="display: flex; align-items: start; margin-bottom: 15px;">
                                             <i class="bi bi-calendar2-check" style="color: #ff6600; margin-right: 10px; font-size: 1.2rem; margin-top: 3px;"></i>
                                             <div>
-                                                <strong style="color: #030f68;">Don't overdo it</strong>
-                                                <p style="margin: 3px 0 0 0; color: #666; font-size: 0.95rem;">Keep braids for 4-8 weeks max to avoid damage</p>
+                                                <strong style="color: #030f68;">Know when it's time to take them down</strong>
+                                                <p style="margin: 3px 0 0 0; color: #666; font-size: 0.95rem;">Most styles should be worn <strong>4–8 weeks max</strong> (sooner if there's tension, itching, or thinning).</p>
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="mt-4" style="background: rgba(255, 102, 0, 0.1); padding: 15px; border-radius: 10px; border-left: 4px solid #ff6600;">
-                                        <p style="margin: 0; color: #030f68; font-size: 0.95rem;"><i class="bi bi-info-circle-fill me-2"></i><strong>Pro Tip:</strong> Schedule touch-ups every 6-8 weeks to maintain your look and keep your edges healthy.</p>
+                                    <div class="mt-4" style="background: rgba(255, 102, 0, 0.1); padding: 15px; border-radius: 10px; border-left: 4px solid #ff6600; margin-bottom: 15px;">
+                                        <p style="margin: 0; color: #030f68; font-size: 0.95rem;"><i class="bi bi-info-circle-fill me-2"></i><strong>Pro Tip:</strong> Book a refresh/touch-up around <strong>6 weeks</strong> to keep your parts tidy and protect your edges.</p>
+                                    </div>
+                                    <div style="background: linear-gradient(135deg, #f8f9fa 0%, #e3eafc 100%); padding: 15px; border-radius: 10px;">
+                                        <p style="margin: 0; color: #030f68; font-size: 0.9rem; line-height: 1.6;"><strong style="color: #ff6600;">Hair Care Tools & Products:</strong> Satin bonnet/scarf • Scalp cleanser • Braid spray/leave-in • Light oil (jojoba/argan) • Edge-safe brush (soft bristles)</p>
                                     </div>
                                 </div>
                             </div>
                             <div class="col-lg-6">
                                 <div class="slide-image" style="text-align: center;">
-                                    <img src="{{ asset('images/large braid.jpg') }}" alt="Hair Care Tips" style="width: 100%; max-width: 500px; height: 400px; object-fit: cover; border-radius: 20px; box-shadow: 0 15px 40px rgba(0,0,0,0.15);">
+                                    <img src="{{ asset('images/hair-care-tools.png') }}" alt="Hair Care Tools and Products" style="width: 100%; max-width: 500px; height: 400px; object-fit: cover; border-radius: 20px; box-shadow: 0 15px 40px rgba(0,0,0,0.15);">
                                 </div>
                             </div>
                         </div>
@@ -3626,17 +3625,17 @@
                         <div class="row align-items-center">
                             <div class="col-lg-6">
                                 <div class="slide-content" style="padding: 40px;">
-                                    <h3 style="color: #030f68; font-weight: 700; font-size: 2rem; margin-bottom: 20px;">Real Clients, Real Results</h3>
+                                    <h3 style="color: #030f68; font-weight: 700; font-size: 2rem; margin-bottom: 20px;">Real Clients. Real Results.</h3>
                                     <p style="color: #666; font-size: 1.1rem; line-height: 1.6; margin-bottom: 25px;">
-                                        See the stunning transformations our clients experience at DBT Beauty Touch. From intricate braiding to elegant updos, we bring your hair vision to life with precision and care.
+                                        Browse real transformations from DBT—neat parts, clean finishing, and styles that hold up beautifully. Whether you're booking knotless braids, box braids, or a special-occasion look, we focus on precision, comfort, and hair health so you leave feeling confident.
                                     </p>
                                     <div class="slide-features">
                                         <div style="background: linear-gradient(135deg, #f8f9fa 0%, #e3eafc 100%); border-radius: 12px; padding: 20px; margin-bottom: 15px;">
                                             <div style="display: flex; align-items: center; margin-bottom: 10px;">
                                                 <div style="color: #ff6600; font-size: 1.8rem; margin-right: 15px;"><i class="bi bi-chat-quote-fill"></i></div>
                                                 <div>
-                                                    <div style="color: #666; font-style: italic; font-size: 0.95rem;">"The best braiding experience in Ottawa! My knotless braids lasted 8 weeks and looked fresh the entire time."</div>
-                                                    <div style="color: #030f68; font-weight: 600; font-size: 0.9rem; margin-top: 8px;">— Sarah M.</div>
+                                                    <div style="color: #666; font-style: italic; font-size: 0.95rem;">"The best braiding experience in Ottawa. My knotless braids stayed neat for weeks."</div>
+                                                    <div style="color: #030f68; font-weight: 600; font-size: 0.9rem; margin-top: 8px;">— <strong>Sarah M.</strong></div>
                                                 </div>
                                             </div>
                                         </div>
@@ -3644,14 +3643,14 @@
                                             <div style="display: flex; align-items: center; margin-bottom: 10px;">
                                                 <div style="color: #ff6600; font-size: 1.8rem; margin-right: 15px;"><i class="bi bi-chat-quote-fill"></i></div>
                                                 <div>
-                                                    <div style="color: #666; font-style: italic; font-size: 0.95rem;">"Professional, clean, and talented! My daughter's hair has never looked better."</div>
-                                                    <div style="color: #030f68; font-weight: 600; font-size: 0.9rem; margin-top: 8px;">— Jennifer T.</div>
+                                                    <div style="color: #666; font-style: italic; font-size: 0.95rem;">"Professional, clean, and so talented. My daughter's hair turned out perfect."</div>
+                                                    <div style="color: #030f68; font-weight: 600; font-size: 0.9rem; margin-top: 8px;">— <strong>Jennifer T.</strong></div>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="mt-3">
-                                        <div style="display: flex; gap: 10px; align-items: center; color: #ff6600; font-size: 1.3rem;">
+                                    <div class="mt-3" style="background: linear-gradient(135deg, rgba(255,102,0,0.08) 0%, rgba(3,15,104,0.05) 100%); padding: 18px; border-radius: 12px;">
+                                        <div style="display: flex; gap: 10px; align-items: center; color: #ff6600; font-size: 1.3rem; margin-bottom: 10px;">
                                             <i class="bi bi-star-fill"></i>
                                             <i class="bi bi-star-fill"></i>
                                             <i class="bi bi-star-fill"></i>
@@ -3659,12 +3658,13 @@
                                             <i class="bi bi-star-fill"></i>
                                             <span style="color: #030f68; font-weight: 700; font-size: 1.1rem; margin-left: 10px;">4.9/5 Average Rating</span>
                                         </div>
+                                        <p style="margin: 0; color: #030f68; font-size: 0.95rem; font-weight: 500;"><strong style="color: #ff6600;">Client Testimonials</strong> — Don't just take our word for it. See what clients are saying.</p>
                                     </div>
                                 </div>
                             </div>
                             <div class="col-lg-6">
                                 <div class="slide-image" style="text-align: center;">
-                                    <img src="{{ asset('images/jumbo braid.jpg') }}" alt="Client Transformations" style="width: 100%; max-width: 500px; height: 400px; object-fit: cover; border-radius: 20px; box-shadow: 0 15px 40px rgba(0,0,0,0.15);">
+                                    <img src="{{ asset('images/client-testimonials.png') }}" alt="Client Testimonials - Don't just listen to us... listen to them" style="width: 100%; max-width: 500px; height: 400px; object-fit: cover; border-radius: 20px; box-shadow: 0 15px 40px rgba(0,0,0,0.15);">
                                 </div>
                             </div>
                         </div>
@@ -3707,7 +3707,7 @@
                             </div>
                             <div class="col-lg-6">
                                 <div class="slide-image" style="text-align: center;">
-                                    <img src="{{ asset('images/boho braid.jpg') }}" alt="Mobile Braiding Service" style="width: 100%; max-width: 500px; height: 400px; object-fit: cover; border-radius: 20px; box-shadow: 0 15px 40px rgba(0,0,0,0.15);">
+                                    <img src="{{ asset('images/mobile-home-service.png') }}" alt="Mobile Home Service - Beauty Services Anywhere, Anytime" style="width: 100%; max-width: 500px; height: 400px; object-fit: contain; border-radius: 20px; box-shadow: 0 15px 40px rgba(0,0,0,0.15); background: white; padding: 20px;">
                                 </div>
                             </div>
                         </div>
@@ -3720,7 +3720,7 @@
                                 <div class="slide-content" style="padding: 40px;">
                                     <h3 style="color: #030f68; font-weight: 700; font-size: 2rem; margin-bottom: 20px;">Ready for Your Transformation?</h3>
                                     <p style="color: #666; font-size: 1.1rem; line-height: 1.6; margin-bottom: 25px;">
-                                        Book your appointment now and experience the DBT Beauty Touch difference. We're here to make you look and feel amazing!
+                                        Book your appointment now and experience the DBT difference. We're here to make you look and feel amazing!
                                     </p>
                                     <div class="slide-features">
                                         <div style="background: linear-gradient(135deg, #030f68 0%, #ff6600 100%); border-radius: 15px; padding: 25px; color: white; margin-bottom: 20px;">
