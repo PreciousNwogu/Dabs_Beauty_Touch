@@ -148,20 +148,37 @@ class PriceCalculator
             $kb_length = Arr::get($data, 'kb_length') ?? Arr::get($data, 'length');
             if (is_string($kb_length)) $kb_length = str_replace(['-', ' '], '_', strtolower($kb_length));
             
-            // Length adjustment pricing with grouped lengths (same as regular bookings)
-            $lengthAdjustmentMap = [
-                'neck' => -40.00,      // Same as shoulder and armpit
-                'shoulder' => -40.00,   // Same as neck and armpit
-                'armpit' => -40.00,     // Same as neck and shoulder
-                'bra_strap' => 0.00,    // Base/default price (same as mid_back)
-                'mid_back' => 0.00,     // Base/default price (same as bra_strap)
-                'waist' => 20.00,
-                'hip' => 40.00,        // Waist + $20
-                'tailbone' => 60.00,    // Same as classic
-                'classic' => 60.00,    // Same as tailbone
-            ];
+            // Kids selector adjustments: type + length + finish (matching UI calculation)
+            $typeAdj = ['protective'=>-20,'cornrows'=>-40,'knotless_small'=>20,'knotless_med'=>0,'box_small'=>10,'box_med'=>0,'stitch'=>20];
+            $lengthAdj = ['shoulder'=>0,'armpit'=>10,'mid_back'=>20,'waist'=>30];
+            $finishAdj = ['curled'=>-10,'plain'=>0];
             
-            $kb_length_adjustment = $lengthAdjustmentMap[$kb_length] ?? 0.00;
+            $kb_braid_type = Arr::get($data, 'kb_braid_type');
+            $kb_finish = Arr::get($data, 'kb_finish');
+            
+            // Calculate type adjustment
+            $typeAdjustment = 0.00;
+            if ($kb_braid_type && isset($typeAdj[$kb_braid_type])) {
+                $typeAdjustment = (float) $typeAdj[$kb_braid_type];
+            }
+            
+            // Calculate length adjustment (using the selector mapping, not regular booking map)
+            $lengthAdjustment = 0.00;
+            if ($kb_length && isset($lengthAdj[$kb_length])) {
+                $lengthAdjustment = (float) $lengthAdj[$kb_length];
+            }
+            
+            // Calculate finish adjustment
+            $finishAdjustment = 0.00;
+            if ($kb_finish && isset($finishAdj[$kb_finish])) {
+                $finishAdjustment = (float) $finishAdj[$kb_finish];
+            }
+            
+            // Total adjustments = type + length + finish
+            $kb_total_adjustments = $typeAdjustment + $lengthAdjustment + $finishAdjustment;
+            $kb_length_adjustment = $kb_total_adjustments;
+            
+            // Parse extras
             $kb_extras_raw = Arr::get($data, 'kb_extras');
             if (!empty($kb_extras_raw)) {
                 if (is_string($kb_extras_raw) && preg_match('/^\d+(?:\.\d+)?(?:,\d+(?:\.\d+)?)*$/', $kb_extras_raw)) {
@@ -172,7 +189,7 @@ class PriceCalculator
                     foreach (explode(',', $kb_extras_raw) as $it) { $it = trim($it); if (isset($addonMap[$it])) $kb_extras_total += $addonMap[$it]; }
                 }
             }
-            $kb_final_price = round(($kb_base_price ?? 0) + ($kb_length_adjustment ?? 0) + ($kb_extras_total ?? 0), 2);
+            $kb_final_price = round(($kb_base_price ?? 0) + $kb_total_adjustments + ($kb_extras_total ?? 0), 2);
         }
 
         return [

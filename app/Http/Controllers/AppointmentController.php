@@ -489,6 +489,8 @@ class AppointmentController extends Controller
                 'service_type' => $request->input('service_type') ?? $serviceInput,
                 'length' => $request->input('length'),
                 'kb_length' => $request->input('kb_length'),
+                'kb_braid_type' => $request->input('kb_braid_type'),
+                'kb_finish' => $request->input('kb_finish'),
                 'kb_extras' => $request->input('kb_extras'),
                 'hair_mask_option' => $request->input('hair_mask_option') ?? $request->input('selectedHairMaskOption'),
                 'stitch_rows_option' => $request->input('stitch_rows_option'),
@@ -1443,6 +1445,7 @@ class AppointmentController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'date' => 'required|date|after_or_equal:today',
+            'service_duration' => 'nullable|numeric|min:0.5|max:12', // Duration in hours
         ]);
 
         if ($validator->fails()) {
@@ -1455,6 +1458,18 @@ class AppointmentController extends Controller
         try {
             $date = $request->date;
             $dateCarbon = \Carbon\Carbon::parse($date)->startOfDay();
+            
+            // Always use 4-hour blocks for calendar display to ensure consistency
+            // between kids and regular bookings, preventing conflicts
+            // Users can book shorter services (like kids services) but calendar
+            // shows availability based on standard 4-hour blocks
+            $serviceDurationHours = $request->input('service_duration', 4);
+            $serviceDurationMinutes = $serviceDurationHours * 60;
+            
+            Log::info('Calendar availability check', [
+                'date' => $date,
+                'service_duration_hours' => $serviceDurationHours,
+            ]);
 
             // Check if the entire date is blocked (all-day block)
             $appTz = config('app.timezone') ?: date_default_timezone_get();
@@ -1492,85 +1507,53 @@ class AppointmentController extends Controller
                 }
             }
 
-            // Default available time slots (9 AM to 6 PM)
+            // Default available time slots
             // Note: Lunch/break time is controlled via blocked schedules, not hardcoded exclusions.
-            $defaultSlots = ['09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00'];
+            // Determine start time based on day of week
+            $dayOfWeek = $dateCarbon->dayOfWeek; // 0 = Sunday, 6 = Saturday
+            
+            if ($dayOfWeek === 0) {
+                // Sunday: 1:00 PM to 8:00 PM
+                $defaultSlots = ['13:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00', '20:00'];
+            } elseif ($dayOfWeek === 6) {
+                // Saturday: 10:00 AM to 8:00 PM
+                $defaultSlots = ['10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00', '20:00'];
+            } else {
+                // Monday-Friday: 8:00 AM to 8:00 PM
+                $defaultSlots = ['08:00', '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00', '20:00'];
+            }
 
             // Get booked time ranges for the day.
-            // Business rule: each booking blocks a 6-hour window from its start time (5 hours service + 1 hour travel/transition).
-            // This ensures the stylist has time to complete the service and travel to the next appointment location.
-            // Example: 9:00 AM booking blocks 9:00 AM–3:00 PM, next available slot is 3:00 PM.
-            $bookingBlockMinutes = 6 * 60; // 6 hours = 360 minutes
+            // Business rule: each booking blocks a 4-hour window from its start time.
+            // Maximum 2 bookings allowed per day with at least 4 hours between bookings.
+            // Example: 10:00 AM booking blocks 10:00 AM–2:00 PM, next available slot is 3:00 PM.
+            $bookingBlockMinutes = 4 * 60; // 4 hours = 240 minutes
             $bookedTimeRanges = [];
             $bookingsForDay = \App\Models\Booking::where('appointment_date', $date)
                 ->whereNotIn('status', ['completed', 'cancelled'])
                 ->whereNotNull('appointment_time')
                 ->get(['appointment_time']);
 
-            // Check if the requested date is today and if we're within 5 hours of any existing booking
-            $now = Carbon::now($appTz);
-            $isToday = $dateCarbon->isSameDay($now);
-            
-            if ($isToday) {
-                // Check if there's less than 3 hours remaining in the business day
-                // Last slot is 18:00 (6:00 PM), so check time until then
-                $lastSlotTime = Carbon::createFromFormat('Y-m-d H:i', $date . ' 18:00', $appTz);
-                $hoursUntilEndOfDay = $now->diffInHours($lastSlotTime, false);
+            // Enforce maximum 2 bookings per day
+            if ($bookingsForDay->count() >= 2) {
+                Log::info('Maximum bookings per day reached', [
+                    'date' => $date,
+                    'booking_count' => $bookingsForDay->count(),
+                ]);
                 
-                if ($hoursUntilEndOfDay < 3) {
-                    Log::info('Blocking entire day - less than 3 hours remaining in business day', [
-                        'date' => $date,
-                        'current_time' => $now->format('Y-m-d H:i:s'),
-                        'last_slot_time' => $lastSlotTime->format('Y-m-d H:i:s'),
-                        'hours_remaining' => $hoursUntilEndOfDay
-                    ]);
-                    
-                    return response()->json([
-                        'success' => true,
-                        'slots' => [],
-                        'message' => 'No available slots - insufficient time remaining today (minimum 3 hours required)',
-                        'date' => $date
-                    ]);
-                }
-                
-                foreach ($bookingsForDay as $b) {
-                    try {
-                        $t = $b->appointment_time;
-                        if (!$t) continue;
-                        
-                        // Get the booking time
-                        $timeStr = \Carbon\Carbon::parse($t)->format('H:i');
-                        $bookingDateTime = Carbon::createFromFormat('Y-m-d H:i', $date . ' ' . $timeStr, $appTz);
-                        
-                        // Calculate hours until this booking
-                        $hoursUntilBooking = $now->diffInHours($bookingDateTime, false);
-                        
-                        // If we're less than 6 hours before any booking, block the entire day
-                        // (5 hours service + 1 hour travel/setup time)
-                        if ($hoursUntilBooking >= 0 && $hoursUntilBooking < 6) {
-                            Log::info('Blocking entire day - within 6-hour window of existing booking', [
-                                'date' => $date,
-                                'current_time' => $now->format('Y-m-d H:i:s'),
-                                'booking_time' => $bookingDateTime->format('Y-m-d H:i:s'),
-                                'hours_until_booking' => $hoursUntilBooking
-                            ]);
-                            
-                            return response()->json([
-                                'success' => true,
-                                'slots' => [],
-                                'message' => 'No available slots - insufficient time before existing appointment (minimum 6 hours required for service and travel)',
-                                'date' => $date
-                            ]);
-                        }
-                    } catch (\Throwable $e) {
-                        // ignore malformed times
-                        Log::warning('Error checking 5-hour window', [
-                            'error' => $e->getMessage(),
-                            'date' => $date
-                        ]);
-                    }
-                }
+                return response()->json([
+                    'success' => true,
+                    'slots' => [],
+                    'message' => 'No available slots - maximum bookings per day reached (2 bookings allowed)',
+                    'date' => $date
+                ]);
             }
+
+            Log::info('Bookings found for date', [
+                'date' => $date,
+                'booking_count' => $bookingsForDay->count(),
+                'booking_times' => $bookingsForDay->pluck('appointment_time')->toArray(),
+            ]);
 
             foreach ($bookingsForDay as $b) {
                 try {
@@ -1580,7 +1563,7 @@ class AppointmentController extends Controller
                     $timeStr = \Carbon\Carbon::parse($t)->format('H:i');
                     $bookingStart = Carbon::createFromFormat('Y-m-d H:i', $date . ' ' . $timeStr, $appTz);
                     
-                    // Block forward: booking time + 6 hours (e.g., 10am blocks until 4pm)
+                    // Block forward: booking time + 4 hours (e.g., 10am blocks until 2pm)
                     $forwardEnd = $bookingStart->copy()->addMinutes($bookingBlockMinutes);
                     $bookedTimeRanges[] = [
                         'start' => $bookingStart,
@@ -1588,26 +1571,6 @@ class AppointmentController extends Controller
                         'start_hm' => $bookingStart->format('H:i'),
                         'end_hm' => $forwardEnd->format('H:i'),
                     ];
-                    
-                    // Block backward: any earlier slot that would overlap with this booking
-                    // If someone books at 10am, a 9am slot would end at 3pm (9am + 6hrs), 
-                    // which overlaps with the 10am booking. So we need to block backwards.
-                    // Block from (booking time - 6 hours) to booking time
-                    $backwardStart = $bookingStart->copy()->subMinutes($bookingBlockMinutes);
-                    // Only block backward within business hours (don't go before 9am)
-                    $dayStart = Carbon::createFromFormat('Y-m-d H:i', $date . ' 09:00', $appTz);
-                    if ($backwardStart->lt($dayStart)) {
-                        $backwardStart = $dayStart;
-                    }
-                    
-                    if ($backwardStart->lt($bookingStart)) {
-                        $bookedTimeRanges[] = [
-                            'start' => $backwardStart,
-                            'end' => $bookingStart,
-                            'start_hm' => $backwardStart->format('H:i'),
-                            'end_hm' => $bookingStart->format('H:i'),
-                        ];
-                    }
                 } catch (\Throwable $e) {
                     // ignore malformed times
                 }
@@ -1623,6 +1586,22 @@ class AppointmentController extends Controller
                 ->where('start', '<', $endOfDay)
                 ->where('end', '>', $startOfDay)
                 ->get();
+
+            Log::info('Fetching blocked schedules for date', [
+                'date' => $date,
+                'dateStr' => $dateStr,
+                'startOfDay' => $startOfDay->toDateTimeString(),
+                'endOfDay' => $endOfDay->toDateTimeString(),
+                'blocked_schedules_found' => $blockedSchedules->count(),
+                'schedules' => $blockedSchedules->map(function($s) {
+                    return [
+                        'id' => $s->id,
+                        'title' => $s->title,
+                        'start' => $s->start,
+                        'end' => $s->end,
+                    ];
+                })->toArray(),
+            ]);
 
             foreach ($blockedSchedules as $block) {
                 // Parse from UTC (as stored) first
@@ -1678,8 +1657,9 @@ class AppointmentController extends Controller
             }
 
             // Log blocked time ranges for debugging
-            Log::debug('Blocked time ranges for date', [
+            Log::info('Blocked time ranges processed for date', [
                 'date' => $date,
+                'blocked_ranges_count' => count($blockedTimeRanges),
                 'blocked_ranges' => $blockedTimeRanges,
             ]);
 
@@ -1704,13 +1684,34 @@ class AppointmentController extends Controller
                 return $a['start']->timestamp <=> $b['start']->timestamp;
             });
             
-            // Check for continuous 3-hour window
-            $businessDayStart = Carbon::createFromFormat('Y-m-d H:i', $date . ' 09:00', $appTz);
-            $businessDayEnd = Carbon::createFromFormat('Y-m-d H:i', $date . ' 18:00', $appTz);
-            $minimumWindowMinutes = 3 * 60; // 3 hours = 180 minutes
+            // Check for continuous window based on service duration
+            // The minimum window should be at least the service duration or 4 hours (whichever is greater)
+            // Business day start varies by day of week
+            $dayOfWeek = $dateCarbon->dayOfWeek; // 0 = Sunday, 6 = Saturday
+            
+            if ($dayOfWeek === 0) {
+                // Sunday: 1:00 PM start
+                $businessDayStart = Carbon::createFromFormat('Y-m-d H:i', $date . ' 13:00', $appTz);
+            } elseif ($dayOfWeek === 6) {
+                // Saturday: 10:00 AM start
+                $businessDayStart = Carbon::createFromFormat('Y-m-d H:i', $date . ' 10:00', $appTz);
+            } else {
+                // Monday-Friday: 8:00 AM start
+                $businessDayStart = Carbon::createFromFormat('Y-m-d H:i', $date . ' 08:00', $appTz);
+            }
+            
+            $businessDayEnd = Carbon::createFromFormat('Y-m-d H:i', $date . ' 20:00', $appTz);
+            $minimumWindowMinutes = max($serviceDurationMinutes, $bookingBlockMinutes);
+            
+            Log::info('Checking calendar availability with service duration', [
+                'date' => $date,
+                'service_duration_hours' => $serviceDurationHours,
+                'service_duration_minutes' => $serviceDurationMinutes,
+                'minimum_window_minutes' => $minimumWindowMinutes,
+            ]);
             
             // Check from business start to first blocked range
-            $hasThreeHourWindow = false;
+            $hasFourHourWindow = false;
             $previousEnd = $businessDayStart->copy();
             
             foreach ($allBlockedRanges as $range) {
@@ -1721,7 +1722,7 @@ class AppointmentController extends Controller
                 $gapMinutes = $gapStart->diffInMinutes($gapEnd, false);
                 
                 if ($gapMinutes >= $minimumWindowMinutes) {
-                    $hasThreeHourWindow = true;
+                    $hasFourHourWindow = true;
                     break;
                 }
                 
@@ -1733,36 +1734,131 @@ class AppointmentController extends Controller
             }
             
             // Check gap from last blocked range to end of business day
-            if (!$hasThreeHourWindow) {
+            if (!$hasFourHourWindow) {
                 $finalGapMinutes = $previousEnd->diffInMinutes($businessDayEnd, false);
                 if ($finalGapMinutes >= $minimumWindowMinutes) {
-                    $hasThreeHourWindow = true;
+                    $hasFourHourWindow = true;
                 }
             }
             
-            // If no 3-hour window exists, block the entire day
-            if (!$hasThreeHourWindow) {
-                Log::info('Blocking entire day - no 3-hour continuous window available', [
+            // If no sufficient window exists for the service duration, block the entire day
+            if (!$hasFourHourWindow) {
+                $requiredHours = $minimumWindowMinutes / 60;
+                Log::info('Blocking entire day - insufficient continuous window for service', [
                     'date' => $date,
+                    'service_duration_hours' => $serviceDurationHours,
+                    'required_window_hours' => $requiredHours,
                     'booked_ranges_count' => count($bookedTimeRanges),
                     'blocked_ranges_count' => count($blockedTimeRanges),
                 ]);
                 
+                $message = $serviceDurationHours > 4 
+                    ? "No available slots - service requires {$serviceDurationHours} hours but less than {$requiredHours} hours available"
+                    : 'No available slots - insufficient available time';
+                
                 return response()->json([
                     'success' => true,
                     'slots' => [],
-                    'message' => 'No available slots - insufficient available time (minimum 3-hour window required)',
+                    'message' => $message,
                     'date' => $date
                 ]);
             }
 
             // Filter out blocked and booked slots
+            // Additionally, only show slots where the service can fit before end of business day
+            // AND check backward availability to prevent conflicts with earlier bookings
             $availableSlots = [];
             foreach ($defaultSlots as $slotTime) {
+                $slotDateTime = Carbon::createFromFormat('Y-m-d H:i', $date . ' ' . $slotTime, $appTz);
+                
+                // Check if service duration fits before end of business day (FORWARD check)
+                $serviceEndTime = $slotDateTime->copy()->addMinutes($serviceDurationMinutes);
+                $hasEnoughTimeBeforeClose = $serviceEndTime->lte($businessDayEnd);
+                
+                if (!$hasEnoughTimeBeforeClose) {
+                    // Skip this slot - service would extend beyond business hours
+                    continue;
+                }
+                
+                // BACKWARD BLOCKING: Check if there's enough time before this slot
+                // If another booking exists later, ensure there's adequate time before this slot
+                // to complete the service without conflicts
+                $hasBackwardConflict = false;
+                $backwardThreshold = 1 * 60; // 1 hour = 60 minutes (minimum gap to keep slot open)
+                
+                // Find the latest booking/block that ends before this slot (not at this slot)
+                $previousEndTime = $businessDayStart->copy();
+                foreach ($allBlockedRanges as $range) {
+                    /** @var \Carbon\Carbon $rangeEnd */
+                    $rangeEnd = $range['end'];
+                    // Use lt() instead of lte() to exclude ranges that end exactly at this slot
+                    // because blocked ranges use [start, end) notation
+                    if ($rangeEnd->lt($slotDateTime) && $rangeEnd->gt($previousEndTime)) {
+                        $previousEndTime = $rangeEnd->copy();
+                    }
+                }
+                
+                // Calculate available time backward (from previous booking end to this slot)
+                $availableBackwardMinutes = $previousEndTime->diffInMinutes($slotDateTime, false);
+                
+                // Block if: service needs more time than available backward AND available time < 1 hour
+                // Allow if: service fits in backward time OR at least 1 hour is available
+                if ($availableBackwardMinutes < $serviceDurationMinutes && $availableBackwardMinutes < $backwardThreshold) {
+                    $hasBackwardConflict = true;
+                    Log::debug('Slot blocked due to backward conflict', [
+                        'slot_time' => $slotTime,
+                        'service_duration_minutes' => $serviceDurationMinutes,
+                        'available_backward_minutes' => $availableBackwardMinutes,
+                        'threshold_minutes' => $backwardThreshold,
+                        'previous_end' => $previousEndTime->format('H:i'),
+                    ]);
+                }
+                
+                if ($hasBackwardConflict) {
+                    // Skip this slot - insufficient backward time and less than 1-hour threshold
+                    continue;
+                }
+                
+                // FORWARD CONFLICT: Check if there's a booking shortly after this slot
+                // Ensure service can complete before next booking starts
+                $hasForwardConflict = false;
+                $nextBookingStart = null;
+                
+                // Find the earliest booking/block that starts after this slot
+                foreach ($allBlockedRanges as $range) {
+                    /** @var \Carbon\Carbon $rangeStart */
+                    $rangeStart = $range['start'];
+                    if ($rangeStart->gt($slotDateTime)) {
+                        if ($nextBookingStart === null || $rangeStart->lt($nextBookingStart)) {
+                            $nextBookingStart = $rangeStart->copy();
+                        }
+                    }
+                }
+                
+                // If there's a booking after this slot, check if service fits
+                if ($nextBookingStart !== null) {
+                    $availableForwardMinutes = $slotDateTime->diffInMinutes($nextBookingStart, false);
+                    
+                    // Block if service would extend into next booking
+                    if ($availableForwardMinutes < $serviceDurationMinutes) {
+                        $hasForwardConflict = true;
+                        Log::debug('Slot blocked due to forward conflict', [
+                            'slot_time' => $slotTime,
+                            'service_duration_minutes' => $serviceDurationMinutes,
+                            'available_forward_minutes' => $availableForwardMinutes,
+                            'next_booking_start' => $nextBookingStart->format('H:i'),
+                        ]);
+                    }
+                }
+                
+                if ($hasForwardConflict) {
+                    // Skip this slot - service would conflict with next booking
+                    continue;
+                }
+                
                 // Check if slot falls within any booked window [start, end)
                 $isBooked = false;
                 foreach ($bookedTimeRanges as $br) {
-                    $slotDateTime = Carbon::createFromFormat('Y-m-d H:i', $date . ' ' . $slotTime, $appTz);
                     /** @var \Carbon\Carbon $rangeStart */
                     $rangeStart = $br['start'];
                     /** @var \Carbon\Carbon $rangeEnd */
@@ -1785,10 +1881,14 @@ class AppointmentController extends Controller
                     // Treat blocked ranges as [start, end) so a lunch block 12:00–13:00 does NOT block the 13:00 slot.
                     if ($slotDateTime->gte($rangeStart) && $slotDateTime->lt($rangeEnd)) {
                         $isBlocked = true;
-                        Log::debug('Slot blocked', [
+                        Log::info('Slot blocked by time range', [
+                            'date' => $date,
                             'slot_time' => $slotTime,
                             'range_start' => $range['start'],
                             'range_end' => $range['end'],
+                            'slot_datetime' => $slotDateTime->toDateTimeString(),
+                            'range_start_datetime' => $rangeStart->toDateTimeString(),
+                            'range_end_datetime' => $rangeEnd->toDateTimeString(),
                         ]);
                         break;
                     }
@@ -1804,8 +1904,20 @@ class AppointmentController extends Controller
                         'available' => true,
                         'formatted_time' => $formattedTime,
                     ];
+                    
+                    Log::info('Slot marked as available', [
+                        'date' => $date,
+                        'slot_time' => $slotTime,
+                        'formatted' => $formattedTime,
+                    ]);
                 }
             }
+
+            Log::info('Final available slots', [
+                'date' => $date,
+                'total_available' => count($availableSlots),
+                'available_times' => array_column($availableSlots, 'time'),
+            ]);
 
             return response()->json([
                 'success' => true,

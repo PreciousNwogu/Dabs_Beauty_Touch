@@ -11,9 +11,10 @@
         <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav mb-2 mb-lg-0">
                 <li class="nav-item"><a class="nav-link px-3" href="{{ route('home') }}#home">Home</a></li>
-                <li class="nav-item"><a class="nav-link px-3" href="{{ route('home') }}#about">About</a></li>
                 <li class="nav-item"><a class="nav-link px-3" id="navServicesLink" href="{{ route('home') }}#services">Services</a></li>
+                <li class="nav-item"><a class="nav-link px-3" href="{{ route('home') }}#about">About</a></li>
                 <li class="nav-item"><a class="nav-link px-3" href="{{ route('home') }}#contact">Contact</a></li>
+                <li class="nav-item"><a class="nav-link px-3" href="{{ route('home') }}#faq">FAQ</a></li>
                 <li class="nav-item"><a class="nav-link px-3" href="{{ route('home') }}#terms">Terms</a></li>
                 <li class="nav-item"><a class="nav-link px-3" href="{{ route('calendar') }}" style="background: linear-gradient(135deg, #ff6600 0%, #ff8533 100%); color: white; border-radius: 20px; padding: 8px 20px !important;">Book Appointment</a></li>
             </ul>

@@ -409,8 +409,8 @@
         // Calculate adjustments total (excluding weaving + stitch add-ons which are shown separately)
         $adjustmentsTotal = ($typeLengthFinishAdjust ?? 0) + (is_numeric($addons_total) ? $addons_total : 0);
         // Final price should match what's stored in the database (which includes weaving addon, stitch addon, or $80 mask-with-weave legacy behavior)
-        // Prefer persisted price first; template computations are only a fallback.
-        $finalPrice = $booking->final_price ?? ($final_price ?? round(($basePrice ?? 0) + $adjustmentsTotal + $weavingAddon + $stitchAddon, 2));
+        // For kids bookings, prefer kb_final_price (most authoritative); then breakdown final_price; then final_price; finally computed
+        $finalPrice = $booking->kb_final_price ?? ($final_price ?? ($booking->final_price ?? round(($basePrice ?? 0) + $adjustmentsTotal + $weavingAddon + $stitchAddon, 2)));
       @endphp
 
       <div class="price-box">

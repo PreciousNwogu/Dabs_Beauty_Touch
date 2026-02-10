@@ -38,8 +38,8 @@
 
       // Adjustments total = type + length + finish adjustments + addons + weaving addon (matches UI)
       $displayAdjustmentsTotal = ($displayTypeLengthFinishAdjust ?? 0) + ($displayAddons ?? 0) + $displayWeavingAddon;
-      // Prefer persisted price first; breakdown may be recomputed and should not override what was booked.
-      $displayFinal = $booking->final_price ?? ($bd['final_price'] ?? round($displayBase + $displayAdjustmentsTotal, 2));
+      // For kids bookings, prefer kb_final_price (most authoritative); then breakdown final_price; then final_price; finally computed
+      $displayFinal = $booking->kb_final_price ?? ($bd['final_price'] ?? ($booking->final_price ?? round($displayBase + $displayAdjustmentsTotal, 2)));
     @endphp
 
       <p class="muted">A new booking has been received. Details are shown below.</p>
@@ -179,8 +179,8 @@
 
         // Adjustments total = type + length + finish adjustments + addons + weaving addon + stitch addon (matches UI)
         $adjustmentsTotal = ($typeLengthFinishAdjust ?? 0) + ($addons ?? 0) + $weavingAddon + $stitchAddon;
-        // Prefer persisted price first; breakdown is informational.
-        $finalPrice = $booking->final_price ?? ($bd['final_price'] ?? round(($basePrice ?? 0) + $adjustmentsTotal, 2));
+        // For kids bookings, prefer kb_final_price (most authoritative); then breakdown final_price; then final_price; finally computed
+        $finalPrice = $booking->kb_final_price ?? ($bd['final_price'] ?? ($booking->final_price ?? round(($basePrice ?? 0) + $adjustmentsTotal, 2)));
       @endphp
 
       <h4 style="margin-top:16px;margin-bottom:8px;color:#0b3a66;">Details</h4>
