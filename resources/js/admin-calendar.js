@@ -267,6 +267,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const isAllDay = looksAllDayUTC(startIso, endIso);
         if (blockAllDay) blockAllDay.checked = !!isAllDay;
+
         updateBlockMode();
 
         if (blockTitle) blockTitle.value = slotObj.title || 'Blocked';
@@ -692,7 +693,12 @@ document.addEventListener('DOMContentLoaded', () => {
                         'X-CSRF-TOKEN': csrf,
                         'Accept': 'application/json'
                     },
-                    body: JSON.stringify({ title, start: start.toISOString(), end: end.toISOString(), type: 'blocked' })
+                    body: JSON.stringify({
+                        title,
+                        start: start.toISOString(),
+                        end: end.toISOString(),
+                        type: 'blocked'
+                    })
                 });
                 
                 console.log('Response status:', res.status, res.statusText);
@@ -718,7 +724,12 @@ document.addEventListener('DOMContentLoaded', () => {
                                     'X-CSRF-TOKEN': csrf,
                                     'Accept': 'application/json'
                                 },
-                                body: JSON.stringify({ title, start: start.toISOString(), end: end.toISOString(), type: 'blocked' })
+                                body: JSON.stringify({
+                                    title,
+                                    start: start.toISOString(),
+                                    end: end.toISOString(),
+                                    type: 'blocked'
+                                })
                             });
                             
                             if (!retryRes.ok) {
@@ -739,7 +750,9 @@ document.addEventListener('DOMContentLoaded', () => {
                             if (retryData.success) {
                                 try { window._blockModalInstance?.hide(); } catch (e) {}
                                 calendar.refetchEvents();
-                                try { calendar.gotoDate(start); } catch (e) {}
+                                try {
+                                    if (start) calendar.gotoDate(start);
+                                } catch (e) {}
                                 window._editingBlockId = null;
                                 
                                 const alertDiv = document.createElement('div');
@@ -771,6 +784,12 @@ document.addEventListener('DOMContentLoaded', () => {
                             errorMessage += '\n\nConflicts with existing bookings:\n' + 
                                 errorData.conflicts.map(c => `- ${c.name} on ${c.date} at ${c.time}`).join('\n');
                         }
+                        if (errorData.booking_conflicts && Array.isArray(errorData.booking_conflicts) && errorData.booking_conflicts.length) {
+                            errorMessage += '\n\nThese dates already have bookings:\n' + errorData.booking_conflicts.map(d => `- ${d}`).join('\n');
+                        }
+                        if (errorData.already_blocked && Array.isArray(errorData.already_blocked) && errorData.already_blocked.length) {
+                            errorMessage += '\n\nThese dates are already blocked:\n' + errorData.already_blocked.map(d => `- ${d}`).join('\n');
+                        }
                     } catch (e) {
                         errorMessage += ` (${res.status} ${res.statusText})`;
                     }
@@ -786,7 +805,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     try { window._blockModalInstance?.hide(); } catch (e) {}
                     // refresh calendar and jump to the start of the block to make it visible
                     calendar.refetchEvents();
-                    try { calendar.gotoDate(start); } catch (e) {}
+                    try {
+                        if (start) calendar.gotoDate(start);
+                    } catch (e) {}
                     window._editingBlockId = null;
                     
                     // Show success message
@@ -806,6 +827,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (data.conflicts && Array.isArray(data.conflicts)) {
                         errorMessage += '\n\nConflicts with existing bookings:\n' + 
                             data.conflicts.map(c => `- ${c.name} on ${c.date} at ${c.time}`).join('\n');
+                    }
+                    if (data.booking_conflicts && Array.isArray(data.booking_conflicts) && data.booking_conflicts.length) {
+                        errorMessage += '\n\nThese dates already have bookings:\n' + data.booking_conflicts.map(d => `- ${d}`).join('\n');
+                    }
+                    if (data.already_blocked && Array.isArray(data.already_blocked) && data.already_blocked.length) {
+                        errorMessage += '\n\nThese dates are already blocked:\n' + data.already_blocked.map(d => `- ${d}`).join('\n');
                     }
                     alert(`❌ Failed to ${isEditing ? 'update' : 'create'} block: ` + errorMessage);
                 }
@@ -917,6 +944,96 @@ document.addEventListener('DOMContentLoaded', () => {
                 const listEl = document.getElementById('blocksList');
                 listEl.innerHTML = '<div class="text-center text-muted py-4"><div class="spinner-border spinner-border-sm me-2" role="status"></div>Loading blocked ranges...</div>';
 
+                // Filter controls (client-side): search + from/to date range
+                const searchEl = document.getElementById('manageBlocksSearch');
+                const fromEl = document.getElementById('manageBlocksFrom');
+                const toEl = document.getElementById('manageBlocksTo');
+                const applyBtn = document.getElementById('manageBlocksApplyBtn');
+                const clearBtn = document.getElementById('manageBlocksClearBtn');
+
+                const parseYmd = (s) => {
+                    try { return s ? new Date(s + 'T00:00:00') : null; } catch (e) { return null; }
+                };
+
+                const applyManageBlocksFilter = () => {
+                    try{
+                        const q = (searchEl && searchEl.value ? searchEl.value.trim().toLowerCase() : '');
+                        const fromD = parseYmd(fromEl ? fromEl.value : '');
+                        const toD = parseYmd(toEl ? toEl.value : '');
+
+                        const rows = Array.from(listEl.querySelectorAll('[data-block-row="1"]'));
+                        let anyVisible = false;
+
+                        rows.forEach(row => {
+                            const title = (row.dataset.title || '').toLowerCase();
+                            const fullText = (row.textContent || '').toLowerCase();
+                            const sYmd = row.dataset.startYmd || '';
+                            const eYmd = row.dataset.endYmd || '';
+                            const sD = parseYmd(sYmd);
+                            const eD = parseYmd(eYmd);
+
+                            let ok = true;
+                            if (q) ok = ok && (title.includes(q) || fullText.includes(q));
+
+                            // Date range overlap check: block [sD,eD] overlaps filter [fromD,toD]
+                            if (fromD || toD) {
+                                if (!sD || !eD) {
+                                    ok = false;
+                                } else {
+                                    if (fromD && eD && eD < fromD) ok = false;
+                                    if (toD && sD && sD > toD) ok = false;
+                                }
+                            }
+
+                            row.style.display = ok ? '' : 'none';
+                            if (ok) anyVisible = true;
+                        });
+
+                        // filtered empty state (only when there are rows)
+                        let empty = listEl.querySelector('[data-block-empty="1"]');
+                        if (!anyVisible && rows.length) {
+                            if (!empty) {
+                                empty = document.createElement('div');
+                                empty.dataset.blockEmpty = '1';
+                                empty.className = 'text-center py-4 text-muted';
+                                empty.innerHTML = '<i class="bi bi-search" style="font-size:1.6rem;opacity:0.6;"></i><div class="mt-2">No blocked ranges match your filter.</div>';
+                                listEl.appendChild(empty);
+                            }
+                        } else if (empty) {
+                            empty.remove();
+                        }
+                    }catch(e){}
+                };
+
+                // expose so removal actions can re-apply after DOM changes
+                window.__applyManageBlocksFilter = applyManageBlocksFilter;
+
+                if (searchEl && !searchEl.dataset.bound) {
+                    searchEl.dataset.bound = '1';
+                    searchEl.addEventListener('input', applyManageBlocksFilter);
+                }
+                if (applyBtn && !applyBtn.dataset.bound) {
+                    applyBtn.dataset.bound = '1';
+                    applyBtn.addEventListener('click', applyManageBlocksFilter);
+                }
+                if (fromEl && !fromEl.dataset.bound) {
+                    fromEl.dataset.bound = '1';
+                    fromEl.addEventListener('change', applyManageBlocksFilter);
+                }
+                if (toEl && !toEl.dataset.bound) {
+                    toEl.dataset.bound = '1';
+                    toEl.addEventListener('change', applyManageBlocksFilter);
+                }
+                if (clearBtn && !clearBtn.dataset.bound) {
+                    clearBtn.dataset.bound = '1';
+                    clearBtn.addEventListener('click', () => {
+                        if (searchEl) searchEl.value = '';
+                        if (fromEl) fromEl.value = '';
+                        if (toEl) toEl.value = '';
+                        applyManageBlocksFilter();
+                    });
+                }
+
                 try {
                     const resp = await fetch(eventsUrl);
                     const items = await resp.json();
@@ -955,10 +1072,17 @@ document.addEventListener('DOMContentLoaded', () => {
                         const isAllDay = looksAllDayUTC(startIso, endIso);
                         const durationDays = Math.max(1, Math.round((endDate - startDate) / (1000 * 60 * 60 * 24)));
                         const inclusiveEnd = isAllDay ? new Date(endDate.getTime() - 24 * 60 * 60 * 1000) : endDate;
+                        const startYmd = startIso ? String(startIso).slice(0, 10) : '';
+                        // inclusiveEnd -> y-m-d in local time
+                        const endYmd = inclusiveEnd ? new Date(inclusiveEnd.getTime() - inclusiveEnd.getTimezoneOffset() * 60000).toISOString().slice(0,10) : '';
                         
                         const li = document.createElement('div');
                         li.className = 'list-group-item';
                         li.style.cssText = 'border-left: 4px solid #dc3545; margin-bottom: 12px; border-radius: 8px; padding: 16px; background: #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.1);';
+                        li.dataset.blockRow = '1';
+                        li.dataset.title = (slot.title || 'Blocked');
+                        li.dataset.startYmd = startYmd;
+                        li.dataset.endYmd = endYmd;
                         
                         const card = document.createElement('div');
                         card.className = 'd-flex justify-content-between align-items-start';
@@ -1018,6 +1142,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                     li.style.transform = 'translateX(-20px)';
                                     setTimeout(() => {
                                         li.remove();
+                                        try { window.__applyManageBlocksFilter && window.__applyManageBlocksFilter(); } catch(e){}
                                         // Refresh calendar
                                         calendar.refetchEvents();
                                         
@@ -1066,6 +1191,9 @@ document.addEventListener('DOMContentLoaded', () => {
                         li.appendChild(card);
                         listEl.appendChild(li);
                     });
+
+                    // Apply current filter after rendering
+                    try { applyManageBlocksFilter(); } catch (e) {}
                 } catch (err) {
                     console.error('Failed to load blocked ranges', err);
                     listEl.innerHTML = '<div class="text-danger">Failed to load blocked ranges.</div>';

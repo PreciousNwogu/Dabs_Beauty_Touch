@@ -840,21 +840,25 @@
                                     </div>
 
                                     <div class="row g-3">
-                                        <div class="col-md-6">
-                                            <label class="form-label fw-semibold mb-2">
-                                                <i class="bi bi-calendar-event me-1"></i><span id="startLabel">Start Date</span>
-                                                <span class="text-danger">*</span>
-                                            </label>
-                                            <input id="blockStart" type="datetime-local" class="form-control form-control-lg" required>
-                                            <small id="startHelpText" class="form-text text-muted">Select the first day to block</small>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <label class="form-label fw-semibold mb-2">
-                                                <i class="bi bi-calendar-x me-1"></i><span id="endLabel">End Date</span>
-                                                <span class="text-danger">*</span>
-                                            </label>
-                                            <input id="blockEnd" type="datetime-local" class="form-control form-control-lg" required>
-                                            <small id="endHelpText" class="form-text text-muted">Select the last day to block (inclusive)</small>
+                                        <div class="col-12">
+                                            <div class="row g-3">
+                                                <div class="col-md-6">
+                                                    <label class="form-label fw-semibold mb-2">
+                                                        <i class="bi bi-calendar-event me-1"></i><span id="startLabel">Start Date</span>
+                                                        <span class="text-danger">*</span>
+                                                    </label>
+                                                    <input id="blockStart" type="datetime-local" class="form-control form-control-lg" required>
+                                                    <small id="startHelpText" class="form-text text-muted">Select the first day to block</small>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <label class="form-label fw-semibold mb-2">
+                                                        <i class="bi bi-calendar-x me-1"></i><span id="endLabel">End Date</span>
+                                                        <span class="text-danger">*</span>
+                                                    </label>
+                                                    <input id="blockEnd" type="datetime-local" class="form-control form-control-lg" required>
+                                                    <small id="endHelpText" class="form-text text-muted">Select the last day to block (inclusive)</small>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
 
@@ -919,6 +923,31 @@
                                                     <i class="bi bi-info-circle-fill me-2" style="color: #0ea5e9; font-size: 1.2rem;"></i>
                                                     <div>
                                                         <strong>Manage your blocked date ranges:</strong> View all active blocked periods and remove them if needed.
+                                                    </div>
+                                                </div>
+                                                <!-- Blocked dates filter (client-side) -->
+                                                <div class="mb-3" style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:12px;">
+                                                    <div class="row g-2 align-items-end">
+                                                        <div class="col-12 col-md-6">
+                                                            <label for="manageBlocksSearch" class="form-label mb-1">Search</label>
+                                                            <input type="text" id="manageBlocksSearch" class="form-control" placeholder="Search by title (e.g., Lunch, Holiday, Afternoon)">
+                                                        </div>
+                                                        <div class="col-6 col-md-3">
+                                                            <label for="manageBlocksFrom" class="form-label mb-1">From</label>
+                                                            <input type="date" id="manageBlocksFrom" class="form-control">
+                                                        </div>
+                                                        <div class="col-6 col-md-3">
+                                                            <label for="manageBlocksTo" class="form-label mb-1">To</label>
+                                                            <input type="date" id="manageBlocksTo" class="form-control">
+                                                        </div>
+                                                        <div class="col-12 d-flex justify-content-end gap-2">
+                                                            <button type="button" class="btn btn-primary btn-sm" id="manageBlocksApplyBtn">
+                                                                <i class="bi bi-search me-1"></i>Search
+                                                            </button>
+                                                            <button type="button" class="btn btn-outline-secondary btn-sm" id="manageBlocksClearBtn" title="Clear filter">
+                                                                <i class="bi bi-x-circle me-1"></i>Clear
+                                                            </button>
+                                                        </div>
                                                     </div>
                                                 </div>
                                                 <div id="blocksList" class="list-group" style="border-radius: 8px; overflow: hidden;">
@@ -2589,12 +2618,12 @@
             let fullUpdateUrl = updateStatusUrl;
             if (updateStatusUrl.startsWith('/')) {
                 // Relative URL - make it absolute using current origin
-                // Force HTTPS to prevent mixed content errors
-                const protocol = window.location.protocol === 'https:' ? 'https:' : 'https:';
+                // Use the same protocol as the current page (don't force HTTPS on local dev)
+                const protocol = window.location.protocol;
                 const host = window.location.host;
                 fullUpdateUrl = protocol + '//' + host + updateStatusUrl;
-            } else if (updateStatusUrl.startsWith('http://')) {
-                // If URL is HTTP, convert to HTTPS to prevent mixed content errors
+            } else if (updateStatusUrl.startsWith('http://') && window.location.protocol === 'https:') {
+                // Only convert HTTP to HTTPS if we're on HTTPS to prevent mixed content errors
                 fullUpdateUrl = updateStatusUrl.replace('http://', 'https://');
             }
 
@@ -2921,6 +2950,25 @@
         }
 
         // FullCalendar is bundled via Vite (resources/js/admin-calendar.js). See Vite build for the asset.
+    </script>
+    <script>
+      // Fallback: ensure Manage Blocks "Search" button always works even if the Vite bundle is stale.
+      document.addEventListener('click', function(e){
+        try{
+          const btn = e.target && (e.target.closest ? e.target.closest('#manageBlocksApplyBtn') : null);
+          if (!btn) return;
+          e.preventDefault();
+          if (typeof window.__applyManageBlocksFilter === 'function') {
+            window.__applyManageBlocksFilter();
+            return;
+          }
+          // fallback: trigger input event on search field (if live filter binding exists)
+          const s = document.getElementById('manageBlocksSearch');
+          if (s) {
+            try { s.dispatchEvent(new Event('input', { bubbles: true })); } catch(err) {}
+          }
+        }catch(err){}
+      }, true);
     </script>
     @vite(['resources/css/app.css', 'resources/js/admin-calendar.js'])
 </body>

@@ -10,6 +10,8 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Http\Request;
 use Illuminate\Http\Request as HttpRequest;
 use Illuminate\Support\Facades\Artisan;
+use App\Http\Controllers\PublicAuthController;
+use App\Http\Controllers\AccountController;
 
 // TEMPORARY: clear application caches.
 // This is protected by a secret key. Remove when done.
@@ -64,19 +66,25 @@ Route::get('/clear-session', function (Request $request) {
 // Get booked dates for calendar
 Route::get('/api/booked-dates', function (Request $request) {
     try {
+        // Business rule: allow up to 2 bookings per day (each booking blocks a 5-hour window).
+        // So a date should only be "disabled" on the calendar once it has 2 pending/confirmed bookings,
+        // or if it is blocked via schedules (handled separately by /schedules/blocked-dates).
+        $maxBookingsPerDay = 2;
+
         // Only get dates with pending or confirmed bookings (exclude cancelled and completed)
         $bookedDates = \App\Models\Booking::whereIn('status', ['pending', 'confirmed'])
             ->selectRaw('appointment_date, COUNT(*) as booking_count')
             ->groupBy('appointment_date')
             ->get()
-            ->map(function ($booking) {
+            ->map(function ($booking) use ($maxBookingsPerDay) {
                 // Format date as YYYY-MM-DD for JavaScript
                 $formattedDate = \Carbon\Carbon::parse($booking->appointment_date)->format('Y-m-d');
                 return [
                     'date' => $formattedDate,
                     'original_date' => $booking->appointment_date,
                     'count' => $booking->booking_count,
-                    'disabled' => true // Disable all dates with pending or confirmed bookings
+                    // Disable only when fully booked for the day.
+                    'disabled' => ((int)($booking->booking_count ?? 0) >= (int)$maxBookingsPerDay)
                 ];
             });
 
@@ -204,6 +212,49 @@ Route::get('/debug/security', function (Request $request) {
     ]);
 })->name('debug.security');
 
+// Sitemap.xml generator
+Route::get('/sitemap.xml', function () {
+    $baseUrl = config('app.url');
+    $now = now()->toAtomString();
+    
+    $urls = [
+        [
+            'loc' => $baseUrl,
+            'lastmod' => $now,
+            'changefreq' => 'weekly',
+            'priority' => '1.0'
+        ],
+        [
+            'loc' => $baseUrl . '/calendar',
+            'lastmod' => $now,
+            'changefreq' => 'weekly',
+            'priority' => '0.9'
+        ],
+        [
+            'loc' => $baseUrl . '/kids-selector',
+            'lastmod' => $now,
+            'changefreq' => 'monthly',
+            'priority' => '0.8'
+        ],
+    ];
+    
+    $xml = '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
+    $xml .= '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' . "\n";
+    
+    foreach ($urls as $url) {
+        $xml .= "  <url>\n";
+        $xml .= "    <loc>" . htmlspecialchars($url['loc']) . "</loc>\n";
+        $xml .= "    <lastmod>" . htmlspecialchars($url['lastmod']) . "</lastmod>\n";
+        $xml .= "    <changefreq>" . htmlspecialchars($url['changefreq']) . "</changefreq>\n";
+        $xml .= "    <priority>" . htmlspecialchars($url['priority']) . "</priority>\n";
+        $xml .= "  </url>\n";
+    }
+    
+    $xml .= '</urlset>';
+    
+    return response($xml, 200)->header('Content-Type', 'application/xml');
+})->name('sitemap');
+
 // Booking success page
 Route::get('/booking/success', function () {
     // Check if we have booking details in session
@@ -215,6 +266,18 @@ Route::get('/booking/success', function () {
 Route::get('/calendar', function () {
     return view('calendar');
 })->name('calendar');
+
+// Public auth (optional accounts)
+Route::middleware('guest')->group(function () {
+    Route::get('/login', [PublicAuthController::class, 'showLogin'])->name('login');
+    Route::post('/login', [PublicAuthController::class, 'login'])->name('login.submit');
+    Route::get('/register', [PublicAuthController::class, 'showRegister'])->name('register');
+    Route::post('/register', [PublicAuthController::class, 'register'])->name('register.submit');
+});
+
+Route::post('/logout', [PublicAuthController::class, 'logout'])->middleware('auth')->name('logout');
+Route::get('/my-bookings', [AccountController::class, 'myBookings'])->middleware('auth')->name('account.bookings');
+Route::get('/my-bookings/{booking}', [AccountController::class, 'showBooking'])->middleware('auth')->name('account.bookings.show');
 
 // Kids Braids Selector page
 Route::get('/kids-selector', function () {
@@ -1013,6 +1076,7 @@ Route::post('/bookings', function(Request $request) {
             'email' => $request->email ?: 'no-email@example.com',
             'phone' => $normalizedPhone,
             'address' => $request->address,
+            'appointment_type' => $request->appointment_type,
             'service' => $request->service ?: 'General Service',
             'appointment_date' => $request->appointment_date,
             'appointment_time' => $request->appointment_time,
@@ -1336,6 +1400,17 @@ Route::post('/bookings', function(Request $request) {
             } catch (\Exception $e) {
                 Log::warning('Failed to check blocked date for booking: ' . $e->getMessage());
                 // Continue with booking creation if date check fails
+            }
+        }
+
+        // Link booking to logged-in user (optional accounts)
+        if (Auth::check()) {
+            $bookingData['user_id'] = Auth::id();
+
+            // If the booking email is empty/placeholder, use the account email
+            $currentEmail = $bookingData['email'] ?? null;
+            if (!$currentEmail || $currentEmail === 'no-email@example.com') {
+                $bookingData['email'] = Auth::user()->email;
             }
         }
 
@@ -1771,6 +1846,7 @@ Route::get('/bookings/confirm/{id}/{code}', function($id, $code) {
         'email' => $booking->email,
         'phone' => $booking->phone,
         'message' => $booking->message,
+        'sample_picture' => $booking->sample_picture,
         // Kids selector fields (if applicable)
         'kb_braid_type' => $booking->kb_braid_type,
         'kb_finish' => $booking->kb_finish,

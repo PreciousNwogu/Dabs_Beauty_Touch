@@ -4,7 +4,33 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Dab's Beauty Touch - Professional Hair Braiding Services</title>
+    
+    <!-- Primary Meta Tags -->
+    <title>Dab's Beauty Touch - Professional Hair Braiding Services | Ottawa</title>
+    <meta name="title" content="Dab's Beauty Touch - Professional Hair Braiding Services | Ottawa">
+    <meta name="description" content="Professional hair braiding services in Ottawa. Expert stylists specializing in knotless braids, box braids, cornrow styles, and custom braiding services. Book your appointment today for flawless, long-lasting results.">
+    <meta name="keywords" content="hair braiding Ottawa, knotless braids, box braids, cornrow braids, hair styling, professional braiding services, Ottawa hair salon, braiding salon">
+    <meta name="author" content="Dab's Beauty Touch">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="{{ url('/') }}">
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="{{ url('/') }}">
+    <meta property="og:title" content="Dab's Beauty Touch - Professional Hair Braiding Services | Ottawa">
+    <meta property="og:description" content="Professional hair braiding services in Ottawa. Expert stylists specializing in knotless braids, box braids, cornrow styles, and custom braiding services. Book your appointment today.">
+    <meta property="og:image" content="{{ asset('images/logo.jpg') }}">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:site_name" content="Dab's Beauty Touch">
+    <meta property="og:locale" content="en_CA">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:url" content="{{ url('/') }}">
+    <meta name="twitter:title" content="Dab's Beauty Touch - Professional Hair Braiding Services">
+    <meta name="twitter:description" content="Professional hair braiding services in Ottawa. Expert stylists specializing in knotless braids, box braids, cornrow styles, and custom braiding services.">
+    <meta name="twitter:image" content="{{ asset('images/logo.jpg') }}">
 
     <!-- Favicon -->
     <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
@@ -13,6 +39,178 @@
     <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('images/icon.ico.jpg') }}">
     <meta name="msapplication-TileImage" content="{{ asset('images/icon.ico.jpg') }}">
 
+    <!-- Structured Data (JSON-LD) -->
+    <script type="application/ld+json">
+    {
+        "@@context": "https://schema.org",
+        "@@type": "BeautySalon",
+        "name": "Dab's Beauty Touch",
+        "description": "Professional hair braiding services in Ottawa. Expert stylists specializing in knotless braids, box braids, cornrow styles, and custom braiding services.",
+        "url": "{{ url('/') }}",
+        "logo": "{{ asset('images/logo.jpg') }}",
+        "image": "{{ asset('images/logo.jpg') }}",
+        "telephone": "(647) 834-8549",
+        "priceRange": "$$",
+        "address": {
+            "@@type": "PostalAddress",
+            "addressLocality": "Ottawa",
+            "addressRegion": "ON",
+            "addressCountry": "CA"
+        },
+        "geo": {
+            "@@type": "GeoCoordinates",
+            "latitude": "45.4215",
+            "longitude": "-75.6972"
+        },
+        "openingHoursSpecification": [
+            {
+                "@@type": "OpeningHoursSpecification",
+                "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
+                "opens": "08:00",
+                "closes": "20:00"
+            },
+            {
+                "@@type": "OpeningHoursSpecification",
+                "dayOfWeek": "Saturday",
+                "opens": "10:00",
+                "closes": "20:00"
+            },
+            {
+                "@@type": "OpeningHoursSpecification",
+                "dayOfWeek": "Sunday",
+                "opens": "13:00",
+                "closes": "20:00"
+            }
+        ],
+        "sameAs": [],
+        "aggregateRating": {
+            "@@type": "AggregateRating",
+            "ratingValue": "5",
+            "reviewCount": "4"
+        },
+        "review": [
+            {
+                "@@type": "Review",
+                "author": {
+                    "@@type": "Person",
+                    "name": "Client 1"
+                },
+                "reviewRating": {
+                    "@@type": "Rating",
+                    "ratingValue": "5"
+                },
+                "reviewBody": "DBT offers great services and she delivers excellently."
+            },
+            {
+                "@@type": "Review",
+                "author": {
+                    "@@type": "Person",
+                    "name": "Client 2"
+                },
+                "reviewRating": {
+                    "@@type": "Rating",
+                    "ratingValue": "5"
+                },
+                "reviewBody": "Excellent service and attention to detail."
+            },
+            {
+                "@@type": "Review",
+                "author": {
+                    "@@type": "Person",
+                    "name": "Client 3"
+                },
+                "reviewRating": {
+                    "@@type": "Rating",
+                    "ratingValue": "5"
+                },
+                "reviewBody": "Amazing work! Highly recommend."
+            },
+            {
+                "@@type": "Review",
+                "author": {
+                    "@@type": "Person",
+                    "name": "Client 4"
+                },
+                "reviewRating": {
+                    "@@type": "Rating",
+                    "ratingValue": "5"
+                },
+                "reviewBody": "Best braiding service in Ottawa!"
+            }
+        ],
+        "hasOfferCatalog": {
+            "@@type": "OfferCatalog",
+            "name": "Hair Braiding Services",
+            "itemListElement": [
+                {
+                    "@@type": "Offer",
+                    "itemOffered": {
+                        "@@type": "Service",
+                        "name": "Small Knotless Braids",
+                        "description": "Ultra-fine knotless braids that blend seamlessly with your natural hair. Perfect for a sleek, professional look."
+                    }
+                },
+                {
+                    "@@type": "Offer",
+                    "itemOffered": {
+                        "@@type": "Service",
+                        "name": "Smedium Knotless Braids",
+                        "description": "Medium-sized knotless braids offering the perfect balance between style and manageability."
+                    }
+                },
+                {
+                    "@@type": "Offer",
+                    "itemOffered": {
+                        "@@type": "Service",
+                        "name": "Medium Knotless Braids",
+                        "description": "Classic medium-sized knotless braids for a timeless look."
+                    }
+                },
+                {
+                    "@@type": "Offer",
+                    "itemOffered": {
+                        "@@type": "Service",
+                        "name": "Jumbo Knotless Braids",
+                        "description": "Bold, statement-making jumbo knotless braids for a dramatic look."
+                    }
+                },
+                {
+                    "@@type": "Offer",
+                    "itemOffered": {
+                        "@@type": "Service",
+                        "name": "Kids Braids",
+                        "description": "Specialized braiding services for children with gentle techniques."
+                    }
+                },
+                {
+                    "@@type": "Offer",
+                    "itemOffered": {
+                        "@@type": "Service",
+                        "name": "Stitch Braids",
+                        "description": "Elegant 8-row stitch braids for a sophisticated style."
+                    }
+                },
+                {
+                    "@@type": "Offer",
+                    "itemOffered": {
+                        "@@type": "Service",
+                        "name": "Hair Mask/Relaxing",
+                        "description": "Deep conditioning and relaxing treatments for healthy, manageable hair."
+                    }
+                },
+                {
+                    "@@type": "Offer",
+                    "itemOffered": {
+                        "@@type": "Service",
+                        "name": "Boho Braids",
+                        "description": "Trendy boho-style braids for a free-spirited, bohemian look."
+                    }
+                }
+            ]
+        }
+    }
+    </script>
+
     <!-- CSS Files -->
     <link rel="stylesheet" href="{{ asset('css/bootstrap.css') }}">
     <link rel="stylesheet" href="{{ asset('css/style.css') }}">
@@ -20,6 +218,7 @@
 
     <!-- Bootstrap CDN (backup) -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
         <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
 
 
@@ -344,6 +543,11 @@
                 padding-left: 6px;
                 padding-right: 6px;
             }
+            
+            /* Hide extra services on mobile initially */
+            .services-section .service-item.hidden-mobile {
+                display: none !important;
+            }
         }
 
         @media (max-width: 576px) {
@@ -422,6 +626,35 @@
             cursor: pointer;
             transition: all 0.3s ease;
         }
+
+        /* Filter Chip Styles */
+        .filter-chip {
+            border-radius: 20px;
+            padding: 6px 16px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            border: 2px solid #030f68;
+            color: #030f68;
+        }
+        .filter-chip:hover {
+            background-color: #030f68;
+            color: white;
+        }
+        .filter-chip.active {
+            background-color: #030f68;
+            color: white;
+            border-color: #030f68;
+        }
+
+        /* Service Item Animation */
+        .service-item {
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+        .service-item.hidden {
+            display: none !important;
+        }
+
         .service-card img {
             width: 220px;
             height: 220px;
@@ -1702,6 +1935,13 @@
         window.clearBookingForm = function() {
             var form = document.getElementById('bookingForm');
             if (form) {
+                // Check if terms were already accepted before resetting
+                const KEY = 'dbt_terms_accepted_v1';
+                const hasAccepted = () => {
+                    try { return window.localStorage && localStorage.getItem(KEY) === '1'; } catch(e) { return false; }
+                };
+                const termsWereAccepted = hasAccepted();
+                
                 form.reset();
                 // Clear all inputs except CSRF token
                 var inputs = form.querySelectorAll('input, textarea, select');
@@ -1715,7 +1955,607 @@
                         }
                     }
                 });
+                
+                // Restore terms checkbox if terms were already accepted
+                if (termsWereAccepted) {
+                    const termsCheckbox = document.getElementById('termsAcceptedMain');
+                    if (termsCheckbox) {
+                        termsCheckbox.checked = true;
+                    }
+                }
+                
+                // Reset appointment type to in-studio and hide address field
+                var inStudioRadio = document.getElementById('appointment_type_in_studio');
+                if (inStudioRadio) {
+                    inStudioRadio.checked = true;
+                }
+                
+                // Hide address field
+                var addressContainer = document.getElementById('addressFieldContainer');
+                if (addressContainer) {
+                    addressContainer.classList.add('d-none');
+                    addressContainer.style.display = 'none';
+                }
+                
+                // Clear address input
+                var addressInput = document.getElementById('address');
+                if (addressInput) {
+                    addressInput.value = '';
+                    addressInput.required = false;
+                }
+                
                 console.log('Booking form cleared');
+                
+                // Call toggle function to ensure proper state
+                if (typeof toggleAddressField === 'function') {
+                    toggleAddressField();
+                }
+            }
+        };
+
+        // Size & Length Selection Modal Functions
+        window.serviceSizeData = {
+            selectedSize: null,
+            selectedLength: 'mid-back',
+            basePrice: 0,
+            lengthAdjustment: 0,
+            serviceCategory: '',
+            serviceName: '',
+            serviceType: ''
+        };
+
+        // Service categories and their available sizes
+        window.serviceSizesMap = {
+            'knotless': {
+                category: 'Knotless Braids',
+                sizes: [
+                    { name: 'Small Knotless Braids', slug: 'small-knotless', price: {{ (int) config('service_prices.small_knotless', 170) }}, time: '6–7 hrs' },
+                    { name: 'Smedium Knotless Braids', slug: 'smedium-knotless', price: {{ (int) config('service_prices.smedium_knotless', 150) }}, time: '5–6 hrs' },
+                    { name: 'Medium Knotless Braids', slug: 'medium-knotless', price: {{ (int) config('service_prices.medium_knotless', 130) }}, time: '4–4.5 hrs' },
+                    { name: 'Jumbo Knotless Braids', slug: 'jumbo-knotless', price: {{ (int) config('service_prices.jumbo_knotless', 100) }}, time: '2–3 hrs' }
+                ]
+            },
+            'boho': {
+                category: 'Boho Braids',
+                sizes: [
+                    { name: 'Small Boho Braids', slug: 'small-boho', price: 180, time: '6–7 hrs' },
+                    { name: 'Smedium Boho Braids', slug: 'smedium-boho', price: {{ (int) config('service_prices.boho_braids', 150) }}, time: '5–6 hrs' },
+                    { name: 'Medium Boho Braids', slug: 'medium-boho', price: 130, time: '4–5 hrs' },
+                    { name: 'Jumbo/Large Boho Braids', slug: 'jumbo-boho', price: 100, time: '3–4 hrs' }
+                ]
+            },
+            'twist': {
+                category: 'Twist Styles',
+                sizes: [
+                    { name: 'Small Twists', slug: 'small-twist', price: 150, time: '5–6 hrs' },
+                    { name: 'Medium Twists', slug: 'medium-twist', price: 120, time: '4–5 hrs' },
+                    { name: 'Jumbo/Large Twists', slug: 'jumbo-twist', price: 100, time: '3–4 hrs' },
+                    { name: 'Small Natural Hair Twist', slug: 'small-natural-hair-twist', price: 80, time: '2–3 hrs', noLength: true },
+                    { name: 'Medium Natural Hair Twist', slug: 'medium-natural-hair-twist', price: 60, time: '2–3 hrs', noLength: true }
+                ]
+            },
+            'cornrow': {
+                category: 'Cornrow/Feed-in Braids',
+                sizes: [
+                    { name: 'Stitch Weave', slug: 'stitch-weave', price: 100, time: '4–5 hrs', hasRowOptions: true },
+                    { name: 'Cornrow Weave', slug: 'cornrow-weave', price: 100, time: '4–5 hrs', hasRowOptions: true },
+                    { name: 'Under-wig Weave', slug: 'under-wig-weave', price: 30, time: '30 min–1 hr', hasRowOptions: false, noLength: true },
+                    { name: 'Weave&Braid Mixed', slug: 'weave-braid-mixed', price: 150, time: '4–5 hrs', hasRowOptions: false }
+                ]
+            },
+            'french-curl': {
+                category: 'French Curl Braids',
+                sizes: [
+                    { name: 'Small French Curl Braids', slug: 'small-french-curl', price: 200, time: '6–7 hrs' },
+                    { name: 'Smedium French Curl Braids', slug: 'smedium-french-curl', price: 170, time: '5–6 hrs' },
+                    { name: 'Medium French Curl Braids', slug: 'medium-french-curl', price: 150, time: '4–5 hrs' },
+                    { name: 'Large French Curl Braids', slug: 'large-french-curl', price: 120, time: '3–4 hrs' }
+                ]
+            },
+            'crotchet': {
+                category: 'Crotchet Styles',
+                sizes: [
+                    { name: '2/3 Line Single', slug: 'line-single', price: 100, time: '2–3 hrs', hasFrontBackAddon: true, noLength: true },
+                    { name: 'Afro Crotchet', slug: 'afro-crotchet', price: 120, time: '3–4 hrs', hasFrontBackAddon: false, noLength: true },
+                    { name: 'Individual Loc', slug: 'individual-loc', price: 150, time: '4–5 hrs', hasFrontBackAddon: false, noLength: true },
+                    { name: 'Butterfly Locks', slug: 'butterfly-locks', price: 150, time: '3–4 hrs', hasFrontBackAddon: false, noLength: true },
+                    { name: 'Weave Crotchet', slug: 'weave-crotchet', price: 80, time: '1.5–2 hrs', hasFrontBackAddon: false, noLength: true }
+                ]
+            },
+            'hair-treatment': {
+                category: 'Hair Treatment Services',
+                sizes: [
+                    { name: 'Natural Hair Treatment/Mask', slug: 'natural-hair-treatment', price: {{ (int) config('service_prices.hair_mask', 50) }}, time: '45 min–1 hr', hasWeaveAddon: true },
+                    { name: 'Chemical Relaxer', slug: 'chemical-relaxer', price: 50, time: '1.5–2 hrs', hasWeaveAddon: true }
+                ]
+            }
+        };
+
+        // Open size selection modal
+        window.openServiceSizeModal = function(serviceCategory) {
+            console.log('Opening size selection modal for:', serviceCategory);
+            
+            const categoryData = window.serviceSizesMap[serviceCategory];
+            if (!categoryData) {
+                console.error('Unknown service category:', serviceCategory);
+                return;
+            }
+
+            // Update modal title
+            const modalTitle = document.getElementById('serviceCategory');
+            if (modalTitle) {
+                modalTitle.textContent = categoryData.category;
+            }
+
+            // Store category
+            window.serviceSizeData.serviceCategory = serviceCategory;
+            
+            // Populate size options
+            populateSizeOptions(categoryData.sizes);
+            
+            // Reset selections
+            window.serviceSizeData.selectedSize = null;
+            window.serviceSizeData.selectedLength = 'mid-back';
+            
+            // Show/hide length selection based on service type
+            const lengthSection = document.getElementById('lengthSelectionSection');
+            if (lengthSection) {
+                if (serviceCategory === 'crotchet' || serviceCategory === 'hair-treatment') {
+                    lengthSection.style.display = 'none';
+                    window.serviceSizeData.selectedLength = 'none'; // Crotchet and hair treatment don't need length
+                } else {
+                    lengthSection.style.display = 'block';
+                    // Reset length selection to mid-back
+                    const lengthRadios = document.querySelectorAll('input[name="size_length"]');
+                    lengthRadios.forEach(radio => {
+                        radio.checked = (radio.value === 'mid-back');
+                    });
+                }
+            }
+            
+            // Show modal
+            const modalEl = document.getElementById('serviceSizeLengthModal');
+            if (modalEl && typeof bootstrap !== 'undefined') {
+                const modal = new bootstrap.Modal(modalEl);
+                modal.show();
+            }
+        };
+
+        // Populate size options dynamically
+        function populateSizeOptions(sizes) {
+            const container = document.getElementById('sizeOptionsContainer');
+            if (!container) return;
+            
+            container.innerHTML = '';
+            
+            sizes.forEach(size => {
+                const sizeCard = document.createElement('div');
+                sizeCard.className = 'col-6 col-md-3';
+                const sizeImage = getSizeImage(size.name);
+                const hasWeaveAddon = size.hasWeaveAddon || false;
+                const hasRowOptions = size.hasRowOptions || false;
+                const hasFrontBackAddon = size.hasFrontBackAddon || false;
+                const noLength = size.noLength || false;
+                const sizeName = getSizeName(size.name);
+                const sizeDesc = getSizeDescription(sizeName);
+                sizeCard.innerHTML = `
+                    <div class="size-option-card" onclick="selectSize('${size.slug}', '${size.name}', ${size.price}, ${hasWeaveAddon}, ${hasRowOptions}, ${hasFrontBackAddon}, ${noLength})" style="cursor: pointer; padding: 12px; border: 2px solid #e9ecef; border-radius: 12px; text-align: center; transition: all 0.3s; background: #fff;" data-size-slug="${size.slug}">
+                        <div style="margin-bottom: 8px; overflow: hidden; border-radius: 8px; height: 120px;">
+                            <img src="${sizeImage}" alt="${sizeName} size" style="width: 100%; height: 100%; object-fit: cover; object-position: top;">
+                        </div>
+                        <div style="font-weight: 700; color: #030f68; font-size: 0.9rem; margin-bottom: 4px;">${sizeName}</div>
+                        ${sizeDesc ? `<div style="font-size: 0.7rem; color: #6c757d; margin-bottom: 6px; line-height: 1.2;">${sizeDesc}</div>` : ''}
+                        <div style="font-size: 1.2rem; font-weight: 800; color: #ff6600;">$${size.price}</div>
+                        <div style="font-size: 0.75rem; color: #999; margin-top: 4px;">${size.time}</div>
+                    </div>
+                `;
+                container.appendChild(sizeCard);
+            });
+        }
+
+        // Helper to get image for braid size
+        function getSizeImage(name) {
+            // Knotless Braids
+            if (name.includes('Knotless')) {
+                if (name.includes('Small') && !name.includes('Smedium')) return '{{ asset("images/small braid.jpg") }}';
+                if (name.includes('Smedium')) return '{{ asset("images/smedium-braids.jpg") }}';
+                if (name.includes('Medium') && !name.includes('Smedium')) return '{{ asset("images/medium-knotless.jpg") }}';
+                if (name.includes('Jumbo')) return '{{ asset("images/jumbo braid.jpg") }}';
+            }
+            // Boho Braids
+            if (name.includes('Boho')) {
+                if (name.includes('Small')) return '{{ asset("images/boho braid.jpg") }}';
+                if (name.includes('Smedium')) return '{{ asset("images/smedium-braids.jpg") }}';
+                if (name.includes('Medium') && !name.includes('Jumbo')) return '{{ asset("images/medium boho.png") }}';
+                if (name.includes('Jumbo') || name.includes('Large')) return '{{ asset("images/jumbo boho.png") }}';
+            }
+            // Twist Styles
+            if (name.includes('Twist')) {
+                if (name.includes('Natural Hair')) {
+                    if (name.includes('Small')) return '{{ asset("images/natural-hair-twist.jpg") }}';
+                    if (name.includes('Medium')) return '{{ asset("images/medium-natural-twist.png") }}';
+                }
+                if (name.includes('Small')) return '{{ asset("images/small-twist.jpg") }}';
+                if (name.includes('Medium')) return '{{ asset("images/medium-twist.jpg") }}';
+                if (name.includes('Jumbo') || name.includes('Large')) return '{{ asset("images/jumbo-twist.jpg") }}';
+            }
+            // Cornrow/Feed-in Braids
+            if (name.includes('Weave') || name.includes('Cornrow')) {
+                if (name.includes('Stitch Weave')) return '{{ asset("images/stitch braid.jpg") }}';
+                if (name.includes('Cornrow Weave')) return '{{ asset("images/cornrow-weave.jpg") }}';
+                if (name.includes('Under-wig')) return '{{ asset("images/under-wig-weave.jpg") }}';
+                if (name.includes('Half Weave') || name.includes('Weave&Braid Mixed')) return '{{ asset("images/weave & braid (mixed).avif") }}';
+            }
+            // French Curl Braids
+            if (name.includes('French Curl')) {
+                if (name.includes('Small')) return '{{ asset("images/french curl braid.jpg") }}';
+                if (name.includes('Smedium')) return '{{ asset("images/medium size french curl.png") }}';
+                if (name.includes('Medium')) return '{{ asset("images/french braid.avif") }}';
+                if (name.includes('Large')) return '{{ asset("images/large-french-curl.jpg") }}';
+            }
+            // Crotchet Styles
+            if (name.includes('Crotchet') || name.includes('Lock') || name.includes('Line Single') || name.includes('Loc')) {
+                if (name.includes('2/3 Line Single')) return '{{ asset("images/Screenshot 2026-02-05 132501.png") }}';
+                if (name.includes('Weave Crotchet')) return '{{ asset("images/weave-crotchet.jpg") }}';
+                if (name.includes('Afro Crotchet')) return '{{ asset("images/kinky crotchet.png") }}';
+                if (name.includes('Individual Loc')) return '{{ asset("images/individual_crotchet.png") }}';
+                if (name.includes('Butterfly')) return '{{ asset("images/butterfly loc.jpg") }}';
+                if (name.includes('Front & Back')) return '{{ asset("images/yanky twist crotchet.jpg") }}';
+            }
+            // Hair Treatment Services
+            if (name.includes('Treatment') || name.includes('Mask') || name.includes('Relaxer')) {
+                if (name.includes('Natural Hair') || name.includes('Treatment/Mask')) return '{{ asset("images/hair_mask.png") }}';
+                if (name.includes('Relaxer')) return '{{ asset("images/relaxer.png") }}';
+            }
+            return '{{ asset("images/smedium braid.jpg") }}'; // fallback
+        }
+
+        // Helper to get size name (e.g., "Small" from "Small Knotless Braids")
+        function getSizeName(fullName) {
+            if (fullName.includes('Small')) return 'Small';
+            if (fullName.includes('Smedium')) return 'Smedium';
+            if (fullName.includes('Medium')) return 'Medium';
+            if (fullName.includes('Jumbo') || fullName.includes('Large')) return 'Large/Jumbo';
+            return fullName.split(' ')[0];
+        }
+        
+        // Helper to get full size description for tooltips
+        function getSizeDescription(sizeName) {
+            const descriptions = {
+                'Small': 'Very thin braids (4-6 packs hair)',
+                'Smedium': 'Small-Medium size (3-4 packs hair)',
+                'Medium': 'Standard medium size (2-3 packs hair)',
+                'Large/Jumbo': 'Extra large/thick braids (1-2 packs hair)'
+            };
+            return descriptions[sizeName] || '';
+        }
+
+        // Select a size
+        window.selectSize = function(slug, name, price, hasWeaveAddon, hasRowOptions, hasFrontBackAddon, noLength) {
+            // Remove selection from all cards
+            document.querySelectorAll('.size-option-card').forEach(card => {
+                card.style.border = '2px solid #e9ecef';
+                card.style.background = '#fff';
+                card.style.transform = 'scale(1)';
+            });
+            
+            // Highlight selected card
+            const selectedCard = document.querySelector(`[data-size-slug="${slug}"]`);
+            if (selectedCard) {
+                selectedCard.style.border = '2px solid #ff6600';
+                selectedCard.style.background = '#fff7e0';
+                selectedCard.style.transform = 'scale(1.05)';
+            }
+            
+            // Store selection
+            window.serviceSizeData.selectedSize = slug;
+            window.serviceSizeData.serviceName = name;
+            window.serviceSizeData.serviceType = slug;
+            window.serviceSizeData.basePrice = price;
+            window.serviceSizeData.weaveAddon = false; // Reset weave addon
+            window.serviceSizeData.rowOption = '8-10'; // Reset row option to default
+            window.serviceSizeData.frontBackAddon = false; // Reset front/back addon
+            window.serviceSizeData.noLength = noLength || false; // Track if length should be hidden
+            
+            // Show/hide weave add-on section based on service
+            const weaveSection = document.getElementById('weaveAddonSection');
+            if (weaveSection) {
+                if (hasWeaveAddon) {
+                    weaveSection.style.display = 'block';
+                    // Reset weave selection to "no"
+                    const noWeaveRadio = document.getElementById('weave_no');
+                    if (noWeaveRadio) noWeaveRadio.checked = true;
+                } else {
+                    weaveSection.style.display = 'none';
+                }
+            }
+            
+            // Show/hide row options section based on service
+            const rowSection = document.getElementById('rowOptionsSection');
+            if (rowSection) {
+                if (hasRowOptions) {
+                    rowSection.style.display = 'block';
+                    // Reset row selection to "8-10"
+                    const row810Radio = document.getElementById('row_8_10');
+                    if (row810Radio) row810Radio.checked = true;
+                } else {
+                    rowSection.style.display = 'none';
+                }
+            }
+            
+            // Show/hide front/back add-on section based on service
+            const frontBackSection = document.getElementById('frontBackAddonSection');
+            if (frontBackSection) {
+                if (hasFrontBackAddon) {
+                    frontBackSection.style.display = 'block';
+                    // Reset front/back selection to "no"
+                    const frontOnlyRadio = document.getElementById('frontback_no');
+                    if (frontOnlyRadio) frontOnlyRadio.checked = true;
+                } else {
+                    frontBackSection.style.display = 'none';
+                }
+            }
+            
+            // Show/hide length selection based on service
+            const lengthSection = document.getElementById('lengthSelectionSection');
+            if (lengthSection) {
+                if (noLength) {
+                    lengthSection.style.display = 'none';
+                    window.serviceSizeData.selectedLength = 'none';
+                } else {
+                    lengthSection.style.display = 'block';
+                    if (!window.serviceSizeData.selectedLength || window.serviceSizeData.selectedLength === 'none') {
+                        window.serviceSizeData.selectedLength = 'mid-back';
+                    }
+                }
+            }
+            
+            // Display selected service info
+            const selectedServiceDisplay = document.getElementById('selectedServiceDisplay');
+            const selectedServiceName = document.getElementById('selectedServiceName');
+            const selectedServicePrice = document.getElementById('selectedServicePrice');
+            
+            if (selectedServiceDisplay && selectedServiceName && selectedServicePrice) {
+                selectedServiceDisplay.style.display = 'block';
+                selectedServiceName.textContent = name;
+                selectedServicePrice.textContent = '$' + price;
+            }
+            
+            // Update price display
+            updateSizeLengthPrice();
+        };
+
+        // Toggle weave add-on
+        window.toggleWeaveAddon = function(addWeave) {
+            window.serviceSizeData.weaveAddon = addWeave;
+            
+            // Update radio selection
+            const weaveRadio = document.getElementById(addWeave ? 'weave_yes' : 'weave_no');
+            if (weaveRadio) weaveRadio.checked = true;
+            
+            // Update visual selection
+            const noWeaveOption = document.getElementById('weave_no')?.closest('.form-check');
+            const yesWeaveOption = document.getElementById('weave_yes')?.closest('.form-check');
+            
+            if (noWeaveOption && yesWeaveOption) {
+                if (addWeave) {
+                    noWeaveOption.style.border = '2px solid #e9ecef';
+                    yesWeaveOption.style.border = '2px solid #28a745';
+                    yesWeaveOption.style.background = '#f0f9f4';
+                } else {
+                    noWeaveOption.style.border = '2px solid #ff6600';
+                    noWeaveOption.style.background = '#fff7e0';
+                    yesWeaveOption.style.border = '2px solid #e9ecef';
+                    yesWeaveOption.style.background = '#fff';
+                }
+            }
+            
+            // Update price
+            updateSizeLengthPrice();
+        };
+
+        // Toggle row option
+        window.toggleRowOption = function(rowOption) {
+            window.serviceSizeData.rowOption = rowOption;
+            
+            // Update radio selection
+            const rowRadio = document.getElementById(rowOption === '8-10' ? 'row_8_10' : 'row_10_plus');
+            if (rowRadio) rowRadio.checked = true;
+            
+            // Update visual selection
+            const row810Option = document.getElementById('row_8_10')?.closest('.form-check');
+            const row10PlusOption = document.getElementById('row_10_plus')?.closest('.form-check');
+            
+            if (row810Option && row10PlusOption) {
+                if (rowOption === '10+') {
+                    row810Option.style.border = '2px solid #e9ecef';
+                    row810Option.style.background = '#fff';
+                    row10PlusOption.style.border = '2px solid #17a2b8';
+                    row10PlusOption.style.background = '#e7f3ff';
+                } else {
+                    row810Option.style.border = '2px solid #ff6600';
+                    row810Option.style.background = '#fff7e0';
+                    row10PlusOption.style.border = '2px solid #e9ecef';
+                    row10PlusOption.style.background = '#fff';
+                }
+            }
+            
+            // Update price
+            updateSizeLengthPrice();
+        };
+
+        // Toggle front/back add-on
+        window.toggleFrontBackAddon = function(addBack) {
+            window.serviceSizeData.frontBackAddon = addBack;
+            
+            // Update radio selection
+            const frontBackRadio = document.getElementById(addBack ? 'frontback_yes' : 'frontback_no');
+            if (frontBackRadio) frontBackRadio.checked = true;
+            
+            // Update visual selection
+            const frontOnlyOption = document.getElementById('frontback_no')?.closest('.form-check');
+            const frontBackOption = document.getElementById('frontback_yes')?.closest('.form-check');
+            
+            if (frontOnlyOption && frontBackOption) {
+                if (addBack) {
+                    frontOnlyOption.style.border = '2px solid #e9ecef';
+                    frontOnlyOption.style.background = '#fff';
+                    frontBackOption.style.border = '2px solid #28a745';
+                    frontBackOption.style.background = '#f0f9f4';
+                } else {
+                    frontOnlyOption.style.border = '2px solid #ff6600';
+                    frontOnlyOption.style.background = '#fff7e0';
+                    frontBackOption.style.border = '2px solid #e9ecef';
+                    frontBackOption.style.background = '#fff';
+                }
+            }
+            
+            // Update price
+            updateSizeLengthPrice();
+        };
+
+        // Select a length
+        window.selectSizeLength = function(length) {
+            const radio = document.getElementById(`size_length_${length}`);
+            if (radio) {
+                radio.checked = true;
+            }
+            
+            window.serviceSizeData.selectedLength = length;
+            
+            // Update visual selection
+            document.querySelectorAll('#lengthOptionsContainer .form-check').forEach(option => {
+                option.style.border = '2px solid transparent';
+                option.style.background = '#f8f9fa';
+            });
+            
+            const selectedOption = radio?.closest('.form-check');
+            if (selectedOption) {
+                selectedOption.style.border = '2px solid #ff6600';
+                selectedOption.style.background = '#fff7e0';
+            }
+            
+            // Update price display
+            updateSizeLengthPrice();
+        };
+
+        // Update price display based on selections
+        function updateSizeLengthPrice() {
+            const length = window.serviceSizeData.selectedLength;
+            const basePrice = window.serviceSizeData.basePrice;
+            const serviceCategory = window.serviceSizeData.serviceCategory;
+            const weaveAddon = window.serviceSizeData.weaveAddon || false;
+            const rowOption = window.serviceSizeData.rowOption || '8-10';
+            const frontBackAddon = window.serviceSizeData.frontBackAddon || false;
+            
+            let adjustment = 0;
+            let weaveAddonCost = 0;
+            let rowAddonCost = 0;
+            let frontBackAddonCost = 0;
+            
+            // Only apply length adjustments for braid services (not crotchet or hair treatment)
+            if (serviceCategory !== 'crotchet' && serviceCategory !== 'hair-treatment') {
+                // Length adjustments
+                const lengthAdjustments = {
+                    'neck': -40,
+                    'shoulder': -40,
+                    'armpit': -40,
+                    'bra-strap': 0,
+                    'mid-back': 0,
+                    'waist': 20,
+                    'hip': 40,
+                    'tailbone': 60
+                };
+                adjustment = lengthAdjustments[length] || 0;
+            }
+            
+            // Add weave add-on cost if selected
+            if (weaveAddon) {
+                weaveAddonCost = 30;
+            }
+            
+            // Add row add-on cost if 10+ rows selected
+            if (rowOption === '10+') {
+                rowAddonCost = 30;
+            }
+            
+            // Add front/back add-on cost if selected
+            if (frontBackAddon) {
+                frontBackAddonCost = 20;
+            }
+            
+            window.serviceSizeData.lengthAdjustment = adjustment;
+            window.serviceSizeData.weaveAddonCost = weaveAddonCost;
+            window.serviceSizeData.rowAddonCost = rowAddonCost;
+            window.serviceSizeData.frontBackAddonCost = frontBackAddonCost;
+            
+            const totalPrice = basePrice + adjustment + weaveAddonCost + rowAddonCost + frontBackAddonCost;
+            
+            const priceDisplay = document.getElementById('sizeLengthPriceDisplay');
+            if (priceDisplay) {
+                priceDisplay.textContent = basePrice > 0 ? `$${totalPrice}` : '$--';
+            }
+            
+            // Enable/disable continue button
+            const continueBtn = document.getElementById('continueToBookingBtn');
+            if (continueBtn) {
+                continueBtn.disabled = !window.serviceSizeData.selectedSize;
+            }
+        }
+
+        // Continue to booking modal
+        window.continueToBooking = function() {
+            if (!window.serviceSizeData.selectedSize) {
+                alert('Please select a braid size first');
+                return;
+            }
+            
+            // Update service name with add-ons
+            let serviceName = window.serviceSizeData.serviceName;
+            if (window.serviceSizeData.weaveAddon) {
+                serviceName += ' (With Weave)';
+            }
+            if (window.serviceSizeData.rowOption === '10+') {
+                serviceName += ' (10+ Rows)';
+            }
+            if (window.serviceSizeData.frontBackAddon) {
+                serviceName += ' (Front + Back)';
+            }
+            
+            // Get the size modal element and instance
+            const sizeModalEl = document.getElementById('serviceSizeLengthModal');
+            const sizeModal = bootstrap.Modal.getInstance(sizeModalEl);
+            
+            // Listen for the modal to fully hide before opening booking modal
+            const openBooking = () => {
+                sizeModalEl.removeEventListener('hidden.bs.modal', openBooking);
+                
+                // Open booking modal with the selected service
+                setTimeout(() => {
+                    window.openBookingModal(
+                        serviceName,
+                        window.serviceSizeData.serviceType
+                    );
+                    
+                    // Pre-select the length in booking form (skip for crotchet and hair treatment)
+                    if (window.serviceSizeData.serviceCategory !== 'crotchet' && window.serviceSizeData.serviceCategory !== 'hair-treatment') {
+                        const lengthRadio = document.getElementById(`length_${window.serviceSizeData.selectedLength.replace('-', '')}`);
+                        if (lengthRadio) {
+                            lengthRadio.checked = true;
+                            // Trigger change event to update price
+                            lengthRadio.dispatchEvent(new Event('change', { bubbles: true }));
+                        }
+                    }
+                }, 100);
+            };
+            
+            // Add event listener and hide modal
+            if (sizeModal) {
+                sizeModalEl.addEventListener('hidden.bs.modal', openBooking);
+                sizeModal.hide();
+            } else {
+                // Fallback if modal instance not found
+                openBooking();
             }
         };
 
@@ -2183,8 +3023,8 @@
 
             // Render calendar days
             for (let i = 0; i < 42; i++) {
-                const date = new Date(startDate);
-                date.setDate(startDate.getDate() + i);
+                // Create a new date by adding i days to startDate
+                const date = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate() + i);
                 const dateString = formatYMD(date);
                 
                 // Ensure dateString is in YYYY-MM-DD format for consistent matching
@@ -2345,34 +3185,63 @@
             const loading = document.getElementById('calendarLoading');
             const timeSlotsContainer = document.getElementById('timeSlotsContainer');
             const timeSlots = document.getElementById('timeSlots');
-            const selectedDateText = document.getElementById('selectedDateText');
+            const selectedDateText = documebased on day of week
+            const selectedDate = new Date(date);
+            const dayOfWeek = selectedDate.getDay(); // 0 = Sunday, 6 = Saturday
+            
+            let defaultSlots;
+            if (dayOfWeek === 0) {
+                // Sunday: 1:00 PM to 8:00 PM
+                defaultSlots = [
+                    { time: '13:00', available: true, formatted_time: '1:00 PM' },
+                    { time: '14:00', available: true, formatted_time: '2:00 PM' },
+                    { time: '15:00', available: true, formatted_time: '3:00 PM' },
+                    { time: '16:00', available: true, formatted_time: '4:00 PM' },
+                    { time: '17:00', available: true, formatted_time: '5:00 PM' },
+                    { time: '18:00', available: true, formatted_time: '6:00 PM' },
+                    { time: '19:00', available: true, formatted_time: '7:00 PM' },
+                    { time: '20:00', available: true, formatted_time: '8:00 PM' }
+                ];
+            } else if (dayOfWeek === 6) {
+                // Saturday: 10:00 AM to 8:00 PM
+                defaultSlots = [
+                    { time: '10:00', available: true, formatted_time: '10:00 AM' },
+                    { time: '11:00', available: true, formatted_time: '11:00 AM' },
+                    { time: '12:00', available: true, formatted_time: '12:00 PM' },
+                    { time: '13:00', available: true, formatted_time: '1:00 PM' },
+                    { time: '14:00', available: true, formatted_time: '2:00 PM' },
+                    { time: '15:00', available: true, formatted_time: '3:00 PM' },
+                    { time: '16:00', available: true, formatted_time: '4:00 PM' },
+                    { time: '17:00', available: true, formatted_time: '5:00 PM' },
+                    { time: '18:00', available: true, formatted_time: '6:00 PM' },
+                    { time: '19:00', available: true, formatted_time: '7:00 PM' },
+                    { time: '20:00', available: true, formatted_time: '8:00 PM' }
+                ];
+            } else {
+                // Monday-Friday: 8:00 AM to 8:00 PM
+                defaultSlots = [
+                    { time: '08:00', available: true, formatted_time: '8:00 AM' },
+                    { time: '09:00', available: true, formatted_time: '9:00 AM' },
+                    { time: '10:00', available: true, formatted_time: '10:00 AM' },
+                    { time: '11:00', available: true, formatted_time: '11:00 AM' },
+                    { time: '12:00', available: true, formatted_time: '12:00 PM' },
+                    { time: '13:00', available: true, formatted_time: '1:00 PM' },
+                    { time: '14:00', available: true, formatted_time: '2:00 PM' },
+                    { time: '15:00', available: true, formatted_time: '3:00 PM' },
+                    { time: '16:00', available: true, formatted_time: '4:00 PM' },
+                    { time: '17:00', available: true, formatted_time: '5:00 PM' },
+                    { time: '18:00', available: true, formatted_time: '6:00 PM' },
+                    { time: '19:00', available: true, formatted_time: '7:00 PM' },
+                    { time: '20:00', available: true, formatted_time: '8:00 PM' }
+                ];
+            }
 
-            loading.style.display = 'block';
-            timeSlotsContainer.style.display = 'none';
-
-            selectedDateText.textContent = date.toLocaleDateString('en-US', {
-                weekday: 'long',
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric'
-            });
-
-            // Generate default time slots (9 AM to 6 PM)
-            const defaultSlots = [
-                { time: '09:00', available: true, formatted_time: '9:00 AM' },
-                { time: '10:00', available: true, formatted_time: '10:00 AM' },
-                { time: '11:00', available: true, formatted_time: '11:00 AM' },
-                { time: '12:00', available: true, formatted_time: '12:00 PM' },
-                { time: '13:00', available: true, formatted_time: '1:00 PM' },
-                { time: '14:00', available: true, formatted_time: '2:00 PM' },
-                { time: '15:00', available: true, formatted_time: '3:00 PM' },
-                { time: '16:00', available: true, formatted_time: '4:00 PM' },
-                { time: '17:00', available: true, formatted_time: '5:00 PM' },
-                { time: '18:00', available: true, formatted_time: '6:00 PM' }
-            ];
+            // Use unified calendar API - both kids and regular bookings see same availability
+            // Calendar uses 4-hour blocks by default to prevent conflicts
+            const apiUrl = `/bookings/slots?date=${formatYMD(date)}`;
 
             // Try to fetch from API first, but fallback to default slots
-            fetch(`/bookings/slots?date=${formatYMD(date)}`)
+            fetch(apiUrl)
                 .then(response => response.json())
                 .then(data => {
                     loading.style.display = 'none';
@@ -2380,18 +3249,21 @@
 
                     if (data.success) {
                         if (data.message) {
-                            // Date is booked, show message
+                            // Date is booked or blocked, show message
                             timeSlots.innerHTML = `<div class="alert alert-warning"><i class="bi bi-exclamation-triangle me-2"></i>${data.message}</div>`;
                             document.getElementById('confirmDateTimeBtn').disabled = true;
                         } else if (data.slots && data.slots.length > 0) {
+                            // Show available slots from API
                             renderTimeSlotsInModal(data.slots);
                         } else {
-                            // Use default slots if no slots returned
-                            renderTimeSlotsInModal(defaultSlots);
+                            // Empty slots means day is fully booked or no availability
+                            timeSlots.innerHTML = `<div class="alert alert-warning"><i class="bi bi-exclamation-triangle me-2"></i>No available time slots for this date. Please select another date.</div>`;
+                            document.getElementById('confirmDateTimeBtn').disabled = true;
                         }
                     } else {
-                        // Use default slots if API returns error
-                        renderTimeSlotsInModal(defaultSlots);
+                        // API error - show error message instead of default slots
+                        timeSlots.innerHTML = `<div class="alert alert-danger"><i class="bi bi-exclamation-triangle me-2"></i>Unable to load availability. Please try again.</div>`;
+                        document.getElementById('confirmDateTimeBtn').disabled = true;
                     }
                 })
                 .catch(error => {
@@ -2594,6 +3466,7 @@
     </div>
     @endif
 
+    @include('partials.cookie-consent')
     @include('partials.site-header')
 
     <!-- Hero Section -->
@@ -2601,7 +3474,24 @@
         <div class="container" style="padding-top: 120px; padding-bottom: 80px;">
             <div class="hero-content">
                 <h1>Dab's Beauty Touch</h1>
-                <p>Flawless Results - Looking for a stylist who delivers neat, long-lasting braids? Experience the expert touch at Dab's Beauty Touch today!</p>
+                <p style="margin-bottom: 1.5rem;">Flawless Results - Looking for a stylist who delivers neat, long-lasting braids? Experience the expert touch at Dab's Beauty Touch today!</p>
+                <div class="text-center">
+                    <a href="{{ route('calendar') }}" class="btn btn-warning btn-lg px-5 py-3" style="font-weight: 700; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.25); font-size: 1.2rem;">
+                        <i class="bi bi-calendar-check me-2"></i>Book Appointment
+                    </a>
+                </div>
+                <div class="mt-3 small text-white-50">
+                    Choose a date/time → confirm your style → get instant confirmation.
+                    <br>
+                    <a href="javascript:void(0)" onclick="(window.openCalendarModal ? window.openCalendarModal() : window.location.assign('{{ route('calendar') }}'))" style="color: rgba(255,255,255,0.8); text-decoration: underline; font-weight: 500;">View Availability</a>
+                </div>
+                <p style="font-size: 0.95rem; opacity: 0.9; font-weight: 500; margin-top: 1rem;">
+                    <i class="bi bi-geo-alt-fill me-2"></i>Ottawa
+                    <span class="mx-2">•</span>
+                    <i class="bi bi-telephone-fill me-2"></i><a href="tel:+13432548848" style="color: #fff; text-decoration: none;">343-254-8848</a>
+                    <span class="mx-2">•</span>
+                    By Appointment Only
+                </p>
             </div>
         </div>
     </section>
@@ -2610,12 +3500,12 @@
     <section class="image-slider-section" style="padding: 50px 0; background: linear-gradient(135deg, #f8f9fa 0%, #e3eafc 100%);">
         <div class="container">
             <div class="text-center mb-5">
-                <h2 class="section-title" style="font-size: 2.5rem; font-weight: 700; color: #030f68;">Customer Transformations</h2>
-                <p class="lead" style="color: #666; font-size: 1.2rem;">See Real Results from Our Satisfied Clients</p>
+                <h2 class="section-title" style="font-size: 2.5rem; font-weight: 700; color: #030f68;">Why DBT</h2>
+                <p class="lead" style="color: #666; font-size: 1.2rem;">Your Trusted Hair Care Experience in Ottawa</p>
             </div>
 
             {{-- Prices are stored in config/service_prices.php --}}
-            <div id="workSlider" class="carousel slide" data-bs-ride="carousel" data-bs-interval="5000">
+            <div id="workSlider" class="carousel slide" data-bs-ride="carousel" data-bs-interval="6000">
                 <!-- Carousel Indicators -->
                 <div class="carousel-indicators">
                     <button type="button" data-bs-target="#workSlider" data-bs-slide-to="0" class="active" aria-current="true" aria-label="Slide 1"></button>
@@ -2624,402 +3514,297 @@
                     <button type="button" data-bs-target="#workSlider" data-bs-slide-to="3" aria-label="Slide 4"></button>
                     <button type="button" data-bs-target="#workSlider" data-bs-slide-to="4" aria-label="Slide 5"></button>
                     <button type="button" data-bs-target="#workSlider" data-bs-slide-to="5" aria-label="Slide 6"></button>
-                    <button type="button" data-bs-target="#workSlider" data-bs-slide-to="6" aria-label="Slide 7"></button>
-                    <button type="button" data-bs-target="#workSlider" data-bs-slide-to="7" aria-label="Slide 8"></button>
-                    <button type="button" data-bs-target="#workSlider" data-bs-slide-to="8" aria-label="Slide 9"></button>
-                    <button type="button" data-bs-target="#workSlider" data-bs-slide-to="9" aria-label="Slide 10"></button>
                 </div>
 
                 <!-- Carousel Items -->
                 <div class="carousel-inner">
-                    <!-- Slide 1: Small Knotless Braids -->
+                    <!-- Slide 1: Why Choose DBT -->
                     <div class="carousel-item active">
                         <div class="row align-items-center">
                             <div class="col-lg-6">
                                 <div class="slide-content" style="padding: 40px;">
-                                    <h3 style="color: #030f68; font-weight: 700; font-size: 2rem; margin-bottom: 20px;">Small Knotless Braids</h3>
+                                    <h3 style="color: #030f68; font-weight: 700; font-size: 2rem; margin-bottom: 20px;">Why Clients Choose DBT</h3>
                                     <p style="color: #666; font-size: 1.1rem; line-height: 1.6; margin-bottom: 25px;">
-                                        Ultra-fine knotless braids that blend seamlessly with your natural hair. Perfect for a sleek, professional look with minimal tension and maximum comfort.
+                                        Dab's Beauty Touch is where Ottawa clients come for braids and protective styles that look flawless on day one—and still look neat weeks later. With 10+ years of hands-on experience, we focus on clean parts, consistent tension, and a finish that suits your face, lifestyle, and hair goals. You'll get honest guidance, a comfortable appointment, and results you can feel confident wearing.
                                     </p>
                                     <div class="slide-features">
                                         <div class="feature-item" style="display: flex; align-items: center; margin-bottom: 15px;">
-                                            <i class="bi bi-check-circle-fill" style="color: #ff6600; margin-right: 10px;"></i>
-                                            <span style="color: #333; font-weight: 500;">Seamless blend</span>
+                                            <i class="bi bi-award-fill" style="color: #ff6600; margin-right: 10px; font-size: 1.3rem;"></i>
+                                            <span style="color: #333; font-weight: 500;">Expert stylists with 10+ years experience</span>
                                         </div>
                                         <div class="feature-item" style="display: flex; align-items: center; margin-bottom: 15px;">
-                                            <i class="bi bi-check-circle-fill" style="color: #ff6600; margin-right: 10px;"></i>
-                                            <span style="color: #333; font-weight: 500;">Professional look</span>
+                                            <i class="bi bi-heart-fill" style="color: #ff6600; margin-right: 10px; font-size: 1.3rem;"></i>
+                                            <span style="color: #333; font-weight: 500;">Hair health focused techniques</span>
                                         </div>
                                         <div class="feature-item" style="display: flex; align-items: center; margin-bottom: 15px;">
-                                            <i class="bi bi-check-circle-fill" style="color: #ff6600; margin-right: 10px;"></i>
-                                            <span style="color: #333; font-weight: 500;">Minimal tension</span>
+                                            <i class="bi bi-shield-check" style="color: #ff6600; margin-right: 10px; font-size: 1.3rem;"></i>
+                                            <span style="color: #333; font-weight: 500;">Premium products & sanitized tools</span>
                                         </div>
                                     </div>
-                                    <div class="pricing-info mb-3" style="background: rgba(255, 102, 0, 0.1); padding: 15px; border-radius: 10px; border-left: 4px solid #ff6600;">
-                                        <p class="price" style="margin: 0; color: #030f68; font-weight: 700; font-size: 1.2rem;">Starting at ${{ number_format(config('service_prices.small_knotless', 170),0) }}</p>
-                                    </div>
-                                    <button class="btn btn-warning mt-3" onclick="openBookingModal('Small Knotless Braids', 'small-knotless')" style="font-weight: 600; padding: 12px 30px;">
-                                        <i class="bi bi-calendar-check me-2"></i>Book This Style
+                                    <button class="btn btn-warning mt-3" onclick="document.getElementById('services').scrollIntoView({behavior: 'smooth'});" style="font-weight: 600; padding: 12px 30px;">
+                                        <i class="bi bi-eye me-2"></i>View Our Services
                                     </button>
                                 </div>
                             </div>
                             <div class="col-lg-6">
                                 <div class="slide-image" style="text-align: center;">
-                                    <img src="{{ asset('images/small braid.jpg') }}" alt="Small Knotless Braids" style="width: 100%; max-width: 500px; height: 400px; object-fit: cover; border-radius: 20px; box-shadow: 0 15px 40px rgba(0,0,0,0.15);">
+                                    <img src="{{ asset('images/why-choose-us.png') }}" alt="Why Choose Us? - Stand out from the crowd" style="width: 100%; max-width: 500px; height: 400px; object-fit: contain; border-radius: 20px;">
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Slide 2: Smedium Knotless Braids -->
+                    <!-- Slide 2: What to Expect -->
                     <div class="carousel-item">
                         <div class="row align-items-center">
                             <div class="col-lg-6">
                                 <div class="slide-content" style="padding: 40px;">
-                                    <h3 style="color: #030f68; font-weight: 700; font-size: 2rem; margin-bottom: 20px;">Smedium Knotless Braids</h3>
+                                    <h3 style="color: #030f68; font-weight: 700; font-size: 2rem; margin-bottom: 20px;">Your Appointment Experience</h3>
                                     <p style="color: #666; font-size: 1.1rem; line-height: 1.6; margin-bottom: 25px;">
-                                        Perfect balance between small and medium braids for a versatile, everyday style. Offers excellent durability while maintaining a natural, lightweight feel.
+                                        From booking to your finished style, everything at DBT is set up to be simple, comfortable, and stress-free. Here's what your visit looks like:
                                     </p>
                                     <div class="slide-features">
-                                        <div class="feature-item" style="display: flex; align-items: center; margin-bottom: 15px;">
-                                            <i class="bi bi-check-circle-fill" style="color: #ff6600; margin-right: 10px;"></i>
-                                            <span style="color: #333; font-weight: 500;">Perfect balance</span>
+                                        <div class="feature-item" style="display: flex; align-items: start; margin-bottom: 18px;">
+                                            <div style="background: #ff6600; color: white; border-radius: 50%; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; font-weight: 700; margin-right: 12px; flex-shrink: 0;">1</div>
+                                            <div>
+                                                <strong style="color: #030f68;">Book in Minutes</strong>
+                                                <p style="margin: 5px 0 0 0; color: #666; font-size: 0.95rem;">Choose your style, select a date/time, and receive instant confirmation.</p>
+                                            </div>
                                         </div>
-                                        <div class="feature-item" style="display: flex; align-items: center; margin-bottom: 15px;">
-                                            <i class="bi bi-check-circle-fill" style="color: #ff6600; margin-right: 10px;"></i>
-                                            <span style="color: #333; font-weight: 500;">Excellent durability</span>
+                                        <div class="feature-item" style="display: flex; align-items: start; margin-bottom: 18px;">
+                                            <div style="background: #ff6600; color: white; border-radius: 50%; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; font-weight: 700; margin-right: 12px; flex-shrink: 0;">2</div>
+                                            <div>
+                                                <strong style="color: #030f68;">Quick Style Check-In</strong>
+                                                <p style="margin: 5px 0 0 0; color: #666; font-size: 0.95rem;">We confirm your inspo, hair condition, and the right size/length so you get the look you want—without unnecessary tension.</p>
+                                            </div>
                                         </div>
-                                        <div class="feature-item" style="display: flex; align-items: center; margin-bottom: 15px;">
-                                            <i class="bi bi-check-circle-fill" style="color: #ff6600; margin-right: 10px;"></i>
-                                            <span style="color: #333; font-weight: 500;">Lightweight feel</span>
+                                        <div class="feature-item" style="display: flex; align-items: start; margin-bottom: 18px;">
+                                            <div style="background: #ff6600; color: white; border-radius: 50%; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; font-weight: 700; margin-right: 12px; flex-shrink: 0;">3</div>
+                                            <div>
+                                                <strong style="color: #030f68;">Relax & Get Styled</strong>
+                                                <p style="margin: 5px 0 0 0; color: #666; font-size: 0.95rem;">Clean parting, consistent technique, and a comfortable, professional appointment from start to finish.</p>
+                                            </div>
+                                        </div>
+                                        <div class="feature-item" style="display: flex; align-items: start; margin-bottom: 18px;">
+                                            <div style="background: #ff6600; color: white; border-radius: 50%; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; font-weight: 700; margin-right: 12px; flex-shrink: 0;">4</div>
+                                            <div>
+                                                <strong style="color: #030f68;">Leave With a Plan</strong>
+                                                <p style="margin: 5px 0 0 0; color: #666; font-size: 0.95rem;">You'll get personalized aftercare tips (and product guidance if needed) to keep your braids neat and long-lasting.</p>
+                                            </div>
                                         </div>
                                     </div>
-                                    <div class="pricing-info mb-3" style="background: rgba(255, 102, 0, 0.1); padding: 15px; border-radius: 10px; border-left: 4px solid #ff6600;">
-                                        <p class="price" style="margin: 0; color: #030f68; font-weight: 700; font-size: 1.2rem;">Starting at ${{ number_format(config('service_prices.smedium_knotless', 150),0) }}</p>
-                                    </div>
-                                    <button class="btn btn-warning mt-3" onclick="openBookingModal('Smedium Knotless Braids', 'smedium-knotless')" style="font-weight: 600; padding: 12px 30px;">
-                                        <i class="bi bi-calendar-check me-2"></i>Book This Style
+                                    <button class="btn btn-warning mt-3" onclick="window.scrollTo({top: 0, behavior: 'smooth'});" style="font-weight: 600; padding: 12px 30px;">
+                                        <i class="bi bi-calendar-check me-2"></i>Book Your Appointment
                                     </button>
                                 </div>
                             </div>
                             <div class="col-lg-6">
                                 <div class="slide-image" style="text-align: center;">
-                                    <img src="{{ asset('images/webbraids2.jpg') }}" alt="Smedium Knotless Braids" style="width: 100%; max-width: 500px; height: 400px; object-fit: cover; border-radius: 20px; box-shadow: 0 15px 40px rgba(0,0,0,0.15);">
+                                    <img src="{{ asset('images/easy-booking.png') }}" alt="Easy Online Booking System" style="width: 100%; max-width: 500px; height: 400px; object-fit: cover; border-radius: 20px; box-shadow: 0 15px 40px rgba(0,0,0,0.15);">
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Slide 3: Wig Installation -->
+                    <!-- Slide 3: Hair Care Tips -->
                     <div class="carousel-item">
                         <div class="row align-items-center">
                             <div class="col-lg-6">
                                 <div class="slide-content" style="padding: 40px;">
-                                    <h3 style="color: #030f68; font-weight: 700; font-size: 2rem; margin-bottom: 20px;">Wig Installation</h3>
+                                    <h3 style="color: #030f68; font-weight: 700; font-size: 2rem; margin-bottom: 20px;">Keep Your Braids Looking Fresh</h3>
                                     <p style="color: #666; font-size: 1.1rem; line-height: 1.6; margin-bottom: 25px;">
-                                        Professional wig installation with custom fitting and styling. Sleek natural hairline blending, and personalized styling to match your desired look.
+                                        The right routine helps your style stay neat longer—and keeps your natural hair and edges healthy underneath. Here are our go-to tips:
+                                    </p>
+                                    <div class="slide-features">
+                                        <div class="feature-item" style="display: flex; align-items: start; margin-bottom: 15px;">
+                                            <i class="bi bi-droplet-fill" style="color: #ff6600; margin-right: 10px; font-size: 1.2rem; margin-top: 3px;"></i>
+                                            <div>
+                                                <strong style="color: #030f68;">Moisturize (lightly, consistently)</strong>
+                                                <p style="margin: 3px 0 0 0; color: #666; font-size: 0.95rem;">Use a braid spray or light oil on the scalp <strong>2–3x per week</strong>. Avoid heavy buildup.</p>
+                                            </div>
+                                        </div>
+                                        <div class="feature-item" style="display: flex; align-items: start; margin-bottom: 15px;">
+                                            <i class="bi bi-moon-stars-fill" style="color: #ff6600; margin-right: 10px; font-size: 1.2rem; margin-top: 3px;"></i>
+                                            <div>
+                                                <strong style="color: #030f68;">Protect at night</strong>
+                                                <p style="margin: 3px 0 0 0; color: #666; font-size: 0.95rem;">Sleep in a <strong>satin bonnet/scarf</strong> or use a satin pillowcase to reduce frizz and preserve shine.</p>
+                                            </div>
+                                        </div>
+                                        <div class="feature-item" style="display: flex; align-items: start; margin-bottom: 15px;">
+                                            <i class="bi bi-water" style="color: #ff6600; margin-right: 10px; font-size: 1.2rem; margin-top: 3px;"></i>
+                                            <div>
+                                                <strong style="color: #030f68;">Cleanse your scalp gently</strong>
+                                                <p style="margin: 3px 0 0 0; color: #666; font-size: 0.95rem;">Wash <strong>weekly or as needed</strong> using diluted shampoo or a scalp cleanser. Focus on the scalp, then rinse well.</p>
+                                            </div>
+                                        </div>
+                                        <div class="feature-item" style="display: flex; align-items: start; margin-bottom: 15px;">
+                                            <i class="bi bi-calendar2-check" style="color: #ff6600; margin-right: 10px; font-size: 1.2rem; margin-top: 3px;"></i>
+                                            <div>
+                                                <strong style="color: #030f68;">Know when it's time to take them down</strong>
+                                                <p style="margin: 3px 0 0 0; color: #666; font-size: 0.95rem;">Most styles should be worn <strong>4–8 weeks max</strong> (sooner if there's tension, itching, or thinning).</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="mt-4" style="background: rgba(255, 102, 0, 0.1); padding: 15px; border-radius: 10px; border-left: 4px solid #ff6600; margin-bottom: 15px;">
+                                        <p style="margin: 0; color: #030f68; font-size: 0.95rem;"><i class="bi bi-info-circle-fill me-2"></i><strong>Pro Tip:</strong> Book a refresh/touch-up around <strong>6 weeks</strong> to keep your parts tidy and protect your edges.</p>
+                                    </div>
+                                    <div style="background: linear-gradient(135deg, #f8f9fa 0%, #e3eafc 100%); padding: 15px; border-radius: 10px;">
+                                        <p style="margin: 0; color: #030f68; font-size: 0.9rem; line-height: 1.6;"><strong style="color: #ff6600;">Hair Care Tools & Products:</strong> Satin bonnet/scarf • Scalp cleanser • Braid spray/leave-in • Light oil (jojoba/argan) • Edge-safe brush (soft bristles)</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-lg-6">
+                                <div class="slide-image" style="text-align: center;">
+                                    <img src="{{ asset('images/hair-care-tools.png') }}" alt="Hair Care Tools and Products" style="width: 100%; max-width: 500px; height: 400px; object-fit: cover; border-radius: 20px; box-shadow: 0 15px 40px rgba(0,0,0,0.15);">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Slide 4: Real Transformations -->
+                    <div class="carousel-item">
+                        <div class="row align-items-center">
+                            <div class="col-lg-6">
+                                <div class="slide-content" style="padding: 40px;">
+                                    <h3 style="color: #030f68; font-weight: 700; font-size: 2rem; margin-bottom: 20px;">Real Clients. Real Results.</h3>
+                                    <p style="color: #666; font-size: 1.1rem; line-height: 1.6; margin-bottom: 25px;">
+                                        Browse real transformations from DBT—neat parts, clean finishing, and styles that hold up beautifully. Whether you're booking knotless braids, box braids, or a special-occasion look, we focus on precision, comfort, and hair health so you leave feeling confident.
+                                    </p>
+                                    <div class="slide-features">
+                                        <div style="background: linear-gradient(135deg, #f8f9fa 0%, #e3eafc 100%); border-radius: 12px; padding: 20px; margin-bottom: 15px;">
+                                            <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                                                <div style="color: #ff6600; font-size: 1.8rem; margin-right: 15px;"><i class="bi bi-chat-quote-fill"></i></div>
+                                                <div>
+                                                    <div style="color: #666; font-style: italic; font-size: 0.95rem;">"The best braiding experience in Ottawa. My knotless braids stayed neat for weeks."</div>
+                                                    <div style="color: #030f68; font-weight: 600; font-size: 0.9rem; margin-top: 8px;">— <strong>Sarah M.</strong></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div style="background: linear-gradient(135deg, #f8f9fa 0%, #e3eafc 100%); border-radius: 12px; padding: 20px; margin-bottom: 15px;">
+                                            <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                                                <div style="color: #ff6600; font-size: 1.8rem; margin-right: 15px;"><i class="bi bi-chat-quote-fill"></i></div>
+                                                <div>
+                                                    <div style="color: #666; font-style: italic; font-size: 0.95rem;">"Professional, clean, and so talented. My daughter's hair turned out perfect."</div>
+                                                    <div style="color: #030f68; font-weight: 600; font-size: 0.9rem; margin-top: 8px;">— <strong>Jennifer T.</strong></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="mt-3" style="background: linear-gradient(135deg, rgba(255,102,0,0.08) 0%, rgba(3,15,104,0.05) 100%); padding: 18px; border-radius: 12px;">
+                                        <div style="display: flex; gap: 10px; align-items: center; color: #ff6600; font-size: 1.3rem; margin-bottom: 10px;">
+                                            <i class="bi bi-star-fill"></i>
+                                            <i class="bi bi-star-fill"></i>
+                                            <i class="bi bi-star-fill"></i>
+                                            <i class="bi bi-star-fill"></i>
+                                            <i class="bi bi-star-fill"></i>
+                                            <span style="color: #030f68; font-weight: 700; font-size: 1.1rem; margin-left: 10px;">4.9/5 Average Rating</span>
+                                        </div>
+                                        <p style="margin: 0; color: #030f68; font-size: 0.95rem; font-weight: 500;"><strong style="color: #ff6600;">Client Testimonials</strong> — Don't just take our word for it. See what clients are saying.</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-lg-6">
+                                <div class="slide-image" style="text-align: center;">
+                                    <img src="{{ asset('images/client-testimonials.png') }}" alt="Client Testimonials - Don't just listen to us... listen to them" style="width: 100%; max-width: 500px; height: 400px; object-fit: cover; border-radius: 20px; box-shadow: 0 15px 40px rgba(0,0,0,0.15);">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Slide 5: Mobile Service -->
+                    <div class="carousel-item">
+                        <div class="row align-items-center">
+                            <div class="col-lg-6">
+                                <div class="slide-content" style="padding: 40px;">
+                                    <h3 style="color: #030f68; font-weight: 700; font-size: 2rem; margin-bottom: 20px;">We Come to You!</h3>
+                                    <p style="color: #666; font-size: 1.1rem; line-height: 1.6; margin-bottom: 25px;">
+                                        Can't make it to us? No problem! We offer mobile braiding services throughout Ottawa. Enjoy professional hair styling in the comfort of your own home.
                                     </p>
                                     <div class="slide-features">
                                         <div class="feature-item" style="display: flex; align-items: center; margin-bottom: 15px;">
-                                            <i class="bi bi-check-circle-fill" style="color: #ff6600; margin-right: 10px;"></i>
-                                            <span style="color: #333; font-weight: 500;">Custom fitting</span>
+                                            <i class="bi bi-house-heart-fill" style="color: #ff6600; margin-right: 10px; font-size: 1.3rem;"></i>
+                                            <span style="color: #333; font-weight: 500;">Convenient at-home service</span>
                                         </div>
                                         <div class="feature-item" style="display: flex; align-items: center; margin-bottom: 15px;">
-                                            <i class="bi bi-check-circle-fill" style="color: #ff6600; margin-right: 10px;"></i>
-                                            <span style="color: #333; font-weight: 500;">Natural hairline</span>
+                                            <i class="bi bi-clock-fill" style="color: #ff6600; margin-right: 10px; font-size: 1.3rem;"></i>
+                                            <span style="color: #333; font-weight: 500;">Flexible scheduling options</span>
                                         </div>
                                         <div class="feature-item" style="display: flex; align-items: center; margin-bottom: 15px;">
-                                            <i class="bi bi-check-circle-fill" style="color: #ff6600; margin-right: 10px;"></i>
-                                            <span style="color: #333; font-weight: 500;">Personalized styling</span>
+                                            <i class="bi bi-geo-alt-fill" style="color: #ff6600; margin-right: 10px; font-size: 1.3rem;"></i>
+                                            <span style="color: #333; font-weight: 500;">Serving all of Ottawa</span>
+                                        </div>
+                                        <div class="feature-item" style="display: flex; align-items: center; margin-bottom: 15px;">
+                                            <i class="bi bi-people-fill" style="color: #ff6600; margin-right: 10px; font-size: 1.3rem;"></i>
+                                            <span style="color: #333; font-weight: 500;">Great for groups & parties</span>
                                         </div>
                                     </div>
-                                    <div class="pricing-info mb-3" style="background: rgba(255, 102, 0, 0.1); padding: 15px; border-radius: 10px; border-left: 4px solid #ff6600;">
-                                        <p class="price" style="margin: 0; color: #030f68; font-weight: 700; font-size: 1.2rem;">Starting at ${{ number_format(config('service_prices.wig_installation', 150),0) }}</p>
+                                    <div class="mt-4" style="background: linear-gradient(135deg, rgba(255,102,0,0.1) 0%, rgba(3,15,104,0.05) 100%); padding: 18px; border-radius: 12px; border-left: 4px solid #ff6600;">
+                                        <p style="margin: 0; color: #030f68; font-weight: 600; font-size: 1rem;">Select "Mobile Service" when booking to have us come to your location!</p>
                                     </div>
-                                    <button class="btn btn-warning mt-3" onclick="openBookingModal('Wig Installation', 'wig-installation')" style="font-weight: 600; padding: 12px 30px;">
-                                        <i class="bi bi-calendar-check me-2"></i>Book Now
+                                    <button class="btn btn-warning mt-3" onclick="window.scrollTo({top: 0, behavior: 'smooth'});" style="font-weight: 600; padding: 12px 30px;">
+                                        <i class="bi bi-calendar-check me-2"></i>Book Mobile Service
                                     </button>
                                 </div>
                             </div>
                             <div class="col-lg-6">
                                 <div class="slide-image" style="text-align: center;">
-                                    <img src="{{ asset('images/wig installation.jpg') }}" alt="Wig Installation" style="width: 100%; max-width: 500px; height: 400px; object-fit: cover; border-radius: 20px; box-shadow: 0 15px 40px #00000026;">
+                                    <img src="{{ asset('images/mobile-home-service.png') }}" alt="Mobile Home Service - Beauty Services Anywhere, Anytime" style="width: 100%; max-width: 500px; height: 400px; object-fit: contain; border-radius: 20px; box-shadow: 0 15px 40px rgba(0,0,0,0.15); background: white; padding: 20px;">
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Slide 4: Medium Knotless Braids -->
+                    <!-- Slide 6: Ready to Book CTA -->
                     <div class="carousel-item">
                         <div class="row align-items-center">
                             <div class="col-lg-6">
                                 <div class="slide-content" style="padding: 40px;">
-                                    <h3 style="color: #030f68; font-weight: 700; font-size: 2rem; margin-bottom: 20px;">Medium Knotless Braids</h3>
+                                    <h3 style="color: #030f68; font-weight: 700; font-size: 2rem; margin-bottom: 20px;">Ready for Your Transformation?</h3>
                                     <p style="color: #666; font-size: 1.1rem; line-height: 1.6; margin-bottom: 25px;">
-                                        Bold, statement-making braids that create a dramatic, eye-catching look. Perfect for those who want to make a strong fashion statement with their hair.
+                                        Book your appointment now and experience the DBT difference. We're here to make you look and feel amazing!
                                     </p>
                                     <div class="slide-features">
-                                        <div class="feature-item" style="display: flex; align-items: center; margin-bottom: 15px;">
-                                            <i class="bi bi-check-circle-fill" style="color: #ff6600; margin-right: 10px;"></i>
-                                            <span style="color: #333; font-weight: 500;">Bold statement</span>
-                                        </div>
-                                        <div class="feature-item" style="display: flex; align-items: center; margin-bottom: 15px;">
-                                            <i class="bi bi-check-circle-fill" style="color: #ff6600; margin-right: 10px;"></i>
-                                            <span style="color: #333; font-weight: 500;">Eye-catching look</span>
-                                        </div>
-                                        <div class="feature-item" style="display: flex; align-items: center; margin-bottom: 15px;">
-                                            <i class="bi bi-check-circle-fill" style="color: #ff6600; margin-right: 10px;"></i>
-                                            <span style="color: #333; font-weight: 500;">Fashion statement</span>
+                                        <div style="background: linear-gradient(135deg, #030f68 0%, #ff6600 100%); border-radius: 15px; padding: 25px; color: white; margin-bottom: 20px;">
+                                            <h4 style="color: white; font-weight: 700; margin-bottom: 15px; font-size: 1.4rem;">What You Get:</h4>
+                                            <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                                                <i class="bi bi-check-circle-fill me-2"></i>
+                                                <span>Expert consultation & styling advice</span>
+                                            </div>
+                                            <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                                                <i class="bi bi-check-circle-fill me-2"></i>
+                                                <span>Premium quality hair extensions</span>
+                                            </div>
+                                            <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                                                <i class="bi bi-check-circle-fill me-2"></i>
+                                                <span>Comfortable, relaxing atmosphere</span>
+                                            </div>
+                                            <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                                                <i class="bi bi-check-circle-fill me-2"></i>
+                                                <span>Aftercare tips & product recommendations</span>
+                                            </div>
+                                            <div style="display: flex; align-items: center;">
+                                                <i class="bi bi-check-circle-fill me-2"></i>
+                                                <span>100% satisfaction guarantee</span>
+                                            </div>
                                         </div>
                                     </div>
-                                    <div class="pricing-info mb-3" style="background: rgba(255, 102, 0, 0.1); padding: 15px; border-radius: 10px; border-left: 4px solid #ff6600;">
-                                        <p class="price" style="margin: 0; color: #030f68; font-weight: 700; font-size: 1.2rem;">Starting at ${{ number_format(config('service_prices.medium_knotless', 130),0) }}</p>
+                                    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                                        <button class="btn btn-warning" onclick="window.scrollTo({top: 0, behavior: 'smooth'});" style="font-weight: 600; padding: 12px 30px;">
+                                            <i class="bi bi-calendar-check me-2"></i>Book Now
+                                        </button>
+                                        <button class="btn btn-outline-primary" onclick="document.getElementById('services').scrollIntoView({behavior: 'smooth'});" style="font-weight: 600; padding: 12px 30px; border: 2px solid #030f68; color: #030f68;">
+                                            <i class="bi bi-grid me-2"></i>View Services
+                                        </button>
                                     </div>
-                                    <button class="btn btn-warning mt-3" onclick="openBookingModal('Medium Knotless Braids', 'medium-knotless')" style="font-weight: 600; padding: 12px 30px;">
-                                        <i class="bi bi-calendar-check me-2"></i>Book Now
-                                    </button>
                                 </div>
                             </div>
                             <div class="col-lg-6">
-                                <div class="slide-image" style="text-align: center;">
-                                    <img src="{{ asset('images/large braid.jpg') }}" alt="Medium Knotless Braids" style="width: 100%; max-width: 500px; height: 400px; object-fit: cover; border-radius: 20px; box-shadow: 0 15px 40px rgba(0,0,0,0.15);">
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Slide 5: Jumbo Knotless Braids -->
-                    <div class="carousel-item">
-                        <div class="row align-items-center">
-                            <div class="col-lg-6">
-                                <div class="slide-content" style="padding: 40px;">
-                                    <h3 style="color: #030f68; font-weight: 700; font-size: 2rem; margin-bottom: 20px;">Jumbo Knotless Braids</h3>
-                                    <p style="color: #666; font-size: 1.1rem; line-height: 1.6; margin-bottom: 25px;">
-                                        Extra large, voluminous braids for maximum impact and style. Creates a bold, confident look that's perfect for special occasions and fashion-forward individuals.
-                                    </p>
-                                    <div class="slide-features">
-                                        <div class="feature-item" style="display: flex; align-items: center; margin-bottom: 15px;">
-                                            <i class="bi bi-check-circle-fill" style="color: #ff6600; margin-right: 10px;"></i>
-                                            <span style="color: #333; font-weight: 500;">Extra large volume</span>
-                                        </div>
-                                        <div class="feature-item" style="display: flex; align-items: center; margin-bottom: 15px;">
-                                            <i class="bi bi-check-circle-fill" style="color: #ff6600; margin-right: 10px;"></i>
-                                            <span style="color: #333; font-weight: 500;">Maximum impact</span>
-                                        </div>
-                                        <div class="feature-item" style="display: flex; align-items: center; margin-bottom: 15px;">
-                                            <i class="bi bi-check-circle-fill" style="color: #ff6600; margin-right: 10px;"></i>
-                                            <span style="color: #333; font-weight: 500;">Special occasions</span>
-                                        </div>
-                                    </div>
-                                    <div class="pricing-info mb-3" style="background: rgba(255, 102, 0, 0.1); padding: 15px; border-radius: 10px; border-left: 4px solid #ff6600;">
-                                        <p class="price" style="margin: 0; color: #030f68; font-weight: 700; font-size: 1.2rem;">Starting at ${{ number_format(config('service_prices.jumbo_knotless', 100),0) }}</p>
-                                    </div>
-                                    <button class="btn btn-warning mt-3" onclick="openBookingModal('Jumbo Knotless Braids', 'jumbo-knotless')" style="font-weight: 600; padding: 12px 30px;">
-                                        <i class="bi bi-calendar-check me-2"></i>Book Now
-                                    </button>
-                                </div>
-                            </div>
-                            <div class="col-lg-6">
-                                <div class="slide-image" style="text-align: center;">
-                                    <img src="{{ asset('images/jumbo braid.jpg') }}" alt="Jumbo Knotless Braids" style="width: 100%; max-width: 500px; height: 400px; object-fit: cover; border-radius: 20px; box-shadow: 0 15px 40px rgba(0,0,0,0.15);">
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Slide 6: Kids Braids -->
-                    <div class="carousel-item">
-                        <div class="row align-items-center">
-                            <div class="col-lg-6">
-                                <div class="slide-content" style="padding: 40px;">
-                                    <h3 style="color: #030f68; font-weight: 700; font-size: 2rem; margin-bottom: 20px;">Kids Braids</h3>
-                                    <p style="color: #666; font-size: 1.1rem; line-height: 1.6; margin-bottom: 25px;">
-                                        Specialized braiding services for children with gentle, age-appropriate techniques. Creates adorable, manageable styles that are comfortable and long-lasting for active kids.
-                                    </p>
-                                    <div class="slide-features">
-                                        <div class="feature-item" style="display: flex; align-items: center; margin-bottom: 15px;">
-                                            <i class="bi bi-check-circle-fill" style="color: #ff6600; margin-right: 10px;"></i>
-                                            <span style="color: #333; font-weight: 500;">Gentle techniques</span>
-                                        </div>
-                                        <div class="feature-item" style="display: flex; align-items: center; margin-bottom: 15px;">
-                                            <i class="bi bi-check-circle-fill" style="color: #ff6600; margin-right: 10px;"></i>
-                                            <span style="color: #333; font-weight: 500;">Adorable styles</span>
-                                        </div>
-                                        <div class="feature-item" style="display: flex; align-items: center; margin-bottom: 15px;">
-                                            <i class="bi bi-check-circle-fill" style="color: #ff6600; margin-right: 10px;"></i>
-                                            <span style="color: #333; font-weight: 500;">Kid-friendly comfort</span>
-                                        </div>
-                                    </div>
-                                    <div class="pricing-info mb-3" style="background: rgba(255, 102, 0, 0.1); padding: 15px; border-radius: 10px; border-left: 4px solid #ff6600;">
-                                        <p class="price" style="margin: 0; color: #030f68; font-weight: 700; font-size: 1.2rem;">Starting at ${{ number_format(config('service_prices.kids_braids', 80),0) }}</p>
-                                    </div>
-                                    <button class="btn btn-warning mt-3" onclick="window.location='{{ route('kids.selector') }}'" style="font-weight: 600; padding: 12px 30px;">
-                                        <i class="bi bi-calendar-check me-2"></i>Book Now
-                                    </button>
-                                </div>
-                            </div>
-                            <div class="col-lg-6">
-                                <div class="slide-image" style="text-align: center;">
-                                    <img src="{{ asset('images/kids hair style.webp') }}" alt="Kids Braids" style="width: 100%; max-width: 500px; height: 400px; object-fit: cover; border-radius: 20px; box-shadow: 0 15px 40px rgba(0,0,0,0.15);">
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Slide 7: Stitch Braids -->
-                    <div class="carousel-item">
-                        <div class="row align-items-center">
-                            <div class="col-lg-6">
-                                <div class="slide-content" style="padding: 40px;">
-                                    <h3 style="color: #030f68; font-weight: 700; font-size: 2rem; margin-bottom: 20px;">8–10 Rows Stitch Braids</h3>
-                                    <p style="color: #666; font-size: 1.1rem; line-height: 1.6; margin-bottom: 25px;">
-                                        Unique stitch pattern braids that create a distinctive, textured look. Features a special weaving technique that adds dimension and style to your braided hairstyle.
-                                    </p>
-                                    <div class="slide-features">
-                                        <div class="feature-item" style="display: flex; align-items: center; margin-bottom: 15px;">
-                                            <i class="bi bi-check-circle-fill" style="color: #ff6600; margin-right: 10px;"></i>
-                                            <span style="color: #333; font-weight: 500;">Unique stitch pattern</span>
-                                        </div>
-                                        <div class="feature-item" style="display: flex; align-items: center; margin-bottom: 15px;">
-                                            <i class="bi bi-check-circle-fill" style="color: #ff6600; margin-right: 10px;"></i>
-                                            <span style="color: #333; font-weight: 500;">Distinctive texture</span>
-                                        </div>
-                                        <div class="feature-item" style="display: flex; align-items: center; margin-bottom: 15px;">
-                                            <i class="bi bi-check-circle-fill" style="color: #ff6600; margin-right: 10px;"></i>
-                                            <span style="color: #333; font-weight: 500;">Special weaving</span>
-                                        </div>
-                                    </div>
-                                    <div class="pricing-info mb-3" style="background: rgba(255, 102, 0, 0.1); padding: 15px; border-radius: 10px; border-left: 4px solid #ff6600;">
-                                        <p class="price" style="margin: 0; color: #030f68; font-weight: 700; font-size: 1.2rem;">Starting at ${{ number_format(config('service_prices.stitch_braids', 120),0) }}</p>
-                                    </div>
-                                    <button class="btn btn-warning mt-3" onclick="openBookingModal('8–10 Rows Stitch Braids', 'stitch-braids')" style="font-weight: 600; padding: 12px 30px;">
-                                        <i class="bi bi-calendar-check me-2"></i>Book Now
-                                    </button>
-                                </div>
-                            </div>
-                            <div class="col-lg-6">
-                                <div class="slide-image" style="text-align: center;">
-                                    <img src="{{ asset('images/stitch braid.jpg') }}" alt="Stitch Braids" style="width: 100%; max-width: 500px; height: 400px; object-fit: cover; border-radius: 20px; box-shadow: 0 15px 40px rgba(0,0,0,0.15);">
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Slide 8: Hair Mask/Relaxing -->
-                    <div class="carousel-item">
-                        <div class="row align-items-center">
-                            <div class="col-lg-6">
-                                <div class="slide-content" style="padding: 40px;">
-                                    <h3 style="color: #030f68; font-weight: 700; font-size: 2rem; margin-bottom: 20px;">Hair Mask/Relaxing</h3>
-                                    <p style="color: #666; font-size: 1.1rem; line-height: 1.6; margin-bottom: 25px;">
-                                        Professional hair mask treatment and relaxing services to restore moisture, shine, and manageability. Perfect for maintaining healthy, beautiful hair.
-                                    </p>
-                                    <div class="slide-features">
-                                        <div class="feature-item" style="display: flex; align-items: center; margin-bottom: 15px;">
-                                            <i class="bi bi-check-circle-fill" style="color: #ff6600; margin-right: 10px;"></i>
-                                            <span style="color: #333; font-weight: 500;">Restore moisture</span>
-                                        </div>
-                                        <div class="feature-item" style="display: flex; align-items: center; margin-bottom: 15px;">
-                                            <i class="bi bi-check-circle-fill" style="color: #ff6600; margin-right: 10px;"></i>
-                                            <span style="color: #333; font-weight: 500;">Add shine</span>
-                                        </div>
-                                        <div class="feature-item" style="display: flex; align-items: center; margin-bottom: 15px;">
-                                            <i class="bi bi-check-circle-fill" style="color: #ff6600; margin-right: 10px;"></i>
-                                            <span style="color: #333; font-weight: 500;">Professional treatment</span>
-                                        </div>
-                                    </div>
-                                    <div class="pricing-info mb-3" style="background: rgba(255, 102, 0, 0.1); padding: 15px; border-radius: 10px; border-left: 4px solid #ff6600;">
-                                        <p class="price" style="margin: 0; color: #030f68; font-weight: 700; font-size: 1.2rem;">Starting at ${{ number_format(config('service_prices.hair_mask', 50),0) }}</p>
-                                    </div>
-                                    <button class="btn btn-warning mt-3" onclick="openBookingModal('Hair Mask/Relaxing', 'hair-mask')" style="font-weight: 600; padding: 12px 30px;">
-                                        <i class="bi bi-calendar-check me-2"></i>Book Now
-                                    </button>
-                                </div>
-                            </div>
-                            <div class="col-lg-6">
-                                <div class="slide-image" style="text-align: center;">
-                                    <img src="{{ asset('images/hair_mask.png') }}" alt="Hair Mask/Relaxing" style="width: 100%; max-width: 500px; height: 400px; object-fit: cover; border-radius: 20px; box-shadow: 0 15px 40px rgba(0,0,0,0.15);">
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Slide 9: Smedium Boho Braids -->
-                    <div class="carousel-item">
-                        <div class="row align-items-center">
-                            <div class="col-lg-6">
-                                <div class="slide-content" style="padding: 40px;">
-                                    <h3 style="color: #030f68; font-weight: 700; font-size: 2rem; margin-bottom: 20px;">Smedium Boho Braids</h3>
-                                    <p style="color: #666; font-size: 1.1rem; line-height: 1.6; margin-bottom: 25px;">
-                                        Bohemian-inspired braids with a free-spirited, artistic touch. Features curly strands for a trendy, fashion-forward look.
-                                    </p>
-                                    <div class="slide-features">
-                                        <div class="feature-item" style="display: flex; align-items: center; margin-bottom: 15px;">
-                                            <i class="bi bi-check-circle-fill" style="color: #ff6600; margin-right: 10px;"></i>
-                                            <span style="color: #333; font-weight: 500;">Bohemian-inspired</span>
-                                        </div>
-                                        <div class="feature-item" style="display: flex; align-items: center; margin-bottom: 15px;">
-                                            <i class="bi bi-check-circle-fill" style="color: #ff6600; margin-right: 10px;"></i>
-                                            <span style="color: #333; font-weight: 500;">Voluminous</span>
-                                        </div>
-                                        <div class="feature-item" style="display: flex; align-items: center; margin-bottom: 15px;">
-                                            <i class="bi bi-check-circle-fill" style="color: #ff6600; margin-right: 10px;"></i>
-                                            <span style="color: #333; font-weight: 500;">Fashionable</span>
-                                        </div>
-                                    </div>
-                                    <div class="pricing-info mb-3" style="background: rgba(255, 102, 0, 0.1); padding: 15px; border-radius: 10px; border-left: 4px solid #ff6600;">
-                                        <p class="price" style="margin: 0; color: #030f68; font-weight: 700; font-size: 1.2rem;">Starting at ${{ number_format(config('service_prices.boho_braids', 150),0) }}</p>
-                                    </div>
-                                    <button class="btn btn-warning mt-3" onclick="openBookingModal('Smedium Boho Braids', 'boho-braids')" style="font-weight: 600; padding: 12px 30px;">
-                                        <i class="bi bi-calendar-check me-2"></i>Book Now
-                                    </button>
-                                </div>
-                            </div>
-                            <div class="col-lg-6">
-                                <div class="slide-image" style="text-align: center;">
-                                    <img src="{{ asset('images/boho braid.jpg') }}" alt="Smedium Boho Braids" style="width: 100%; max-width: 500px; height: 400px; object-fit: cover; border-radius: 20px; box-shadow: 0 15px 40px rgba(0,0,0,0.15);">
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Slide 10: Custom Service -->
-                    <div class="carousel-item">
-                        <div class="row align-items-center">
-                            <div class="col-lg-6">
-                                <div class="slide-content" style="padding: 40px;">
-                                    <h3 style="color: #030f68; font-weight: 700; font-size: 2rem; margin-bottom: 20px;">Custom Styles Available</h3>
-                                    <p style="color: #666; font-size: 1.1rem; line-height: 1.6; margin-bottom: 25px;">
-                                        Don't see what you're looking for? We offer many more services beyond what's listed. Book a consultation and let us know what you need!
-                                    </p>
-                                    <div class="slide-features">
-                                        <div class="feature-item" style="display: flex; align-items: center; margin-bottom: 15px;">
-                                            <i class="bi bi-check-circle-fill" style="color: #ff6600; margin-right: 10px;"></i>
-                                            <span style="color: #333; font-weight: 500;">Custom consultations</span>
-                                        </div>
-                                        <div class="feature-item" style="display: flex; align-items: center; margin-bottom: 15px;">
-                                            <i class="bi bi-check-circle-fill" style="color: #ff6600; margin-right: 10px;"></i>
-                                            <span style="color: #333; font-weight: 500;">Personalized service</span>
-                                        </div>
-                                        <div class="feature-item" style="display: flex; align-items: center; margin-bottom: 15px;">
-                                            <i class="bi bi-check-circle-fill" style="color: #ff6600; margin-right: 10px;"></i>
-                                            <span style="color: #333; font-weight: 500;">Expert guidance</span>
-                                        </div>
-                                    </div>
-                                    <div class="pricing-info mb-3" style="background: rgba(3, 15, 104, 0.1); padding: 15px; border-radius: 10px; border-left: 4px solid #030f68;">
-                                        <p class="price" style="margin: 0; color: #030f68; font-weight: 700; font-size: 1.2rem;">Pricing varies by service</p>
-                                    </div>
-                                    <button class="btn btn-warning mt-3" onclick="openOtherServicesModal()" style="font-weight: 600; padding: 12px 30px;">
-                                        <i class="bi bi-plus-circle me-2"></i>Book Consultation
-                                    </button>
-                                </div>
-                            </div>
-                            <div class="col-lg-6">
-                                <div class="slide-image" style="text-align: center; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #f8f9fa 0%, #e3eafc 100%); border-radius: 20px; height: 400px;">
-                                    <div class="text-center" style="color: #030f68;">
-                                        <i class="bi bi-scissors" style="font-size: 4rem; margin-bottom: 20px; color: #ff6600;"></i>
-                                        <h4 style="font-weight: 700; margin-bottom: 10px;">Tell Us Your Vision</h4>
-                                        <p style="font-size: 1.1rem; color: #666;">We'll make it happen!</p>
+                                <div class="slide-image" style="text-align: center; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #030f68 0%, #ff6600 100%); border-radius: 20px; height: 400px; position: relative; overflow: hidden;">
+                                    <div style="position: absolute; inset: 0; background: url('{{ asset('images/stitch braid.jpg') }}') center/cover; opacity: 0.2;"></div>
+                                    <div class="text-center" style="position: relative; z-index: 1; color: white; padding: 40px;">
+                                        <i class="bi bi-stars" style="font-size: 4rem; margin-bottom: 20px;"></i>
+                                        <h4 style="font-weight: 700; margin-bottom: 15px; font-size: 1.8rem;">Your Hair Deserves the Best</h4>
+                                        <p style="font-size: 1.2rem; margin-bottom: 0;">Professional. Caring. Exceptional.</p>
                                     </div>
                                 </div>
                             </div>
@@ -3040,195 +3825,169 @@
         </div>
     </section>
 
-    <!-- Terms and Conditions Section -->
-    <section id="terms" class="section section-xl" style="padding: 50px 0; background-color: #f8f9fa;">
+    <!-- Services Section -->
+    <section id="services" class="services-section">
+        <div class="container" style="padding-top: 40px; padding-bottom: 40px;">
+            <div class="text-center mb-5">
+                <h2 class="section-title" style="font-weight: 700;">Our Services</h2>
+                <p class="lead">Professional hair braiding and styling services</p>
+            </div>
+
+            <!-- Quick Pick Filter -->
+            <div class="mb-4 text-center">
+                <div class="d-inline-flex flex-wrap gap-2 justify-content-center" role="group" aria-label="Service filter">
+                    <button class="btn btn-sm btn-outline-primary filter-chip active" data-filter="all" onclick="filterServices('all')">
+                        All Services
+                    </button>
+                    <button class="btn btn-sm btn-outline-primary filter-chip" data-filter="knotless" onclick="filterServices('knotless')">
+                        Knotless Braids
+                    </button>
+                    <button class="btn btn-sm btn-outline-primary filter-chip" data-filter="box" onclick="filterServices('box')">
+                        Box Braids
+                    </button>
+                    <button class="btn btn-sm btn-outline-primary filter-chip" data-filter="french" onclick="filterServices('french')">
+                        French Curl
+                    </button>
+                    <button class="btn btn-sm btn-outline-primary filter-chip" data-filter="twist" onclick="filterServices('twist')">
+                        Twists
+                    </button>
+                    <button class="btn btn-sm btn-outline-primary filter-chip" data-filter="kids" onclick="filterServices('kids')">
+                        Kids
+                    </button>
+                    <button class="btn btn-sm btn-outline-primary filter-chip" data-filter="cornrow" onclick="filterServices('cornrow')">
+                        Cornrow/Feed-in
+                    </button>
+                    <button class="btn btn-sm btn-outline-primary filter-chip" data-filter="crotchet" onclick="filterServices('crotchet')">
+                        Crotchet
+                    </button>
+                    <button class="btn btn-sm btn-outline-primary filter-chip" data-filter="other" onclick="filterServices('other')">
+                        Other
+                    </button>
+                </div>
+            </div>
+                        <!-- length guide removed from services section (moved into booking form) -->
+
+                        <div class="row g-4" id="servicesGrid">
+                <div class="col-lg-4 col-md-6 col-6 service-item" data-category="knotless" data-index="0">
+                    <div class="service-card h-100" onclick="openServiceSizeModal('knotless')">
+                        <img src="{{ asset('images/webbraids2.jpg') }}" alt="Knotless Braids">
+                        <h4>Knotless Braids</h4>
+                        <p class="mb-2">Versatile protective style available in multiple sizes—from ultra-fine to jumbo.</p>
+                        <p class="mb-1"><strong>Time:</strong> 2–7 hrs • <strong>Sizes:</strong> Small, Smedium, Medium, Jumbo</p>
+                        <p class="mb-3"><strong>Hair:</strong> Not included</p>
+                        <p class="price"><strong>From ${{ number_format(config('service_prices.jumbo_knotless', 100),0) }}</strong> <small class="text-muted">(varies by size & length)</small></p>
+                        <button class="btn btn-warning mt-3">Select Size & Book</button>
+                    </div>
+                </div>
+                <div class="col-lg-4 col-md-6 col-6 service-item" data-category="french" data-index="1">
+                    <div class="service-card h-100" onclick="openServiceSizeModal('french-curl')">
+                        <img src="{{ asset('images/french curl braid.jpg') }}" alt="French Curl Braids">
+                        <h4>French Curl Braids</h4>
+                        <p class="mb-2">Elegant braids with beautiful curly ends for a sophisticated, romantic look.</p>
+                        <p class="mb-1"><strong>Time:</strong> 3–7 hrs • <strong>Sizes:</strong> Small, Smedium, Medium, Large</p>
+                        <p class="mb-3"><strong>Hair:</strong> Not included</p>
+                        <p class="price"><strong>From $120</strong> <small class="text-muted">(varies by size & length)</small></p>
+                        <button class="btn btn-warning mt-3">Select Size & Book</button>
+                    </div>
+                </div>
+                <div class="col-lg-4 col-md-6 col-6 service-item" data-category="twist" data-index="2">
+                    <div class="service-card h-100" onclick="openServiceSizeModal('twist')">
+                        <img src="{{ asset('images/twist-main.jpg') }}" alt="Twist Styles">
+                        <h4>Twist Styles</h4>
+                        <p class="mb-2">Protective two-strand twists in various sizes—low-tension, versatile styling.</p>
+                        <p class="mb-1"><strong>Time:</strong> 2–6 hrs • <strong>Sizes:</strong> Small, Medium, Jumbo/Large, Natural Hair (S/M)</p>
+                        <p class="mb-3"><strong>Hair:</strong> Not included • <strong>Note:</strong> Natural Hair Twist - Small: $80, Medium: $60 (no length)</p>
+                        <p class="price"><strong>From $60</strong> <small class="text-muted">(varies by size & length)</small></p>
+                        <button class="btn btn-warning mt-3">Select Size & Book</button>
+                    </div>
+                </div>
+                <div class="col-lg-4 col-md-6 col-6 service-item" data-category="crotchet" data-index="3">
+                    <div class="service-card h-100" onclick="openServiceSizeModal('crotchet')">
+                        <img src="{{ asset('images/kinky crotchet.png') }}" alt="Crotchet Styles">
+                        <h4>Crotchet Styles</h4>
+                        <p class="mb-2">Quick protective styles with various crotchet options—versatile and low-maintenance.</p>
+                        <p class="mb-1"><strong>Time:</strong> 1.5–5 hrs • <strong>Types:</strong> 2/3 Line Single, Afro, Individual Loc, Butterfly, Weave Crotchet</p>
+                        <p class="mb-3"><strong>Hair:</strong> Not included • <strong>Note:</strong> No length adjustment needed</p>
+                        <p class="price"><strong>From $80</strong> <small class="text-muted">(varies by type)</small></p>
+                        <button class="btn btn-warning mt-3">Select Type & Book</button>
+                    </div>
+                </div>
+                <div class="col-lg-4 col-md-6 col-6 service-item" data-category="kids" data-index="4">
+                    <div class="service-card h-100" onclick="window.location='{{ route('kids.selector') }}'">
+                        <img src="{{ asset('images/kids hair style.webp') }}" alt="Kids Braids">
+                        <h4>Kids Braids (3–8 yrs)</h4>
+                        <p class="mb-2">Gentle, age-appropriate styles with adorable results.</p>
+                        <p class="mb-1"><strong>Time:</strong> 2–4 hrs • <strong>Length:</strong> Choose in booking</p>
+                        <p class="mb-3"><strong>Hair:</strong> Not included • <strong>Note:</strong> Parent/guardian must stay</p>
+                        <p class="price"><strong>From ${{ number_format(config('service_prices.kids_braids', 80),0) }}</strong> <small class="text-muted">(varies by style/complexity)</small></p>
+                        <button class="btn btn-warning mt-3">Book this style</button>
+                    </div>
+                </div>
+                <div class="col-lg-4 col-md-6 col-6 service-item" data-category="cornrow" data-index="5">
+                    <div class="service-card h-100" onclick="openServiceSizeModal('cornrow')">
+                        <img src="{{ asset('images/stitch braid.jpg') }}" alt="Cornrow/Feed-in Braids">
+                        <h4>Cornrow/Feed-in Braids</h4>
+                        <p class="mb-2">Classic cornrows and feed-in styles with or without weave extensions.</p>
+                        <p class="mb-1"><strong>Time:</strong> 1–5 hrs • <strong>Types:</strong> Stitch Weave, Cornrow Weave, Under-wig Weave, Weave&Braid Mixed</p>
+                        <p class="mb-2"><strong>Hair:</strong> Not included</p>
+                        <p class="mb-3" style="font-size: 0.9rem;"><strong>Note:</strong> Stitch/Cornrow: 8-10 rows $100, 10+ rows $130. Under-wig: $30 (no length). Mixed: $150</p>
+                        <p class="price"><strong>From $30</strong> <small class="text-muted">(varies by type)</small></p>
+                        <button class="btn btn-warning mt-3">Select Type & Book</button>
+                    </div>
+                </div>
+                <div class="col-lg-4 col-md-6 col-6 service-item" data-category="other">
+                    <div class="service-card h-100" onclick="openServiceSizeModal('hair-treatment')">
+                        <img src="{{ asset('images/hair_mask.png') }}" alt="Hair Treatment Services">
+                        <h4>Hair Treatment Services</h4>
+                        <p class="mb-2">Professional hair care treatments for natural and relaxed hair.</p>
+                        <p class="mb-1"><strong>Time:</strong> 45 min–2 hrs • <strong>Options:</strong> Natural Hair Mask, Chemical Relaxer</p>
+                        <p class="mb-3"><strong>Note:</strong> Optional weave treatment adds $30 to any service</p>
+                        <p class="price"><strong>From ${{ number_format(config('service_prices.hair_mask', 50),0) }}</strong> <small class="text-muted">(all treatments $50-$80)</small></p>
+                        <button class="btn btn-warning mt-3">Select Treatment & Book</button>
+                    </div>
+                </div>
+                <div class="col-lg-4 col-md-6 col-6 service-item" data-category="other" data-index="7">
+                    <div class="service-card h-100" onclick="openServiceSizeModal('boho')">
+                        <img src="{{ asset('images/boho braid.jpg') }}" alt="Boho Braids">
+                        <h4>Boho Braids</h4>
+                        <p class="mb-2">Knotless braids with curly ends left out for a free-spirited, bohemian look.</p>
+                        <p class="mb-1"><strong>Time:</strong> 3–7 hrs • <strong>Sizes:</strong> Small, Smedium, Medium, Jumbo/Large</p>
+                        <p class="mb-3"><strong>Hair:</strong> Not included</p>
+                        <p class="price"><strong>From $100</strong> <small class="text-muted">(varies by size & length)</small></p>
+                        <button class="btn btn-warning mt-3">Select Size & Book</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- See More/Less Button for Mobile -->
+            <div class="text-center mt-4 d-md-none" id="seeMoreContainer">
+                <button class="btn btn-primary" id="seeMoreBtn" onclick="toggleServices()">
+                    <span id="seeMoreText">See More Services</span>
+                    <i class="bi bi-chevron-down ms-1" id="seeMoreIcon"></i>
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Book Other Services Section -->
+    <section class="text-center py-5" style="background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);">
         <div class="container">
             <div class="row justify-content-center">
-                <div class="col-lg-10">
-                    <div class="text-center mb-5">
-                        <h2 class="section-title" style="font-size: 2.5rem; font-weight: 700; color: #030f68;">Terms & Conditions</h2>
-                        <div style="display:inline-block; max-width:820px; margin-top:18px; text-align:left;">
-                            <div style="background: linear-gradient(90deg, rgba(255,102,0,0.06), rgba(3,15,104,0.03)); border-left: 6px solid #ff6600; padding: 18px 20px; border-radius: 12px; box-shadow: 0 6px 18px rgba(3,15,104,0.06);">
-                                <div style="display:flex; align-items:flex-start; gap:12px;">
-                                    <div style="font-size:1.6rem; color:#ff6600; line-height:1; margin-top:2px;"><i class="bi bi-exclamation-triangle-fill"></i></div>
-                                    <div>
-                                        <div style="font-size:1.05rem; color:#03253f; font-weight:700; margin-bottom:6px;">Before booking, please review our terms and conditions</div>                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Important Hair Preparation Notice -->
-                    <div class="row mb-4">
-                        <div class="col-12">
-                            <div style="background: linear-gradient(135deg, rgba(255, 193, 7, 0.15), rgba(255, 152, 0, 0.1)); border-left: 6px solid #ff6600; border-top: 2px solid rgba(255, 102, 0, 0.3); padding: 20px 24px; border-radius: 12px; box-shadow: 0 4px 12px rgba(255, 102, 0, 0.1);">
-                                <p style="margin: 0; color: #ff6600; font-size: 1.1rem; line-height: 1.6;">
-                                    <strong style="font-weight: 700;">Important:</strong> Hair must come washed and blow dried/detangled for optimal styling results.
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="row g-4">
-                        <!-- Deposit & Payment Terms -->
-                        <div class="col-lg-6">
-                            <div class="card h-100 shadow-lg border-0" style="border-radius: 20px; background: #fff;">
-                                <div class="card-body p-4">
-                                    <div class="text-center mb-4">
-                                        <i class="bi bi-credit-card" style="font-size: 3rem; color: #ff6600;"></i>
-                                    </div>
-                                    <h4 style="color: #030f68; font-weight: 700; text-align: center; margin-bottom: 20px;">Deposit & Payment</h4>
-                                    <ul class="list-unstyled" style="font-size: 1rem; line-height: 1.8;">
-                                        <li class="mb-3">
-                                            <i class="bi bi-check-circle-fill text-success me-2"></i>
-                                            <strong>Deposit Required:</strong> A non-refundable deposit is required to secure your appointment
-                                        </li>
-                                        <li class="mb-3">
-                                            <i class="bi bi-check-circle-fill text-success me-2"></i>
-                                            <strong>Payment Methods:</strong> We accept cash, bank transfers, and mobile money payments
-                                        </li>
-                                        <li class="mb-3">
-                                            <i class="bi bi-check-circle-fill text-success me-2"></i>
-                                            <strong>Balance Payment:</strong> Remaining balance is due on the day of your appointment
-                                        </li>
-                                        <li class="mb-3">
-                                            <i class="bi bi-exclamation-triangle-fill text-warning me-2"></i>
-                                            <strong>No Refunds:</strong> Deposits are non-refundable once appointment is confirmed
-                                        </li>
-                                    </ul>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Cancellation Policy -->
-                        <div class="col-lg-6">
-                            <div class="card h-100 shadow-lg border-0" style="border-radius: 20px; background: #fff;">
-                                <div class="card-body p-4">
-                                    <div class="text-center mb-4">
-                                        <i class="bi bi-calendar-x" style="font-size: 3rem; color: #ff6600;"></i>
-                                    </div>
-                                    <h4 style="color: #030f68; font-weight: 700; text-align: center; margin-bottom: 20px;">Cancellation Policy</h4>
-                                    <ul class="list-unstyled" style="font-size: 1rem; line-height: 1.8;">
-                                        <li class="mb-3">
-                                            <i class="bi bi-clock-fill text-info me-2"></i>
-                                            <strong>Notice Required:</strong> Minimum 48 hours notice required for cancellations
-                                        </li>
-                                        <li class="mb-3">
-                                            <i class="bi bi-x-circle-fill text-danger me-2"></i>
-                                            <strong>No Show:</strong> No-shows will result in full charge and may affect future bookings
-                                        </li>
-                                        <li class="mb-3">
-                                            <i class="bi bi-arrow-clockwise text-success me-2"></i>
-                                            <strong>Rescheduling:</strong> Rescheduling is allowed with 48 hours notice
-                                        </li>
-                                        <li class="mb-3">
-                                            <i class="bi bi-calendar2-week-fill text-primary me-2"></i>
-                                            <strong>Reschedule Window:</strong> Reschedules must be within 1 month of the initial appointment date
-                                        </li>
-                                    </ul>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Home Service Terms -->
-                        <div class="col-lg-6">
-                            <div class="card h-100 shadow-lg border-0" style="border-radius: 20px; background: #fff;">
-                                <div class="card-body p-4">
-                                    <div class="text-center mb-4">
-                                        <i class="bi bi-house-heart" style="font-size: 3rem; color: #ff6600;"></i>
-                                    </div>
-                                    <h4 style="color: #030f68; font-weight: 700; text-align: center; margin-bottom: 20px;">Home Service</h4>
-                                    <ul class="list-unstyled" style="font-size: 1rem; line-height: 1.8;">
-                                        <li class="mb-3">
-                                            <i class="bi bi-check-circle-fill text-success me-2"></i>
-                                            <strong>No Extra Fee:</strong> Home service does not affect our standard pricing
-                                        </li>
-                                        <li class="mb-3">
-                                            <i class="bi bi-car-front-fill text-info me-2"></i>
-                                            <strong>Transportation:</strong> Clients are responsible for covering the cost of fueling the stylist’s transportation. Fees vary based on the distance to the service location.
-                                        </li>
-                                        <li class="mb-3">
-                                            <i class="bi bi-geo-alt-fill text-warning me-2"></i>
-                                            <strong>Service Area:</strong> Available within reasonable distance from our base location
-                                        </li>
-
-                                    </ul>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Contact Information -->
-                        <div class="col-lg-6">
-                            <div class="card h-100 shadow-lg border-0" style="border-radius: 20px; background: linear-gradient(135deg, #030f68 0%, #05137c 100%); color: white;">
-                                <div class="card-body p-4">
-                                    <div class="text-center mb-4">
-                                        <i class="bi bi-telephone-fill" style="font-size: 3rem; color: #ff6600;"></i>
-                                    </div>
-                                    <h4 style="color: #fff; font-weight: 700; text-align: center; margin-bottom: 20px;">Contact for More Information</h4>
-                                    <div class="contact-info" style="font-size: 1rem; line-height: 1.8;">
-                                        <div class="mb-3">
-                                            <i class="bi bi-telephone-fill text-warning me-2"></i>
-                                            <strong>Phone:</strong>
-                                            <a href="tel:+13432458848" style="color: #ff6600; text-decoration: none;">(+1)343-245-8848</a>
-                                        </div>
-                                        <div class="mb-3">
-                                            <i class="bi bi-envelope-fill text-warning me-2"></i>
-                                            <strong>Email:</strong>
-                                            <a href="mailto:info@dabsbeautytouch.com" style="color: #ff6600; text-decoration: none;">info@dabsbeautytouch.com</a>
-                                        </div>
-                                        <div class="mb-3">
-                                            <i class="bi bi-clock-fill text-warning me-2"></i>
-                                            <strong>Response Time:</strong> Within 24 hours
-                                        </div>
-                                        <div class="mb-3">
-                                            <i class="bi bi-chat-dots-fill text-warning me-2"></i>
-                                            <strong>Consultation:</strong> Free consultation available
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Additional Terms -->
-                    <div class="row mt-5">
-                        <div class="col-12">
-                            <div class="card shadow-lg border-0" style="border-radius: 20px; background: #fff;">
-                                <div class="card-body p-4">
-                                    <h4 style="color: #030f68; font-weight: 700; text-align: center; margin-bottom: 30px;">
-                                        <i class="bi bi-file-text me-2" style="color: #ff6600;"></i>
-                                        Additional Terms
-                                    </h4>
-                                    <div class="row">
-                                        <div class="col-md-6">
-                                            <ul class="list-unstyled" style="font-size: 1rem; line-height: 1.8;">
-                                                <li class="mb-3">
-                                                    <i class="bi bi-check-circle-fill text-success me-2"></i>
-                                                    <strong>Hair Preparation:</strong> Hair must be washed and detangled before appointment
-                                                </li>
-                                                <li class="mb-3">
-                                                    <i class="bi bi-check-circle-fill text-success me-2"></i>
-                                                    <strong>Extensions:</strong> Clients may provide their own extensions or purchase from us
-                                                </li>
-                                                <li class="mb-3">
-                                                    <i class="bi bi-check-circle-fill text-success me-2"></i>
-                                                    <strong>Duration:</strong> Service duration varies based on style complexity
-                                                </li>
-
-                                            </ul>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <ul class="list-unstyled" style="font-size: 1rem; line-height: 1.8;">
-
-
-
-
-                                            </ul>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                <div class="col-lg-8">
+                    <h4 class="mb-3" style="color: #030f68; font-weight: 600;">
+                        <i class="bi bi-star me-2"></i>Don't See Your Desired Service?
+                    </h4>
+                    <p class="lead mb-4" style="color: #6c757d;">
+                        We offer many more services beyond what's listed above. Book a consultation and let us know what you need!
+                    </p>
+                    <button type="button" class="btn btn-outline-primary btn-lg px-5" onclick="openCustomServiceModal()" style="font-weight: 600; border-radius: 25px; box-shadow: 0 4px 12px rgba(3, 15, 104, 0.2);">
+                        <i class="bi bi-plus-circle me-2"></i>Book Other Services
+                    </button>
+                    <div class="mt-3">
+                        <small class="text-muted">
+                            <i class="bi bi-info-circle me-1"></i>
+                            Tell us about your specific needs and we'll take care of you!
+                        </small>
                     </div>
                 </div>
             </div>
@@ -3246,30 +4005,31 @@
         <div class="owl-carousel owl-theme-1" data-items="1" data-sm-items="1" data-md-items="1" data-lg-items="1" data-xl-items="2" data-xxl-items="3" data-margin="15px" data-nav="false" data-dots="true" data-autoplay="5000">
             <div class="testimonial-box" style="background:linear-gradient(135deg,#e3eafc 0%,#f8f9fa 100%); border-radius:18px; box-shadow:0 8px 32px rgba(0,0,0,0.12); padding:38px 28px; margin:0 12px; position:relative;">
                 <div class="testimonial-title" style="font-size:1.3rem; color:#ff6600; font-weight:700; margin-top:32px;">Cool!</div>
-                <div class="testimonial-rate"><img src="{{ asset('images/star-ratings.webp') }}" alt="" width="120" height="22"/></div>
+                <div class="testimonial-rate"><img src="{{ asset('images/star-ratings.webp') }}" alt="5 Star Rating" width="120" height="22"/></div>
                 <div class="testimonial-text" style="font-size:1.12rem; color:#222; margin:18px 0; font-style:italic;">"DBT offers great services and she delivers excellently. </div>
                 <div class="testimonial-name" style="font-size:1rem; color:#030f68; font-weight:500;">Client 1</div>
             </div>
             <div class="testimonial-box" style="background:linear-gradient(135deg,#fff6e3 0%,#ffe3e3 100%); border-radius:18px; box-shadow:0 8px 32px rgba(0,0,0,0.12); padding:38px 28px; margin:0 12px; position:relative;">
                 <div class="testimonial-title" style="font-size:1.3rem; color:#ff6600; font-weight:700; margin-top:32px;">Excellent!</div>
-                <div class="testimonial-rate"><img src="{{ asset('images/star-ratings.webp') }}" alt="" width="120" height="22"/></div>
+                <div class="testimonial-rate"><img src="{{ asset('images/star-ratings.webp') }}" alt="5 Star Rating" width="120" height="22"/></div>
                 <div class="testimonial-text" style="font-size:1.12rem; color:#222; margin:18px 0; font-style:italic;">"Very patient and time conscious. She follows up and ensures customer comfortability. I always leave happy!"</div>
                 <div class="testimonial-name" style="font-size:1rem; color:#030f68; font-weight:500;">Client 2</div>
             </div>
             <div class="testimonial-box" style="background:linear-gradient(135deg,#e3ffe3 0%,#e3f8ff 100%); border-radius:18px; box-shadow:0 8px 32px rgba(0,0,0,0.12); padding:38px 28px; margin:0 12px; position:relative;">
                 <div class="testimonial-title" style="font-size:1.3rem; color:#ff6600; font-weight:700; margin-top:32px;">Amazing!</div>
-                <div class="testimonial-rate"><img src="{{ asset('images/star-ratings.webp') }}" alt="" width="120" height="22"/></div>
+                <div class="testimonial-rate"><img src="{{ asset('images/star-ratings.webp') }}" alt="5 Star Rating" width="120" height="22"/></div>
                 <div class="testimonial-text" style="font-size:1.12rem; color:#222; margin:18px 0; font-style:italic;">"DBT braided my child's hair and my child was very comfortable. Her braids don't hurt much and last long!"</div>
                 <div class="testimonial-name" style="font-size:1rem; color:#030f68; font-weight:500;">Client 3</div>
             </div>
             <div class="testimonial-box" style="background:linear-gradient(135deg,#f8e3ff 0%,#e3eaff 100%); border-radius:18px; box-shadow:0 8px 32px rgba(0,0,0,0.12); padding:38px 28px; margin:0 12px; position:relative;">
                 <div class="testimonial-title" style="font-size:1.3rem; color:#ff6600; font-weight:700; margin-top:32px;">Excellent!</div>
-                <div class="testimonial-rate"><img src="{{ asset('images/star-ratings.webp') }}" alt="" width="120" height="22"/></div>
+                <div class="testimonial-rate"><img src="{{ asset('images/star-ratings.webp') }}" alt="5 Star Rating" width="120" height="22"/></div>
                 <div class="testimonial-text" style="font-size:1.12rem; color:#222; margin:18px 0; font-style:italic;"> "Customer relationship is amazing. Very professional and very affordable service. Highly recommend DBT!"</div>
                 <div class="testimonial-name" style="font-size:1rem; color:#030f68; font-weight:500;">Client 4</div>
             </div>
         </div>
     </div>
+
 
     <!-- About Section -->
     <section id="about" class="about-section">
@@ -3292,120 +4052,87 @@
         </div>
     </section>
 
-    <!-- Services Section -->
-    <section id="services" class="services-section">
+    <!-- Contact Section -->
+    <section id="contact" class="contact-section">
         <div class="container" style="padding-top: 40px; padding-bottom: 40px;">
-            <div class="text-center mb-5">
-                <h2 class="section-title" style="font-weight: 700;">Our Services</h2>
-                <p class="lead">Professional hair braiding and styling services</p>
-            </div>
-                        <!-- length guide removed from services section (moved into booking form) -->
+            <div class="row justify-content-center align-items-center">
+                <div class="col-lg-10">
+                    <div class="card flex-row shadow-lg border-0" style="border-radius: 24px; overflow: hidden; background: #fff;">
+                        <div class="col-md-6 p-5 d-flex flex-column justify-content-center" style="border-right:1px solid #e3eafc;">
+                            <h2 class="section-title mb-3" style="font-size:2.2rem; font-weight:700;">Contact Information</h2>
+                            <ul class="list-unstyled mb-4" style="font-size:1.08rem;">
+                                <li class="mb-3"><i class="bi bi-arrow-right-circle-fill text-primary me-2"></i><strong>Phone:</strong> <a href="tel:+13432458848" style="color:#030f68; text-decoration:none;">(+1)343-245-8848</a></li>
+                                <li class="mb-3"><i class="bi bi-arrow-right-circle-fill text-warning me-2"></i><strong>Email:</strong> <a href="mailto:info@dabsbeautytouch.com" style="color:#ff6600; text-decoration:none;">info@dabsbeautytouch.com</a></li>
+                                <li class="mb-3"><i class="bi bi-arrow-right-circle-fill text-danger me-2"></i><strong>Address:</strong> Ottawa</li>
+                                <li class="mb-3"><i class="bi bi-arrow-right-circle-fill text-success me-2"></i><strong>Hours:</strong>
+                                    <ul class="ps-4 mb-0" style="font-size:0.98rem;">
+                                        <li>Monday - Friday: 8:00 AM - 8:00 PM</li>
+                                        <li>Saturday: 10:00 AM - 8:00 PM</li>
+                                        <li>Sunday: 1:00 PM - 8:00 PM</li>
+                                    </ul>
+                                </li>
+                            </ul>
+                            <div class="social-links mt-3">
+                                <a href="#" class="btn btn-outline-primary me-2"><i class="bi bi-facebook me-1"></i>Facebook</a>
+                                <a href="https://www.instagram.com/dabs_beauty_touch?igsh=MXYycGNraGxwem5tZw%3D%3D&utm_source=qr" class="btn btn-outline-info me-2" target="_blank" rel="noopener noreferrer"><i class="bi bi-instagram me-1"></i>Instagram</a>
+                                <a href="https://wa.me/13432548848" class="btn btn-outline-success" target="_blank" rel="noopener noreferrer"><i class="bi bi-whatsapp me-1"></i>WhatsApp</a>
+                            </div>
+                        </div>
+                        <div class="col-md-6 p-5 d-flex flex-column justify-content-center">
+                            <h2 class="section-title mb-4" style="font-size:2rem; font-weight:700;">Send us a Message</h2>
+                            
+                            @if(session('success'))
+                                <div class="alert alert-success alert-dismissible fade show mb-4" role="alert" style="border-radius: 10px; border-left: 4px solid #28a745;">
+                                    <i class="bi bi-check-circle-fill me-2"></i>
+                                    <strong>Success!</strong> {{ session('success') }}
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                </div>
+                            @endif
 
-                        <div class="row g-4">
-                <div class="col-lg-4 col-md-6 col-6">
-                    <div class="service-card h-100" onclick="openBookingModal('Small Knotless Braids', 'small-knotless')">
-                        <img src="{{ asset('images/small braid.jpg') }}" alt="Small Knotless Braids">
-                        <h4>Small Knotless Braids</h4>
-                        <p>Ultra-fine knotless braids that blend seamlessly with your natural hair. Perfect for a sleek, professional look with minimal tension and maximum comfort.</p>
-                        <p class="price"><strong>Starting at ${{ number_format(config('service_prices.small_knotless', 170),0) }}</strong></p>
-                        <button class="btn btn-warning mt-3">Book Now</button>
-                    </div>
-                </div>
-                <div class="col-lg-4 col-md-6 col-6">
-                    <div class="service-card h-100" onclick="openBookingModal('Smedium Knotless Braids', 'smedium-knotless')">
-                        <img src="{{ asset('images/webbraids2.jpg') }}" alt="Smedium Knotless Braids">
-                        <h4>Smedium Knotless Braids</h4>
-                        <p>Perfect balance between small and medium braids for a versatile, everyday style. Offers excellent durability while maintaining a natural, lightweight feel.</p>
-                        <p class="price"><strong>Starting at ${{ number_format(config('service_prices.smedium_knotless', 150),0) }}</strong></p>
-                        <button class="btn btn-warning mt-3">Book Now</button>
-                    </div>
-                </div>
-                <div class="col-lg-4 col-md-6 col-6">
-                    <div class="service-card h-100" onclick="openBookingModal('Wig Installation', 'wig-installation')">
-                        <img src="{{ asset('images/wig installation.jpg') }}" alt="Smedium Knotless Braids">
-                        <h4>Wig Installation</h4>
-                        <p>Professional wig installation with custom fitting and styling. Sleek natural hairline blending, and personalized styling to match your desired look.</p>
-                        <p class="price"><strong>Starting at ${{ number_format(config('service_prices.wig_installation', 150),0) }}</strong></p>
-                        <button class="btn btn-warning mt-3">Book Now</button>
-                    </div>
-                </div>
-                <div class="col-lg-4 col-md-6 col-6">
-                    <div class="service-card h-100" onclick="openBookingModal('Medium Knotless Braids', 'medium-knotless')">
-                        <img src="{{ asset('images/large braid.jpg') }}" alt="Medium Knotless Braids">
-                        <h4>Medium Knotless Braids</h4>
-                        <p>Bold, statement-making braids that create a dramatic, eye-catching look. Perfect for those who want to make a strong fashion statement with their hair.</p>
-                        <p class="price"><strong>Starting at ${{ number_format(config('service_prices.medium_knotless', 130),0) }}</strong></p>
-                        <button class="btn btn-warning mt-3">Book Now</button>
-                    </div>
-                </div>
-                <div class="col-lg-4 col-md-6 col-6">
-                    <div class="service-card h-100" onclick="openBookingModal('Jumbo Knotless Braids', 'jumbo-knotless')">
-                        <img src="{{ asset('images/jumbo braid.jpg') }}" alt="Jumbo Knotless Braids">
-                        <h4>Jumbo Knotless Braids</h4>
-                        <p>Extra large, voluminous braids for maximum impact and style. Creates a bold, confident look that's perfect for special occasions and fashion-forward individuals.</p>
-                        <p class="price"><strong>Starting at ${{ number_format(config('service_prices.jumbo_knotless', 100),0) }}</strong></p>
-                        <button class="btn btn-warning mt-3">Book Now</button>
-                    </div>
-                </div>
-                <div class="col-lg-4 col-md-6 col-6">
-                    <div class="service-card h-100" onclick="window.location='{{ route('kids.selector') }}'">
-                        <img src="{{ asset('images/kids hair style.webp') }}" alt="Kids Braids">
-                        <h4>Kids Braids(3-8yrs)</h4>
-                        <p>Specialized braiding services for children with gentle, age-appropriate techniques. Creates adorable, manageable styles that are comfortable and long-lasting for active kids.</p>
-                        <p class="price"><strong>Starting at ${{ number_format(config('service_prices.kids_braids', 80),0) }}</strong></p>
-                        <button class="btn btn-warning mt-3">Book Now</button>
-                    </div>
-                </div>
-                <div class="col-lg-4 col-md-6 col-6">
-                    <div class="service-card h-100" onclick="openBookingModal('8–10 Rows Stitch Braids', 'stitch-braids')">
-                        <img src="{{ asset('images/stitch braid.jpg') }}" alt="8–10 Rows Stitch Braids">
-                        <h4>8–10 Rows Stitch Braids</h4>
-                        <p>Unique stitch pattern braids that create a distinctive, textured look. Features a special weaving technique that adds dimension and style to your braided hairstyle.</p>
-                        <p class="price"><strong>Starting at ${{ number_format(config('service_prices.stitch_braids', 120),0) }}</strong></p>
-                        <button class="btn btn-warning mt-3">Book Now</button>
-                    </div>
-                </div>
-                <div class="col-lg-4 col-md-6 col-6">
-                    <div class="service-card h-100" onclick="openBookingModal('Hair Mask/Relaxing', 'hair-mask')">
-                        <img src="{{ asset('images/hair_mask.png') }}" alt="Hair Mask/Relaxing">
-                        <h4>Hair Mask/Relaxing</h4>
-                        <p>Professional hair mask treatment and relaxing services to restore moisture, shine, and manageability.</p>
-                        <p class="price"><strong>Starting at ${{ number_format(config('service_prices.hair_mask', 50),0) }}</strong></p>
-                        <button class="btn btn-warning mt-3">Book Now</button>
-                    </div>
-                </div>
-                <div class="col-lg-4 col-md-6 col-6">
-                    <div class="service-card h-100" onclick="openBookingModal('Smedium Boho Braids', 'boho-braids')">
-                        <img src="{{ asset('images/boho braid.jpg') }}" alt="Smedium Boho Braids">
-                        <h4>Smedium Boho Braids</h4>
-                        <p>Bohemian-inspired braids with a free-spirited, artistic touch. Features unique styling elements and accessories for a trendy, fashion-forward look.</p>
-                        <p class="price"><strong>Starting at ${{ number_format(config('service_prices.boho_braids', 150),0) }}</strong></p>
-                        <button class="btn btn-warning mt-3">Book Now</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
+                            @if($errors->any())
+                                <div class="alert alert-danger alert-dismissible fade show mb-4" role="alert" style="border-radius: 10px; border-left: 4px solid #dc3545;">
+                                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                                    <strong>Please fix the following errors:</strong>
+                                    <ul class="mb-0 mt-2">
+                                        @foreach($errors->all() as $error)
+                                            <li>{{ $error }}</li>
+                                        @endforeach
+                                    </ul>
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                </div>
+                            @endif
 
-    <!-- Book Other Services Section -->
-    <section class="text-center py-5" style="background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);">
-        <div class="container">
-            <div class="row justify-content-center">
-                <div class="col-lg-8">
-                    <h4 class="mb-3" style="color: #030f68; font-weight: 600;">
-                        <i class="bi bi-star me-2"></i>Don't See Your Desired Service?
-                    </h4>
-                    <p class="lead mb-4" style="color: #6c757d;">
-                        We offer many more services beyond what's listed above. Book a consultation and let us know what you need!
-                    </p>
-                    <button type="button" class="btn btn-outline-primary btn-lg px-5" onclick="openOtherServicesModal()" style="font-weight: 600; border-radius: 25px; box-shadow: 0 4px 12px rgba(3, 15, 104, 0.2);">
-                        <i class="bi bi-plus-circle me-2"></i>Book Other Services
-                    </button>
-                    <div class="mt-3">
-                        <small class="text-muted">
-                            <i class="bi bi-info-circle me-1"></i>
-                            Tell us about your specific needs and we'll take care of you!
-                        </small>
+                            <form action="{{ route('contact.store') }}" method="POST" id="contactForm" class="bg-white p-4 rounded shadow-sm" style="border-radius:18px;">
+                                @csrf
+                                <div class="row g-4">
+                                    <div class="col-12 mb-3">
+                                        <div class="form-floating">
+                                            <input type="text" class="form-control" id="contact_name" name="name" placeholder="Name *" required>
+                                            <label for="contact_name">Name *</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-12 mb-3">
+                                        <div class="form-floating">
+                                            <input type="email" class="form-control" id="contact_email" name="email" placeholder="Email *" required>
+                                            <label for="contact_email">Email *</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-12 mb-3">
+                                        <div class="form-floating">
+                                            <input type="text" class="form-control" id="contact_subject" name="subject" placeholder="Subject">
+                                            <label for="contact_subject">Subject</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-12 mb-3">
+                                        <div class="form-floating">
+                                            <textarea class="form-control" id="contact_message" name="message" placeholder="Message *" style="height: 120px" required></textarea>
+                                            <label for="contact_message">Message *</label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <button type="submit" class="btn btn-primary w-100" style="font-size:1.1rem; font-weight:700; border-radius:8px;">Send Message</button>
+                            </form>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -3416,6 +4143,225 @@
     <!-- Primary success modal omitted: show deposit modal/banner instead when a booking completes -->
 
     <!-- Other Services Success Modal removed per request -->
+
+    <!-- Size & Length Selection Modal (Step 1 before booking form) -->
+    <div class="modal fade" id="serviceSizeLengthModal" tabindex="-1" aria-labelledby="serviceSizeLengthModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content" style="border-radius: 16px; box-shadow: 0 10px 40px rgba(0,0,0,0.15);">
+                <div class="modal-header" style="background: linear-gradient(135deg, #030f68 0%, #05137c 100%); color: white; border-radius: 16px 16px 0 0; padding: 20px 30px;">
+                    <h5 class="modal-title" id="serviceSizeLengthModalLabel" style="font-weight: 700; font-size: 1.5rem;">
+                        <i class="bi bi-card-checklist me-2"></i><span id="serviceCategory">Knotless Braids</span>
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" style="padding: 30px;">
+                    <!-- Step indicator -->
+                    <div class="mb-4 pb-3 border-bottom">
+                        <div class="d-flex align-items-center justify-content-center gap-3">
+                            <div class="d-flex align-items-center" style="background: #030f68; color: white; padding: 8px 16px; border-radius: 50px; font-weight: 600;">
+                                <span class="me-2">1</span>
+                                <span>Select Size & Length</span>
+                            </div>
+                            <i class="bi bi-arrow-right" style="color: #ccc;"></i>
+                            <div class="d-flex align-items-center" style="background: #e9ecef; color: #666; padding: 8px 16px; border-radius: 50px; font-weight: 600;">
+                                <span class="me-2">2</span>
+                                <span>Booking Details</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Size Selection -->
+                    <div class="mb-4">
+                        <h6 style="font-weight: 700; color: #030f68; margin-bottom: 15px;">
+                            <i class="bi bi-grid-3x3 me-2"></i>Choose Braid Size
+                        </h6>
+                        <div class="row g-3" id="sizeOptionsContainer">
+                            <!-- Size options will be dynamically populated -->
+                        </div>
+                        
+                        <!-- Selected Service Display -->
+                        <div id="selectedServiceDisplay" style="display: none; margin-top: 20px; padding: 15px; background: linear-gradient(135deg, #e7f3ff 0%, #cce5ff 100%); border-left: 6px solid #17a2b8; border-radius: 10px;">
+                            <div style="display: flex; align-items: center; justify-content: space-between;">
+                                <div>
+                                    <div style="font-size: 0.85rem; color: #6c757d; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 5px;">
+                                        Selected Service
+                                    </div>
+                                    <div id="selectedServiceName" style="font-size: 1.1rem; font-weight: 700; color: #030f68;"></div>
+                                </div>
+                                <div style="text-align: right;">
+                                    <div style="font-size: 0.85rem; color: #6c757d; margin-bottom: 3px;">Base Price</div>
+                                    <div id="selectedServicePrice" style="font-size: 1.3rem; font-weight: 800; color: #ff6600;"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Weave Add-on (shown for Hair Treatment Services) -->
+                    <div class="mb-4" id="weaveAddonSection" style="display: none;">
+                        <div class="alert" style="background: linear-gradient(135deg, #fff7e0 0%, #ffe8cc 100%); border-left: 6px solid #ff6600; border-radius: 12px; padding: 20px;">
+                            <h6 style="font-weight: 700; color: #030f68; margin-bottom: 15px;">
+                                <i class="bi bi-plus-circle me-2"></i>Add Weave Treatment
+                            </h6>
+                            <p style="margin-bottom: 15px; color: #555; font-size: 0.95rem;">
+                                Do you have a weave/extension installed that needs treatment?
+                            </p>
+                            <div class="d-flex gap-3">
+                                <div class="form-check flex-fill" style="background: #fff; padding: 15px; border-radius: 10px; border: 2px solid #e9ecef; cursor: pointer;" onclick="toggleWeaveAddon(false)">
+                                    <input class="form-check-input" type="radio" name="weave_addon" id="weave_no" value="no" checked>
+                                    <label class="form-check-label w-100" for="weave_no" style="cursor: pointer; font-weight: 600;">
+                                        <i class="bi bi-x-circle me-2"></i>No Weave
+                                        <span class="float-end text-muted">+$0</span>
+                                    </label>
+                                </div>
+                                <div class="form-check flex-fill" style="background: #fff; padding: 15px; border-radius: 10px; border: 2px solid #e9ecef; cursor: pointer;" onclick="toggleWeaveAddon(true)">
+                                    <input class="form-check-input" type="radio" name="weave_addon" id="weave_yes" value="yes">
+                                    <label class="form-check-label w-100" for="weave_yes" style="cursor: pointer; font-weight: 600;">
+                                        <i class="bi bi-check-circle me-2"></i>Add Weave
+                                        <span class="float-end text-success">+$30</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Row Options (shown for Stitch and Cornrow Weave) -->
+                    <div class="mb-4" id="rowOptionsSection" style="display: none;">
+                        <div class="alert" style="background: linear-gradient(135deg, #e7f3ff 0%, #cce5ff 100%); border-left: 6px solid #17a2b8; border-radius: 12px; padding: 20px;">
+                            <h6 style="font-weight: 700; color: #030f68; margin-bottom: 15px;">
+                                <i class="bi bi-sliders me-2"></i>Choose Number of Rows
+                            </h6>
+                            <p style="margin-bottom: 15px; color: #555; font-size: 0.95rem;">
+                                <strong>Note:</strong> More than 10 rows (tiny braids) attracts an extra $30.
+                            </p>
+                            <div class="d-flex gap-3">
+                                <div class="form-check flex-fill" style="background: #fff; padding: 15px; border-radius: 10px; border: 2px solid #e9ecef; cursor: pointer;" onclick="toggleRowOption('8-10')">
+                                    <input class="form-check-input" type="radio" name="row_option" id="row_8_10" value="8-10" checked>
+                                    <label class="form-check-label w-100" for="row_8_10" style="cursor: pointer; font-weight: 600;">
+                                        <i class="bi bi-grid-3x2 me-2"></i>8-10 Rows
+                                        <span class="float-end text-muted">+$0</span>
+                                    </label>
+                                </div>
+                                <div class="form-check flex-fill" style="background: #fff; padding: 15px; border-radius: 10px; border: 2px solid #e9ecef; cursor: pointer;" onclick="toggleRowOption('10+')">
+                                    <input class="form-check-input" type="radio" name="row_option" id="row_10_plus" value="10+">
+                                    <label class="form-check-label w-100" for="row_10_plus" style="cursor: pointer; font-weight: 600;">
+                                        <i class="bi bi-grid-fill me-2"></i>10+ Rows (Tiny)
+                                        <span class="float-end text-info">+$30</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Front/Back Add-on (shown for 2/3 Line Single Crotchet) -->
+                    <div class="mb-4" id="frontBackAddonSection" style="display: none;">
+                        <div class="alert" style="background: linear-gradient(135deg, #fff7e0 0%, #ffe8cc 100%); border-left: 6px solid #ff6600; border-radius: 12px; padding: 20px;">
+                            <h6 style="font-weight: 700; color: #030f68; margin-bottom: 15px;">
+                                <i class="bi bi-plus-circle me-2"></i>Add Back Coverage
+                            </h6>
+                            <p style="margin-bottom: 15px; color: #555; font-size: 0.95rem;">
+                                Would you like a single crotchet at back too?
+                            </p>
+                            <div class="d-flex gap-3">
+                                <div class="form-check flex-fill" style="background: #fff; padding: 15px; border-radius: 10px; border: 2px solid #e9ecef; cursor: pointer;" onclick="toggleFrontBackAddon(false)">
+                                    <input class="form-check-input" type="radio" name="frontback_addon" id="frontback_no" value="no" checked>
+                                    <label class="form-check-label w-100" for="frontback_no" style="cursor: pointer; font-weight: 600;">
+                                        <i class="bi bi-x-circle me-2"></i>Front Only
+                                        <span class="float-end text-muted">+$0</span>
+                                    </label>
+                                </div>
+                                <div class="form-check flex-fill" style="background: #fff; padding: 15px; border-radius: 10px; border: 2px solid #e9ecef; cursor: pointer;" onclick="toggleFrontBackAddon(true)">
+                                    <input class="form-check-input" type="radio" name="frontback_addon" id="frontback_yes" value="yes">
+                                    <label class="form-check-label w-100" for="frontback_yes" style="cursor: pointer; font-weight: 600;">
+                                        <i class="bi bi-check-circle me-2"></i>Front + Back
+                                        <span class="float-end text-success">+$20</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Length Selection with Guide -->
+                    <div class="mb-4" id="lengthSelectionSection">
+                        <h6 style="font-weight: 700; color: #030f68; margin-bottom: 15px;">
+                            <i class="bi bi-rulers me-2"></i>Choose Hair Length
+                        </h6>
+                        <div class="row align-items-center">
+                            <div class="col-12 col-md-5 text-center mb-3 mb-md-0">
+                                <img src="{{ asset('images/braids-length-guide.jpg') }}" alt="Length guide" class="img-fluid" style="max-width: 100%; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+                            </div>
+                            <div class="col-12 col-md-7">
+                                <div class="d-flex flex-column gap-2" id="lengthOptionsContainer">
+                                    <div class="form-check p-3" style="background: #f8f9fa; border-radius: 8px; border: 2px solid transparent; cursor: pointer;" onclick="selectSizeLength('neck')">
+                                        <input class="form-check-input" type="radio" name="size_length" id="size_length_neck" value="neck">
+                                        <label class="form-check-label w-100" for="size_length_neck" style="cursor: pointer;">
+                                            <strong>Neck length</strong> <span class="text-muted float-end">-$40</span>
+                                        </label>
+                                    </div>
+                                    <div class="form-check p-3" style="background: #f8f9fa; border-radius: 8px; border: 2px solid transparent; cursor: pointer;" onclick="selectSizeLength('shoulder')">
+                                        <input class="form-check-input" type="radio" name="size_length" id="size_length_shoulder" value="shoulder">
+                                        <label class="form-check-label w-100" for="size_length_shoulder" style="cursor: pointer;">
+                                            <strong>Shoulder length</strong> <span class="text-muted float-end">-$40</span>
+                                        </label>
+                                    </div>
+                                    <div class="form-check p-3" style="background: #f8f9fa; border-radius: 8px; border: 2px solid transparent; cursor: pointer;" onclick="selectSizeLength('armpit')">
+                                        <input class="form-check-input" type="radio" name="size_length" id="size_length_armpit" value="armpit">
+                                        <label class="form-check-label w-100" for="size_length_armpit" style="cursor: pointer;">
+                                            <strong>Armpit length</strong> <span class="text-muted float-end">-$40</span>
+                                        </label>
+                                    </div>
+                                    <div class="form-check p-3" style="background: #fff7e0; border-radius: 8px; border: 2px solid #ff6600; cursor: pointer;" onclick="selectSizeLength('mid-back')">
+                                        <input class="form-check-input" type="radio" name="size_length" id="size_length_midback" value="mid-back" checked>
+                                        <label class="form-check-label w-100" for="size_length_midback" style="cursor: pointer;">
+                                            <strong>Mid-back length</strong> <span class="badge bg-warning text-dark float-end">Base Price</span>
+                                        </label>
+                                    </div>
+                                    <div class="form-check p-3" style="background: #f8f9fa; border-radius: 8px; border: 2px solid transparent; cursor: pointer;" onclick="selectSizeLength('waist')">
+                                        <input class="form-check-input" type="radio" name="size_length" id="size_length_waist" value="waist">
+                                        <label class="form-check-label w-100" for="size_length_waist" style="cursor: pointer;">
+                                            <strong>Waist length</strong> <span class="text-muted float-end">+$20</span>
+                                        </label>
+                                    </div>
+                                    <div class="form-check p-3" style="background: #f8f9fa; border-radius: 8px; border: 2px solid transparent; cursor: pointer;" onclick="selectSizeLength('hip')">
+                                        <input class="form-check-input" type="radio" name="size_length" id="size_length_hip" value="hip">
+                                        <label class="form-check-label w-100" for="size_length_hip" style="cursor: pointer;">
+                                            <strong>Hip length</strong> <span class="text-muted float-end">+$40</span>
+                                        </label>
+                                    </div>
+                                    <div class="form-check p-3" style="background: #f8f9fa; border-radius: 8px; border: 2px solid transparent; cursor: pointer;" onclick="selectSizeLength('tailbone')">
+                                        <input class="form-check-input" type="radio" name="size_length" id="size_length_tailbone" value="tailbone">
+                                        <label class="form-check-label w-100" for="size_length_tailbone" style="cursor: pointer;">
+                                            <strong>Tailbone / Classic length</strong> <span class="text-muted float-end">+$60</span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Price Display -->
+                    <div class="alert" style="background: linear-gradient(135deg, #fff7e0 0%, #ffe8cc 100%); border-left: 6px solid #ff6600; border-radius: 12px;">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <div style="font-size: 0.9rem; color: #666; font-weight: 500;">Estimated Total</div>
+                                <div id="sizeLengthPriceDisplay" style="font-size: 2rem; font-weight: 800; color: #030f68;">$--</div>
+                            </div>
+                            <div class="text-end">
+                                <small class="text-muted">Base + Length adjustment</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer" style="border-top: 2px solid #e9ecef; padding: 20px 30px;">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal" style="padding: 10px 24px; border-radius: 8px;">
+                        <i class="bi bi-x-circle me-2"></i>Cancel
+                    </button>
+                    <button type="button" class="btn btn-warning" id="continueToBookingBtn" onclick="continueToBooking()" style="padding: 10px 30px; border-radius: 8px; font-weight: 700; background: linear-gradient(135deg, #ff6600 0%, #ff8533 100%); border: none;">
+                        <i class="bi bi-arrow-right-circle me-2"></i>Continue to Booking
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 
                     <!-- Booking Modal (contains Single Booking Form) -->
                     <div class="modal fade" id="bookingModal" tabindex="-1" aria-labelledby="bookingModalLabel" aria-hidden="true">
@@ -3438,137 +4384,7 @@
                         <input type="hidden" id="selectedServiceType" name="service_type">
                         <input type="hidden" id="selectedPrice" name="price">
                         <input type="hidden" id="final_price_input" name="final_price" value="">
-                        <input type="hidden" id="selectedHairMaskOption" name="hair_mask_option" value="mask-only">
                         <input type="hidden" id="stitch_rows_option" name="stitch_rows_option" value="">
-
-                        <!-- Pricing Information (detailed boxes like screenshot) -->
-                            <div id="bookingDetailedInfo" class="mb-3">
-                                <div style="background:#fff7e0;border-radius:12px;padding:18px;border-left:6px solid #ff6600;">
-                                <h5 style="color:#0b3a66;font-weight:700;margin-bottom:8px;">Pricing Information</h5>
-                                <p style="margin:0 0 12px 0;color:#0b3a66;font-weight:600;">💰 <span style="font-weight:700;">Default Pricing:</span> All braid service prices shown are for <strong>mid-back / bra-strap length</strong> (the “base price”).</p>
-
-                                <div style="background:#ffeacc;border-radius:10px;padding:12px;border:1px solid rgba(0,0,0,0.03);margin-bottom:12px;">
-                                    <h6 style="margin:0 0 8px 0;color:#0b3a66;font-weight:700;">📏 Length Adjustments:</h6>
-                                    <ul style="margin:0;padding-left:18px;color:#0b3a66;">
-                                        <li><strong>- $40</strong> for <strong>Neck / Shoulder / Armpit</strong></li>
-                                        <li><strong>$0</strong> for <strong>Bra-strap / Mid-back</strong> (base)</li>
-                                        <li><strong>+ $20</strong> for <strong>Waist</strong></li>
-                                        <li><strong>+ $40</strong> for <strong>Hip</strong></li>
-                                        <li><strong>+ $60</strong> for <strong>Tailbone / Classic</strong></li>
-                                    </ul>
-                                </div>
-
-                                <!-- Kids booking summary (shown only for kids-braids) -->
-                                <div id="kidsBookingSummary" style="display:none; margin-top:12px;">
-                                    <div style="background:#fff;border-radius:10px;padding:12px;border-left:6px solid #ff6600;">
-                                        <h6 style="margin:0 0 8px 0;color:#0b3a66;font-weight:700;">Price Summary</h6>
-                                        <div id="kbs_base">Base: <strong>$--</strong></div>
-                                        <div id="kbs_adjustments">Adjustments: <strong>$0</strong></div>
-                                        <div id="kbs_total" style="margin-top:6px;"><strong>Total: $--</strong></div>
-                                    </div>
-                                </div>
-
-                                <div style="background:#f0efe9;border-radius:10px;padding:14px;margin-bottom:12px;">
-                                    @php
-                                        $exBase = (float) config('service_prices.small_knotless', 170);
-                                        $exTotal = $exBase + 20; // waist
-                                    @endphp
-                                    <p style="margin:0;color:#0b3a66;"><strong>💡 Example:</strong> Small Knotless Braids (<strong>${{ number_format($exBase, 0) }}</strong>) + Waist (+<strong>$20</strong>) = <strong style="color:#0b3a66;">${{ number_format($exTotal, 0) }} total</strong></p>
-                                </div>
-
-                                <div style="background:#e7f3ff;border-radius:10px;padding:14px;border-left:6px solid #0d6efd;">
-                                    <p style="margin:0;color:#0b3a66;font-weight:700;">ℹ️ Hair Mask / Relax / Retouch:</p>
-                                    <p style="margin:6px 0 0 0;color:#0b3a66;">Mask only: <strong>${{ number_format((float) config('service_prices.hair_mask', 50), 0) }}</strong>. With weave add-on: <strong>$80</strong>.</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Visible Price Display + hidden price input -->
-                        <div class="mb-3">
-                            <div style="display:flex; align-items:center; justify-content:space-between; background:#fff; border-radius:10px; padding:12px; border-left:6px solid #ff6600;">
-                                <div>
-                                    <div style="font-weight:700; color:#0b3a66;">Estimated Price</div>
-                                    <div id="priceDisplay" style="font-size:1.4rem; font-weight:800; color:#030f68;">--</div>
-                                </div>
-                                <div style="text-align:right;">
-                                    <small style="color:#6c757d; display:block;">Default is mid-back pricing. Final price computed on submit.</small>
-                                </div>
-
-                            </div>
-                            <div id="stitchBraidTinyNote" class="alert alert-warning mt-2 mb-0" style="display:none; border-left:6px solid #e35a4a;">
-                                <strong>Note:</strong> Tiny Stitch Braids (more than 10 rows) attracts an extra <strong>$20</strong>.
-                            </div>
-                            <!-- Braid Length Guide + Selection (inside booking form so it is submitted) -->
-                            <div class="col-12" id="lengthGuideBlock">
-                                <div class="mb-3">
-                                    <div class="row align-items-center">
-                                        <div class="col-12 col-md-5 text-center mb-3 mb-md-0">
-                                            <img src="{{ asset('images/braids-length-guide.jpg') }}" alt="Braid length guide" class="img-fluid" style="max-width: 100%; border-radius: 8px; border: 1px solid #e9ecef;">
-                                        </div>
-                                        <div class="col-12 col-md-7">
-                                            <label class="form-label">Select Braid Length *</label>
-                                            <div class="d-flex flex-column" role="radiogroup" aria-label="Braid length options">
-                                                <div class="form-check">
-                                                    <input class="form-check-input" type="radio" name="hair_length" id="length_neck" value="neck">
-                                                    <label class="form-check-label" for="length_neck">Neck length</label>
-                                                </div>
-                                                <div class="form-check">
-                                                    <input class="form-check-input" type="radio" name="hair_length" id="length_shoulder" value="shoulder">
-                                                    <label class="form-check-label" for="length_shoulder">Shoulder length</label>
-                                                </div>
-                                                <div class="form-check">
-                                                    <input class="form-check-input" type="radio" name="hair_length" id="length_armpit" value="armpit">
-                                                    <label class="form-check-label" for="length_armpit">Armpit length</label>
-                                                </div>
-                                                <div class="form-check">
-                                                    <input class="form-check-input" type="radio" name="hair_length" id="length_bracstrap" value="bra-strap">
-                                                    <label class="form-check-label" for="length_bracstrap">Bra-Strap length</label>
-                                                </div>
-                                                <div class="form-check">
-                                                    <input class="form-check-input" type="radio" name="hair_length" id="length_midback" value="mid-back" checked>
-                                                    <label class="form-check-label" for="length_midback">Mid-back length (default)</label>
-                                                </div>
-                                                <div class="form-check">
-                                                    <input class="form-check-input" type="radio" name="hair_length" id="length_waist" value="waist">
-                                                    <label class="form-check-label" for="length_waist">Waist length</label>
-                                                </div>
-                                                <div class="form-check">
-                                                    <input class="form-check-input" type="radio" name="hair_length" id="length_hip" value="hip">
-                                                    <label class="form-check-label" for="length_hip">Hip length</label>
-                                                </div>
-                                                <div class="form-check">
-                                                    <input class="form-check-input" type="radio" name="hair_length" id="length_tailbone" value="tailbone">
-                                                    <label class="form-check-label" for="length_tailbone">Tailbone length</label>
-                                                </div>
-                                                <div class="form-check mb-0">
-                                                    <input class="form-check-input" type="radio" name="hair_length" id="length_classic" value="classic">
-                                                    <label class="form-check-label" for="length_classic">Classic length</label>
-                                                </div>
-                                            </div>
-                                            <small class="form-text text-muted d-block mt-2">Default: Mid-back. Length adjustment affects pricing(+$20 long / -$20 short).</small>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Hair Mask Options - shown only for Hair Mask/Relaxing service -->
-                            <div class="col-12 mt-3" id="hairMaskOptions" style="display:none;">
-                                <div class="mb-3">
-                                    <label class="form-label">Hair Mask/Relaxing Options *</label>
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="radio" name="hair_mask_option" id="mask_only" value="mask-only" checked>
-                                        <label class="form-check-label" for="mask_only">Mask / Relaxing only (Starting at $50)</label>
-                                    </div>
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="radio" name="hair_mask_option" id="mask_with_weave" value="mask-with-weave">
-                                        <label class="form-check-label" for="mask_with_weave">With Weaving (+$30 estimate, total ≈ $80)</label>
-                                    </div>
-                                    <small class="form-text text-muted d-block mt-2">Choose whether you want mask/relaxing only or with weave added. Final price computed on submit.</small>
-                                </div>
-                            </div>
-
-                            <!-- Price hidden input removed: server now computes authoritative price -->
-                        </div>
 
                         <div class="row g-4">
                             <!-- Service Selection -->
@@ -3577,13 +4393,13 @@
                                     <label for="serviceSelection" class="form-label">Service *</label>
                                     <div class="input-group">
                                         <input type="text" class="form-control" id="serviceDisplay" name="service_display" readonly style="background-color: #f8f9fa;">
-                                        <button class="btn btn-outline-secondary" type="button" onclick="openServiceSelectionModal()">
+                                        <button class="btn btn-outline-secondary" type="button" onclick="openNonKidsServicesModal()">
                                             <i class="bi bi-pencil"></i> Change
                                         </button>
                                     </div>
                                     <small class="form-text text-muted mt-2">
                                         <i class="bi bi-info-circle me-1"></i>
-                                        Selected service. Click "Change" to select a different service or add a custom service.
+                                        Selected service. Click "Change" to select a different service.
                                     </small>
                                 </div>
                             </div>
@@ -3633,16 +4449,46 @@
                             </div>
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label for="email" class="form-label">Email</label>
-                                    <input type="email" class="form-control" id="email" name="email" placeholder="Enter your email address" autocomplete="off">
+                                    <label for="email" class="form-label">Email *</label>
+                                    <input type="email" class="form-control" id="email" name="email" placeholder="Enter your email address" autocomplete="off" required>
                                 </div>
                             </div>
-                            <div class="col-md-6">
+
+                            <!-- Appointment Type -->
+                            <div class="col-12">
                                 <div class="form-group">
-                                    <label for="address" class="form-label">Home Address</label>
-                                    <input type="text" class="form-control" id="address" name="address" placeholder="Enter your address" autocomplete="off">
+                                    <label class="form-label">Appointment Type *</label>
+                                    <div class="d-flex gap-3">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="appointment_type" id="appointment_type_in_studio" value="in-studio" checked>
+                                            <label class="form-check-label" for="appointment_type_in_studio">
+                                                <i class="bi bi-house-door me-1"></i>Stylist address
+                                            </label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="appointment_type" id="appointment_type_mobile" value="mobile">
+                                            <label class="form-check-label" for="appointment_type_mobile">
+                                                <i class="bi bi-truck me-1"></i>Mobile (I want you to come to me)
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <small class="form-text text-muted mt-2">
+                                        <i class="bi bi-info-circle me-1"></i>Mobile service available in Ottawa/Gatineau. Travel fee may apply based on distance.
+                                    </small>
                                 </div>
                             </div>
+
+                            <!-- Service Address (conditional) -->
+                            <div class="col-12 d-none" id="addressFieldContainer">
+                                <div class="form-group">
+                                    <label for="address" class="form-label">Mobile Service Address (Ottawa) *</label>
+                                    <input type="text" class="form-control" id="address" name="address" placeholder="Enter your complete address" autocomplete="off">
+                                    <small class="form-text text-muted mt-2">
+                                        <i class="bi bi-geo-alt me-1"></i>Required for mobile appointments so we can confirm travel availability and any travel fee.
+                                    </small>
+                                </div>
+                            </div>
+
                             <div class="col-12">
                                 <div class="form-group">
                                     <label for="message" class="form-label">Special Requests or Notes</label>
@@ -3691,7 +4537,7 @@
                             <div class="mt-3">
                                 <small class="text-muted">
                                     <i class="bi bi-info-circle me-1"></i>
-                                    A $20 deposit is required to confirm your appointment
+                                    A $20 deposit is required to confirm your appointment. Mobile appointments are confirmed after deposit + address verification.
                                     (<a href="#terms" class="text-decoration-none" style="color: #030f68; font-weight: 500;" onclick="closeModalAndGoToTerms(event)">Terms & Conditions</a>)
                                 </small>
                             </div>
@@ -3749,7 +4595,7 @@
                     <div id="timeSlotsContainer" style="display: none;">
                         <h6 class="mb-3" style="font-weight: 600; color: #0b3a66;">Available Time Slots for <span id="selectedDateText"></span></h6>
                         <div id="timeSlotsInstruction" class="alert alert-info mb-3" style="display: none; background: #e7f3ff; border-left: 4px solid #17a2b8; border-radius: 8px;">
-                            <i class="bi bi-info-circle me-2"></i>Click on a time slot below to select it, then click "CONFIRM SELECTION" to book your appointment.
+                            <i class="bi bi-info-circle me-2"></i>Click a time slot to select it.
                         </div>
                         <div id="timeSlots" class="row g-2 row-cols-2 row-cols-md-3 row-cols-lg-4"></div>
                     </div>
@@ -3810,9 +4656,9 @@
                             <!-- Email - Full Width on Mobile, Half on Desktop -->
                             <div class="col-12 col-md-6">
                                 <label for="csrEmail" class="form-label fw-semibold">
-                                    <i class="bi bi-envelope me-1"></i>Email Address <span class="text-muted">(Optional)</span>
+                                    <i class="bi bi-envelope me-1"></i>Email Address <span class="text-danger">*</span>
                                 </label>
-                                <input type="email" class="form-control form-control-lg" id="csrEmail" name="email" placeholder="Enter your email address" maxlength="255" style="border-radius: 8px; border: 2px solid #e9ecef; transition: border-color 0.3s ease;">
+                                <input type="email" class="form-control form-control-lg" id="csrEmail" name="email" placeholder="Enter your email address" maxlength="255" required style="border-radius: 8px; border: 2px solid #e9ecef; transition: border-color 0.3s ease;">
                                 <small class="form-text text-muted">
                                     <i class="bi bi-info-circle me-1"></i>We'll send confirmation to this email
                                 </small>
@@ -3918,7 +4764,7 @@
                                             <strong style="color: #0b3a66;">Custom Service Information</strong>
                                             <ul class="mb-0 mt-2" style="color: #0b3a66; font-size: 0.9rem; padding-left: 20px;">
                                                 <li>Prices vary based on <strong>hair length, thickness, and design complexity</strong></li>
-                                                <li>Length adjustments apply: <strong>+$20 for longer, -$20 for shorter</strong> than mid-back</li>
+                                                <li>Length adjustments apply: <strong>+$20 for longer, -$40 for shorter</strong> than mid-back</li>
                                                 <li>Final pricing will be <strong>confirmed during consultation</strong> before service</li>
                                                 <li>You'll receive email confirmation with estimated pricing</li>
                                             </ul>
@@ -4312,6 +5158,75 @@
 
     <!-- Kids Booking Modal moved to end of file -->
 
+    <!-- FAQ Section -->
+    <div id="faq" class="section section-xl" style="padding: 80px 0; background-color: #f8f9fa;">
+        <div class="container">
+            <div class="row row-md-80 row-sm-50">
+                <div class="col-sm-12 col-lg-4 mb-4">
+                    <div class="subtitle" style="font-size: 2rem; color: #ff6600; font-weight: 700; letter-spacing:-1px;">Frequently Asked <br class="br-none">Questions</div>
+                </div>
+                <div class="col-sm-12 col-lg-8">
+                    <ul class="faq-list" style="list-style:none; padding:0; margin:0;">
+                        <li class="faq-list-item" style="display:flex; flex-direction:column; border-bottom:1px solid #eee; padding:32px 0 16px 0;">
+                            <div class="faq-question" style="display:flex; align-items:center; justify-content:space-between; font-size:1.45rem; color:#1a237e; font-weight:400; cursor:pointer;">
+                                <span>Do you provide services for children below 3 years?</span>
+                                <span class="faq-arrow" style="font-size:1.7rem; color:#030f68; transition:transform 0.2s;">&#x25BC;</span>
+                            </div>
+                            <div class="faq-answer" style="color:#222; font-size:1.08rem; margin-top:12px;">
+                                Yes, at Dab's Beauty Touch, we offer gentle and tailored hair care services for children under 4 years. We are experienced in working with young children. We use age-appropriate, safe, and non-irritating products that are specifically designed for sensitive scalps. If you have any special requests, please feel free to reach out to us. We are here to make the experience enjoyable for both children and parents.
+                            </div>
+                        </li>
+                        <li class="faq-list-item" style="display:flex; flex-direction:column; border-bottom:1px solid #eee; padding:32px 0 16px 0;">
+                            <div class="faq-question" style="display:flex; align-items:center; justify-content:space-between; font-size:1.45rem; color:#1a237e; font-weight:400; cursor:pointer;">
+                                <span>How many hours is your cancellation notice and any penalty?</span>
+                                <span class="faq-arrow" style="font-size:1.7rem; color:#030f68; transition:transform 0.2s;">&#x25BC;</span>
+                            </div>
+                            <div class="faq-answer" style="color:#222; font-size:1.08rem; margin-top:12px;">
+                                We kindly request a minimum 2-day cancellation notice for all appointments. If you cancel within less than 2 days, a deposit fee will be non-refundable. This helps us accommodate other clients who may need the time slot. We appreciate your understanding and cooperation.
+                            </div>
+                        </li>
+                        <li class="faq-list-item" style="display:flex; flex-direction:column; border-bottom:1px solid #eee; padding:32px 0 16px 0;">
+                            <div class="faq-question" style="display:flex; align-items:center; justify-content:space-between; font-size:1.45rem; color:#1a237e; font-weight:400; cursor:pointer;">
+                                <span>Do you render home services and do you charge differently for that?</span>
+                                <span class="faq-arrow" style="font-size:1.7rem; color:#030f68; transition:transform 0.2s;">&#x25BC;</span>
+                            </div>
+                            <div class="faq-answer" style="color:#222; font-size:1.08rem; margin-top:12px;">
+                                Yes, we offer home services for your convenience! Please note, we do not charge differently for home service fee, our clients are responsible for covering the cost of fueling the stylist's transportation. Fees vary based on the distance to the service location.
+                            </div>
+                        </li>
+                        <li class="faq-list-item" style="display:flex; flex-direction:column; border-bottom:1px solid #eee; padding:32px 0 16px 0;">
+                            <div class="faq-question" style="display:flex; align-items:center; justify-content:space-between; font-size:1.45rem; color:#1a237e; font-weight:400; cursor:pointer;">
+                                <span>Do you also do men's hair?</span>
+                                <span class="faq-arrow" style="font-size:1.7rem; color:#030f68; transition:transform 0.2s;">&#x25BC;</span>
+                            </div>
+                            <div class="faq-answer" style="color:#222; font-size:1.08rem; margin-top:12px;">
+                                Absolutely! We provide a variety of grooming and hairstyling services for men, including braids, twists, and basic grooming. We ensure that each style is tailored to fit your preferences.
+                            </div>
+                        </li>
+                        <li class="faq-list-item" style="display:flex; flex-direction:column; border-bottom:1px solid #eee; padding:32px 0 16px 0;">
+                            <div class="faq-question" style="display:flex; align-items:center; justify-content:space-between; font-size:1.45rem; color:#1a237e; font-weight:400; cursor:pointer;">
+                                <span>What kind of extensions should I get for my appointment?</span>
+                                <span class="faq-arrow" style="font-size:1.7rem; color:#030f68; transition:transform 0.2s;">&#x25BC;</span>
+                            </div>
+                            <div class="faq-answer" style="color:#222; font-size:1.08rem; margin-top:12px;">
+                                The type of hair extensions depends on the style you're looking for. For braids we recommend Xpression extension/attachment. We recommend human hair extensions for a natural look and durability. For a temporary style or budget-friendly option, synthetic extensions work well. Feel free to consult us before your appointment for personalized recommendations.
+                            </div>
+                        </li>
+                        <li class="faq-list-item" style="display:flex; flex-direction:column; border-bottom:1px solid #eee; padding:32px 0 16px 0;">
+                            <div class="faq-question" style="display:flex; align-items:center; justify-content:space-between; font-size:1.45rem; color:#1a237e; font-weight:400; cursor:pointer;">
+                                <span>Do you charge the same amount for all ages?</span>
+                                <span class="faq-arrow" style="font-size:1.7rem; color:#030f68; transition:transform 0.2s;">&#x25BC;</span>
+                            </div>
+                            <div class="faq-answer" style="color:#222; font-size:1.08rem; margin-top:12px;">
+                                Our pricing varies depending on the age group and the complexity of the service. For children under 10, we offer discounted rates for selected hairstyles. For adults and teens, standard pricing applies. We believe in providing fair pricing while maintaining the highest quality of service for all our clients, regardless of age.
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Important Information Section -->
     <script>
         // Ensure the kids booking modal is a direct child of <body>
@@ -4411,154 +5326,198 @@
         </div>
     </div>
 
-    <!-- Contact Section -->
-    <div class="section section-xl" style="padding: 80px 0; background-color: #f8f9fa;">
+    <!-- Terms and Conditions Section -->
+    <section id="terms" class="section section-xl" style="padding: 50px 0; background-color: #f8f9fa;">
         <div class="container">
-            <div class="row row-md-80 row-sm-50">
-                <div class="col-sm-12 col-lg-4 mb-4">
-                    <div class="subtitle" style="font-size: 2rem; color: #ff6600; font-weight: 700; letter-spacing:-1px;">Frequently Asked <br class="br-none">Questions</div>
-                </div>
-                <div class="col-sm-12 col-lg-8">
-                    <ul class="faq-list" style="list-style:none; padding:0; margin:0;">
-                        <li class="faq-list-item" style="display:flex; flex-direction:column; border-bottom:1px solid #eee; padding:32px 0 16px 0;">
-                            <div class="faq-question" style="display:flex; align-items:center; justify-content:space-between; font-size:1.45rem; color:#1a237e; font-weight:400; cursor:pointer;">
-                                <span>Do you provide services for children below 3 years?</span>
-                                <span class="faq-arrow" style="font-size:1.7rem; color:#030f68; transition:transform 0.2s;">&#x25BC;</span>
-                            </div>
-                            <div class="faq-answer" style="color:#222; font-size:1.08rem; margin-top:12px;">
-                                Yes, at Dab's Beauty Touch, we offer gentle and tailored hair care services for children under 4 years. We are experienced in working with young children. We use age-appropriate, safe, and non-irritating products that are specifically designed for sensitive scalps. If you have any special requests, please feel free to reach out to us. We are here to make the experience enjoyable for both children and parents.
-                            </div>
-                        </li>
-                        <li class="faq-list-item" style="display:flex; flex-direction:column; border-bottom:1px solid #eee; padding:32px 0 16px 0;">
-                            <div class="faq-question" style="display:flex; align-items:center; justify-content:space-between; font-size:1.45rem; color:#1a237e; font-weight:400; cursor:pointer;">
-                                <span>How many hours is your cancellation notice and any penalty?</span>
-                                <span class="faq-arrow" style="font-size:1.7rem; color:#030f68; transition:transform 0.2s;">&#x25BC;</span>
-                            </div>
-                            <div class="faq-answer" style="color:#222; font-size:1.08rem; margin-top:12px;">
-                                We kindly request a minimum 2-day cancellation notice for all appointments. If you cancel within less than 2 days, a deposit fee will be non-refundable. This helps us accommodate other clients who may need the time slot. We appreciate your understanding and cooperation.
-                            </div>
-                        </li>
-                        <li class="faq-list-item" style="display:flex; flex-direction:column; border-bottom:1px solid #eee; padding:32px 0 16px 0;">
-                            <div class="faq-question" style="display:flex; align-items:center; justify-content:space-between; font-size:1.45rem; color:#1a237e; font-weight:400; cursor:pointer;">
-                                <span>Do you render home services and do you charge differently for that?</span>
-                                <span class="faq-arrow" style="font-size:1.7rem; color:#030f68; transition:transform 0.2s;">&#x25BC;</span>
-                            </div>
-                            <div class="faq-answer" style="color:#222; font-size:1.08rem; margin-top:12px;">
-                                Yes, we offer home services for your convenience! Please note, we do not charge differently for home service fee, our clients take charge of the transportation to and fro. Clients can book a ride or use any other means.
-                            </div>
-                        </li>
-                        <li class="faq-list-item" style="display:flex; flex-direction:column; border-bottom:1px solid #eee; padding:32px 0 16px 0;">
-                            <div class="faq-question" style="display:flex; align-items:center; justify-content:space-between; font-size:1.45rem; color:#1a237e; font-weight:400; cursor:pointer;">
-                                <span>Do you also do men's hair?</span>
-                                <span class="faq-arrow" style="font-size:1.7rem; color:#030f68; transition:transform 0.2s;">&#x25BC;</span>
-                            </div>
-                            <div class="faq-answer" style="color:#222; font-size:1.08rem; margin-top:12px;">
-                                Absolutely! We provide a variety of grooming and hairstyling services for men, including braids, twists, and basic grooming. We ensure that each style is tailored to fit your preferences.
-                            </div>
-                        </li>
-                        <li class="faq-list-item" style="display:flex; flex-direction:column; border-bottom:1px solid #eee; padding:32px 0 16px 0;">
-                            <div class="faq-question" style="display:flex; align-items:center; justify-content:space-between; font-size:1.45rem; color:#1a237e; font-weight:400; cursor:pointer;">
-                                <span>What kind of extensions should I get for my appointment?</span>
-                                <span class="faq-arrow" style="font-size:1.7rem; color:#030f68; transition:transform 0.2s;">&#x25BC;</span>
-                            </div>
-                            <div class="faq-answer" style="color:#222; font-size:1.08rem; margin-top:12px;">
-                                The type of hair extensions depends on the style you're looking for. For braids we recommend Xpression extension/attachment. We recommend human hair extensions for a natural look and durability. For a temporary style or budget-friendly option, synthetic extensions work well. Feel free to consult us before your appointment for personalized recommendations.
-                            </div>
-                        </li>
-                        <li class="faq-list-item" style="display:flex; flex-direction:column; border-bottom:1px solid #eee; padding:32px 0 16px 0;">
-                            <div class="faq-question" style="display:flex; align-items:center; justify-content:space-between; font-size:1.45rem; color:#1a237e; font-weight:400; cursor:pointer;">
-                                <span>Do you charge the same amount for all ages?</span>
-                                <span class="faq-arrow" style="font-size:1.7rem; color:#030f68; transition:transform 0.2s;">&#x25BC;</span>
-                            </div>
-                            <div class="faq-answer" style="color:#222; font-size:1.08rem; margin-top:12px;">
-                                Our pricing varies depending on the age group and the complexity of the service. For children under 10, we offer discounted rates for selected hairstyles. For adults and teens, standard pricing applies. We believe in providing fair pricing while maintaining the highest quality of service for all our clients, regardless of age.
-                            </div>
-                        </li>
-                    </ul>
-                </div>
-            </div>
-        </div>
-    </div>
-    <!-- Contact Section -->
-    <section id="contact" class="contact-section">
-        <div class="container" style="padding-top: 40px; padding-bottom: 40px;">
-            <div class="row justify-content-center align-items-center">
+            <div class="row justify-content-center">
                 <div class="col-lg-10">
-                    <div class="card flex-row shadow-lg border-0" style="border-radius: 24px; overflow: hidden; background: #fff;">
-                        <div class="col-md-6 p-5 d-flex flex-column justify-content-center" style="border-right:1px solid #e3eafc;">
-                            <h2 class="section-title mb-3" style="font-size:2.2rem; font-weight:700;">Contact Information</h2>
-                            <ul class="list-unstyled mb-4" style="font-size:1.08rem;">
-                                <li class="mb-3"><i class="bi bi-arrow-right-circle-fill text-primary me-2"></i><strong>Phone:</strong> <a href="tel:+13432458848" style="color:#030f68; text-decoration:none;">(+1)343-245-8848</a></li>
-                                <li class="mb-3"><i class="bi bi-arrow-right-circle-fill text-warning me-2"></i><strong>Email:</strong> <a href="mailto:info@dabsbeautytouch.com" style="color:#ff6600; text-decoration:none;">info@dabsbeautytouch.com</a></li>
-                                <li class="mb-3"><i class="bi bi-arrow-right-circle-fill text-danger me-2"></i><strong>Address:</strong> Ottawa</li>
-                                <li class="mb-3"><i class="bi bi-arrow-right-circle-fill text-success me-2"></i><strong>Hours:</strong>
-                                    <ul class="ps-4 mb-0" style="font-size:0.98rem;">
-                                        <li>Monday - Friday: 9:00 AM - 7:00 PM</li>
-                                        <li>Saturday: 10:00 AM - 6:00 PM</li>
-                                        <li>Sunday: 1:00 PM - 6:00 PM</li>
-                                    </ul>
-                                </li>
-                            </ul>
-                            <div class="social-links mt-3">
-                                <a href="#" class="btn btn-outline-primary me-2"><i class="bi bi-facebook me-1"></i>Facebook</a>
-                                <a href="https://www.instagram.com/dabs_beauty_touch?igsh=MXYycGNraGxwem5tZw%3D%3D&utm_source=qr" class="btn btn-outline-info me-2" target="_blank" rel="noopener noreferrer"><i class="bi bi-instagram me-1"></i>Instagram</a>
-                                <a href="https://wa.me/13432548848" class="btn btn-outline-success" target="_blank" rel="noopener noreferrer"><i class="bi bi-whatsapp me-1"></i>WhatsApp</a>
+                    <div class="text-center mb-5">
+                        <h2 class="section-title" style="font-size: 2.5rem; font-weight: 700; color: #030f68;">Terms & Conditions</h2>
+                        <div style="display:inline-block; max-width:820px; margin-top:18px; text-align:left;">
+                            <div style="background: linear-gradient(90deg, rgba(255,102,0,0.06), rgba(3,15,104,0.03)); border-left: 6px solid #ff6600; padding: 18px 20px; border-radius: 12px; box-shadow: 0 6px 18px rgba(3,15,104,0.06);">
+                                <div style="display:flex; align-items:flex-start; gap:12px;">
+                                    <div style="font-size:1.6rem; color:#ff6600; line-height:1; margin-top:2px;"><i class="bi bi-exclamation-triangle-fill"></i></div>
+                                    <div>
+                                        <div style="font-size:1.05rem; color:#03253f; font-weight:700; margin-bottom:6px;">Before booking, please review our terms and conditions</div>                                    </div>
+                                </div>
                             </div>
                         </div>
-                        <div class="col-md-6 p-5 d-flex flex-column justify-content-center">
-                            <h2 class="section-title mb-4" style="font-size:2rem; font-weight:700;">Send us a Message</h2>
-                            
-                            @if(session('success'))
-                                <div class="alert alert-success alert-dismissible fade show mb-4" role="alert" style="border-radius: 10px; border-left: 4px solid #28a745;">
-                                    <i class="bi bi-check-circle-fill me-2"></i>
-                                    <strong>Success!</strong> {{ session('success') }}
-                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                                </div>
-                            @endif
+                    </div>
 
-                            @if($errors->any())
-                                <div class="alert alert-danger alert-dismissible fade show mb-4" role="alert" style="border-radius: 10px; border-left: 4px solid #dc3545;">
-                                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
-                                    <strong>Please fix the following errors:</strong>
-                                    <ul class="mb-0 mt-2">
-                                        @foreach($errors->all() as $error)
-                                            <li>{{ $error }}</li>
-                                        @endforeach
+                    <!-- Important Hair Preparation Notice -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <div style="background: linear-gradient(135deg, rgba(255, 193, 7, 0.15), rgba(255, 152, 0, 0.1)); border-left: 6px solid #ff6600; border-top: 2px solid rgba(255, 102, 0, 0.3); padding: 20px 24px; border-radius: 12px; box-shadow: 0 4px 12px rgba(255, 102, 0, 0.1);">
+                                <p style="margin: 0; color: #ff6600; font-size: 1.1rem; line-height: 1.6;">
+                                    <strong style="font-weight: 700;">Important:</strong> Hair must come washed and blow dried/detangled for optimal styling results.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row g-4">
+                        <!-- Deposit & Payment Terms -->
+                        <div class="col-lg-6">
+                            <div class="card h-100 shadow-lg border-0" style="border-radius: 20px; background: #fff;">
+                                <div class="card-body p-4">
+                                    <div class="text-center mb-4">
+                                        <i class="bi bi-credit-card" style="font-size: 3rem; color: #ff6600;"></i>
+                                    </div>
+                                    <h4 style="color: #030f68; font-weight: 700; text-align: center; margin-bottom: 20px;">Deposit & Payment</h4>
+                                    <ul class="list-unstyled" style="font-size: 1rem; line-height: 1.8;">
+                                        <li class="mb-3">
+                                            <i class="bi bi-check-circle-fill text-success me-2"></i>
+                                            <strong>Deposit Required:</strong> A non-refundable deposit is required to secure your appointment
+                                        </li>
+                                        <li class="mb-3">
+                                            <i class="bi bi-check-circle-fill text-success me-2"></i>
+                                            <strong>Payment Methods:</strong> We accept cash, bank transfers, and mobile money payments
+                                        </li>
+                                        <li class="mb-3">
+                                            <i class="bi bi-check-circle-fill text-success me-2"></i>
+                                            <strong>Balance Payment:</strong> Remaining balance is due on the day of your appointment
+                                        </li>
+                                        <li class="mb-3">
+                                            <i class="bi bi-exclamation-triangle-fill text-warning me-2"></i>
+                                            <strong>No Refunds:</strong> Deposits are non-refundable once appointment is confirmed
+                                        </li>
                                     </ul>
-                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                                 </div>
-                            @endif
+                            </div>
+                        </div>
 
-                            <form action="{{ route('contact.store') }}" method="POST" id="contactForm" class="bg-white p-4 rounded shadow-sm" style="border-radius:18px;">
-                                @csrf
-                                <div class="row g-4">
-                                    <div class="col-12 mb-3">
-                                        <div class="form-floating">
-                                            <input type="text" class="form-control" id="contact_name" name="name" placeholder="Name *" required>
-                                            <label for="contact_name">Name *</label>
-                                        </div>
+                        <!-- Cancellation Policy -->
+                        <div class="col-lg-6">
+                            <div class="card h-100 shadow-lg border-0" style="border-radius: 20px; background: #fff;">
+                                <div class="card-body p-4">
+                                    <div class="text-center mb-4">
+                                        <i class="bi bi-calendar-x" style="font-size: 3rem; color: #ff6600;"></i>
                                     </div>
-                                    <div class="col-12 mb-3">
-                                        <div class="form-floating">
-                                            <input type="email" class="form-control" id="contact_email" name="email" placeholder="Email *" required>
-                                            <label for="contact_email">Email *</label>
-                                        </div>
+                                    <h4 style="color: #030f68; font-weight: 700; text-align: center; margin-bottom: 20px;">Cancellation Policy</h4>
+                                    <ul class="list-unstyled" style="font-size: 1rem; line-height: 1.8;">
+                                        <li class="mb-3">
+                                            <i class="bi bi-clock-fill text-info me-2"></i>
+                                            <strong>Notice Required:</strong> Minimum 48 hours notice required for cancellations
+                                        </li>
+                                        <li class="mb-3">
+                                            <i class="bi bi-x-circle-fill text-danger me-2"></i>
+                                            <strong>No Show:</strong> No-shows will result in full charge and may affect future bookings
+                                        </li>
+                                        <li class="mb-3">
+                                            <i class="bi bi-arrow-clockwise text-success me-2"></i>
+                                            <strong>Rescheduling:</strong> Rescheduling is allowed with 48 hours notice
+                                        </li>
+                                        <li class="mb-3">
+                                            <i class="bi bi-calendar2-week-fill text-primary me-2"></i>
+                                            <strong>Reschedule Window:</strong> Reschedules must be within 1 month of the initial appointment date
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Home Service Terms -->
+                        <div class="col-lg-6">
+                            <div class="card h-100 shadow-lg border-0" style="border-radius: 20px; background: #fff;">
+                                <div class="card-body p-4">
+                                    <div class="text-center mb-4">
+                                        <i class="bi bi-house-heart" style="font-size: 3rem; color: #ff6600;"></i>
                                     </div>
-                                    <div class="col-12 mb-3">
-                                        <div class="form-floating">
-                                            <input type="text" class="form-control" id="contact_subject" name="subject" placeholder="Subject">
-                                            <label for="contact_subject">Subject</label>
-                                        </div>
+                                    <h4 style="color: #030f68; font-weight: 700; text-align: center; margin-bottom: 20px;">Home Service</h4>
+                                    <ul class="list-unstyled" style="font-size: 1rem; line-height: 1.8;">
+                                        <li class="mb-3">
+                                            <i class="bi bi-check-circle-fill text-success me-2"></i>
+                                            <strong>No Extra Fee:</strong> Home service does not affect our standard pricing
+                                        </li>
+                                        <li class="mb-3">
+                                            <i class="bi bi-car-front-fill text-info me-2"></i>
+                                            <strong>Transportation:</strong> Clients are responsible for covering the cost of fueling the stylist's transportation. Fees vary based on the distance to the service location.
+                                        </li>
+                                        <li class="mb-3">
+                                            <i class="bi bi-geo-alt-fill text-warning me-2"></i>
+                                            <strong>Service Area:</strong> Available within reasonable distance from our base location
+                                        </li>
+
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Contact Information -->
+                        <div class="col-lg-6">
+                            <div class="card h-100 shadow-lg border-0" style="border-radius: 20px; background: linear-gradient(135deg, #030f68 0%, #05137c 100%); color: white;">
+                                <div class="card-body p-4">
+                                    <div class="text-center mb-4">
+                                        <i class="bi bi-telephone-fill" style="font-size: 3rem; color: #ff6600;"></i>
                                     </div>
-                                    <div class="col-12 mb-3">
-                                        <div class="form-floating">
-                                            <textarea class="form-control" id="contact_message" name="message" placeholder="Message *" style="height: 120px" required></textarea>
-                                            <label for="contact_message">Message *</label>
+                                    <h4 style="color: #fff; font-weight: 700; text-align: center; margin-bottom: 20px;">Contact for More Information</h4>
+                                    <div class="contact-info" style="font-size: 1rem; line-height: 1.8;">
+                                        <div class="mb-3">
+                                            <i class="bi bi-telephone-fill text-warning me-2"></i>
+                                            <strong>Phone:</strong>
+                                            <a href="tel:+13432458848" style="color: #ff6600; text-decoration: none;">(+1)343-245-8848</a>
+                                        </div>
+                                        <div class="mb-3">
+                                            <i class="bi bi-envelope-fill text-warning me-2"></i>
+                                            <strong>Email:</strong>
+                                            <a href="mailto:info@dabsbeautytouch.com" style="color: #ff6600; text-decoration: none;">info@dabsbeautytouch.com</a>
+                                        </div>
+                                        <div class="mb-3">
+                                            <i class="bi bi-clock-fill text-warning me-2"></i>
+                                            <strong>Response Time:</strong> Within 24 hours
+                                        </div>
+                                        <div class="mb-3">
+                                            <i class="bi bi-chat-dots-fill text-warning me-2"></i>
+                                            <strong>Consultation:</strong> Free consultation available
                                         </div>
                                     </div>
                                 </div>
-                                <button type="submit" class="btn btn-primary w-100" style="font-size:1.1rem; font-weight:700; border-radius:8px;">Send Message</button>
-                            </form>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Additional Terms -->
+                    <div class="row mt-5">
+                        <div class="col-12">
+                            <div class="card shadow-lg border-0" style="border-radius: 20px; background: #fff;">
+                                <div class="card-body p-4">
+                                    <h4 style="color: #030f68; font-weight: 700; text-align: center; margin-bottom: 30px;">
+                                        <i class="bi bi-file-text me-2" style="color: #ff6600;"></i>
+                                        Additional Terms
+                                    </h4>
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <ul class="list-unstyled" style="font-size: 1rem; line-height: 1.8;">
+                                                <li class="mb-3">
+                                                    <i class="bi bi-check-circle-fill text-success me-2"></i>
+                                                    <strong>Hair Preparation:</strong> Hair must be washed and detangled before appointment
+                                                </li>
+                                                <li class="mb-3">
+                                                    <i class="bi bi-check-circle-fill text-success me-2"></i>
+                                                    <strong>Extensions:</strong> Clients may provide their own extensions or purchase from us
+                                                </li>
+                                                <li class="mb-3">
+                                                    <i class="bi bi-check-circle-fill text-success me-2"></i>
+                                                    <strong>Duration:</strong> Service duration varies based on style complexity
+                                                </li>
+
+                                            </ul>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <ul class="list-unstyled" style="font-size: 1rem; line-height: 1.8;">
+                                                <li class="mb-3">
+                                                    <i class="bi bi-exclamation-circle-fill text-warning me-2"></i>
+                                                    <strong>Style Changes:</strong> No style changes allowed on the day of appointment or after confirmation, as a time window is reserved for your service
+                                                </li>
+                                                <li class="mb-3">
+                                                    <i class="bi bi-calendar-check-fill text-info me-2"></i>
+                                                    <strong>Time Reservation:</strong> Once confirmed, your appointment slot is exclusively reserved, preventing other bookings
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -4804,7 +5763,23 @@ console.log('=== LOADING BOOKING FUNCTIONS ===');
     window.clearBookingForm = function() {
         var form = document.getElementById('bookingForm');
         if (form) {
+            // Check if terms were already accepted before resetting
+            const KEY = 'dbt_terms_accepted_v1';
+            const hasAccepted = () => {
+                try { return window.localStorage && localStorage.getItem(KEY) === '1'; } catch(e) { return false; }
+            };
+            const termsWereAccepted = hasAccepted();
+            
             form.reset();
+            
+            // Restore terms checkbox if terms were already accepted
+            if (termsWereAccepted) {
+                const termsCheckbox = document.getElementById('termsAcceptedMain');
+                if (termsCheckbox) {
+                    termsCheckbox.checked = true;
+                }
+            }
+            
             console.log('Form cleared');
         }
     };
@@ -4995,6 +5970,43 @@ console.log('=== LOADING BOOKING FUNCTIONS ===');
         window.openServiceSelectionModal();
     }
 
+    // Function to open custom service modal directly (skips popular services list)
+    window.openCustomServiceModal = function() {
+        const modalEl = document.getElementById('serviceSelectionModal');
+        if (!modalEl) {
+            console.error('Service selection modal not found');
+            return;
+        }
+        
+        // Hide the popular services section
+        const popularServicesSection = modalEl.querySelector('.row.g-2');
+        if (popularServicesSection && popularServicesSection.parentElement) {
+            popularServicesSection.parentElement.style.display = 'none';
+        }
+        
+        // Show the modal
+        const serviceModal = new bootstrap.Modal(modalEl);
+        serviceModal.show();
+        
+        // After modal is shown, scroll to and focus on the custom service input
+        modalEl.addEventListener('shown.bs.modal', function() {
+            const customServiceInput = document.getElementById('customServiceInput');
+            if (customServiceInput) {
+                // Scroll to the custom service section
+                customServiceInput.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                // Focus on the input
+                setTimeout(() => customServiceInput.focus(), 300);
+            }
+        }, { once: true });
+        
+        // When modal is hidden, restore popular services visibility for other uses
+        modalEl.addEventListener('hidden.bs.modal', function() {
+            if (popularServicesSection && popularServicesSection.parentElement) {
+                popularServicesSection.parentElement.style.display = '';
+            }
+        }, { once: true });
+    };
+
     // Guided service flow: Who is this service for?
     window.openServiceForWhoModal = function() {
         const modalEl = document.getElementById('serviceForWhoModal');
@@ -5081,24 +6093,47 @@ console.log('=== LOADING BOOKING FUNCTIONS ===');
         // Base prices (single source of truth: config/service_prices.php + popular services)
         @php
             $basePriceByServiceName = [
-                // Main services
+                // Knotless Braids
                 'Small Knotless Braids' => (int) config('service_prices.small_knotless', 170),
                 'Smedium Knotless Braids' => (int) config('service_prices.smedium_knotless', 150),
-                'Wig Installation' => (int) config('service_prices.wig_installation', 150),
                 'Medium Knotless Braids' => (int) config('service_prices.medium_knotless', 130),
                 'Jumbo Knotless Braids' => (int) config('service_prices.jumbo_knotless', 100),
-                'Kids Braids' => (int) config('service_prices.kids_braids', 80),
-                '8–10 Rows Stitch Braids' => (int) config('service_prices.stitch_braids', 120),
-                'Hair Mask/Relaxing' => (int) config('service_prices.hair_mask', 50),
+                
+                // Boho Braids
+                'Small Boho Braids' => 180,
                 'Smedium Boho Braids' => (int) config('service_prices.boho_braids', 150),
-
-                // Popular services (these are shown in the Services section too)
-                'Weaving Crotchet' => (int) config('service_prices.weaving_crotchet', 80),
-                'Single Crotchet' => (int) config('service_prices.single_crotchet', 150),
-                'Natural Hair Twist' => (int) config('service_prices.natural_hair_twist', 50),
-                'Weaving No-Extension' => (int) config('service_prices.weaving_no_extension', 30),
-                'Kinky Twist' => (int) config('service_prices.kinky_twist', 120),
-                'Twist Braids' => (int) config('service_prices.twist_braids', 130),
+                'Medium Boho Braids' => 130,
+                'Jumbo/Large Boho Braids' => 100,
+                
+                // Twist Styles
+                'Small Twists' => 150,
+                'Medium Twists' => 120,
+                'Jumbo/Large Twists' => 100,
+                'Small Natural Hair Twist' => 80,
+                'Medium Natural Hair Twist' => 60,
+                
+                // French Curl Braids
+                'Small French Curl Braids' => 200,
+                'Smedium French Curl Braids' => 170,
+                'Medium French Curl Braids' => 150,
+                'Large French Curl Braids' => 120,
+                
+                // Crotchet Styles
+                '2/3 Line Single' => 100,
+                'Afro Crotchet' => 120,
+                'Individual Loc' => 150,
+                'Butterfly Locks' => 150,
+                'Weave Crotchet' => (int) config('service_prices.weaving_crotchet', 80),
+                
+                // Cornrow/Feed-in Braids
+                'Stitch Weave' => 100,
+                'Cornrow Weave' => 100,
+                'Under-wig Weave' => 30,
+                'Weave&Braid Mixed' => 150,
+                
+                // Hair Treatment Services
+                'Natural Hair Treatment/Mask' => (int) config('service_prices.hair_mask', 50),
+                'Chemical Relaxer' => 50,
             ];
         @endphp
         const basePriceByServiceName = @json($basePriceByServiceName);
@@ -5155,12 +6190,13 @@ console.log('=== LOADING BOOKING FUNCTIONS ===');
     };
 
     window.selectNonKidsService = function(serviceName) {
+        console.log('selectNonKidsService called with:', serviceName);
         try {
             const nonKidsModal = bootstrap.Modal.getInstance(document.getElementById('nonKidsServicesModal'));
             if (nonKidsModal) nonKidsModal.hide();
         } catch (e) {}
 
-        // Open main booking modal with selected service
+        // Open main booking modal with selected service - the wrapper will handle pricing
         if (typeof window.openBookingModal === 'function') {
             window.openBookingModal(serviceName, null);
         } else {
@@ -5365,13 +6401,43 @@ console.log('=== LOADING BOOKING FUNCTIONS ===');
                 if(bookingPanel) bookingPanel.style.display = '';
             }catch(e){ /* noop */ }
 
+            // Initialize address field state (ensure it's hidden by default for in-studio)
+            try{
+                const inStudioKids = document.getElementById('appointment_type_in_studio_kids');
+                if(inStudioKids) inStudioKids.checked = true;
+                
+                const addressContainerKids = document.getElementById('addressFieldContainerKids');
+                if(addressContainerKids) {
+                    addressContainerKids.classList.add('d-none');
+                    addressContainerKids.style.display = 'none';
+                }
+                
+                const kidsAddress = document.getElementById('kids_address');
+                if(kidsAddress) {
+                    kidsAddress.value = '';
+                    kidsAddress.required = false;
+                }
+                
+                // Call toggle function to ensure proper state
+                if (typeof toggleAddressFieldKids === 'function') {
+                    toggleAddressFieldKids();
+                }
+            }catch(e){ console.warn('Kids address field init failed', e); }
+
             // accessibility: focus first input when modal shown
             try{
                 const modalEl = document.getElementById('kidsBookingModal');
                 modalEl.addEventListener('shown.bs.modal', function(){
                     const nameField = document.getElementById('kids_name'); if(nameField) nameField.focus();
+                    // Ensure address field state is correct
+                    if(typeof toggleAddressFieldKids === 'function') toggleAddressFieldKids();
                 }, { once: true });
             }catch(e){ /* noop */ }
+            
+            // Also call immediately in case modal is already shown
+            if(typeof toggleAddressFieldKids === 'function') {
+                setTimeout(toggleAddressFieldKids, 100);
+            }
         }catch(e){ console.warn('openKidsBookingModal failed', e); }
     }
 
@@ -5884,6 +6950,13 @@ console.log('=== LOADING BOOKING FUNCTIONS ===');
     function clearBookingForm() {
         const form = document.getElementById('bookingForm');
         if (form) {
+            // Check if terms were already accepted before resetting
+            const KEY = 'dbt_terms_accepted_v1';
+            const hasAccepted = () => {
+                try { return window.localStorage && localStorage.getItem(KEY) === '1'; } catch(e) { return false; }
+            };
+            const termsWereAccepted = hasAccepted();
+            
             // Reset the form
             form.reset();
 
@@ -5906,6 +6979,14 @@ console.log('=== LOADING BOOKING FUNCTIONS ===');
                         break;
                 }
             });
+
+            // Restore terms checkbox if terms were already accepted
+            if (termsWereAccepted) {
+                const termsCheckbox = document.getElementById('termsAcceptedMain');
+                if (termsCheckbox) {
+                    termsCheckbox.checked = true;
+                }
+            }
 
             // Also clear the service display field
             const serviceDisplayInput = document.getElementById('serviceDisplay');
@@ -5944,6 +7025,17 @@ console.log('=== LOADING BOOKING FUNCTIONS ===');
         }
 
         bookingForm.addEventListener('submit', function(e) {
+            // DEBUG: Log all pricing-related fields before submission
+            console.log('=== FORM SUBMISSION DEBUG ===');
+            console.log('selectedService:', document.getElementById('selectedService')?.value);
+            console.log('selectedServiceType:', document.getElementById('selectedServiceType')?.value);
+            console.log('selectedPrice:', document.getElementById('selectedPrice')?.value);
+            console.log('final_price_input:', document.getElementById('final_price_input')?.value);
+            const priceDisplayEl = document.getElementById('priceDisplay');
+            console.log('priceDisplay text:', priceDisplayEl ? (priceDisplayEl.textContent || priceDisplayEl.innerText || 'empty') : 'element not found');
+            console.log('window.currentServiceInfo:', window.currentServiceInfo);
+            console.log('=== END DEBUG ===');
+            
             // Minimal submit handler: basic validation + keep hair-mask hidden-field behavior.
             // Ensure terms checkbox posts a valid "accepted" value when checked (some resets previously blanked values)
             try {
@@ -6053,10 +7145,6 @@ console.log('=== LOADING BOOKING FUNCTIONS ===');
             if (isHairMaskForm) {
                 // clear length to avoid server applying length-based adjustments
                 selectedLengthInput.value = '';
-                // ensure hair_mask_option is set from the selected radio into the hidden field
-                const maskRadio = document.querySelector('input[name="hair_mask_option"]:checked');
-                const hiddenMask = document.getElementById('selectedHairMaskOption');
-                if (maskRadio && hiddenMask) hiddenMask.value = maskRadio.value;
             } else {
                 if (selectedHairLength) selectedLengthInput.value = selectedHairLength.replace(/-/g, '_');
             }
@@ -6606,7 +7694,9 @@ document.addEventListener('DOMContentLoaded', function() {
         opacity: 1;
     }
 }
+</style>
 
+<script>
 // Persist current kids modal selector state and navigate back to selector page
 function backToKidsSelector(){
     try{
@@ -6807,6 +7897,35 @@ document.addEventListener('DOMContentLoaded', function() {
 
             if (file) {
                 // Validate file type
+                const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
+                if (!allowedTypes.includes(file.type)) {
+                    alert('Please select a valid image file (JPG, PNG, or GIF)');
+                    e.target.value = '';
+                    return;
+                }
+
+                // Validate file size (5MB)
+                const maxSize = 5 * 1024 * 1024; // 5MB in bytes
+                if (file.size > maxSize) {
+                    alert('File size must be less than 5MB');
+                    e.target.value = '';
+                    return;
+                }
+
+                // Create preview
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    previewImg.src = e.target.result;
+                    fileName.textContent = file.name + ' (' + (file.size / 1024 / 1024).toFixed(2) + ' MB)';
+                    imagePreview.style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            } else {
+                clearImagePreview();
+            }
+        });
+    }
+}, 100);
 
 // Attempt to attach success modal buttons immediately (in case DOMContentLoaded already fired)
 (function attachSuccessButtonsNow() {
@@ -6882,35 +8001,104 @@ document.addEventListener('keydown', function(e) {
         console.warn('Success modal key handler error', err);
     }
 });
-                const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
-                if (!allowedTypes.includes(file.type)) {
-                    alert('Please select a valid image file (JPG, PNG, or GIF)');
-                    e.target.value = '';
-                    return;
-                }
 
-                // Validate file size (5MB)
-                const maxSize = 5 * 1024 * 1024; // 5MB in bytes
-                if (file.size > maxSize) {
-                    alert('File size must be less than 5MB');
-                    e.target.value = '';
-                    return;
-                }
-
-                // Create preview
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    previewImg.src = e.target.result;
-                    fileName.textContent = file.name + ' (' + (file.size / 1024 / 1024).toFixed(2) + ' MB)';
-                    imagePreview.style.display = 'block';
-                };
-                reader.readAsDataURL(file);
-            } else {
-                clearImagePreview();
-            }
-        });
+// Function to toggle address field based on appointment type
+function toggleAddressField() {
+    console.log('toggleAddressField called');
+    const mobileRadio = document.getElementById('appointment_type_mobile');
+    const inStudioRadio = document.getElementById('appointment_type_in_studio');
+    const addressContainer = document.getElementById('addressFieldContainer');
+    const addressInput = document.getElementById('address');
+    
+    // Determine which is checked
+    const isMobileSelected = mobileRadio && mobileRadio.checked;
+    
+    console.log('Elements found:', {
+        mobileRadio: !!mobileRadio,
+        inStudioRadio: !!inStudioRadio,
+        addressContainer: !!addressContainer,
+        addressInput: !!addressInput,
+        mobileChecked: isMobileSelected
+    });
+    
+    if (isMobileSelected) {
+        console.log('Mobile selected - showing address field');
+        if (addressContainer) {
+            addressContainer.classList.remove('d-none');
+            addressContainer.classList.add('d-block');
+            addressContainer.style.setProperty('display', 'block', 'important');
+            addressContainer.style.setProperty('visibility', 'visible', 'important');
+            addressContainer.style.setProperty('opacity', '1', 'important');
+            console.log('Address container shown with !important');
+        }
+        if (addressInput) {
+            addressInput.required = true;
+            addressInput.disabled = false;
+        }
+    } else {
+        console.log('In-studio selected - hiding address field');
+        if (addressContainer) {
+            addressContainer.classList.remove('d-block');
+            addressContainer.classList.add('d-none');
+            addressContainer.style.setProperty('display', 'none', 'important');
+            console.log('Address container hidden');
+        }
+        if (addressInput) {
+            addressInput.required = false;
+            addressInput.value = '';
+            addressInput.disabled = false;
+        }
     }
-});
+}
+
+// Function to toggle address field for kids form
+function toggleAddressFieldKids() {
+    console.log('toggleAddressFieldKids called');
+    const mobileRadio = document.getElementById('appointment_type_mobile_kids');
+    const inStudioRadio = document.getElementById('appointment_type_in_studio_kids');
+    const addressContainer = document.getElementById('addressFieldContainerKids');
+    const addressInput = document.getElementById('kids_address');
+    
+    // Determine which is checked
+    const isMobileSelected = mobileRadio && mobileRadio.checked;
+    
+    console.log('Kids elements found:', {
+        mobileRadio: !!mobileRadio,
+        inStudioRadio: !!inStudioRadio,
+        addressContainer: !!addressContainer,
+        addressInput: !!addressInput,
+        mobileChecked: isMobileSelected
+    });
+    
+    if (isMobileSelected) {
+        console.log('Kids Mobile selected - showing address field');
+        if (addressContainer) {
+            addressContainer.classList.remove('d-none');
+            addressContainer.classList.add('d-block');
+            addressContainer.style.setProperty('display', 'block', 'important');
+            addressContainer.style.setProperty('visibility', 'visible', 'important');
+            addressContainer.style.setProperty('opacity', '1', 'important');
+            console.log('Kids address container shown with !important');
+        }
+        if (addressInput) {
+            addressInput.required = true;
+            addressInput.disabled = false;
+        }
+    } else {
+        console.log('Kids In-studio selected - hiding address field');
+        if (addressContainer) {
+            addressContainer.classList.remove('d-block');
+            addressContainer.classList.add('d-none');
+            addressContainer.style.setProperty('display', 'none', 'important');
+            console.log('Kids address container hidden');
+        }
+        if (addressInput) {
+            addressInput.required = false;
+            addressInput.value = '';
+            addressInput.disabled = false;
+        }
+    }
+}
 
 // Function to clear image preview
 function clearImagePreview() {
@@ -6924,6 +8112,101 @@ function clearImagePreview() {
     if (previewImg) previewImg.src = '';
     if (fileName) fileName.textContent = '';
 }
+
+// Initialize address field visibility when modals open
+document.addEventListener('DOMContentLoaded', function() {
+    const bookingModal = document.getElementById('bookingModal');
+    const kidsBookingModal = document.getElementById('kidsBookingModal');
+    
+    if (bookingModal) {
+        bookingModal.addEventListener('shown.bs.modal', function() {
+            toggleAddressField();
+            
+            // Ensure price is set correctly whenever modal is shown
+            setTimeout(function() {
+                if (window.currentServiceInfo && window.currentServiceInfo.basePrice) {
+                    console.log('Modal shown - Ensuring price is set from currentServiceInfo:', window.currentServiceInfo.basePrice);
+                    const selectedPriceEl = document.getElementById('selectedPrice');
+                    if (selectedPriceEl && !selectedPriceEl.value) {
+                        selectedPriceEl.value = window.currentServiceInfo.basePrice;
+                        console.log('Modal shown - Set empty selectedPrice to:', selectedPriceEl.value);
+                    }
+                    // Trigger price display update
+                    if (typeof window.updatePriceDisplay === 'function') {
+                        window.updatePriceDisplay(window.currentServiceInfo.basePrice);
+                    }
+                }
+            }, 50);
+        });
+    }
+    
+    if (kidsBookingModal) {
+        kidsBookingModal.addEventListener('shown.bs.modal', function() {
+            toggleAddressFieldKids();
+        });
+    }
+    
+    // Add change event listeners as backup to onclick handlers
+    // Main booking form
+    const mainInStudio = document.getElementById('appointment_type_in_studio');
+    const mainMobile = document.getElementById('appointment_type_mobile');
+    if (mainInStudio) {
+        mainInStudio.addEventListener('change', function() {
+            console.log('Main in-studio change event fired');
+            toggleAddressField();
+        });
+        mainInStudio.addEventListener('click', function() {
+            console.log('Main in-studio click event fired');
+            setTimeout(toggleAddressField, 50);
+        });
+    }
+    if (mainMobile) {
+        mainMobile.addEventListener('change', function() {
+            console.log('Main mobile change event fired');
+            toggleAddressField();
+        });
+        mainMobile.addEventListener('click', function() {
+            console.log('Main mobile click event fired');
+            setTimeout(toggleAddressField, 50);
+        });
+    }
+    
+    // Kids booking form
+    const kidsInStudio = document.getElementById('appointment_type_in_studio_kids');
+    const kidsMobile = document.getElementById('appointment_type_mobile_kids');
+    if (kidsInStudio) {
+        kidsInStudio.addEventListener('change', function() {
+            console.log('Kids in-studio change event fired');
+            toggleAddressFieldKids();
+        });
+        kidsInStudio.addEventListener('click', function() {
+            console.log('Kids in-studio click event fired');
+            setTimeout(toggleAddressFieldKids, 50);
+        });
+    }
+    if (kidsMobile) {
+        kidsMobile.addEventListener('change', function() {
+            console.log('Kids mobile change event fired');
+            toggleAddressFieldKids();
+        });
+        kidsMobile.addEventListener('click', function() {
+            console.log('Kids mobile click event fired');
+            setTimeout(toggleAddressFieldKids, 50);
+        });
+    }
+    
+    // Initial call on page load
+    setTimeout(function() {
+        if (typeof toggleAddressField === 'function') {
+            console.log('Calling toggleAddressField on page load');
+            toggleAddressField();
+        }
+        if (typeof toggleAddressFieldKids === 'function') {
+            console.log('Calling toggleAddressFieldKids on page load');
+            toggleAddressFieldKids();
+        }
+    }, 500);
+});
 </script>
     <!-- Kids Booking Modal (placed at end to ensure it is top-level) -->
     <div class="modal fade" id="kidsBookingModal" tabindex="-1" aria-labelledby="kidsBookingModalLabel" aria-hidden="true">
@@ -6955,8 +8238,8 @@ function clearImagePreview() {
                                     <div id="kids_name_error" class="text-danger small mt-1" style="display:none;"></div>
                                 </div>
                                 <div class="mb-3">
-                                    <label class="form-label">Parent / Guardian Email</label>
-                                    <input id="kids_email" name="email" type="email" class="form-control" placeholder="you@example.com">
+                                    <label class="form-label">Parent / Guardian Email *</label>
+                                    <input id="kids_email" name="email" type="email" class="form-control" placeholder="you@example.com" required>
                                     <div id="kids_email_error" class="text-danger small mt-1" style="display:none;"></div>
                                 </div>
                                 <div class="mb-3">
@@ -6984,6 +8267,37 @@ function clearImagePreview() {
                                     <label class="form-label">Time *</label>
                                     <input id="kidsBookingTime" type="text" class="form-control" readonly />
                                     <div id="kidsBookingTime_error" class="text-danger small mt-1" style="display:none;"></div>
+                                </div>
+
+                                <!-- Appointment Type -->
+                                <div class="mb-3">
+                                    <label class="form-label">Appointment Type *</label>
+                                    <div class="d-flex gap-3">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="appointment_type" id="appointment_type_in_studio_kids" value="in-studio" checked>
+                                            <label class="form-check-label" for="appointment_type_in_studio_kids">
+                                                <i class="bi bi-house-door me-1"></i>Stylist address
+                                            </label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="appointment_type" id="appointment_type_mobile_kids" value="mobile">
+                                            <label class="form-check-label" for="appointment_type_mobile_kids">
+                                                <i class="bi bi-truck me-1"></i>Mobile (I want you to come to me)
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <small class="form-text text-muted mt-2">
+                                        <i class="bi bi-info-circle me-1"></i>Mobile service available in Ottawa/Gatineau. Travel fee may apply based on distance.
+                                    </small>
+                                </div>
+
+                                <!-- Mobile Service Address (conditional) -->
+                                <div class="mb-3 d-none" id="addressFieldContainerKids">
+                                    <label for="kids_address" class="form-label">Mobile Service Address (Ottawa) *</label>
+                                    <input type="text" class="form-control" id="kids_address" name="address" placeholder="Enter your complete address" autocomplete="off">
+                                    <small class="form-text text-muted mt-2">
+                                        <i class="bi bi-geo-alt me-1"></i>Required for mobile appointments so we can confirm travel availability and any travel fee.
+                                    </small>
                                 </div>
 
                                 <div class="mb-3">
@@ -7062,11 +8376,13 @@ function clearImagePreview() {
                         <div class="mb-1" style="font-weight:800;">Quick summary</div>
                         <ul class="mb-0" style="padding-left: 18px;">
                             <li>Deposits are non-refundable once the appointment is confirmed.</li>
+                            <li>Mobile appointments are confirmed after deposit + address verification.</li>
+                            <li>No style changes allowed on the day of appointment or after confirmation (time window is reserved).</li>
                             <li>Minimum 48 hours notice is required for cancellations.</li>
                             <li>Rescheduling requires 48 hours notice and must be within 1 month of the initial appointment date.</li>
                             <li>No-shows may result in a full charge and may affect future bookings.</li>
-                            <li>For home service: clients cover fueling for the stylist’s transportation; fees vary by distance.</li>
-                        </ul>
+                            <li>For home service: clients cover fueling for the stylist's transportation; fees vary by distance.</li>
+                            <li>For mobile service: travel fee may apply based on distance in Ottawa/Gatineau area.</li>
                     </div>
 
                     <div class="form-check mt-3">
@@ -7173,36 +8489,102 @@ document.addEventListener('DOMContentLoaded', function(){
 // Dynamic price preview and form wiring
 (function() {
     const priceMap = {
+        // Knotless Braids
         'small-knotless': {{ (int) config('service_prices.small_knotless', 170) }},
         'smedium-knotless': {{ (int) config('service_prices.smedium_knotless', 150) }},
-        'wig-installation': {{ (int) config('service_prices.wig_installation', 150) }},
         'medium-knotless': {{ (int) config('service_prices.medium_knotless', 130) }},
         'jumbo-knotless': {{ (int) config('service_prices.jumbo_knotless', 100) }},
+        
+        // Boho Braids
+        'small-boho': 180,
+        'smedium-boho': {{ (int) config('service_prices.boho_braids', 150) }},
+        'medium-boho': 130,
+        'jumbo-boho': 100,
+        
+        // Twist Styles
+        'small-twist': 150,
+        'medium-twist': 120,
+        'jumbo-twist': 100,
+        'small-natural-hair-twist': 80,
+        'medium-natural-hair-twist': 60,
+        
+        // French Curl Braids
+        'small-french-curl': 200,
+        'smedium-french-curl': 170,
+        'medium-french-curl': 150,
+        'large-french-curl': 120,
+        
+        // Crotchet Styles
+        'line-single': 100,
+        'afro-crotchet': 120,
+        'individual-loc': 150,
+        'butterfly-locks': 150,
+        'weave-crotchet': {{ (int) config('service_prices.weaving_crotchet', 80) }},
+        
+        // Cornrow/Feed-in Braids
+        'stitch-weave': 100,
+        'cornrow-weave': 100,
+        'under-wig-weave': 30,
+        'weave-braid-mixed': 150,
+        
+        // Hair Treatment Services
+        'natural-hair-treatment': {{ (int) config('service_prices.hair_mask', 50) }},
+        'chemical-relaxer': 50,
+        
+        // Other Services
         'kids-braids': {{ (int) config('service_prices.kids_braids', 80) }},
         'stitch-braids': {{ (int) config('service_prices.stitch_braids', 120) }},
         'hair-mask': {{ (int) config('service_prices.hair_mask', 50) }},
         'retouching': {{ (int) config('service_prices.hair_mask', 50) }},
-        'boho-braids': {{ (int) config('service_prices.boho_braids', 150) }},
         'custom': 100
     };
 
     // Name → base price (used when we only have a serviceName, not a serviceType)
     const priceByServiceName = {
+        // Knotless Braids
         'Small Knotless Braids': {{ (int) config('service_prices.small_knotless', 170) }},
         'Smedium Knotless Braids': {{ (int) config('service_prices.smedium_knotless', 150) }},
-        'Wig Installation': {{ (int) config('service_prices.wig_installation', 150) }},
         'Medium Knotless Braids': {{ (int) config('service_prices.medium_knotless', 130) }},
         'Jumbo Knotless Braids': {{ (int) config('service_prices.jumbo_knotless', 100) }},
-        'Kids Braids': {{ (int) config('service_prices.kids_braids', 80) }},
-        '8–10 Rows Stitch Braids': {{ (int) config('service_prices.stitch_braids', 120) }},
-        'Hair Mask/Relaxing': {{ (int) config('service_prices.hair_mask', 50) }},
+        
+        // Boho Braids
+        'Small Boho Braids': 180,
         'Smedium Boho Braids': {{ (int) config('service_prices.boho_braids', 150) }},
-        'Weaving Crotchet': {{ (int) config('service_prices.weaving_crotchet', 80) }},
-        'Single Crotchet': {{ (int) config('service_prices.single_crotchet', 150) }},
-        'Natural Hair Twist': {{ (int) config('service_prices.natural_hair_twist', 50) }},
-        'Weaving No-Extension': {{ (int) config('service_prices.weaving_no_extension', 30) }},
-        'Kinky Twist': {{ (int) config('service_prices.kinky_twist', 120) }},
-        'Twist Braids': {{ (int) config('service_prices.twist_braids', 130) }},
+        'Medium Boho Braids': 130,
+        'Jumbo/Large Boho Braids': 100,
+        
+        // Twist Styles
+        'Small Twists': 150,
+        'Medium Twists': 120,
+        'Jumbo/Large Twists': 100,
+        'Small Natural Hair Twist': 80,
+        'Medium Natural Hair Twist': 60,
+        
+        // French Curl Braids
+        'Small French Curl Braids': 200,
+        'Smedium French Curl Braids': 170,
+        'Medium French Curl Braids': 150,
+        'Large French Curl Braids': 120,
+        
+        // Crotchet Styles
+        '2/3 Line Single': 100,
+        'Afro Crotchet': 120,
+        'Individual Loc': 150,
+        'Butterfly Locks': 150,
+        'Weave Crotchet': {{ (int) config('service_prices.weaving_crotchet', 80) }},
+        
+        // Cornrow/Feed-in Braids
+        'Stitch Weave': 100,
+        'Cornrow Weave': 100,
+        'Under-wig Weave': 30,
+        'Weave&Braid Mixed': 150,
+        
+        // Hair Treatment Services
+        'Natural Hair Treatment/Mask': {{ (int) config('service_prices.hair_mask', 50) }},
+        'Chemical Relaxer': 50,
+        
+        // Other Services
+        'Kids Braids': {{ (int) config('service_prices.kids_braids', 80) }},
     };
 
     function lengthAdjustment(lengthValue) {
@@ -7322,58 +8704,24 @@ document.addEventListener('DOMContentLoaded', function(){
             }
         }
 
-        // For hair-mask/relax/retouch we show mask options and compute addon (+$30 for weave)
+        // For hair-mask/relax/retouch: price is already set in the size selection modal
+        // Check if weave addon is included in the service name from the size modal
         if (isHairMask) {
-            // read selected mask option (only consider actual radio inputs)
-            const maskRadio = document.querySelector('input[type="radio"][name="hair_mask_option"]:checked');
-            // log snapshot of all mask radio inputs for debugging
-            try {
-                const maskInputs = Array.from(document.querySelectorAll('input[type="radio"][name="hair_mask_option"]'));
-                const maskSnapshot = maskInputs.map((m, idx) => ({ idx, id: m.id || null, type: m.type, value: m.value, checked: !!m.checked }));
-                console.log('Mask radios snapshot:', maskSnapshot);
-            } catch (e) { /* ignore */ }
-
-            // Derive maskVal robustly: prefer radio.value; if empty, derive from id or label text; finally fallback to hidden field or 'mask-only'
-            let maskVal = '';
-            if (maskRadio) {
-                maskVal = (maskRadio.value || '').toString().trim();
-                if (!maskVal) {
-                    // try from id (mask_with_weave -> mask-with-weave)
-                    if (maskRadio.id) {
-                        const derived = maskRadio.id.replace(/_/g, '-');
-                        if (derived.includes('weav') || derived.includes('weave')) maskVal = 'mask-with-weave';
-                        else if (derived.includes('mask')) maskVal = 'mask-only';
-                        else maskVal = derived;
-                        console.log('Derived maskVal from id:', derived, '->', maskVal);
-                    }
-                    // try from label text
-                    if (!maskVal) {
-                        try {
-                            const label = document.querySelector('label[for="' + (maskRadio.id || '') + '"]') || maskRadio.closest('label');
-                            if (label) {
-                                const txt = (label.textContent || '').toLowerCase();
-                                if (txt.includes('weav')) maskVal = 'mask-with-weave';
-                                else if (txt.includes('mask') || txt.includes('relax')) maskVal = 'mask-only';
-                                console.log('Derived maskVal from label text:', txt, '->', maskVal);
-                            }
-                        } catch (e) { /* ignore */ }
-                    }
-                }
-            }
-            if (!maskVal) maskVal = document.getElementById('selectedHairMaskOption')?.value || 'mask-only';
-            const addon = (maskVal === 'mask-with-weave') ? 30 : 0;
+            const serviceNameEl = document.getElementById('selectedService');
+            const serviceName = serviceNameEl ? serviceNameEl.value : '';
+            const hasWeaveAddon = serviceName.toLowerCase().includes('with weave');
+            
+            const addon = hasWeaveAddon ? 30 : 0;
             const finalPrice = (typeof base === 'number' && !isNaN(base) ? base : 0) + addon;
 
-            console.log('Hair-mask price calc', { basePrice, maskVal, addon, finalPrice });
+            console.log('Hair treatment price calc', { basePrice, hasWeaveAddon, addon, finalPrice, serviceName });
 
             const disp = document.getElementById('priceDisplay');
             const hidden = document.getElementById('selectedPrice');
-            const hiddenMask = document.getElementById('selectedHairMaskOption');
 
             if (disp) disp.textContent = finalPrice ? ('$' + finalPrice) : '--';
             // Keep hidden "price" as the base price; send final price via final_price_input
             if (hidden) hidden.value = (typeof base === 'number' && !isNaN(base)) ? Number(base).toFixed(2) : '';
-            if (hiddenMask) hiddenMask.value = maskVal;
 
             // Ensure final_price_input is set so server + emails reflect the correct total
             try {
@@ -7445,25 +8793,27 @@ document.addEventListener('DOMContentLoaded', function(){
         }
         // debug badge removed: no-op
         if (hidden) {
-            // Store only the authoritative base price in the hidden input (do NOT post client-side adjusted finalPrice)
-            hidden.value = base;
-            console.log('Updated hidden price input to base price (client will not post adjusted final):', hidden.value);
+            // Store the BASE price in the hidden input
+            const baseValue = (typeof base === 'number') ? base : (parseFloat(base) || 0);
+            hidden.value = baseValue;
+            console.log('updatePriceDisplay - Set selectedPrice to base:', baseValue);
         }
         // Also store the computed final price in the form hidden input so server can use client-calculated final_price
         try {
             const finalInput = document.getElementById('final_price_input');
+            const finalValue = (typeof finalPrice === 'number') ? Number(finalPrice).toFixed(2) : (parseFloat(finalPrice) || 0).toFixed(2);
             if (finalInput) {
-                finalInput.value = (typeof finalPrice === 'number') ? Number(finalPrice).toFixed(2) : finalPrice;
-                console.log('Wrote final_price_input =', finalInput.value);
+                finalInput.value = finalValue;
+                console.log('updatePriceDisplay - Set final_price_input to:', finalValue);
             } else {
                 // create hidden input in booking form if missing
                 const form = document.getElementById('bookingForm');
                 if (form) {
                     const inp = document.createElement('input');
                     inp.type = 'hidden'; inp.name = 'final_price'; inp.id = 'final_price_input';
-                    inp.value = (typeof finalPrice === 'number') ? Number(finalPrice).toFixed(2) : finalPrice;
+                    inp.value = finalValue;
                     form.appendChild(inp);
-                    console.log('Inserted missing final_price_input with value', inp.value);
+                    console.log('updatePriceDisplay - Created final_price_input with value:', finalValue);
                 }
             }
         } catch (e) { console.warn('Could not set final_price_input', e); }
@@ -7580,6 +8930,8 @@ document.addEventListener('DOMContentLoaded', function(){
                     ? priceMap[serviceType]
                     : ((serviceName && priceByServiceName[serviceName]) ? priceByServiceName[serviceName] : priceMap['custom'])
             };
+            
+            console.log('openBookingModal - Set currentServiceInfo:', window.currentServiceInfo);
 
             // Call original modal opener first (it may clear the form)
             if (typeof prevOpen === 'function') {
@@ -7591,6 +8943,32 @@ document.addEventListener('DOMContentLoaded', function(){
             }
             // If the modal opener reset the form, re-sync Terms buttons (reset doesn't fire change)
             try { window.__dbtSyncTermsButtons && window.__dbtSyncTermsButtons(); } catch(e) {}
+
+            // Restore terms checkbox if user already accepted terms (from calendar or previous interaction)
+            try {
+                const KEY = 'dbt_terms_accepted_v1';
+                const hasAccepted = () => {
+                    try { return window.localStorage && localStorage.getItem(KEY) === '1'; } catch(e) { return false; }
+                };
+                
+                if (hasAccepted()) {
+                    // Pre-check terms checkboxes if terms were already accepted
+                    const termsMain = document.getElementById('termsAcceptedMain');
+                    const termsKids = document.getElementById('termsAcceptedKids');
+                    if (termsMain && !termsMain.checked) {
+                        termsMain.checked = true;
+                        termsMain.dispatchEvent(new Event('change', { bubbles: true }));
+                    }
+                    if (termsKids && !termsKids.checked) {
+                        termsKids.checked = true;
+                        termsKids.dispatchEvent(new Event('change', { bubbles: true }));
+                    }
+                    // Re-sync buttons after checking terms
+                    try { window.__dbtSyncTermsButtons && window.__dbtSyncTermsButtons(); } catch(e) {}
+                }
+            } catch(e) {
+                console.warn('Failed to restore terms acceptance state', e);
+            }
 
             // Now set/restore hidden inputs and update UI (do this after prevOpen which may reset the form)
             try {
@@ -7613,6 +8991,7 @@ document.addEventListener('DOMContentLoaded', function(){
                 const selectedPriceEl = document.getElementById('selectedPrice');
                 if (selectedPriceEl) {
                     selectedPriceEl.value = (typeof base === 'number') ? String(base) : (base || '');
+                    console.log('openBookingModal - Set selectedPrice to:', selectedPriceEl.value);
                 }
             } catch (e) { console.warn('Failed to set selectedPrice hidden input', e); }
 
@@ -7660,24 +9039,11 @@ document.addEventListener('DOMContentLoaded', function(){
                 console.warn('Kids summary render failed', e);
             }
 
-            // For hair-mask show mask options. For hair-mask OR retouching disable length radios.
-            const maskOptionsDiv = document.getElementById('hairMaskOptions');
+            // Service-specific UI handling
             const lengthRadios = document.getElementsByName('hair_length');
             const lengthGuideBlock = document.getElementById('lengthGuideBlock');
             const serviceTypeLower = (serviceType || '').toLowerCase();
             const serviceNameLower = (''+serviceName).toLowerCase();
-            // accept either slug or display name containing 'mask', 'relax', or 'retouch'
-            const isHairMaskLocal = (
-                serviceTypeLower === 'hair-mask' ||
-                serviceTypeLower.includes('hair-mask') ||
-                serviceTypeLower.includes('relax') ||
-                serviceTypeLower.includes('retouch') ||
-                serviceNameLower.includes('hair mask') ||
-                serviceNameLower.includes('mask/relax') ||
-                serviceNameLower.includes('relaxing') ||
-                serviceNameLower.includes('retouch')
-            );
-            const disableLengths = isHairMaskLocal;
 
             // Stitch braids note (tiny stitch >10 rows +$20)
             try {
@@ -7706,63 +9072,10 @@ document.addEventListener('DOMContentLoaded', function(){
                 }
             } catch (e) { /* noop */ }
 
-            // hair-mask specific UI (show mask options for hair-mask, relaxing, retouching services)
-            if (isHairMaskLocal) {
-                if (maskOptionsDiv) maskOptionsDiv.style.display = 'block';
-                // ensure default mask option selected
-                const defaultMask = document.getElementById('mask_only');
-                if (defaultMask) defaultMask.checked = true;
-                // Hide length guide block for hair mask/relaxing/retouching services
-                if (lengthGuideBlock) lengthGuideBlock.style.display = 'none';
-            } else {
-                if (maskOptionsDiv) maskOptionsDiv.style.display = 'none';
-                // Show length guide block for other services
-                if (lengthGuideBlock) lengthGuideBlock.style.display = '';
-            }
-
             // enable/disable length radios according to service; do NOT change kids flows here
             for (let i = 0; i < lengthRadios.length; i++) {
                 try { lengthRadios[i].disabled = !!disableLengths; } catch (e) { /* ignore */ }
             }
-
-            // Attach change listeners to any mask option radios inside the modal
-            try {
-                const maskRadiosModal = document.querySelectorAll('input[type="radio"][name="hair_mask_option"]');
-                for (let i = 0; i < maskRadiosModal.length; i++) {
-                    const el = maskRadiosModal[i];
-                    // avoid attaching multiple times
-                    if (el.dataset && el.dataset.maskListenerAttached) continue;
-                    el.addEventListener('change', function() {
-                        const selVal = this.value;
-                        setTimeout(function(){
-                            // update hidden input for submission
-                            const hiddenMask = document.getElementById('selectedHairMaskOption');
-                            if (hiddenMask) hiddenMask.value = selVal;
-                            // resolve base price
-                            const selectedPriceEl = document.getElementById('selectedPrice');
-                            let base = null;
-                            if (selectedPriceEl && selectedPriceEl.value && !isNaN(parseFloat(selectedPriceEl.value))) {
-                                base = parseFloat(selectedPriceEl.value);
-                            } else if (window.currentServiceInfo && typeof window.currentServiceInfo.basePrice === 'number') {
-                                base = window.currentServiceInfo.basePrice;
-                            } else {
-                                base = priceMap[serviceType] || priceMap['custom'];
-                            }
-                            updatePriceDisplay(base);
-                        }, 0);
-                    });
-                    try { el.dataset.maskListenerAttached = '1'; } catch(e) { /* ignore */ }
-                }
-            } catch (e) { /* ignore modal mask radio attach errors */ }
-
-            // Ensure hidden mask option reflects default before computing price
-            try {
-                const hiddenMask = document.getElementById('selectedHairMaskOption');
-                const checkedMask = document.querySelector('input[name="hair_mask_option"]:checked');
-                if (hiddenMask) {
-                    hiddenMask.value = (checkedMask && checkedMask.value) ? checkedMask.value : (hiddenMask.value || 'mask-only');
-                }
-            } catch (e) { /* ignore */ }
 
                 // Now that modal UI is set up (radios, defaults, hidden inputs), update the price display using authoritative base
                 try { updatePriceDisplay(base); } catch (e) { console.warn('updatePriceDisplay failed after modal setup', e); }
@@ -7874,35 +9187,6 @@ document.addEventListener('DOMContentLoaded', function(){
                 }, 0);
             });
         }
-
-        // hair_mask_option listeners (for hair mask service)
-        const maskRadios = document.querySelectorAll('input[type="radio"][name="hair_mask_option"]');
-        for (let i = 0; i < maskRadios.length; i++) {
-            maskRadios[i].addEventListener('change', function() {
-                console.log('Hair mask option changed (radio):', this.value);
-                // Defer to ensure the checked state and any form hidden inputs are updated
-                const selVal = this.value;
-                setTimeout(function(){
-                    // Resolve authoritative base: prefer hidden selectedPrice, then currentServiceInfo, then priceMap
-                    const selectedPriceEl = document.getElementById('selectedPrice');
-                    let base = null;
-                    if (selectedPriceEl && selectedPriceEl.value && !isNaN(parseFloat(selectedPriceEl.value))) {
-                        base = parseFloat(selectedPriceEl.value);
-                    } else if (window.currentServiceInfo && typeof window.currentServiceInfo.basePrice === 'number') {
-                        base = window.currentServiceInfo.basePrice;
-                    } else {
-                        const serviceType = window.currentServiceInfo.serviceType || document.getElementById('selectedServiceType')?.value || 'custom';
-                        base = priceMap[serviceType] || priceMap['custom'];
-                    }
-                    // Ensure hidden mask option input updated for form submission
-                    const hiddenMask = document.getElementById('selectedHairMaskOption');
-                    if (hiddenMask) hiddenMask.value = selVal;
-                    // Update the visible price using the resolved base so hair-mask branch uses correct base
-                    updatePriceDisplay(base);
-                }, 0);
-            });
-        }
-
         // Fetch booked dates on initial page load so calendar is up-to-date
         try {
             if (typeof fetchRealBookedDates === 'function') {
@@ -8200,8 +9484,6 @@ document.addEventListener('DOMContentLoaded', function(){
 })();
 </script>
 
-</script>
-
 <script>
 // If user was redirected from a selector page, pick up params and open booking modal
 (function(){
@@ -8437,10 +9719,14 @@ document.addEventListener('DOMContentLoaded', function(){
                     clearFieldError('kids_phone');
                 }
 
-                // Validate Email (optional field, but if provided, must be valid format)
+                // Validate Email (required field)
                 const emailField = document.getElementById('kids_email');
                 const emailValue = emailField ? emailField.value.trim() : '';
-                if(emailValue) {
+                if(!emailValue) {
+                    showFieldError('kids_email', 'Please enter parent/guardian email address.');
+                    isValid = false;
+                    errors.push('Email');
+                } else {
                     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
                     if(!emailRegex.test(emailValue)) {
                         showFieldError('kids_email', 'Please enter a valid email address.');
@@ -8449,8 +9735,6 @@ document.addEventListener('DOMContentLoaded', function(){
                     } else {
                         clearFieldError('kids_email');
                     }
-                } else {
-                    clearFieldError('kids_email');
                 }
 
                 // Validate Date
@@ -8533,6 +9817,114 @@ document.addEventListener('DOMContentLoaded', function(){
         }
     });
 })();
+</script>
+
+<script>
+// Service Filter Functionality
+function filterServices(category) {
+    const serviceItems = document.querySelectorAll('.service-item');
+    const filterChips = document.querySelectorAll('.filter-chip');
+    
+    // Update active chip
+    filterChips.forEach(chip => {
+        if (chip.dataset.filter === category) {
+            chip.classList.add('active');
+        } else {
+            chip.classList.remove('active');
+        }
+    });
+    
+    // Filter service cards
+    serviceItems.forEach(item => {
+        if (category === 'all') {
+            item.classList.remove('hidden');
+        } else {
+            if (item.dataset.category === category) {
+                item.classList.remove('hidden');
+            } else {
+                item.classList.add('hidden');
+            }
+        }
+    });
+    
+    // Reset mobile visibility after filter
+    initializeMobileServices();
+}
+
+// Mobile See More/Less Functionality
+let servicesExpanded = false;
+
+function toggleServices() {
+    const serviceItems = document.querySelectorAll('.service-item:not(.hidden)');
+    const seeMoreBtn = document.getElementById('seeMoreBtn');
+    const seeMoreText = document.getElementById('seeMoreText');
+    const seeMoreIcon = document.getElementById('seeMoreIcon');
+    
+    servicesExpanded = !servicesExpanded;
+    
+    if (servicesExpanded) {
+        // Show all services
+        serviceItems.forEach(item => {
+            item.classList.remove('hidden-mobile');
+        });
+        seeMoreText.textContent = 'See Less Services';
+        seeMoreIcon.classList.remove('bi-chevron-down');
+        seeMoreIcon.classList.add('bi-chevron-up');
+    } else {
+        // Show only first 4 services on mobile
+        serviceItems.forEach((item, index) => {
+            if (index >= 4) {
+                item.classList.add('hidden-mobile');
+            }
+        });
+        seeMoreText.textContent = 'See More Services';
+        seeMoreIcon.classList.remove('bi-chevron-up');
+        seeMoreIcon.classList.add('bi-chevron-down');
+        
+        // Scroll to services section smoothly
+        document.getElementById('services').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+}
+
+// Initialize mobile services visibility on load
+function initializeMobileServices() {
+    if (window.innerWidth <= 768) {
+        const serviceItems = document.querySelectorAll('.service-item:not(.hidden)');
+        servicesExpanded = false;
+        
+        serviceItems.forEach((item, index) => {
+            if (index >= 4) {
+                item.classList.add('hidden-mobile');
+            } else {
+                item.classList.remove('hidden-mobile');
+            }
+        });
+        
+        // Reset button state
+        const seeMoreText = document.getElementById('seeMoreText');
+        const seeMoreIcon = document.getElementById('seeMoreIcon');
+        if (seeMoreText) seeMoreText.textContent = 'See More Services';
+        if (seeMoreIcon) {
+            seeMoreIcon.classList.remove('bi-chevron-up');
+            seeMoreIcon.classList.add('bi-chevron-down');
+        }
+    } else {
+        // On desktop, show all services
+        document.querySelectorAll('.service-item').forEach(item => {
+            item.classList.remove('hidden-mobile');
+        });
+    }
+}
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', function() {
+    initializeMobileServices();
+});
+
+// Re-initialize on window resize
+window.addEventListener('resize', function() {
+    initializeMobileServices();
+});
 </script>
 
 </body>

@@ -1,104 +1,595 @@
 <!-- Kids Selector Form Partial -->
-<div class="selector-card card shadow-sm">
-    <div class="card-body">
-        <h3 class="card-title">Kids Braids (3–8 yrs) — Choose options</h3>
-        <p class="text-muted">Follow the steps below to select braid type, length and add-ons. Price updates automatically.</p>
+<style>
+    .kb-selector-container {
+        max-width: 1100px;
+        margin: 0 auto;
+    }
+    
+    .kb-header {
+        text-align: center;
+        padding: 40px 20px 30px;
+        background: linear-gradient(135deg, #ff6600 0%, #ff8533 100%);
+        border-radius: 16px 16px 0 0;
+        color: white;
+        margin-bottom: 0;
+    }
+    
+    .kb-header h1 {
+        font-size: 2rem;
+        font-weight: 800;
+        margin-bottom: 10px;
+        color: white;
+    }
+    
+    .kb-header p {
+        font-size: 1.1rem;
+        margin-bottom: 0;
+        opacity: 0.95;
+        color: white;
+    }
+    
+    .kb-progress {
+        display: flex;
+        justify-content: space-between;
+        padding: 20px;
+        background: #f8f9fa;
+        border-bottom: 2px solid #e9ecef;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+    
+    .kb-progress-step {
+        flex: 1;
+        text-align: center;
+        padding: 10px;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+        min-width: 120px;
+    }
+    
+    .kb-progress-step.active {
+        background: #fff3e0;
+        border: 2px solid #ff6600;
+    }
+    
+    .kb-progress-step .step-number {
+        display: inline-block;
+        width: 32px;
+        height: 32px;
+        line-height: 32px;
+        border-radius: 50%;
+        background: #e9ecef;
+        color: #6c757d;
+        font-weight: bold;
+        margin-bottom: 5px;
+    }
+    
+    .kb-progress-step.active .step-number {
+        background: #ff6600;
+        color: white;
+    }
+    
+    .kb-progress-step .step-label {
+        display: block;
+        font-size: 0.85rem;
+        color: #6c757d;
+        font-weight: 600;
+    }
+    
+    .kb-progress-step.active .step-label {
+        color: #ff6600;
+    }
+    
+    .kb-content {
+        padding: 30px 20px;
+        background: white;
+    }
+    
+    .kb-section {
+        margin-bottom: 40px;
+    }
+    
+    .kb-section-title {
+        font-size: 1.3rem;
+        font-weight: 700;
+        color: #030f68;
+        margin-bottom: 8px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    
+    .kb-section-subtitle {
+        font-size: 0.9rem;
+        color: #6c757d;
+        margin-bottom: 20px;
+    }
+    
+    .kb-braid-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 15px;
+        margin-bottom: 20px;
+    }
+    
+    .kb-braid-card {
+        border: 2px solid #e9ecef;
+        border-radius: 12px;
+        padding: 16px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        background: white;
+        position: relative;
+    }
+    
+    .kb-braid-card:hover {
+        border-color: #ff6600;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(255, 102, 0, 0.15);
+    }
+    
+    .kb-braid-card input[type="radio"] {
+        position: absolute;
+        opacity: 0;
+    }
+    
+    .kb-braid-card input[type="radio"]:checked + .kb-braid-content {
+        border-left: 4px solid #ff6600;
+        padding-left: 12px;
+    }
+    
+    .kb-braid-card input[type="radio"]:checked ~ .kb-checkmark {
+        opacity: 1;
+    }
+    
+    .kb-braid-card.selected {
+        border-color: #ff6600;
+        background: #fff8f0;
+        box-shadow: 0 4px 12px rgba(255, 102, 0, 0.2);
+    }
+    
+    .kb-braid-content {
+        transition: all 0.3s ease;
+    }
+    
+    .kb-braid-name {
+        font-size: 1.05rem;
+        font-weight: 600;
+        color: #030f68;
+        margin-bottom: 4px;
+    }
+    
+    .kb-braid-price {
+        font-size: 1.3rem;
+        font-weight: 800;
+        color: #ff6600;
+    }
+    
+    .kb-checkmark {
+        position: absolute;
+        top: 12px;
+        right: 12px;
+        width: 28px;
+        height: 28px;
+        background: #ff6600;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+    
+    .kb-option-group {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+    
+    .kb-option-btn {
+        flex: 1;
+        min-width: 140px;
+        padding: 14px 20px;
+        border: 2px solid #e9ecef;
+        border-radius: 10px;
+        background: white;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-align: center;
+    }
+    
+    .kb-option-btn:hover {
+        border-color: #ff6600;
+        background: #fff8f0;
+    }
+    
+    .kb-option-btn input[type="radio"] {
+        display: none;
+    }
+    
+    .kb-option-btn input[type="radio"]:checked + .kb-option-label {
+        color: #ff6600;
+        font-weight: 700;
+    }
+    
+    .kb-option-btn.selected {
+        border-color: #ff6600;
+        background: #fff8f0;
+        box-shadow: 0 2px 8px rgba(255, 102, 0, 0.15);
+    }
+    
+    .kb-option-label {
+        font-size: 1rem;
+        font-weight: 600;
+        color: #030f68;
+        transition: all 0.3s ease;
+    }
+    
+    .kb-option-price {
+        display: block;
+        font-size: 0.9rem;
+        color: #6c757d;
+        margin-top: 4px;
+    }
+    
+    .kb-addon-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+        gap: 12px;
+    }
+    
+    .kb-addon-card {
+        border: 2px solid #e9ecef;
+        border-radius: 10px;
+        padding: 14px 16px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        background: white;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+    
+    .kb-addon-card:hover {
+        border-color: #ff6600;
+        background: #fff8f0;
+    }
+    
+    .kb-addon-card input[type="checkbox"] {
+        width: 20px;
+        height: 20px;
+        cursor: pointer;
+        flex-shrink: 0;
+    }
+    
+    .kb-addon-card.checked {
+        border-color: #ff6600;
+        background: #fff8f0;
+    }
+    
+    .kb-addon-label {
+        flex: 1;
+        font-weight: 600;
+        color: #030f68;
+    }
+    
+    .kb-addon-price {
+        font-weight: 700;
+        color: #ff6600;
+    }
+    
+    .kb-price-summary {
+        position: sticky;
+        top: 20px;
+        background: white;
+        border: 3px solid #ff6600;
+        border-radius: 16px;
+        padding: 24px;
+        box-shadow: 0 8px 24px rgba(255, 102, 0, 0.15);
+    }
+    
+    .kb-price-title {
+        font-size: 1.3rem;
+        font-weight: 800;
+        color: #030f68;
+        margin-bottom: 16px;
+        text-align: center;
+    }
+    
+    .kb-price-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 10px 0;
+        border-bottom: 1px solid #f0f0f0;
+        font-size: 0.95rem;
+        line-height: 1.6;
+    }
+    
+    .kb-price-item:last-of-type {
+        border-bottom: 2px solid #e9ecef;
+        margin-bottom: 12px;
+    }
+    
+    .kb-price-total {
+        display: flex;
+        justify-content: space-between;
+        padding: 16px 0;
+        font-size: 1.4rem;
+        font-weight: 800;
+        color: #030f68;
+    }
+    
+    .kb-price-total-amount {
+        color: #ff6600;
+        font-size: 1.8rem;
+    }
+    
+    .kb-action-buttons {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        margin-top: 20px;
+    }
+    
+    .kb-btn-continue {
+        background: linear-gradient(135deg, #ff6600 0%, #ff8533 100%);
+        color: white;
+        border: none;
+        padding: 16px 32px;
+        border-radius: 12px;
+        font-size: 1.1rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 12px rgba(255, 102, 0, 0.3);
+    }
+    
+    .kb-btn-continue:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(255, 102, 0, 0.4);
+    }
+    
+    .kb-btn-cancel {
+        color: #6c757d;
+        background: white;
+        border: 2px solid #e9ecef;
+        padding: 12px 24px;
+        border-radius: 10px;
+        text-decoration: none;
+        text-align: center;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+    
+    .kb-btn-cancel:hover {
+        border-color: #6c757d;
+        color: #495057;
+    }
+    
+    @media (max-width: 768px) {
+        .kb-header h1 { font-size: 1.5rem; }
+        .kb-progress { padding: 15px 10px; }
+        .kb-progress-step { min-width: 80px; padding: 8px; }
+        .kb-braid-grid { grid-template-columns: 1fr; }
+        .kb-addon-grid { grid-template-columns: 1fr; }
+        .kb-price-summary { position: static; margin-top: 30px; }
+    }
+</style>
 
-        <div class="row">
-            <div class="col-md-8">
+<div class="kb-selector-container">
+    <div class="card shadow-lg" style="border: none; border-radius: 16px; overflow: hidden;">
+        <!-- Header -->
+        <div class="kb-header">
+            <h1>👧🏾 Kids Braids Selector</h1>
+            <p>Professional braiding for ages 3–8 • Customize your child's perfect style</p>
+        </div>
+        
+        <!-- Progress Indicator -->
+        <div class="kb-progress">
+            <div class="kb-progress-step active" data-step="1">
+                <span class="step-number">1</span>
+                <span class="step-label">Braid Type</span>
+            </div>
+            <div class="kb-progress-step" data-step="2">
+                <span class="step-number">2</span>
+                <span class="step-label">Finish</span>
+            </div>
+            <div class="kb-progress-step" data-step="3">
+                <span class="step-number">3</span>
+                <span class="step-label">Length</span>
+            </div>
+            <div class="kb-progress-step" data-step="4">
+                <span class="step-number">4</span>
+                <span class="step-label">Add-Ons</span>
+            </div>
+        </div>
+        
+        <div class="row g-0">
+            <!-- Left Column: Form -->
+            <div class="col-lg-8 kb-content">
                 <form id="kidsSelectorForm" method="POST" action="{{ route('kids.selector.submit') }}">
                     @csrf
-                    <h6 class="mt-3">1) Braid Type</h6>
-                    <div id="kb-braid-types" class="mb-3">
-                        <div class="form-check">
-                            <input class="form-check-input" type="radio" name="kb_braid_type" id="kb_type_protective" value="protective" checked>
-                            <label class="form-check-label" for="kb_type_protective">Protective style (natural hair) (-$20)</label>
-                        </div>
-                        <div class="form-check">
-                            <input class="form-check-input" type="radio" name="kb_braid_type" id="kb_type_cornrows" value="cornrows">
-                            <label class="form-check-label" for="kb_type_cornrows">Cornrows with natural hair (-$40)</label>
-                        </div>
-                        <div class="form-check">
-                            <input class="form-check-input" type="radio" name="kb_braid_type" id="kb_type_knotless_small" value="knotless_small">
-                            <label class="form-check-label" for="kb_type_knotless_small">Knotless (Small) (+$20)</label>
-                        </div>
-                        <div class="form-check">
-                            <input class="form-check-input" type="radio" name="kb_braid_type" id="kb_type_knotless_med" value="knotless_med">
-                            <label class="form-check-label" for="kb_type_knotless_med">Knotless (Medium)</label>
-                        </div>
-                        <div class="form-check">
-                            <input class="form-check-input" type="radio" name="kb_braid_type" id="kb_type_box_small" value="box_small">
-                            <label class="form-check-label" for="kb_type_box_small">Box Braids (Small) (+$10)</label>
-                        </div>
-                        <div class="form-check">
-                            <input class="form-check-input" type="radio" name="kb_braid_type" id="kb_type_box_med" value="box_med">
-                            <label class="form-check-label" for="kb_type_box_med">Box Braids (Medium)</label>
-                        </div>
-                        <div class="form-check">
-                            <input class="form-check-input" type="radio" name="kb_braid_type" id="kb_type_stitch" value="stitch">
-                            <label class="form-check-label" for="kb_type_stitch">Stitch Braids (&gt;10 rows) (+$20)</label>
-                        </div>
-                    </div>
-
-                    <h6 class="mt-3" id="kb-finish-header">2) Finish</h6>
-                    <div class="mb-3" id="kb-finish-block">
-                        <div class="form-check form-check-inline">
-                            <input class="form-check-input" type="radio" name="kb_finish" id="kb_finish_curled" value="curled">
-                            <label class="form-check-label" for="kb_finish_curled">With curl (-$10)</label>
-                        </div>
-                        <div class="form-check form-check-inline">
-                            <input class="form-check-input" type="radio" name="kb_finish" id="kb_finish_plain" value="plain" checked>
-                            <label class="form-check-label" for="kb_finish_plain">Without curl</label>
-                        </div>
-                    </div>
-
-                    <h6 class="mt-3" id="kb-length-header">3) Hair Length</h6>
-                    <div id="kb-lengths" class="mb-3">
-                        <div class="form-check">
-                            <input class="form-check-input" type="radio" name="kb_length" id="kb_len_shoulder" value="shoulder" checked>
-                            <label class="form-check-label" for="kb_len_shoulder">Shoulder (base)</label>
-                        </div>
-                        <div class="form-check">
-                            <input class="form-check-input" type="radio" name="kb_length" id="kb_len_armpit" value="armpit">
-                            <label class="form-check-label" for="kb_len_armpit">Armpit (+$10)</label>
-                        </div>
-                        <div class="form-check">
-                            <input class="form-check-input" type="radio" name="kb_length" id="kb_len_midback" value="mid_back">
-                            <label class="form-check-label" for="kb_len_midback">Mid Back (+$20)</label>
-                        </div>
-                        <div class="form-check">
-                            <input class="form-check-input" type="radio" name="kb_length" id="kb_len_waist" value="waist">
-                            <label class="form-check-label" for="kb_len_waist">Waist (+$30)</label>
-                        </div>
-                    </div>
-
-                    <h6 class="mt-3">4) Add-Ons</h6>
-                    <div id="kb-addons" class="mb-3">
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" id="kb_add_detangle" value="15">
-                            <label class="form-check-label" for="kb_add_detangle">Detangle / Blowdry (+$15)</label>
-                        </div>
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" id="kb_add_beads" value="10">
-                            <label class="form-check-label" for="kb_add_beads">Beading (+$10)</label>
-                        </div>
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" id="kb_add_beads_full" value="15">
-                            <label class="form-check-label" for="kb_add_beads_full">Small size beads (+$15)</label>
-                        </div>
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" id="kb_add_extension" value="20">
-                            <label class="form-check-label" for="kb_add_extension">Hair Extension (+$20)</label>
-                        </div>
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" id="kb_add_rest" value="5">
-                            <label class="form-check-label" for="kb_add_rest">Resting Break (+$5)</label>
+                    
+                    <!-- Step 1: Braid Type -->
+                    <div class="kb-section" data-step="1">
+                        <h2 class="kb-section-title">
+                            <span style="color: #ff6600;">✨</span> Choose Braid Type
+                        </h2>
+                        <p class="kb-section-subtitle">Select the perfect style for your child</p>
+                        
+                        <div class="kb-braid-grid" id="kb-braid-types">
+                            <label class="kb-braid-card" for="kb_type_protective">
+                                <input type="radio" name="kb_braid_type" id="kb_type_protective" value="protective" checked>
+                                <div class="kb-braid-content">
+                                    <div class="kb-braid-name">Natural Hair Twist</div>
+                                    <div class="kb-braid-price">$60</div>
+                                </div>
+                                <span class="kb-checkmark">✓</span>
+                            </label>
+                            
+                            <label class="kb-braid-card" for="kb_type_cornrows">
+                                <input type="radio" name="kb_braid_type" id="kb_type_cornrows" value="cornrows">
+                                <div class="kb-braid-content">
+                                    <div class="kb-braid-name">Cornrows</div>
+                                    <div class="kb-braid-price">$40</div>
+                                </div>
+                                <span class="kb-checkmark">✓</span>
+                            </label>
+                            
+                            <label class="kb-braid-card" for="kb_type_knotless_small">
+                                <input type="radio" name="kb_braid_type" id="kb_type_knotless_small" value="knotless_small">
+                                <div class="kb-braid-content">
+                                    <div class="kb-braid-name">Knotless Small</div>
+                                    <div class="kb-braid-price">$100</div>
+                                </div>
+                                <span class="kb-checkmark">✓</span>
+                            </label>
+                            
+                            <label class="kb-braid-card" for="kb_type_knotless_med">
+                                <input type="radio" name="kb_braid_type" id="kb_type_knotless_med" value="knotless_med">
+                                <div class="kb-braid-content">
+                                    <div class="kb-braid-name">Knotless Medium</div>
+                                    <div class="kb-braid-price">$80</div>
+                                </div>
+                                <span class="kb-checkmark">✓</span>
+                            </label>
+                            
+                            <label class="kb-braid-card" for="kb_type_box_small">
+                                <input type="radio" name="kb_braid_type" id="kb_type_box_small" value="box_small">
+                                <div class="kb-braid-content">
+                                    <div class="kb-braid-name">Box Braids Small</div>
+                                    <div class="kb-braid-price">$90</div>
+                                </div>
+                                <span class="kb-checkmark">✓</span>
+                            </label>
+                            
+                            <label class="kb-braid-card" for="kb_type_box_med">
+                                <input type="radio" name="kb_braid_type" id="kb_type_box_med" value="box_med">
+                                <div class="kb-braid-content">
+                                    <div class="kb-braid-name">Box Braids Medium</div>
+                                    <div class="kb-braid-price">$80</div>
+                                </div>
+                                <span class="kb-checkmark">✓</span>
+                            </label>
+                            
+                            <label class="kb-braid-card" for="kb_type_stitch">
+                                <input type="radio" name="kb_braid_type" id="kb_type_stitch" value="stitch">
+                                <div class="kb-braid-content">
+                                    <div class="kb-braid-name">Stitch Braids</div>
+                                    <div class="kb-braid-price">$100</div>
+                                </div>
+                                <span class="kb-checkmark">✓</span>
+                            </label>
                         </div>
                     </div>
 
-                    <!-- Helper note shown when finish/length are disabled -->
-                    <div id="kb_disabled_note" class="alert alert-info mt-3" role="alert" style="display:none; margin-bottom:0; background-color:#e7f3ff; border-left:4px solid #0d6efd; padding:12px;">
-                        <strong>ℹ️ Note:</strong> Finish and hair length options are not available for <span id="kb_disabled_braid_type_name">this braid type</span>. These styles use your natural hair length and a standard finish.
+                    <!-- Step 2: Finish -->
+                    <div class="kb-section" id="kb-finish-section" data-step="2">
+                        <h2 class="kb-section-title" id="kb-finish-header">
+                            <span style="color: #ff6600;">💫</span> Choose Finish
+                        </h2>
+                        <p class="kb-section-subtitle">How would you like the ends styled?</p>
+                        
+                        <div class="kb-option-group" id="kb-finish-block">
+                            <label class="kb-option-btn" for="kb_finish_plain">
+                                <input type="radio" name="kb_finish" id="kb_finish_plain" value="plain" checked>
+                                <div class="kb-option-label">
+                                    Without Curl
+                                    <span class="kb-option-price">Base price</span>
+                                </div>
+                            </label>
+                            
+                            <label class="kb-option-btn" for="kb_finish_curled">
+                                <input type="radio" name="kb_finish" id="kb_finish_curled" value="curled">
+                                <div class="kb-option-label">
+                                    With curled tip
+                                    <span class="kb-option-price">-$10</span>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Step 3: Hair Length -->
+                    <div class="kb-section" id="kb-length-section" data-step="3">
+                        <h2 class="kb-section-title" id="kb-length-header">
+                            <span style="color: #ff6600;">📏</span> Choose Hair Length
+                        </h2>
+                        <p class="kb-section-subtitle">Select the desired braid length</p>
+                        
+                        <div class="kb-option-group" id="kb-lengths">
+                            <label class="kb-option-btn" for="kb_len_shoulder">
+                                <input type="radio" name="kb_length" id="kb_len_shoulder" value="shoulder" checked>
+                                <div class="kb-option-label">
+                                    Shoulder
+                                    <span class="kb-option-price">Base price</span>
+                                </div>
+                            </label>
+                            
+                            <label class="kb-option-btn" for="kb_len_armpit">
+                                <input type="radio" name="kb_length" id="kb_len_armpit" value="armpit">
+                                <div class="kb-option-label">
+                                    Armpit
+                                    <span class="kb-option-price">+$10</span>
+                                </div>
+                            </label>
+                            
+                            <label class="kb-option-btn" for="kb_len_midback">
+                                <input type="radio" name="kb_length" id="kb_len_midback" value="mid_back">
+                                <div class="kb-option-label">
+                                    Mid Back
+                                    <span class="kb-option-price">+$20</span>
+                                </div>
+                            </label>
+                            
+                            <label class="kb-option-btn" for="kb_len_waist">
+                                <input type="radio" name="kb_length" id="kb_len_waist" value="waist">
+                                <div class="kb-option-label">
+                                    Waist
+                                    <span class="kb-option-price">+$30</span>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Step 4: Add-Ons -->
+                    <div class="kb-section" data-step="4">
+                        <h2 class="kb-section-title">
+                            <span style="color: #ff6600;">🎀</span> Add Extra Services
+                        </h2>
+                        <p class="kb-section-subtitle">Optional enhancements (select all that apply)</p>
+                        
+                        <div class="kb-addon-grid" id="kb-addons">
+                            <label class="kb-addon-card" for="kb_add_detangle">
+                                <input type="checkbox" id="kb_add_detangle" value="15">
+                                <span class="kb-addon-label">Detangle / Blowdry</span>
+                                <span class="kb-addon-price">+$15</span>
+                            </label>
+                            
+                            <label class="kb-addon-card" for="kb_add_beads">
+                                <input type="checkbox" id="kb_add_beads" value="15">
+                                <span class="kb-addon-label">Tiny beading</span>
+                                <span class="kb-addon-price">+$15</span>
+                            </label>
+                            
+                            <label class="kb-addon-card" for="kb_add_beads_full">
+                                <input type="checkbox" id="kb_add_beads_full" value="10">
+                                <span class="kb-addon-label">Big eye beading</span>
+                                <span class="kb-addon-price">+$10</span>
+                            </label>
+                            
+                            <label class="kb-addon-card" for="kb_add_extension">
+                                <input type="checkbox" id="kb_add_extension" value="20">
+                                <span class="kb-addon-label">Hair Extension</span>
+                                <span class="kb-addon-price">+$20</span>
+                            </label>
+                            
+                            <label class="kb-addon-card" for="kb_add_rest">
+                                <input type="checkbox" id="kb_add_rest" value="5">
+                                <span class="kb-addon-label">Resting Break</span>
+                                <span class="kb-addon-price">+$5</span>
+                            </label>
+                        </div>
                     </div>
 
                     <input type="hidden" name="price" id="kb_price_input" value="">
@@ -109,113 +600,375 @@
                 </form>
             </div>
 
-            <div class="col-md-4">
-                <div class="price-box">
-                    <h6>Price Summary</h6>
+            <!-- Right Column: Price Summary -->
+            <div class="col-lg-4" style="background: #f8f9fa; padding: 30px 20px;">
+                <div class="kb-price-summary">
+                    <h3 class="kb-price-title">💰 Price Summary</h3>
+                    
                     @php $kidsBaseServer = config('service_prices.kids_braids', 80); @endphp
-                    <div class="mb-2">Base: <span id="kb_base_price">${{ number_format($kidsBaseServer, 0) }}</span></div>
-                    <div class="mb-2">Adjustments: <span id="kb_adjustments">$0</span></div>
-                    <div class="mb-3"><strong>Total: <span id="kb_total_price">$--</span></strong></div>
-                    <div class="d-grid">
-                        <button id="kb_proceed_btn" class="btn btn-primary w-100" type="submit" form="kidsSelectorForm">Continue to Booking</button>
+                    
+                    <div id="kb_itemized_pricing">
+                        <!-- Base Price -->
+                        <div class="kb-price-item">
+                            <span>Kids Braids base</span>
+                            <strong>$80</strong>
+                        </div>
+                        
+                        <!-- Braid Type Adjustment -->
+                        <div class="kb-price-item" id="kb_braid_type_line" style="display: none;">
+                            <span id="kb_braid_type_name">• Adjustment</span>
+                            <strong id="kb_braid_type_price">$0</strong>
+                        </div>
+                        
+                        <!-- Finish Adjustment -->
+                        <div class="kb-price-item" id="kb_finish_line" style="display: none;">
+                            <span id="kb_finish_name">• Finish</span>
+                            <strong id="kb_finish_price">$0</strong>
+                        </div>
+                        
+                        <!-- Length Adjustment -->
+                        <div class="kb-price-item" id="kb_length_line" style="display: none;">
+                            <span id="kb_length_name">• Length</span>
+                            <strong id="kb_length_price">$0</strong>
+                        </div>
+                        
+                        <!-- Add-ons -->
+                        <div id="kb_addons_lines"></div>
                     </div>
-                    <a href="{{ route('home') }}" class="btn btn-link w-100 mt-2">Cancel</a>
+                    
+                    <!-- Total -->
+                    <div class="kb-price-total">
+                        <span>Total</span>
+                        <span class="kb-price-total-amount" id="kb_total_price">$60</span>
+                    </div>
+                    
+                    <!-- Action Buttons -->
+                    <div class="kb-action-buttons">
+                        <button id="kb_proceed_btn" class="kb-btn-continue" type="submit" form="kidsSelectorForm">
+                            <i class="bi bi-arrow-right-circle me-2"></i>Continue to Booking
+                        </button>
+                        <a href="{{ route('home') }}" class="kb-btn-cancel">
+                            <i class="bi bi-x-circle me-1"></i>Cancel
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>
 
     </div>
 </div>
-<!-- Inline helper: disable finish and length when braid types do not require them -->
+
+<!-- Enhanced UI Interaction Script -->
 <script>
 document.addEventListener('DOMContentLoaded', function(){
+    // Handle braid card selections
+    document.querySelectorAll('.kb-braid-card').forEach(function(card){
+        card.addEventListener('click', function(){
+            document.querySelectorAll('.kb-braid-card').forEach(c => c.classList.remove('selected'));
+            this.classList.add('selected');
+        });
+    });
+    
+    // Handle option button selections
+    document.querySelectorAll('.kb-option-btn').forEach(function(btn){
+        btn.addEventListener('click', function(){
+            const input = this.querySelector('input[type="radio"]');
+            if(input){
+                document.querySelectorAll(`input[name="${input.name}"]`).forEach(function(radio){
+                    radio.closest('.kb-option-btn').classList.remove('selected');
+                });
+                this.classList.add('selected');
+            }
+        });
+    });
+    
+    // Handle addon card selections
+    document.querySelectorAll('.kb-addon-card').forEach(function(card){
+        const checkbox = card.querySelector('input[type="checkbox"]');
+        if(checkbox){
+            checkbox.addEventListener('change', function(){
+                if(this.checked){
+                    card.classList.add('checked');
+                } else {
+                    card.classList.remove('checked');
+                }
+            });
+        }
+    });
+    
+    // Update progress indicators
+    function updateProgress(){
+        try{
+            const braidType = document.querySelector('input[name="kb_braid_type"]:checked');
+            const braidTypeValue = braidType ? braidType.value : '';
+            const disabledTypes = ['protective', 'cornrows'];
+            const shouldHideFinishLength = disabledTypes.includes(braidTypeValue);
+            
+            // Update step indicators
+            const steps = document.querySelectorAll('.kb-progress-step');
+            steps.forEach(step => step.classList.remove('active'));
+            
+            // Always show step 1 (Braid Type) as active
+            const step1 = document.querySelector('.kb-progress-step[data-step="1"]');
+            if(step1) step1.classList.add('active');
+            
+            // Show/hide steps 2 and 3 based on braid type
+            const step2 = document.querySelector('.kb-progress-step[data-step="2"]');
+            const step3 = document.querySelector('.kb-progress-step[data-step="3"]');
+            if(!shouldHideFinishLength){
+                if(step2) step2.classList.add('active');
+                if(step3) step3.classList.add('active');
+            }
+            
+            // Always show step 4 (Add-Ons)
+            const step4 = document.querySelector('.kb-progress-step[data-step="4"]');
+            if(step4) step4.classList.add('active');
+            
+        }catch(e){
+            console.warn('updateProgress error:', e);
+        }
+    }
+    
+    // Listen for braid type changes
+    document.querySelectorAll('input[name="kb_braid_type"]').forEach(function(radio){
+        radio.addEventListener('change', updateProgress);
+    });
+    
+    // Initial setup
+    updateProgress();
+    
+    // Set initial selected state for pre-checked options
+    document.querySelectorAll('input[type="radio"]:checked').forEach(function(radio){
+        const card = radio.closest('.kb-braid-card');
+        if(card) card.classList.add('selected');
+        
+        const btn = radio.closest('.kb-option-btn');
+        if(btn) btn.classList.add('selected');
+    });
+});
+</script>
+
+<!-- Inline helper: hide finish and length when braid types do not require them -->
+<script>
+document.addEventListener('DOMContentLoaded', function(){
+    // Pricing map for explicit prices
+    const braidTypePrices = {
+        'protective': 60,
+        'cornrows': 40,
+        'knotless_small': 100,
+        'knotless_med': 80,
+        'box_small': 90,
+        'box_med': 80,
+        'stitch': 100
+    };
+
     function setFinishAndLengthDisabled(disabled, braidTypeValue){
         console.log('setFinishAndLengthDisabled called with disabled:', disabled, 'braidType:', braidTypeValue);
-        // finish radios
+        
+        // HIDE/SHOW FINISH SECTION
+        const finishSection = document.getElementById('kb-finish-section');
+        if(finishSection) {
+            finishSection.style.display = disabled ? 'none' : '';
+        }
+        
+        // Disable/enable finish radio buttons
         document.querySelectorAll('input[name="kb_finish"]').forEach(function(i){
             i.disabled = disabled;
         });
-        // hide/show finish header and block wrapper
-        try{
-            const finishHeader = document.getElementById('kb-finish-header');
-            console.log('finishHeader found:', !!finishHeader);
-            if(finishHeader) {
-                finishHeader.style.display = disabled ? 'none' : 'block';
-                finishHeader.style.visibility = disabled ? 'hidden' : 'visible';
-                console.log('finishHeader display set to:', finishHeader.style.display);
-            }
-            const finishBlock = document.getElementById('kb-finish-block');
-            console.log('finishBlock found:', !!finishBlock);
-            if(finishBlock) {
-                finishBlock.style.display = disabled ? 'none' : 'block';
-                finishBlock.style.visibility = disabled ? 'hidden' : 'visible';
-                console.log('finishBlock display set to:', finishBlock.style.display);
-            }
-        }catch(e){ 
-            console.error('Error hiding/showing finish:', e);
-        }
-        // if disabling, ensure a safe default is selected
+        
+        // Reset to default when hiding
         if(disabled){
-            const plain = document.getElementById('kb_finish_plain'); if(plain) plain.checked = true;
+            const plain = document.getElementById('kb_finish_plain');
+            if(plain) plain.checked = true;
         }
 
-        // length radios
+        // HIDE/SHOW LENGTH SECTION
+        const lengthSection = document.getElementById('kb-length-section');
+        if(lengthSection) {
+            lengthSection.style.display = disabled ? 'none' : '';
+        }
+        
+        // Disable/enable length radio buttons
         document.querySelectorAll('input[name="kb_length"]').forEach(function(i){
             i.disabled = disabled;
         });
-        // hide/show length header and wrapper
-        try{
-            const lengthHeader = document.getElementById('kb-length-header');
-            console.log('lengthHeader found:', !!lengthHeader);
-            if(lengthHeader) {
-                lengthHeader.style.display = disabled ? 'none' : 'block';
-                lengthHeader.style.visibility = disabled ? 'hidden' : 'visible';
-                console.log('lengthHeader display set to:', lengthHeader.style.display);
-            }
-            const lengthBlock = document.getElementById('kb-lengths');
-            console.log('lengthBlock found:', !!lengthBlock);
-            if(lengthBlock) {
-                lengthBlock.style.display = disabled ? 'none' : 'block';
-                lengthBlock.style.visibility = disabled ? 'hidden' : 'visible';
-                console.log('lengthBlock display set to:', lengthBlock.style.display);
-            }
-        }catch(e){ 
-            console.error('Error hiding/showing length:', e);
-        }
-        // if disabling, set base shoulder length
+        
+        // Reset to default when hiding
         if(disabled){
-            const shoulder = document.getElementById('kb_len_shoulder'); if(shoulder) shoulder.checked = true;
+            const shoulder = document.getElementById('kb_len_shoulder');
+            if(shoulder) shoulder.checked = true;
         }
 
-        // visually indicate disabled state on labels (dim)
-        const lengthLabels = document.querySelectorAll('#kb-lengths .form-check-label');
-        const finishLabels = document.querySelectorAll('input[name="kb_finish"]').length ? Array.from(document.querySelectorAll('input[name="kb_finish"]')).map(i=> document.querySelector('label[for="'+i.id+'"]')) : [];
-        lengthLabels.forEach(function(l){ if(disabled) l.classList.add('text-muted','opacity-75'); else { l.classList.remove('text-muted','opacity-75'); } });
-        finishLabels.forEach(function(l){ if(l){ if(disabled) l.classList.add('text-muted','opacity-75'); else { l.classList.remove('text-muted','opacity-75'); } } });
+        // RENUMBER STEPS DYNAMICALLY
+        renumberSteps(disabled);
+        
+        // UPDATE PRICING TO SHOW EXPLICIT PRICE
+        updatePricingDisplay(braidTypeValue);
+    }
 
-        // show/hide helper note with braid type name
-        const note = document.getElementById('kb_disabled_note');
-        const noteBraidTypeName = document.getElementById('kb_disabled_braid_type_name');
-        if(note) {
-            note.style.display = disabled ? 'block' : 'none';
-            // Update the braid type name in the note
-            if(noteBraidTypeName && braidTypeValue){
-                const braidTypeNames = {
-                    'protective': 'Protective style',
-                    'cornrows': 'Cornrows'
-                };
-                const braidTypeName = braidTypeNames[braidTypeValue] || 'this braid type';
-                noteBraidTypeName.textContent = braidTypeName;
+    function renumberSteps(finishLengthHidden){
+        try{
+            // Get all step numbers
+            const steps = document.querySelectorAll('.kb-step-number');
+            let currentStep = 1;
+            
+            steps.forEach(function(stepEl){
+                const originalStep = parseInt(stepEl.getAttribute('data-step'));
+                
+                // Skip steps 2 and 3 if they're hidden (finish/length)
+                if(finishLengthHidden && (originalStep === 2 || originalStep === 3)){
+                    return; // Don't renumber these, they're hidden
+                }
+                
+                stepEl.textContent = currentStep + ')';
+                currentStep++;
+            });
+        }catch(e){
+            console.error('renumberSteps error:', e);
+        }
+    }
+
+    function updatePricingDisplay(braidTypeValue){
+        try{
+            const basePrice = 80; // Kids Braids base price
+            
+            // Braid type names and adjustments
+            const braidTypeNames = {
+                'protective': 'Natural hair twist',
+                'cornrows': 'Cornrows (natural hair)',
+                'knotless_small': 'Knotless (Small)',
+                'knotless_med': 'Knotless (Medium)',
+                'box_small': 'Box Braids (Small)',
+                'box_med': 'Box Braids (Medium)',
+                'stitch': 'Stitch Braids'
+            };
+            
+            const braidTypeAdjustments = {
+                'protective': -20,
+                'cornrows': -40,
+                'knotless_small': 20,
+                'knotless_med': 0,
+                'box_small': 10,
+                'box_med': 0,
+                'stitch': 20
+            };
+            
+            const braidTypeName = braidTypeNames[braidTypeValue] || 'Unknown';
+            const braidTypeAdj = braidTypeAdjustments[braidTypeValue] || 0;
+            
+            // Show/hide and populate braid type line
+            const braidTypeLine = document.getElementById('kb_braid_type_line');
+            const braidTypeNameEl = document.getElementById('kb_braid_type_name');
+            const braidTypePriceEl = document.getElementById('kb_braid_type_price');
+            
+            if(braidTypeAdj !== 0) {
+                if(braidTypeLine) braidTypeLine.style.display = '';
+                if(braidTypeNameEl) braidTypeNameEl.textContent = braidTypeName;
+                if(braidTypePriceEl) braidTypePriceEl.textContent = (braidTypeAdj >= 0 ? '+' : '') + '$' + Math.abs(braidTypeAdj);
+            } else {
+                if(braidTypeLine) braidTypeLine.style.display = 'none';
             }
+            
+            // For protective/cornrows, hide finish and length
+            const disabledTypes = ['protective', 'cornrows'];
+            const shouldDisable = disabledTypes.indexOf(braidTypeValue) !== -1;
+            
+            // Finish adjustment
+            let finishAdj = 0;
+            const finishLine = document.getElementById('kb_finish_line');
+            const finishNameEl = document.getElementById('kb_finish_name');
+            const finishPriceEl = document.getElementById('kb_finish_price');
+            
+            if(!shouldDisable) {
+                const finishEl = document.querySelector('input[name="kb_finish"]:checked');
+                const finishVal = finishEl ? finishEl.value : 'plain';
+                finishAdj = (finishVal === 'curled') ? -10 : 0;
+                
+                if(finishAdj !== 0) {
+                    if(finishLine) finishLine.style.display = '';
+                    if(finishNameEl) finishNameEl.textContent = 'With curled tip';
+                    if(finishPriceEl) finishPriceEl.textContent = '-$10';
+                } else {
+                    if(finishLine) finishLine.style.display = 'none';
+                }
+            } else {
+                if(finishLine) finishLine.style.display = 'none';
+            }
+            
+            // Length adjustment
+            let lengthAdj = 0;
+            const lengthLine = document.getElementById('kb_length_line');
+            const lengthNameEl = document.getElementById('kb_length_name');
+            const lengthPriceEl = document.getElementById('kb_length_price');
+            
+            if(!shouldDisable) {
+                const lengthEl = document.querySelector('input[name="kb_length"]:checked');
+                const lengthVal = lengthEl ? lengthEl.value : 'shoulder';
+                const lengthNames = { 'shoulder': 'Shoulder length', 'armpit': 'Armpit length', 'mid_back': 'Mid back length', 'waist': 'Waist length' };
+                const lengthAdjMap = { 'shoulder': 0, 'armpit': 10, 'mid_back': 20, 'waist': 30 };
+                lengthAdj = lengthAdjMap[lengthVal] || 0;
+                
+                if(lengthAdj !== 0) {
+                    if(lengthLine) lengthLine.style.display = '';
+                    if(lengthNameEl) lengthNameEl.textContent = lengthNames[lengthVal] || lengthVal;
+                    if(lengthPriceEl) lengthPriceEl.textContent = '+$' + lengthAdj;
+                } else {
+                    if(lengthLine) lengthLine.style.display = 'none';
+                }
+            } else {
+                if(lengthLine) lengthLine.style.display = 'none';
+            }
+            
+            // Add-ons - show each one individually
+            const addonsContainer = document.getElementById('kb_addons_lines');
+            const addonNames = {
+                'kb_add_detangle': 'Detangle / Blowdry',
+                'kb_add_beads': 'Tiny beading',
+                'kb_add_beads_full': 'Big eye beading',
+                'kb_add_extension': 'Hair Extension',
+                'kb_add_rest': 'Resting Break'
+            };
+            
+            let addonsHTML = '';
+            let addonsTotal = 0;
+            document.querySelectorAll('#kb-addons input[type="checkbox"]:checked').forEach(function(cb){
+                const addonValue = Number(cb.value) || 0;
+                const addonName = addonNames[cb.id] || cb.id;
+                addonsTotal += addonValue;
+                addonsHTML += '<div>• ' + addonName + ': <strong>+$' + addonValue + '</strong></div>';
+            });
+            
+            if(addonsContainer) addonsContainer.innerHTML = addonsHTML;
+            
+            // Calculate total
+            const totalPrice = basePrice + braidTypeAdj + finishAdj + lengthAdj + addonsTotal;
+            
+            // Update total display
+            const totalPriceEl = document.getElementById('kb_total_price');
+            if(totalPriceEl) totalPriceEl.textContent = '$' + totalPrice;
+            
+            // Update hidden price input
+            const priceInput = document.getElementById('kb_price_input');
+            if(priceInput) priceInput.value = totalPrice;
+            
+            // Backwards compatibility for old elements
+            const kbBaseEl = document.getElementById('kb_base_price');
+            const kbAdjustEl = document.getElementById('kb_adjustments');
+            const kbTotalEl2 = document.getElementById('kb_total_price');
+            if(kbBaseEl) kbBaseEl.textContent = '$' + basePrice;
+            if(kbAdjustEl) kbAdjustEl.textContent = (braidTypeAdj + finishAdj + lengthAdj + addonsTotal >= 0 ? '+' : '') + '$' + Math.abs(braidTypeAdj + finishAdj + lengthAdj + addonsTotal);
+            
+        }catch(e){
+            console.error('updatePricingDisplay error:', e);
         }
     }
 
     function evaluateBraidType(){
         try{
             const cur = document.querySelector('input[name="kb_braid_type"]:checked');
-            const val = cur ? cur.value : '';
+            const val = cur ? cur.value : 'protective';
             console.log('evaluateBraidType called, selected value:', val);
-            // Disable finish & length for specific braid types
+            // Hide finish & length for specific braid types
             const disabledTypes = ['protective', 'cornrows'];
             const shouldDisable = disabledTypes.indexOf(val) !== -1;
             console.log('shouldDisable:', shouldDisable);
@@ -326,6 +1079,31 @@ document.addEventListener('DOMContentLoaded', function(){
             }
         });
     }
+
+    // Attach listeners to finish/length/addons for real-time price updates
+    document.querySelectorAll('input[name="kb_finish"]').forEach(function(r){
+        r.addEventListener('change', function(){
+            const braidType = document.querySelector('input[name="kb_braid_type"]:checked');
+            const val = braidType ? braidType.value : 'protective';
+            updatePricingDisplay(val);
+        });
+    });
+    
+    document.querySelectorAll('input[name="kb_length"]').forEach(function(r){
+        r.addEventListener('change', function(){
+            const braidType = document.querySelector('input[name="kb_braid_type"]:checked');
+            const val = braidType ? braidType.value : 'protective';
+            updatePricingDisplay(val);
+        });
+    });
+    
+    document.querySelectorAll('#kb-addons input[type="checkbox"]').forEach(function(cb){
+        cb.addEventListener('change', function(){
+            const braidType = document.querySelector('input[name="kb_braid_type"]:checked');
+            const val = braidType ? braidType.value : 'protective';
+            updatePricingDisplay(val);
+        });
+    });
 
     // run initial evaluation
     evaluateBraidType();

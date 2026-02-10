@@ -3,7 +3,28 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Book Appointment - Dab's Beauty Touch</title>
+    
+    <!-- Primary Meta Tags -->
+    <title>Book Appointment - Dab's Beauty Touch | Online Booking</title>
+    <meta name="title" content="Book Appointment - Dab's Beauty Touch | Online Booking">
+    <meta name="description" content="Book your hair braiding appointment online. Choose from professional braiding services including knotless braids, box braids, wig installation, and custom styles. Easy online scheduling available.">
+    <meta name="keywords" content="book hair braiding appointment, online booking, Ottawa braiding salon, schedule appointment, hair braiding booking">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="{{ url('/calendar') }}">
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="{{ url('/calendar') }}">
+    <meta property="og:title" content="Book Appointment - Dab's Beauty Touch | Online Booking">
+    <meta property="og:description" content="Book your hair braiding appointment online. Choose from professional braiding services. Easy online scheduling available.">
+    <meta property="og:image" content="{{ asset('images/logo.jpg') }}">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:url" content="{{ url('/calendar') }}">
+    <meta name="twitter:title" content="Book Appointment - Dab's Beauty Touch">
+    <meta name="twitter:description" content="Book your hair braiding appointment online. Easy online scheduling available.">
+    <meta name="twitter:image" content="{{ asset('images/logo.jpg') }}">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
     <style>
@@ -544,6 +565,38 @@
                             </div>
                         </div>
                     </div>
+
+                    <!-- Appointment Type -->
+                    <div class="mb-3">
+                        <label class="form-label">Appointment Type *</label>
+                        <div class="d-flex gap-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="appointment_type" id="appointment_type_in_studio_cal" value="in-studio" checked onclick="toggleAddressFieldCal()">
+                                <label class="form-check-label" for="appointment_type_in_studio_cal">
+                                    <i class="bi bi-house-door me-1"></i>Stylist address
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="appointment_type" id="appointment_type_mobile_cal" value="mobile" onclick="toggleAddressFieldCal()">
+                                <label class="form-check-label" for="appointment_type_mobile_cal">
+                                    <i class="bi bi-truck me-1"></i>Mobile (I want you to come to me)
+                                </label>
+                            </div>
+                        </div>
+                        <small class="form-text text-muted mt-2">
+                            <i class="bi bi-info-circle me-1"></i>Mobile service available in Ottawa/Gatineau. Travel fee may apply based on distance.
+                        </small>
+                    </div>
+
+                    <!-- Mobile Service Address (conditional) -->
+                    <div class="mb-3" id="addressFieldContainerCal" style="display: none;">
+                        <label for="address" class="form-label">Mobile Service Address (Ottawa) *</label>
+                        <input type="text" class="form-control" id="address" name="address" placeholder="Enter your complete address" autocomplete="off">
+                        <small class="form-text text-muted mt-2">
+                            <i class="bi bi-geo-alt me-1"></i>Required for mobile appointments so we can confirm travel availability and any travel fee.
+                        </small>
+                    </div>
+
                     <div class="mb-3">
                         <label for="notes" class="form-label">Special Requests or Notes</label>
                         <textarea class="form-control" id="notes" name="notes" rows="3"></textarea>
@@ -649,10 +702,12 @@
                         <div class="mb-1" style="font-weight:800;">Quick summary</div>
                         <ul class="mb-0" style="padding-left: 18px;">
                             <li>Deposits are non-refundable once the appointment is confirmed.</li>
+                            <li>Mobile appointments are confirmed after deposit + address verification.</li>
+                            <li>No style changes allowed on the day of appointment or after confirmation (time window is reserved).</li>
                             <li>Minimum 48 hours notice is required for cancellations.</li>
                             <li>Rescheduling requires 48 hours notice and must be within 1 month of the initial appointment date.</li>
-                            <li>No-shows may result in a full charge and may affect future bookings.</li>
-                            <li>For home service: clients cover fueling for the stylist’s transportation; fees vary by distance.</li>
+                            <li>For mobile service: travel fee may apply based on distance in Ottawa/Gatineau area.</li>
+                            <li>For home service: clients cover fueling for the stylist's transportation; fees vary by distance.</li>
                         </ul>
                     </div>
                     <div class="form-check mt-3">
@@ -885,6 +940,24 @@
                 return `${yyyy}-${mm}-${dd}`;
             }catch(e){
                 try{ return d.toISOString().split('T')[0]; }catch(er){ return ''+d; }
+            }
+        }
+
+        // Function to toggle address field based on appointment type (calendar form)
+        function toggleAddressFieldCal() {
+            const mobileRadio = document.getElementById('appointment_type_mobile_cal');
+            const addressContainer = document.getElementById('addressFieldContainerCal');
+            const addressInput = document.getElementById('address');
+            
+            if (mobileRadio && mobileRadio.checked) {
+                if (addressContainer) addressContainer.style.display = 'block';
+                if (addressInput) addressInput.required = true;
+            } else {
+                if (addressContainer) addressContainer.style.display = 'none';
+                if (addressInput) {
+                    addressInput.required = false;
+                    addressInput.value = ''; // Clear address when switching to in-studio
+                }
             }
         }
 

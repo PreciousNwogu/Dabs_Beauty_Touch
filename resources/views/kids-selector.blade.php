@@ -1,6 +1,16 @@
 @extends('layouts.app')
 
 @section('title', "Kids Braids Selector - Dab's Beauty Touch")
+@section('meta_title', "Kids Braids Selector - Dab's Beauty Touch | Customize Your Child's Braids")
+@section('meta_description', "Customize your child's braiding service with our interactive kids braids selector. Choose braid type, length, finish, and extras. Professional, gentle braiding services for children in Ottawa.")
+@section('meta_keywords', 'kids braids, children braiding, kids hair braiding Ottawa, customize braids, kids hair styles')
+@section('canonical', url('/kids-selector'))
+@section('og_url', url('/kids-selector'))
+@section('og_title', "Kids Braids Selector - Dab's Beauty Touch")
+@section('og_description', "Customize your child's braiding service with our interactive kids braids selector. Professional, gentle braiding services for children.")
+@section('twitter_url', url('/kids-selector'))
+@section('twitter_title', "Kids Braids Selector - Dab's Beauty Touch")
+@section('twitter_description', "Customize your child's braiding service with our interactive kids braids selector.")
 
 @push('styles')
 <style>
@@ -24,6 +34,33 @@ document.addEventListener('DOMContentLoaded', function(){
     const priceMap = {!! json_encode($servicePrices ?? config('service_prices', [])) !!} || { 'kids_braids': 80 };
     const baseKey = 'kids_braids';
     const base = (priceMap[baseKey] !== undefined) ? Number(priceMap[baseKey]) : 80;
+
+    // Function to hide/show Finish and Length sections based on braid type
+    function toggleFinishAndLength(){
+        const typeEl = document.querySelector('input[name="kb_braid_type"]:checked');
+        const type = typeEl ? typeEl.value : '';
+        
+        // Hide for protective and cornrows, show for others
+        const shouldHide = (type === 'protective' || type === 'cornrows');
+        
+        console.log('toggleFinishAndLength - type:', type, 'shouldHide:', shouldHide);
+        
+        // Hide/Show Finish section
+        const finishHeader = document.getElementById('kb-finish-header');
+        const finishBlock = document.getElementById('kb-finish-block');
+        if(finishHeader) finishHeader.style.display = shouldHide ? 'none' : '';
+        if(finishBlock) finishBlock.style.display = shouldHide ? 'none' : '';
+        
+        // Hide/Show Length section
+        const lengthHeader = document.getElementById('kb-length-header');
+        const lengthBlock = document.getElementById('kb-lengths');
+        if(lengthHeader) lengthHeader.style.display = shouldHide ? 'none' : '';
+        if(lengthBlock) lengthBlock.style.display = shouldHide ? 'none' : '';
+        
+        // Show/hide note
+        const note = document.getElementById('kb_disabled_note');
+        if(note) note.style.display = shouldHide ? 'block' : 'none';
+    }
 
     function compute(){
         let total = base; let adj = 0;
@@ -56,7 +93,13 @@ document.addEventListener('DOMContentLoaded', function(){
         return { total, base, adj };
     }
 
-    document.querySelectorAll('#kidsSelectorForm input').forEach(i=> i.addEventListener('change', compute));
+    document.querySelectorAll('#kidsSelectorForm input').forEach(i=> i.addEventListener('change', function(){
+        toggleFinishAndLength();
+        compute();
+    }));
+    
+    // Initial setup on page load
+    toggleFinishAndLength();
     compute();
 
     const proceedBtn = document.getElementById('kb_proceed_btn');

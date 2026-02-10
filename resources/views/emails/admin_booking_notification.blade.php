@@ -38,7 +38,8 @@
 
       // Adjustments total = type + length + finish adjustments + addons + weaving addon (matches UI)
       $displayAdjustmentsTotal = ($displayTypeLengthFinishAdjust ?? 0) + ($displayAddons ?? 0) + $displayWeavingAddon;
-      $displayFinal = $bd['final_price'] ?? $booking->final_price ?? round($displayBase + $displayAdjustmentsTotal, 2);
+      // For kids bookings, prefer kb_final_price (most authoritative); then breakdown final_price; then final_price; finally computed
+      $displayFinal = $booking->kb_final_price ?? ($bd['final_price'] ?? ($booking->final_price ?? round($displayBase + $displayAdjustmentsTotal, 2)));
     @endphp
 
       <p class="muted">A new booking has been received. Details are shown below.</p>
@@ -81,6 +82,16 @@
             N/A
           @endif
         </td></tr>
+        <tr><td style="font-weight:700;">Location</td><td>
+          @if($booking->appointment_type === 'mobile')
+            <strong style="color:#ff6600;">Mobile Service</strong>
+          @else
+            Stylist Address
+          @endif
+        </td></tr>
+        @if($booking->appointment_type === 'mobile' && $booking->address)
+        <tr style="background:#f8fafc;"><td style="font-weight:700;">Service Address</td><td><strong style="color:#0066ff;">{{ $booking->address }}</strong></td></tr>
+        @endif
       </table>
 
       @php
@@ -168,7 +179,8 @@
 
         // Adjustments total = type + length + finish adjustments + addons + weaving addon + stitch addon (matches UI)
         $adjustmentsTotal = ($typeLengthFinishAdjust ?? 0) + ($addons ?? 0) + $weavingAddon + $stitchAddon;
-        $finalPrice = $bd['final_price'] ?? $booking->final_price ?? round(($basePrice ?? 0) + $adjustmentsTotal, 2);
+        // For kids bookings, prefer kb_final_price (most authoritative); then breakdown final_price; then final_price; finally computed
+        $finalPrice = $booking->kb_final_price ?? ($bd['final_price'] ?? ($booking->final_price ?? round(($basePrice ?? 0) + $adjustmentsTotal, 2)));
       @endphp
 
       <h4 style="margin-top:16px;margin-bottom:8px;color:#0b3a66;">Details</h4>
@@ -220,19 +232,15 @@
           : null;
         // Read-only view link (no edit form)
         $viewUrl = ($bookingId && $code)
-          ? secure_url('/bookings/confirm/' . $bookingId . '/' . $code . '?view=1')
+          ? (secure_url('/bookings/confirm/' . $bookingId . '/' . $code) . '?view=1')
           : null;
         // Fallback: admin view (requires login)
         $adminUrl = $bookingId ? secure_url('/admin/bookings/' . $bookingId) : null;
       @endphp
 
       <div style="margin-top:10px;">
-        <a href="{{ $publicUrl ?: ($adminUrl ?: '#') }}"
-           style="display:block;width:100%;text-align:center;background:#ff6600;color:#ffffff !important;text-decoration:none;padding:14px 16px;border-radius:12px;font-weight:800;font-size:16px;letter-spacing:0.2px;">
-          Edit Booking
-        </a>
         <a href="{{ $viewUrl ?: ($adminUrl ?: '#') }}"
-           style="display:block;width:100%;text-align:center;background:#0b3a66;color:#ffffff !important;text-decoration:none;padding:12px 16px;border-radius:12px;font-weight:800;font-size:14px;margin-top:10px;">
+           style="display:block;width:100%;text-align:center;background:#0b3a66;color:#ffffff !important;text-decoration:none;padding:12px 16px;border-radius:12px;font-weight:800;font-size:14px;margin-top:10px;white-space:nowrap;">
           View Booking Details
         </a>
       </div>
