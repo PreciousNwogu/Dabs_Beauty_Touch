@@ -5060,7 +5060,7 @@
             }catch(e){ console.warn('moveKidsModal failed', e); }
         })();
     </script>
-    <div class="section section-xl" style="padding: 50px 0; background-color: #fff;">
+    <div id="faq" class="section section-xl" style="padding: 50px 0; background-color: #fff;">
         <div class="container">
             <div class="row justify-content-center">
                 <div class="col-lg-10">
