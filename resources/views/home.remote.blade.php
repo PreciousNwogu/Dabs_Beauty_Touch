@@ -1,10 +1,11 @@
-<!DOCTYPE html>
+ service card
+ <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    
+
     <!-- Primary Meta Tags -->
     <title>Dab's Beauty Touch - Professional Hair Braiding Services | Ottawa</title>
     <meta name="title" content="Dab's Beauty Touch - Professional Hair Braiding Services | Ottawa">
@@ -681,6 +682,24 @@
             object-fit: contain;
             object-position: center;
             padding: 8px;
+        }
+
+        .service-card img[src*="passion twist.png"] {
+            width: 100% !important;
+            height: auto !important;
+            object-fit: cover;
+            object-position: center;
+            border-radius: 0 !important;
+            margin-bottom: 18px;
+        }
+
+        .service-card img[src*="kinky.jpeg"] {
+            width: 100% !important;
+            height: auto !important;
+            object-fit: cover;
+            object-position: center;
+            border-radius: 0 !important;
+            margin-bottom: 18px;
         }
 
 
@@ -1942,7 +1961,7 @@
                     try { return window.localStorage && localStorage.getItem(KEY) === '1'; } catch(e) { return false; }
                 };
                 const termsWereAccepted = hasAccepted();
-                
+
                 form.reset();
                 // Clear all inputs except CSRF token
                 var inputs = form.querySelectorAll('input, textarea, select');
@@ -1956,7 +1975,7 @@
                         }
                     }
                 });
-                
+
                 // Restore terms checkbox if terms were already accepted
                 if (termsWereAccepted) {
                     const termsCheckbox = document.getElementById('termsAcceptedMain');
@@ -1964,29 +1983,29 @@
                         termsCheckbox.checked = true;
                     }
                 }
-                
+
                 // Reset appointment type to in-studio and hide address field
                 var inStudioRadio = document.getElementById('appointment_type_in_studio');
                 if (inStudioRadio) {
                     inStudioRadio.checked = true;
                 }
-                
+
                 // Hide address field
                 var addressContainer = document.getElementById('addressFieldContainer');
                 if (addressContainer) {
                     addressContainer.classList.add('d-none');
                     addressContainer.style.display = 'none';
                 }
-                
+
                 // Clear address input
                 var addressInput = document.getElementById('address');
                 if (addressInput) {
                     addressInput.value = '';
                     addressInput.required = false;
                 }
-                
+
                 console.log('Booking form cleared');
-                
+
                 // Call toggle function to ensure proper state
                 if (typeof toggleAddressField === 'function') {
                     toggleAddressField();
@@ -2030,9 +2049,21 @@
                 sizes: [
                     { name: 'Small Twists', slug: 'small-twist', price: 150, time: '5–6 hrs' },
                     { name: 'Medium Twists', slug: 'medium-twist', price: 120, time: '4–5 hrs' },
-                    { name: 'Jumbo/Large Twists', slug: 'jumbo-twist', price: 100, time: '3–4 hrs' },
+                    { name: 'Jumbo/Large Twists', slug: 'jumbo-twist', price: 100, time: '3–4 hrs' }
+                ]
+            },
+            'natural-hair-twist': {
+                category: 'Natural Hair Twist',
+                sizes: [
                     { name: 'Small Natural Hair Twist', slug: 'small-natural-hair-twist', price: 80, time: '2–3 hrs', noLength: true },
                     { name: 'Medium Natural Hair Twist', slug: 'medium-natural-hair-twist', price: 60, time: '2–3 hrs', noLength: true }
+                ]
+            },
+            'kinky-passion-twist': {
+                category: 'Kinky & Passion Twists',
+                sizes: [
+                    { name: 'Kinky Twist', slug: 'kinky-twist', price: 120, time: '3–4 hrs' },
+                    { name: 'Passion Twist', slug: 'passion-twist', price: 130, time: '3–4 hrs' }
                 ]
             },
             'cornrow': {
@@ -2058,7 +2089,7 @@
                 sizes: [
                     { name: '2/3 Line Single', slug: 'line-single', price: 100, time: '2–3 hrs', hasFrontBackAddon: true, noLength: true },
                     { name: 'Afro Crotchet', slug: 'afro-crotchet', price: 120, time: '3–4 hrs', hasFrontBackAddon: false, noLength: true },
-                    { name: 'Individual Loc', slug: 'individual-loc', price: 150, time: '4–5 hrs', hasFrontBackAddon: false, noLength: true },
+                    { name: 'Individual Crotchet', slug: 'individual-crotchet', price: 150, time: '4–5 hrs', hasFrontBackAddon: false, noLength: true },
                     { name: 'Butterfly Locks', slug: 'butterfly-locks', price: 150, time: '3–4 hrs', hasFrontBackAddon: false, noLength: true },
                     { name: 'Weave Crotchet', slug: 'weave-crotchet', price: 80, time: '1.5–2 hrs', hasFrontBackAddon: false, noLength: true }
                 ]
@@ -2075,7 +2106,7 @@
         // Open size selection modal
         window.openServiceSizeModal = function(serviceCategory) {
             console.log('Opening size selection modal for:', serviceCategory);
-            
+
             const categoryData = window.serviceSizesMap[serviceCategory];
             if (!categoryData) {
                 console.error('Unknown service category:', serviceCategory);
@@ -2090,14 +2121,14 @@
 
             // Store category
             window.serviceSizeData.serviceCategory = serviceCategory;
-            
+
             // Populate size options
             populateSizeOptions(categoryData.sizes);
-            
+
             // Reset selections
             window.serviceSizeData.selectedSize = null;
             window.serviceSizeData.selectedLength = 'mid-back';
-            
+
             // Show/hide length selection based on service type
             const lengthSection = document.getElementById('lengthSelectionSection');
             if (lengthSection) {
@@ -2113,7 +2144,7 @@
                     });
                 }
             }
-            
+
             // Show modal
             const modalEl = document.getElementById('serviceSizeLengthModal');
             if (modalEl && typeof bootstrap !== 'undefined') {
@@ -2126,9 +2157,9 @@
         function populateSizeOptions(sizes) {
             const container = document.getElementById('sizeOptionsContainer');
             if (!container) return;
-            
+
             container.innerHTML = '';
-            
+
             sizes.forEach(size => {
                 const sizeCard = document.createElement('div');
                 sizeCard.className = 'col-6 col-md-3';
@@ -2170,15 +2201,24 @@
                 if (name.includes('Medium') && !name.includes('Jumbo')) return '{{ asset("images/medium boho.png") }}';
                 if (name.includes('Jumbo') || name.includes('Large')) return '{{ asset("images/jumbo boho.png") }}';
             }
-            // Twist Styles
-            if (name.includes('Twist')) {
-                if (name.includes('Natural Hair')) {
-                    if (name.includes('Small')) return '{{ asset("images/natural-hair-twist.jpg") }}';
-                    if (name.includes('Medium')) return '{{ asset("images/medium-natural-twist.png") }}';
-                }
+            // Twist Styles (with extensions)
+            if (name.includes('Twist') && !name.includes('Natural Hair')) {
                 if (name.includes('Small')) return '{{ asset("images/small-twist.jpg") }}';
                 if (name.includes('Medium')) return '{{ asset("images/medium-twist.jpg") }}';
                 if (name.includes('Jumbo') || name.includes('Large')) return '{{ asset("images/jumbo-twist.jpg") }}';
+            }
+            // Natural Hair Twist
+            if (name.includes('Natural Hair') && name.includes('Twist')) {
+                if (name.includes('Small')) return '{{ asset("images/natural-hair-twist.jpg") }}';
+                if (name.includes('Medium')) return '{{ asset("images/medium-natural-twist.png") }}';
+            }
+            // Kinky & Passion Twists
+            if (name.includes('Kinky') || name.includes('Passion')) {
+                if (name.includes('Passion')) {
+                    return '{{ asset("images/passion twist.png") }}';
+                } else {
+                    return '{{ asset("images/kinky.jpeg") }}';
+                }
             }
             // Cornrow/Feed-in Braids
             if (name.includes('Weave') || name.includes('Cornrow')) {
@@ -2199,7 +2239,7 @@
                 if (name.includes('2/3 Line Single')) return '{{ asset("images/Screenshot 2026-02-05 132501.png") }}';
                 if (name.includes('Weave Crotchet')) return '{{ asset("images/weave-crotchet.jpg") }}';
                 if (name.includes('Afro Crotchet')) return '{{ asset("images/kinky crotchet.png") }}';
-                if (name.includes('Individual Loc')) return '{{ asset("images/individual_crotchet.png") }}';
+                if (name.includes('Individual Crotchet')) return '{{ asset("images/individual_crotchet.png") }}';
                 if (name.includes('Butterfly')) return '{{ asset("images/butterfly loc.jpg") }}';
                 if (name.includes('Front & Back')) return '{{ asset("images/yanky twist crotchet.jpg") }}';
             }
@@ -2219,14 +2259,14 @@
             if (fullName.includes('Jumbo') || fullName.includes('Large')) return 'Large/Jumbo';
             return fullName.split(' ')[0];
         }
-        
+
         // Helper to get full size description for tooltips
         function getSizeDescription(sizeName) {
             const descriptions = {
-                'Small': 'Very thin braids (4-6 packs hair)',
-                'Smedium': 'Small-Medium size (3-4 packs hair)',
-                'Medium': 'Standard medium size (2-3 packs hair)',
-                'Large/Jumbo': 'Extra large/thick braids (1-2 packs hair)'
+                'Small': 'Very thin braids',
+                'Smedium': 'Small-Medium size',
+                'Medium': 'Standard medium size',
+                'Large/Jumbo': 'Extra large/thick braids'
             };
             return descriptions[sizeName] || '';
         }
@@ -2239,7 +2279,7 @@
                 card.style.background = '#fff';
                 card.style.transform = 'scale(1)';
             });
-            
+
             // Highlight selected card
             const selectedCard = document.querySelector(`[data-size-slug="${slug}"]`);
             if (selectedCard) {
@@ -2247,7 +2287,7 @@
                 selectedCard.style.background = '#fff7e0';
                 selectedCard.style.transform = 'scale(1.05)';
             }
-            
+
             // Store selection
             window.serviceSizeData.selectedSize = slug;
             window.serviceSizeData.serviceName = name;
@@ -2257,7 +2297,7 @@
             window.serviceSizeData.rowOption = '8-10'; // Reset row option to default
             window.serviceSizeData.frontBackAddon = false; // Reset front/back addon
             window.serviceSizeData.noLength = noLength || false; // Track if length should be hidden
-            
+
             // Show/hide weave add-on section based on service
             const weaveSection = document.getElementById('weaveAddonSection');
             if (weaveSection) {
@@ -2270,7 +2310,7 @@
                     weaveSection.style.display = 'none';
                 }
             }
-            
+
             // Show/hide row options section based on service
             const rowSection = document.getElementById('rowOptionsSection');
             if (rowSection) {
@@ -2283,7 +2323,7 @@
                     rowSection.style.display = 'none';
                 }
             }
-            
+
             // Show/hide front/back add-on section based on service
             const frontBackSection = document.getElementById('frontBackAddonSection');
             if (frontBackSection) {
@@ -2296,7 +2336,7 @@
                     frontBackSection.style.display = 'none';
                 }
             }
-            
+
             // Show/hide length selection based on service
             const lengthSection = document.getElementById('lengthSelectionSection');
             if (lengthSection) {
@@ -2310,18 +2350,18 @@
                     }
                 }
             }
-            
+
             // Display selected service info
             const selectedServiceDisplay = document.getElementById('selectedServiceDisplay');
             const selectedServiceName = document.getElementById('selectedServiceName');
             const selectedServicePrice = document.getElementById('selectedServicePrice');
-            
+
             if (selectedServiceDisplay && selectedServiceName && selectedServicePrice) {
                 selectedServiceDisplay.style.display = 'block';
                 selectedServiceName.textContent = name;
                 selectedServicePrice.textContent = '$' + price;
             }
-            
+
             // Update price display
             updateSizeLengthPrice();
         };
@@ -2329,15 +2369,15 @@
         // Toggle weave add-on
         window.toggleWeaveAddon = function(addWeave) {
             window.serviceSizeData.weaveAddon = addWeave;
-            
+
             // Update radio selection
             const weaveRadio = document.getElementById(addWeave ? 'weave_yes' : 'weave_no');
             if (weaveRadio) weaveRadio.checked = true;
-            
+
             // Update visual selection
             const noWeaveOption = document.getElementById('weave_no')?.closest('.form-check');
             const yesWeaveOption = document.getElementById('weave_yes')?.closest('.form-check');
-            
+
             if (noWeaveOption && yesWeaveOption) {
                 if (addWeave) {
                     noWeaveOption.style.border = '2px solid #e9ecef';
@@ -2350,7 +2390,7 @@
                     yesWeaveOption.style.background = '#fff';
                 }
             }
-            
+
             // Update price
             updateSizeLengthPrice();
         };
@@ -2358,15 +2398,15 @@
         // Toggle row option
         window.toggleRowOption = function(rowOption) {
             window.serviceSizeData.rowOption = rowOption;
-            
+
             // Update radio selection
             const rowRadio = document.getElementById(rowOption === '8-10' ? 'row_8_10' : 'row_10_plus');
             if (rowRadio) rowRadio.checked = true;
-            
+
             // Update visual selection
             const row810Option = document.getElementById('row_8_10')?.closest('.form-check');
             const row10PlusOption = document.getElementById('row_10_plus')?.closest('.form-check');
-            
+
             if (row810Option && row10PlusOption) {
                 if (rowOption === '10+') {
                     row810Option.style.border = '2px solid #e9ecef';
@@ -2380,7 +2420,7 @@
                     row10PlusOption.style.background = '#fff';
                 }
             }
-            
+
             // Update price
             updateSizeLengthPrice();
         };
@@ -2388,15 +2428,15 @@
         // Toggle front/back add-on
         window.toggleFrontBackAddon = function(addBack) {
             window.serviceSizeData.frontBackAddon = addBack;
-            
+
             // Update radio selection
             const frontBackRadio = document.getElementById(addBack ? 'frontback_yes' : 'frontback_no');
             if (frontBackRadio) frontBackRadio.checked = true;
-            
+
             // Update visual selection
             const frontOnlyOption = document.getElementById('frontback_no')?.closest('.form-check');
             const frontBackOption = document.getElementById('frontback_yes')?.closest('.form-check');
-            
+
             if (frontOnlyOption && frontBackOption) {
                 if (addBack) {
                     frontOnlyOption.style.border = '2px solid #e9ecef';
@@ -2410,7 +2450,7 @@
                     frontBackOption.style.background = '#fff';
                 }
             }
-            
+
             // Update price
             updateSizeLengthPrice();
         };
@@ -2421,21 +2461,21 @@
             if (radio) {
                 radio.checked = true;
             }
-            
+
             window.serviceSizeData.selectedLength = length;
-            
+
             // Update visual selection
             document.querySelectorAll('#lengthOptionsContainer .form-check').forEach(option => {
                 option.style.border = '2px solid transparent';
                 option.style.background = '#f8f9fa';
             });
-            
+
             const selectedOption = radio?.closest('.form-check');
             if (selectedOption) {
                 selectedOption.style.border = '2px solid #ff6600';
                 selectedOption.style.background = '#fff7e0';
             }
-            
+
             // Update price display
             updateSizeLengthPrice();
         };
@@ -2448,12 +2488,12 @@
             const weaveAddon = window.serviceSizeData.weaveAddon || false;
             const rowOption = window.serviceSizeData.rowOption || '8-10';
             const frontBackAddon = window.serviceSizeData.frontBackAddon || false;
-            
+
             let adjustment = 0;
             let weaveAddonCost = 0;
             let rowAddonCost = 0;
             let frontBackAddonCost = 0;
-            
+
             // Only apply length adjustments for braid services (not crotchet or hair treatment)
             if (serviceCategory !== 'crotchet' && serviceCategory !== 'hair-treatment') {
                 // Length adjustments
@@ -2469,34 +2509,34 @@
                 };
                 adjustment = lengthAdjustments[length] || 0;
             }
-            
+
             // Add weave add-on cost if selected
             if (weaveAddon) {
                 weaveAddonCost = 30;
             }
-            
+
             // Add row add-on cost if 10+ rows selected
             if (rowOption === '10+') {
                 rowAddonCost = 30;
             }
-            
+
             // Add front/back add-on cost if selected
             if (frontBackAddon) {
                 frontBackAddonCost = 20;
             }
-            
+
             window.serviceSizeData.lengthAdjustment = adjustment;
             window.serviceSizeData.weaveAddonCost = weaveAddonCost;
             window.serviceSizeData.rowAddonCost = rowAddonCost;
             window.serviceSizeData.frontBackAddonCost = frontBackAddonCost;
-            
+
             const totalPrice = basePrice + adjustment + weaveAddonCost + rowAddonCost + frontBackAddonCost;
-            
+
             const priceDisplay = document.getElementById('sizeLengthPriceDisplay');
             if (priceDisplay) {
                 priceDisplay.textContent = basePrice > 0 ? `$${totalPrice}` : '$--';
             }
-            
+
             // Enable/disable continue button
             const continueBtn = document.getElementById('continueToBookingBtn');
             if (continueBtn) {
@@ -2510,7 +2550,7 @@
                 alert('Please select a braid size first');
                 return;
             }
-            
+
             // Update service name with add-ons
             let serviceName = window.serviceSizeData.serviceName;
             if (window.serviceSizeData.weaveAddon) {
@@ -2522,22 +2562,34 @@
             if (window.serviceSizeData.frontBackAddon) {
                 serviceName += ' (Front + Back)';
             }
-            
+
             // Get the size modal element and instance
             const sizeModalEl = document.getElementById('serviceSizeLengthModal');
             const sizeModal = bootstrap.Modal.getInstance(sizeModalEl);
-            
+
             // Listen for the modal to fully hide before opening booking modal
+            let bookingOpened = false;
+            const cleanupModalArtifacts = () => {
+                document.querySelectorAll('.modal-backdrop').forEach(backdrop => backdrop.remove());
+                document.body.classList.remove('modal-open');
+                document.body.style.paddingRight = '';
+                document.body.style.overflow = '';
+            };
             const openBooking = () => {
+                if (bookingOpened) return;
+                bookingOpened = true;
                 sizeModalEl.removeEventListener('hidden.bs.modal', openBooking);
-                
+
+                // Clean up any leftover modal artifacts from the size modal
+                cleanupModalArtifacts();
+
                 // Open booking modal with the selected service
                 setTimeout(() => {
                     window.openBookingModal(
                         serviceName,
                         window.serviceSizeData.serviceType
                     );
-                    
+
                     // Pre-select the length in booking form (skip for crotchet and hair treatment)
                     if (window.serviceSizeData.serviceCategory !== 'crotchet' && window.serviceSizeData.serviceCategory !== 'hair-treatment') {
                         const lengthRadio = document.getElementById(`length_${window.serviceSizeData.selectedLength.replace('-', '')}`);
@@ -2549,11 +2601,13 @@
                     }
                 }, 100);
             };
-            
+
             // Add event listener and hide modal
             if (sizeModal) {
-                sizeModalEl.addEventListener('hidden.bs.modal', openBooking);
+                sizeModalEl.addEventListener('hidden.bs.modal', openBooking, { once: true });
                 sizeModal.hide();
+                // Fallback in case the hidden event never fires
+                setTimeout(openBooking, 450);
             } else {
                 // Fallback if modal instance not found
                 openBooking();
@@ -2593,10 +2647,21 @@
                     modalTitle.textContent = 'Book ' + serviceName;
                 }
 
+                // Ensure modal is a direct child of body to avoid stacking issues
+                if (modal.parentElement !== document.body) {
+                    document.body.appendChild(modal);
+                }
+
+                // Clean up any lingering modal artifacts before opening
+                document.querySelectorAll('.modal-backdrop').forEach(backdrop => backdrop.remove());
+                document.body.classList.remove('modal-open');
+                document.body.style.paddingRight = '';
+                document.body.style.overflow = '';
+
                 // Show modal using Bootstrap if available, otherwise fallback
                 if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
                     try {
-                        var modalInstance = new bootstrap.Modal(modal);
+                        var modalInstance = bootstrap.Modal.getOrCreateInstance(modal);
                         modalInstance.show();
                         console.log('Modal shown with Bootstrap');
                     } catch (error) {
@@ -2917,7 +2982,7 @@
         function fetchRealBookedDates() {
             const year = calendarCurrentDate.getFullYear();
             const month = calendarCurrentDate.getMonth() + 1; // 1-based month for API
-            
+
             console.log(`📅 Fetching blocked dates for ${year}-${month}`);
 
             const bookedPromise = fetch('/api/booked-dates').then(r => r.json()).catch(e => { console.error('Booked-dates fetch failed', e); return null; });
@@ -3027,7 +3092,7 @@
                 const date = new Date(startDate);
                 date.setDate(startDate.getDate() + i);
                 const dateString = formatYMD(date);
-                
+
                 // Ensure dateString is in YYYY-MM-DD format for consistent matching
                 if (!/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
                     console.warn('Invalid dateString format:', dateString, 'from date:', date);
@@ -3049,7 +3114,7 @@
                 } else {
                     // Determine blocked or booked or available
                     // Check blocked first
-                    const blockedIndex = (blockedDatesCache || []).reduce((acc, b) => { 
+                    const blockedIndex = (blockedDatesCache || []).reduce((acc, b) => {
                         if (b && b.date) {
                             // Normalize date string to YYYY-MM-DD format for consistent matching
                             const normalizedDate = b.date.trim();
@@ -3059,9 +3124,9 @@
                                 console.warn('⚠️ Invalid blocked date format:', b.date, 'from blocked date object:', b);
                             }
                         }
-                        return acc; 
+                        return acc;
                     }, {});
-                    
+
                     // Debug: log blocked dates
                     if (blockedIndex[dateString]) {
                         console.log(`⛔ Date ${dateString} is BLOCKED:`, blockedIndex[dateString]);
@@ -3093,12 +3158,12 @@
                     } else if (blockedIndex[dateString]) {
                         const blockedInfo = blockedIndex[dateString];
                         const isFullDay = blockedInfo.full_day === true || blockedInfo.full_day === 1;
-                        
+
                         if (isFullDay) {
                             // Full day blocked: show dark styling and small title text
                             dayDiv.classList.add('blocked-range');
                             dayDiv.title = (blockedInfo.title || 'Blocked') + ' - This date is not available for booking';
-                            
+
                             // Force inline styles to ensure visibility
                             dayDiv.style.background = 'linear-gradient(180deg, #dc3545 0%, #c82333 100%)';
                             dayDiv.style.backgroundColor = '#dc3545';
@@ -3111,7 +3176,7 @@
                             dayDiv.style.pointerEvents = 'none';
                             dayDiv.style.fontWeight = '600';
                             dayDiv.style.position = 'relative';
-                            
+
                             dayDiv.innerHTML = date.getDate() + '<div class="blocked-text" style="color:#ffffff;font-size:0.65rem;margin-top:4px;line-height:1.1;">' + (blockedInfo.title || 'Blocked') + '</div>';
                             console.log(`⛔ Marked ${dateString} as FULLY BLOCKED (${blockedInfo.title})`);
                             // Don't add click event for fully blocked dates
@@ -3121,8 +3186,8 @@
                             dayDiv.style.backgroundColor = '#d4edda';
                             dayDiv.style.borderColor = '#c3e6cb';
                             // Add a visual indicator that some times are blocked
-                            const blockedTimes = blockedInfo.start_time && blockedInfo.end_time 
-                                ? `${blockedInfo.start_time}-${blockedInfo.end_time}` 
+                            const blockedTimes = blockedInfo.start_time && blockedInfo.end_time
+                                ? `${blockedInfo.start_time}-${blockedInfo.end_time}`
                                 : 'some times';
                             dayDiv.title = (blockedInfo.title || 'Blocked') + ` (${blockedTimes} blocked) - Click to see available times`;
                             dayDiv.onclick = (e) => selectCalendarDate(date, e);
@@ -3144,19 +3209,19 @@
 
         function selectCalendarDate(date) {
             const dateString = formatYMD(date);
-            
+
             // Check if the clicked day is booked
             if (event && event.target && event.target.classList.contains('booked')) {
                 alert('This date is already booked with a pending or confirmed appointment. Please select another date.');
                 return;
             }
-            
+
             // Check if the clicked day is fully blocked (not time-specific)
             const blockedIndex = (blockedDatesCache || []).reduce((acc, b) => { acc[b.date] = b; return acc; }, {});
             if (blockedIndex[dateString]) {
                 const blockedInfo = blockedIndex[dateString];
                 const isFullDay = blockedInfo.full_day === true || blockedInfo.full_day === 1;
-                
+
                 if (isFullDay) {
                     const blockedTitle = blockedInfo.title || 'Blocked';
                     alert(`This date is blocked: "${blockedTitle}". Please select another date.`);
@@ -3164,7 +3229,7 @@
                 }
                 // If it's a time-specific block, continue - user can still select the date
             }
-            
+
             if (event && event.target && event.target.classList.contains('blocked-range')) {
                 alert('This date is blocked. Please select another date.');
                 return;
@@ -3820,6 +3885,12 @@
                     <button class="btn btn-sm btn-outline-primary filter-chip" data-filter="twist" onclick="filterServices('twist')">
                         Twists
                     </button>
+                    <button class="btn btn-sm btn-outline-primary filter-chip" data-filter="natural-hair-twist" onclick="filterServices('natural-hair-twist')">
+                        Natural Hair Twist
+                    </button>
+                    <button class="btn btn-sm btn-outline-primary filter-chip" data-filter="kinky-passion-twist" onclick="filterServices('kinky-passion-twist')">
+                        Kinky & Passion Twist
+                    </button>
                     <button class="btn btn-sm btn-outline-primary filter-chip" data-filter="kids" onclick="filterServices('kids')">
                         Kids
                     </button>
@@ -3863,10 +3934,32 @@
                     <div class="service-card h-100" onclick="openServiceSizeModal('twist')">
                         <img src="{{ asset('images/twist-main.jpg') }}" alt="Twist Styles">
                         <h4>Twist Styles</h4>
-                        <p class="mb-2">Protective two-strand twists in various sizes—low-tension, versatile styling.</p>
-                        <p class="mb-1"><strong>Time:</strong> 2–6 hrs • <strong>Sizes:</strong> Small, Medium, Jumbo/Large, Natural Hair (S/M)</p>
-                        <p class="mb-3"><strong>Hair:</strong> Not included • <strong>Note:</strong> Natural Hair Twist - Small: $80, Medium: $60 (no length)</p>
-                        <p class="price"><strong>From $60</strong> <small class="text-muted">(varies by size & length)</small></p>
+                        <p class="mb-2">Protective two-strand twists in various sizes—low-tension, versatile styling with hair extensions.</p>
+                        <p class="mb-1"><strong>Time:</strong> 3–6 hrs • <strong>Sizes:</strong> Small, Medium, Jumbo/Large</p>
+                        <p class="mb-3"><strong>Hair:</strong> Not included</p>
+                        <p class="price"><strong>From $100</strong> <small class="text-muted">(varies by size & length)</small></p>
+                        <button class="btn btn-warning mt-3">Select Size & Book</button>
+                    </div>
+                </div>
+                <div class="col-lg-4 col-md-6 col-6 service-item" data-category="natural-hair-twist">
+                    <div class="service-card h-100" onclick="openServiceSizeModal('natural-hair-twist')">
+                        <img src="{{ asset('images/twists-natural-hair.jpg') }}" alt="Natural Hair Twist">
+                        <h4>Natural Hair Twist</h4>
+                        <p class="mb-2">Two-strand twists using your natural hair—no extensions needed, perfect for low-manipulation styling.</p>
+                        <p class="mb-1"><strong>Time:</strong> 2–3 hrs • <strong>Sizes:</strong> Small, Medium</p>
+                        <p class="mb-3"><strong>Hair:</strong> Not needed • <strong>Note:</strong> No length adjustment</p>
+                        <p class="price"><strong>From $60</strong> <small class="text-muted">(varies by size)</small></p>
+                        <button class="btn btn-warning mt-3">Select Size & Book</button>
+                    </div>
+                </div>
+                <div class="col-lg-4 col-md-6 col-6 service-item" data-category="kinky-passion-twist">
+                    <div class="service-card h-100" onclick="openServiceSizeModal('kinky-passion-twist')">
+                        <img src="{{ asset('images/kinky braid.jpeg') }}" alt="Kinky & Passion Twists">
+                        <h4>Kinky & Passion Twists</h4>
+                        <p class="mb-2">Stylish kinky and passion twists in various sizes—versatile protective styles with plenty of texture and dimension.</p>
+                        <p class="mb-1"><strong>Time:</strong> 2.5–5 hrs • <strong>Types:</strong> Kinky & Passion Twists</p>
+                        <p class="mb-3"><strong>Hair:</strong> Not included • <strong>Sizes:</strong> Small, Medium, Jumbo</p>
+                        <p class="price"><strong>From $90</strong> <small class="text-muted">(varies by type & size)</small></p>
                         <button class="btn btn-warning mt-3">Select Size & Book</button>
                     </div>
                 </div>
@@ -3875,7 +3968,7 @@
                         <img src="{{ asset('images/kinky crotchet.png') }}" alt="Crotchet Styles">
                         <h4>Crotchet Styles</h4>
                         <p class="mb-2">Quick protective styles with various crotchet options—versatile and low-maintenance.</p>
-                        <p class="mb-1"><strong>Time:</strong> 1.5–5 hrs • <strong>Types:</strong> 2/3 Line Single, Afro, Individual Loc, Butterfly, Weave Crotchet</p>
+                        <p class="mb-1"><strong>Time:</strong> 1.5–5 hrs • <strong>Types:</strong> 2/3 Line Single, Afro, Individual Crotchet, Butterfly, Weave Crotchet</p>
                         <p class="mb-3"><strong>Hair:</strong> Not included • <strong>Note:</strong> No length adjustment needed</p>
                         <p class="price"><strong>From $80</strong> <small class="text-muted">(varies by type)</small></p>
                         <button class="btn btn-warning mt-3">Select Type & Book</button>
@@ -3927,7 +4020,7 @@
                     </div>
                 </div>
             </div>
-            
+
             <!-- View More Services Button for Mobile -->
             <div class="text-center mt-4 d-md-none" id="viewMoreServicesContainer">
                 <button class="btn btn-primary" id="viewMoreServicesBtn" onclick="toggleMobileServices()" style="border-radius: 20px; padding: 8px 24px; font-size: 0.95rem; font-weight: 600; box-shadow: 0 3px 10px rgba(3, 15, 104, 0.15);">
@@ -4060,7 +4153,7 @@
                         <div class="row g-3" id="sizeOptionsContainer">
                             <!-- Size options will be dynamically populated -->
                         </div>
-                        
+
                         <!-- Selected Service Display -->
                         <div id="selectedServiceDisplay" style="display: none; margin-top: 20px; padding: 15px; background: linear-gradient(135deg, #e7f3ff 0%, #cce5ff 100%); border-left: 6px solid #17a2b8; border-radius: 10px;">
                             <div style="display: flex; align-items: center; justify-content: space-between;">
@@ -4275,7 +4368,7 @@
                                     <label for="serviceSelection" class="form-label">Service *</label>
                                     <div class="input-group">
                                         <input type="text" class="form-control" id="serviceDisplay" name="service_display" readonly style="background-color: #f8f9fa;">
-                                        <button class="btn btn-outline-secondary" type="button" onclick="openServiceSelectionModal()">
+<button class="btn btn-outline-secondary" type="button" onclick="openSelectServiceModal()">
                                             <i class="bi bi-pencil"></i> Change
                                         </button>
                                     </div>
@@ -4502,66 +4595,314 @@
 
     <!-- Custom Service Request Modal -->
     <div class="modal fade" id="customServiceRequestModal" tabindex="-1" aria-labelledby="customServiceRequestModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
             <div class="modal-content" style="border-radius: 12px;">
                 <div class="modal-header" style="background: linear-gradient(135deg, #030f68 0%, #4a8bc2 100%); color: white; border-radius: 12px 12px 0 0;">
                     <h5 class="modal-title" id="customServiceRequestModalLabel">
-                        <i class="bi bi-person-lines-fill me-2"></i>Contact Information
+                        <i class="bi bi-stars me-2"></i>Custom Service Request
                     </h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body p-4">
-                    <form id="customServiceRequestForm">
+                    <div class="alert alert-warning mb-3" style="background: #fff7e0; border-left: 4px solid #ff6600; border-radius: 8px;">
+                        <div class="d-flex align-items-start">
+                            <i class="bi bi-info-circle me-2" style="font-size: 1.2rem; color: #ff6600; margin-top: 2px;"></i>
+                            <div>
+                                <strong style="color: #0b3a66;">Custom Service Information</strong>
+                                <ul class="mb-0 mt-2" style="color: #0b3a66; font-size: 0.9rem; padding-left: 20px;">
+                                    <li>Prices vary based on <strong>hair length, thickness, and design complexity</strong></li>
+                                    <li>Length adjustments apply: <strong>+$20 for longer, -$40 for shorter</strong> than mid-back</li>
+                                    <li>Final pricing will be <strong>confirmed during consultation</strong> before service</li>
+                                    <li>You'll receive email confirmation with estimated pricing</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <form id="customServiceForm">
                         <div class="row g-3">
-                            <!-- Name Field - Full Width -->
+                            <!-- Service Name -->
                             <div class="col-12">
-                                <label for="csrName" class="form-label fw-semibold">
-                                    <i class="bi bi-person me-1"></i>Your Name <span class="text-danger">*</span>
+                                <label for="customServiceInput" class="form-label fw-semibold">
+                                    <i class="bi bi-pencil-square me-1"></i>Service Name <span class="text-danger">*</span>
                                 </label>
-                                <input type="text" class="form-control form-control-lg" id="csrName" name="name" placeholder="Enter your full name" maxlength="255" required style="border-radius: 8px; border: 2px solid #e9ecef; transition: border-color 0.3s ease;">
-                                <small class="form-text text-muted">
-                                    <i class="bi bi-info-circle me-1"></i>Please enter your first and last name
+                                <input type="text" class="form-control form-control-lg" id="customServiceInput" name="service_name" placeholder="e.g., Goddess Braids, Box Braids, Passion Twists, Feed-in Braids, etc." maxlength="255" required style="border-radius: 8px;">
+                                <small class="form-text text-muted d-block mt-1">
+                                    <i class="bi bi-lightbulb me-1"></i>
+                                    Be specific about the style you want
                                 </small>
                             </div>
-                            
-                            <!-- Phone Number - Full Width on Mobile, Half on Desktop -->
-                            <div class="col-12 col-md-6">
-                                <label for="csrPhone" class="form-label fw-semibold">
-                                    <i class="bi bi-phone me-1"></i>Phone Number <span class="text-danger">*</span>
+
+                            <!-- Service Category -->
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-semibold">
+                                    <i class="bi bi-tags me-1"></i>Service Category
                                 </label>
-                                <input type="tel" class="form-control form-control-lg" id="csrPhone" name="phone" placeholder="Enter your phone number" maxlength="20" required style="border-radius: 8px; border: 2px solid #e9ecef; transition: border-color 0.3s ease;">
-                                <small class="form-text text-muted">
-                                    <i class="bi bi-info-circle me-1"></i>Include area code
-                                </small>
-                            </div>
-                            
-                            <!-- Email - Full Width on Mobile, Half on Desktop -->
-                            <div class="col-12 col-md-6">
-                                <label for="csrEmail" class="form-label fw-semibold">
-                                    <i class="bi bi-envelope me-1"></i>Email Address <span class="text-danger">*</span>
-                                </label>
-                                <input type="email" class="form-control form-control-lg" id="csrEmail" name="email" placeholder="Enter your email address" maxlength="255" required style="border-radius: 8px; border: 2px solid #e9ecef; transition: border-color 0.3s ease;">
-                                <small class="form-text text-muted">
-                                    <i class="bi bi-info-circle me-1"></i>We'll send confirmation to this email
-                                </small>
-                            </div>
-                            
-                            <!-- Information Box -->
-                            <div class="col-12">
-                                <div class="alert alert-info mb-0" style="border-radius: 8px; border-left: 4px solid #030f68;">
-                                    <i class="bi bi-info-circle me-2"></i>
-                                    <strong>What happens next?</strong><br>
-                                    We'll review your custom service request and contact you within 24-48 hours to discuss pricing and availability.
+                                <div class="radio-group-container">
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="radio" name="service_category" id="cat_braids" value="braids">
+                                        <label class="form-check-label" for="cat_braids">Braids</label>
+                                    </div>
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="radio" name="service_category" id="cat_twists" value="twists">
+                                        <label class="form-check-label" for="cat_twists">Twists</label>
+                                    </div>
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="radio" name="service_category" id="cat_weaves" value="weaves">
+                                        <label class="form-check-label" for="cat_weaves">Weaves</label>
+                                    </div>
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="radio" name="service_category" id="cat_wigs" value="wigs">
+                                        <label class="form-check-label" for="cat_wigs">Wig Installation</label>
+                                    </div>
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="radio" name="service_category" id="cat_color" value="color">
+                                        <label class="form-check-label" for="cat_color">Hair Coloring</label>
+                                    </div>
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="radio" name="service_category" id="cat_treatment" value="treatment">
+                                        <label class="form-check-label" for="cat_treatment">Hair Treatment</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="service_category" id="cat_other" value="other">
+                                        <label class="form-check-label" for="cat_other">Other</label>
+                                    </div>
                                 </div>
                             </div>
+
+                            <!-- Braid Size Preference -->
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-semibold">
+                                    <i class="bi bi-rulers me-1"></i>Braid/Twist Size
+                                </label>
+                                <div class="radio-group-container">
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="radio" name="braid_size" id="size_micro" value="micro">
+                                        <label class="form-check-label" for="size_micro">Micro (Very Small)</label>
+                                    </div>
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="radio" name="braid_size" id="size_small" value="small">
+                                        <label class="form-check-label" for="size_small">Small</label>
+                                    </div>
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="radio" name="braid_size" id="size_medium" value="medium">
+                                        <label class="form-check-label" for="size_medium">Medium</label>
+                                    </div>
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="radio" name="braid_size" id="size_large" value="large">
+                                        <label class="form-check-label" for="size_large">Large</label>
+                                    </div>
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="radio" name="braid_size" id="size_jumbo" value="jumbo">
+                                        <label class="form-check-label" for="size_jumbo">Jumbo (Very Large)</label>
+                                    </div>
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="radio" name="braid_size" id="size_mixed" value="mixed">
+                                        <label class="form-check-label" for="size_mixed">Mixed Sizes</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="braid_size" id="size_na" value="not-applicable">
+                                        <label class="form-check-label" for="size_na">Not Applicable</label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Hair Length -->
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-semibold">
+                                    <i class="bi bi-scissors me-1"></i>Current Hair Length
+                                </label>
+                                <div class="radio-group-container" style="max-height: 250px; overflow-y: auto;">
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="radio" name="hair_length" id="len_neck" value="neck">
+                                        <label class="form-check-label" for="len_neck">Neck Length</label>
+                                    </div>
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="radio" name="hair_length" id="len_shoulder" value="shoulder">
+                                        <label class="form-check-label" for="len_shoulder">Shoulder Length</label>
+                                    </div>
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="radio" name="hair_length" id="len_armpit" value="armpit">
+                                        <label class="form-check-label" for="len_armpit">Armpit Length</label>
+                                    </div>
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="radio" name="hair_length" id="len_bra_strap" value="bra_strap">
+                                        <label class="form-check-label" for="len_bra_strap">Bra Strap Length</label>
+                                    </div>
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="radio" name="hair_length" id="len_mid_back" value="mid_back">
+                                        <label class="form-check-label" for="len_mid_back">Mid-Back Length</label>
+                                    </div>
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="radio" name="hair_length" id="len_waist" value="waist">
+                                        <label class="form-check-label" for="len_waist">Waist Length</label>
+                                    </div>
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="radio" name="hair_length" id="len_hip" value="hip">
+                                        <label class="form-check-label" for="len_hip">Hip Length</label>
+                                    </div>
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="radio" name="hair_length" id="len_tailbone" value="tailbone">
+                                        <label class="form-check-label" for="len_tailbone">Tailbone Length</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="hair_length" id="len_classic" value="classic">
+                                        <label class="form-check-label" for="len_classic">Classic Length</label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Estimated Budget Range -->
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-semibold">
+                                    <i class="bi bi-currency-dollar me-1"></i>Estimated Budget Range
+                                </label>
+                                <div class="radio-group-container">
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="radio" name="budget_range" id="budget_under100" value="under-100">
+                                        <label class="form-check-label" for="budget_under100">Under $100</label>
+                                    </div>
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="radio" name="budget_range" id="budget_100_150" value="100-150">
+                                        <label class="form-check-label" for="budget_100_150">$100 - $150</label>
+                                    </div>
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="radio" name="budget_range" id="budget_150_200" value="150-200">
+                                        <label class="form-check-label" for="budget_150_200">$150 - $200</label>
+                                    </div>
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="radio" name="budget_range" id="budget_200_250" value="200-250">
+                                        <label class="form-check-label" for="budget_200_250">$200 - $250</label>
+                                    </div>
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="radio" name="budget_range" id="budget_250_300" value="250-300">
+                                        <label class="form-check-label" for="budget_250_300">$250 - $300</label>
+                                    </div>
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="radio" name="budget_range" id="budget_300_400" value="300-400">
+                                        <label class="form-check-label" for="budget_300_400">$300 - $400</label>
+                                    </div>
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="radio" name="budget_range" id="budget_400_500" value="400-500">
+                                        <label class="form-check-label" for="budget_400_500">$400 - $500</label>
+                                    </div>
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="radio" name="budget_range" id="budget_over500" value="over-500">
+                                        <label class="form-check-label" for="budget_over500">Over $500</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="budget_range" id="budget_flexible" value="flexible">
+                                        <label class="form-check-label" for="budget_flexible">Flexible</label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Style Preferences -->
+                            <div class="col-12">
+                                <label class="form-label fw-semibold">
+                                    <i class="bi bi-palette me-1"></i>Style Preferences (Select all that apply)
+                                </label>
+                                <div class="row g-2">
+                                    <div class="col-md-4">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="prefProtective" name="style_preferences[]" value="protective">
+                                            <label class="form-check-label" for="prefProtective">Protective Style</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="prefLowMaintenance" name="style_preferences[]" value="low-maintenance">
+                                            <label class="form-check-label" for="prefLowMaintenance">Low Maintenance</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="prefLongLasting" name="style_preferences[]" value="long-lasting">
+                                            <label class="form-check-label" for="prefLongLasting">Long Lasting</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="prefWithExtensions" name="style_preferences[]" value="with-extensions">
+                                            <label class="form-check-label" for="prefWithExtensions">With Extensions</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="prefWithBeads" name="style_preferences[]" value="with-beads">
+                                            <label class="form-check-label" for="prefWithBeads">With Beads/Accessories</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="prefWithColor" name="style_preferences[]" value="with-color">
+                                            <label class="form-check-label" for="prefWithColor">With Color/Highlights</label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Special Requirements -->
+                            <div class="col-12">
+                                <label for="customSpecialRequirements" class="form-label fw-semibold">
+                                    <i class="bi bi-clipboard-check me-1"></i>Special Requirements or Notes
+                                </label>
+                                <textarea class="form-control" id="customSpecialRequirements" name="special_requirements" rows="3" placeholder="Any specific requirements, allergies, previous service history, or additional details..." style="border-radius: 8px;"></textarea>
+                                <small class="form-text text-muted d-block mt-1">
+                                    Include any important information that will help us provide the best service
+                                </small>
+                            </div>
+
+                            <!-- Urgency/Timeline -->
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-semibold">
+                                    <i class="bi bi-clock me-1"></i>When do you need this service?
+                                </label>
+                                <div class="radio-group-container">
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="radio" name="urgency" id="urgent_asap" value="asap">
+                                        <label class="form-check-label" for="urgent_asap">As Soon As Possible</label>
+                                    </div>
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="radio" name="urgency" id="urgent_week" value="within-week">
+                                        <label class="form-check-label" for="urgent_week">Within a Week</label>
+                                    </div>
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="radio" name="urgency" id="urgent_month" value="within-month">
+                                        <label class="form-check-label" for="urgent_month">Within a Month</label>
+                                    </div>
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="radio" name="urgency" id="urgent_flexible" value="flexible">
+                                        <label class="form-check-label" for="urgent_flexible">Flexible</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="urgency" id="urgent_specific" value="specific-date">
+                                        <label class="form-check-label" for="urgent_specific">I have a specific date in mind</label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Reference Image Upload -->
+                            <div class="col-md-6">
+                                <label for="customReferenceImage" class="form-label fw-semibold">
+                                    <i class="bi bi-image me-1"></i>Reference Image (Optional)
+                                </label>
+                                <input type="file" class="form-control form-control-lg" id="customReferenceImage" name="reference_image" accept="image/*" style="border-radius: 8px;">
+                                <small class="form-text text-muted d-block mt-1">
+                                    Upload a photo of the style you want (max 5MB)
+                                </small>
+                            </div>
+                        </div>
+
+                        <div class="mt-4">
+                            <button type="button" class="btn btn-primary btn-lg w-100" onclick="submitCustomServiceRequestFromModal()" style="border-radius: 8px; font-weight: 600;">
+                                <i class="bi bi-send me-2"></i>Submit Request
+                            </button>
                         </div>
                     </form>
                 </div>
                 <div class="modal-footer" style="border-top: none;">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn btn-primary btn-lg" onclick="submitCustomServiceRequestFromModal()" style="border-radius: 8px; font-weight: 600;">
-                        <i class="bi bi-send me-2"></i>Submit Request
-                    </button>
                 </div>
             </div>
         </div>
@@ -4585,311 +4926,20 @@
                             <div class="row g-2">
                                 <div class="col-md-6 col-lg-4">
                                     <button type="button" class="btn btn-outline-primary w-100 service-quick-btn" onclick="selectQuickService('Weaving Crotchet')">
-                                       Weaving Crotchet
-                                       <div class="small text-muted">Starting at $80</div>
-                                    </button>
-                                </div>
-                                <div class="col-md-6 col-lg-4">
-                                    <button type="button" class="btn btn-outline-primary w-100 service-quick-btn" onclick="selectQuickService('Single Crotchet')">
-                                        Single Crotchet
-                                        <div class="small text-muted">Starting at $150</div>
-                                    </button>
-                                </div>
-                                <div class="col-md-6 col-lg-4">
-                                    <button type="button" class="btn btn-outline-primary w-100 service-quick-btn" onclick="selectQuickService('Natural Hair Twist')">
-                                        Natural Hair Twist
-                                        <div class="small text-muted">Starting at $50</div>
-                                    </button>
-                                </div>
-                                <div class="col-md-6 col-lg-4">
-                                    <button type="button" class="btn btn-outline-primary w-100 service-quick-btn" onclick="selectQuickService('Weaving No-Extension')">
-                                        Weaving No-Extension
-                                        <div class="small text-muted">Starting at $30</div>
-                                    </button>
-                                </div>
-                                <div class="col-md-6 col-lg-4">
-                                    <button type="button" class="btn btn-outline-primary w-100 service-quick-btn" onclick="selectQuickService('Kinky Twist')">
-                                        Kinky Twist
-                                        <div class="small text-muted">Starting at $120</div>
-                                    </button>
-                                </div>
-                                <div class="col-md-6 col-lg-4">
-                                    <button type="button" class="btn btn-outline-primary w-100 service-quick-btn" onclick="selectQuickService('Twist Braids')">
-                                        Twist Braids
-                                        <div class="small text-muted">Starting at $130</div>
-                                    </button>
-                                </div>
-                            </div>
-                            <div class="alert alert-info mt-3 mb-0" style="background: #e7f3ff; border-left: 4px solid #17a2b8; border-radius: 8px;">
-                                <div class="d-flex align-items-start">
-                                    <i class="bi bi-info-circle me-2" style="font-size: 1.2rem; color: #17a2b8; margin-top: 2px;"></i>
-                                    <div>
-                                        <strong style="color: #0b3a66;">Note:</strong>
-                                        <p class="mb-0" style="color: #0b3a66; font-size: 0.9rem;">
-                                            <strong>Kinky Twist</strong> and <strong>Twist Braids</strong> prices shown are for <strong>mid-back length</strong>. You can select a different length during booking, and the price will adjust automatically. Other popular services use fixed mid-back pricing.
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Custom Service Input -->
-                        <div class="col-12 mt-4">
-                            <div class="border-top pt-4">
-                                <h6 class="fw-bold mb-3">
-                                    <i class="bi bi-stars me-2" style="color: #ff6600;"></i>Custom Service Request
-                                </h6>
-                                <div class="alert alert-warning mb-3" style="background: #fff7e0; border-left: 4px solid #ff6600; border-radius: 8px;">
-                                    <div class="d-flex align-items-start">
-                                        <i class="bi bi-info-circle me-2" style="font-size: 1.2rem; color: #ff6600; margin-top: 2px;"></i>
-                                        <div>
-                                            <strong style="color: #0b3a66;">Custom Service Information</strong>
-                                            <ul class="mb-0 mt-2" style="color: #0b3a66; font-size: 0.9rem; padding-left: 20px;">
-                                                <li>Prices vary based on <strong>hair length, thickness, and design complexity</strong></li>
-                                                <li>Length adjustments apply: <strong>+$20 for longer, -$40 for shorter</strong> than mid-back</li>
-                                                <li>Final pricing will be <strong>confirmed during consultation</strong> before service</li>
-                                                <li>You'll receive email confirmation with estimated pricing</li>
-                                            </ul>
+                                    <!-- Custom Service Input -->
+                                    <div class="col-12 mt-4">
+                                        <div class="border-top pt-4 text-center">
+                                            <h6 class="fw-bold mb-2">
+                                                <i class="bi bi-stars me-2" style="color: #ff6600;"></i>Custom Service Request
+                                            </h6>
+                                            <p class="mb-3 text-muted" style="font-size: 0.95rem;">
+                                                Tell us about the style you want and any preferences in a dedicated request form.
+                                            </p>
+                                            <button type="button" class="btn btn-primary btn-lg" onclick="openOtherServicesModal()" style="border-radius: 8px; font-weight: 600;">
+                                                <i class="bi bi-send me-2"></i>Open Custom Request Form
+                                            </button>
                                         </div>
                                     </div>
-                                </div>
-
-                                <!-- Enhanced Custom Service Form -->
-                                <form id="customServiceForm">
-                                    <div class="row g-3">
-                                        <!-- Service Name -->
-                                        <div class="col-12">
-                                            <label for="customServiceInput" class="form-label fw-semibold">
-                                                <i class="bi bi-pencil-square me-1"></i>Service Name <span class="text-danger">*</span>
-                                            </label>
-                                            <input type="text" class="form-control form-control-lg" id="customServiceInput" name="service_name" placeholder="e.g., Goddess Braids, Box Braids, Passion Twists, Feed-in Braids, etc." maxlength="255" required style="border-radius: 8px;">
-                                            <small class="form-text text-muted d-block mt-1">
-                                                <i class="bi bi-lightbulb me-1"></i>
-                                                Be specific about the style you want
-                                            </small>
-                            </div>
-
-                                        <!-- Service Category -->
-                                        <div class="col-md-6 mb-3">
-                                            <label class="form-label fw-semibold">
-                                                <i class="bi bi-tags me-1"></i>Service Category
-                                            </label>
-                                            <div class="radio-group-container">
-                                                <div class="form-check mb-2">
-                                                    <input class="form-check-input" type="radio" name="service_category" id="cat_braids" value="braids">
-                                                    <label class="form-check-label" for="cat_braids">Braids</label>
-                                                </div>
-                                                <div class="form-check mb-2">
-                                                    <input class="form-check-input" type="radio" name="service_category" id="cat_twists" value="twists">
-                                                    <label class="form-check-label" for="cat_twists">Twists</label>
-                                                </div>
-                                                <div class="form-check mb-2">
-                                                    <input class="form-check-input" type="radio" name="service_category" id="cat_locs" value="locs">
-                                                    <label class="form-check-label" for="cat_locs">Locs/Dreadlocks</label>
-                                                </div>
-                                                <div class="form-check mb-2">
-                                                    <input class="form-check-input" type="radio" name="service_category" id="cat_weave" value="weave">
-                                                    <label class="form-check-label" for="cat_weave">Weave/Extensions</label>
-                                                </div>
-                                                <div class="form-check mb-2">
-                                                    <input class="form-check-input" type="radio" name="service_category" id="cat_natural" value="natural">
-                                                    <label class="form-check-label" for="cat_natural">Natural Hair Styling</label>
-                                                </div>
-                                                <div class="form-check mb-2">
-                                                    <input class="form-check-input" type="radio" name="service_category" id="cat_color" value="color">
-                                                    <label class="form-check-label" for="cat_color">Hair Coloring</label>
-                                                </div>
-                                                <div class="form-check mb-2">
-                                                    <input class="form-check-input" type="radio" name="service_category" id="cat_treatment" value="treatment">
-                                                    <label class="form-check-label" for="cat_treatment">Hair Treatment</label>
-                                                </div>
-                                                <div class="form-check">
-                                                    <input class="form-check-input" type="radio" name="service_category" id="cat_other" value="other">
-                                                    <label class="form-check-label" for="cat_other">Other</label>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <!-- Braid Size Preference -->
-                                        <div class="col-md-6 mb-3">
-                                            <label class="form-label fw-semibold">
-                                                <i class="bi bi-rulers me-1"></i>Braid/Twist Size
-                                            </label>
-                                            <div class="radio-group-container">
-                                                <div class="form-check mb-2">
-                                                    <input class="form-check-input" type="radio" name="braid_size" id="size_micro" value="micro">
-                                                    <label class="form-check-label" for="size_micro">Micro (Very Small)</label>
-                                                </div>
-                                                <div class="form-check mb-2">
-                                                    <input class="form-check-input" type="radio" name="braid_size" id="size_small" value="small">
-                                                    <label class="form-check-label" for="size_small">Small</label>
-                                                </div>
-                                                <div class="form-check mb-2">
-                                                    <input class="form-check-input" type="radio" name="braid_size" id="size_medium" value="medium">
-                                                    <label class="form-check-label" for="size_medium">Medium</label>
-                                                </div>
-                                                <div class="form-check mb-2">
-                                                    <input class="form-check-input" type="radio" name="braid_size" id="size_large" value="large">
-                                                    <label class="form-check-label" for="size_large">Large</label>
-                                                </div>
-                                                <div class="form-check mb-2">
-                                                    <input class="form-check-input" type="radio" name="braid_size" id="size_jumbo" value="jumbo">
-                                                    <label class="form-check-label" for="size_jumbo">Jumbo (Very Large)</label>
-                                                </div>
-                                                <div class="form-check mb-2">
-                                                    <input class="form-check-input" type="radio" name="braid_size" id="size_mixed" value="mixed">
-                                                    <label class="form-check-label" for="size_mixed">Mixed Sizes</label>
-                                                </div>
-                                                <div class="form-check">
-                                                    <input class="form-check-input" type="radio" name="braid_size" id="size_na" value="not-applicable">
-                                                    <label class="form-check-label" for="size_na">Not Applicable</label>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <!-- Hair Length -->
-                                        <div class="col-md-6 mb-3">
-                                            <label class="form-label fw-semibold">
-                                                <i class="bi bi-scissors me-1"></i>Current Hair Length
-                                            </label>
-                                            <div class="radio-group-container" style="max-height: 250px; overflow-y: auto;">
-                                                <div class="form-check mb-2">
-                                                    <input class="form-check-input" type="radio" name="hair_length" id="len_neck" value="neck">
-                                                    <label class="form-check-label" for="len_neck">Neck Length</label>
-                                                </div>
-                                                <div class="form-check mb-2">
-                                                    <input class="form-check-input" type="radio" name="hair_length" id="len_shoulder" value="shoulder">
-                                                    <label class="form-check-label" for="len_shoulder">Shoulder Length</label>
-                                                </div>
-                                                <div class="form-check mb-2">
-                                                    <input class="form-check-input" type="radio" name="hair_length" id="len_armpit" value="armpit">
-                                                    <label class="form-check-label" for="len_armpit">Armpit Length</label>
-                                                </div>
-                                                <div class="form-check mb-2">
-                                                    <input class="form-check-input" type="radio" name="hair_length" id="len_bra_strap" value="bra_strap">
-                                                    <label class="form-check-label" for="len_bra_strap">Bra Strap Length</label>
-                                                </div>
-                                                <div class="form-check mb-2">
-                                                    <input class="form-check-input" type="radio" name="hair_length" id="len_mid_back" value="mid_back">
-                                                    <label class="form-check-label" for="len_mid_back">Mid-Back Length</label>
-                                                </div>
-                                                <div class="form-check mb-2">
-                                                    <input class="form-check-input" type="radio" name="hair_length" id="len_waist" value="waist">
-                                                    <label class="form-check-label" for="len_waist">Waist Length</label>
-                                                </div>
-                                                <div class="form-check mb-2">
-                                                    <input class="form-check-input" type="radio" name="hair_length" id="len_hip" value="hip">
-                                                    <label class="form-check-label" for="len_hip">Hip Length</label>
-                                                </div>
-                                                <div class="form-check mb-2">
-                                                    <input class="form-check-input" type="radio" name="hair_length" id="len_tailbone" value="tailbone">
-                                                    <label class="form-check-label" for="len_tailbone">Tailbone Length</label>
-                                                </div>
-                                                <div class="form-check">
-                                                    <input class="form-check-input" type="radio" name="hair_length" id="len_classic" value="classic">
-                                                    <label class="form-check-label" for="len_classic">Classic Length</label>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <!-- Estimated Budget Range -->
-                                        <div class="col-md-6 mb-3">
-                                            <label class="form-label fw-semibold">
-                                                <i class="bi bi-currency-dollar me-1"></i>Estimated Budget Range
-                                            </label>
-                                            <div class="radio-group-container">
-                                                <div class="form-check mb-2">
-                                                    <input class="form-check-input" type="radio" name="budget_range" id="budget_under100" value="under-100">
-                                                    <label class="form-check-label" for="budget_under100">Under $100</label>
-                                                </div>
-                                                <div class="form-check mb-2">
-                                                    <input class="form-check-input" type="radio" name="budget_range" id="budget_100_150" value="100-150">
-                                                    <label class="form-check-label" for="budget_100_150">$100 - $150</label>
-                                                </div>
-                                                <div class="form-check mb-2">
-                                                    <input class="form-check-input" type="radio" name="budget_range" id="budget_150_200" value="150-200">
-                                                    <label class="form-check-label" for="budget_150_200">$150 - $200</label>
-                                                </div>
-                                                <div class="form-check mb-2">
-                                                    <input class="form-check-input" type="radio" name="budget_range" id="budget_200_250" value="200-250">
-                                                    <label class="form-check-label" for="budget_200_250">$200 - $250</label>
-                                                </div>
-                                                <div class="form-check mb-2">
-                                                    <input class="form-check-input" type="radio" name="budget_range" id="budget_250_300" value="250-300">
-                                                    <label class="form-check-label" for="budget_250_300">$250 - $300</label>
-                                                </div>
-                                                <div class="form-check mb-2">
-                                                    <input class="form-check-input" type="radio" name="budget_range" id="budget_300_400" value="300-400">
-                                                    <label class="form-check-label" for="budget_300_400">$300 - $400</label>
-                                                </div>
-                                                <div class="form-check mb-2">
-                                                    <input class="form-check-input" type="radio" name="budget_range" id="budget_400_500" value="400-500">
-                                                    <label class="form-check-label" for="budget_400_500">$400 - $500</label>
-                                                </div>
-                                                <div class="form-check mb-2">
-                                                    <input class="form-check-input" type="radio" name="budget_range" id="budget_over500" value="over-500">
-                                                    <label class="form-check-label" for="budget_over500">Over $500</label>
-                                                </div>
-                                                <div class="form-check">
-                                                    <input class="form-check-input" type="radio" name="budget_range" id="budget_flexible" value="flexible">
-                                                    <label class="form-check-label" for="budget_flexible">Flexible</label>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <!-- Style Preferences -->
-                                        <div class="col-12">
-                                            <label class="form-label fw-semibold">
-                                                <i class="bi bi-palette me-1"></i>Style Preferences (Select all that apply)
-                                            </label>
-                                            <div class="row g-2">
-                                                <div class="col-md-4">
-                                                    <div class="form-check">
-                                                        <input class="form-check-input" type="checkbox" id="prefProtective" name="style_preferences[]" value="protective">
-                                                        <label class="form-check-label" for="prefProtective">Protective Style</label>
-                                                    </div>
-                                                </div>
-                                                <div class="col-md-4">
-                                                    <div class="form-check">
-                                                        <input class="form-check-input" type="checkbox" id="prefLowMaintenance" name="style_preferences[]" value="low-maintenance">
-                                                        <label class="form-check-label" for="prefLowMaintenance">Low Maintenance</label>
-                                                    </div>
-                                                </div>
-                                                <div class="col-md-4">
-                                                    <div class="form-check">
-                                                        <input class="form-check-input" type="checkbox" id="prefLongLasting" name="style_preferences[]" value="long-lasting">
-                                                        <label class="form-check-label" for="prefLongLasting">Long Lasting</label>
-                                                    </div>
-                                                </div>
-                                                <div class="col-md-4">
-                                                    <div class="form-check">
-                                                        <input class="form-check-input" type="checkbox" id="prefWithExtensions" name="style_preferences[]" value="with-extensions">
-                                                        <label class="form-check-label" for="prefWithExtensions">With Extensions</label>
-                                                    </div>
-                                                </div>
-                                                <div class="col-md-4">
-                                                    <div class="form-check">
-                                                        <input class="form-check-input" type="checkbox" id="prefWithBeads" name="style_preferences[]" value="with-beads">
-                                                        <label class="form-check-label" for="prefWithBeads">With Beads/Accessories</label>
-                                                    </div>
-                                                </div>
-                                                <div class="col-md-4">
-                                                    <div class="form-check">
-                                                        <input class="form-check-input" type="checkbox" id="prefWithColor" name="style_preferences[]" value="with-color">
-                                                        <label class="form-check-label" for="prefWithColor">With Color/Highlights</label>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <!-- Special Requirements -->
-                                        <div class="col-12">
-                                            <label for="customSpecialRequirements" class="form-label fw-semibold">
-                                                <i class="bi bi-clipboard-check me-1"></i>Special Requirements or Notes
-                                            </label>
-                                            <textarea class="form-control" id="customSpecialRequirements" name="special_requirements" rows="3" placeholder="Any specific requirements, allergies, previous service history, or additional details..." style="border-radius: 8px;"></textarea>
-                                            <small class="form-text text-muted d-block mt-1">
-                                                Include any important information that will help us provide the best service
                                 </small>
                             </div>
 
@@ -5235,7 +5285,7 @@
                         </div>
                         <div class="col-md-6 p-5 d-flex flex-column justify-content-center">
                             <h2 class="section-title mb-4" style="font-size:2rem; font-weight:700;">Send us a Message</h2>
-                            
+
                             @if(session('success'))
                                 <div class="alert alert-success alert-dismissible fade show mb-4" role="alert" style="border-radius: 10px; border-left: 4px solid #28a745;">
                                     <i class="bi bi-check-circle-fill me-2"></i>
@@ -5736,9 +5786,9 @@ console.log('=== LOADING BOOKING FUNCTIONS ===');
                 try { return window.localStorage && localStorage.getItem(KEY) === '1'; } catch(e) { return false; }
             };
             const termsWereAccepted = hasAccepted();
-            
+
             form.reset();
-            
+
             // Restore terms checkbox if terms were already accepted
             if (termsWereAccepted) {
                 const termsCheckbox = document.getElementById('termsAcceptedMain');
@@ -5746,23 +5796,21 @@ console.log('=== LOADING BOOKING FUNCTIONS ===');
                     termsCheckbox.checked = true;
                 }
             }
-            
+
             console.log('Form cleared');
         }
     };
 
     // Other Services Modal function
     window.openOtherServicesModal = function() {
-        console.log('openOtherServicesModal called');
+        console.log('openOtherServicesModal called - opening custom service request form directly');
 
         try {
-            // Find the modal element
-            var modalEl = document.getElementById('otherServicesModal');
+            // Open the custom service request modal directly (skip the guided flow)
+            var modalEl = document.getElementById('customServiceRequestModal');
             if (!modalEl) {
-                console.warn('Other services modal not found on page — falling back to service selection modal');
-                if (typeof openServiceSelectionModal === 'function') {
-                    try { openServiceSelectionModal(); } catch(e){ console.warn('Fallback to openServiceSelectionModal failed', e); }
-                }
+                console.warn('customServiceRequestModal not found on page');
+                alert('Custom service request form not found. Please try again.');
                 return;
             }
 
@@ -5770,19 +5818,19 @@ console.log('=== LOADING BOOKING FUNCTIONS ===');
             if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
                 var modal = new bootstrap.Modal(modalEl);
                 modal.show();
-                console.log('Other services modal shown successfully');
+                console.log('Custom service request modal shown successfully');
             } else {
                 // Fallback - show modal manually
                 modalEl.style.display = 'block';
                 modalEl.classList.add('show');
                 modalEl.setAttribute('aria-hidden', 'false');
                 document.body.classList.add('modal-open');
-                console.log('Other services modal shown with fallback method');
+                console.log('Custom service request modal shown with fallback method');
             }
 
         } catch (error) {
             console.error('Error in openOtherServicesModal:', error);
-            alert('Error opening other services modal: ' + error.message);
+            alert('Error opening custom service request form: ' + error.message);
         }
     };
 
@@ -5931,7 +5979,7 @@ console.log('=== LOADING BOOKING FUNCTIONS ===');
             document.body.classList.add('modal-open');
         }
     };
-    
+
     // Also define as regular function for backward compatibility
     function openServiceSelectionModal() {
         window.openServiceSelectionModal();
@@ -6026,7 +6074,6 @@ console.log('=== LOADING BOOKING FUNCTIONS ===');
                 // Main services
                 'Small Knotless Braids' => (int) config('service_prices.small_knotless', 170),
                 'Smedium Knotless Braids' => (int) config('service_prices.smedium_knotless', 150),
-                'Wig Installation' => (int) config('service_prices.wig_installation', 150),
                 'Medium Knotless Braids' => (int) config('service_prices.medium_knotless', 130),
                 'Jumbo Knotless Braids' => (int) config('service_prices.jumbo_knotless', 100),
                 'Kids Braids' => (int) config('service_prices.kids_braids', 80),
@@ -6045,53 +6092,93 @@ console.log('=== LOADING BOOKING FUNCTIONS ===');
         @endphp
         const basePriceByServiceName = @json($basePriceByServiceName);
 
-        // Source of truth: if a service dropdown exists, use it; otherwise use the configured base-price map.
-        const select = document.querySelector('#bookingModal select[name="service"]') || document.getElementById('serviceSelection');
-        const options = select ? Array.from(select.querySelectorAll('option')) : [];
+        const sizeMap = window.serviceSizesMap || {};
+        const categories = Object.keys(sizeMap)
+            .filter(key => key && !/kids/i.test(key));
 
-        let services = options
-            .map(o => (o.value || '').trim())
-            .filter(v => v.length > 0);
-
-        if (!services.length) {
-            try {
-                services = Object.keys(basePriceByServiceName || {});
-            } catch (e) { services = []; }
-        }
-
-        // Exclude kids services + deduplicate
-        const unique = Array.from(new Set(services.filter(v => !/kids/i.test(v))));
-
-        if (!unique.length) {
+        if (!categories.length) {
             container.innerHTML = '<div class="col-12"><div class="alert alert-warning mb-0">No services found.</div></div>';
             return;
         }
 
-        unique.forEach(serviceName => {
+        const serviceCardMeta = {
+            'knotless': {
+                title: 'Knotless Braids',
+                img: '{{ asset("images/webbraids2.jpg") }}',
+                desc: 'Versatile protective style in multiple sizes.'
+            },
+            'french-curl': {
+                title: 'French Curl Braids',
+                img: '{{ asset("images/french curl braid.jpg") }}',
+                desc: 'Elegant braids with curly ends for a romantic look.'
+            },
+            'twist': {
+                title: 'Twist Styles',
+                img: '{{ asset("images/twist-main.jpg") }}',
+                desc: 'Two-strand twists with extensions.'
+            },
+            'natural-hair-twist': {
+                title: 'Natural Hair Twist',
+                img: '{{ asset("images/twists-natural-hair.jpg") }}',
+                desc: 'Twists using your natural hair.'
+            },
+            'kinky-passion-twist': {
+                title: 'Kinky & Passion Twists',
+                img: '{{ asset("images/kinky braid.jpeg") }}',
+                desc: 'Textured twists with lots of dimension.'
+            },
+            'crotchet': {
+                title: 'Crotchet Styles',
+                img: '{{ asset("images/kinky crotchet.png") }}',
+                desc: 'Quick protective styles with various options.'
+            },
+            'cornrow': {
+                title: 'Cornrow/Feed-in Braids',
+                img: '{{ asset("images/stitch braid.jpg") }}',
+                desc: 'Classic cornrows and feed-in styles.'
+            },
+            'hair-treatment': {
+                title: 'Hair Treatment Services',
+                img: '{{ asset("images/hair_mask.png") }}',
+                desc: 'Professional treatments for natural and relaxed hair.'
+            },
+            'boho': {
+                title: 'Boho Braids',
+                img: '{{ asset("images/boho braid.jpg") }}',
+                desc: 'Knotless braids with curly ends for a boho look.'
+            },
+            }
+        };
+
+        categories.forEach(categoryKey => {
+            const cat = sizeMap[categoryKey] || {};
+            const sizes = Array.isArray(cat.sizes) ? cat.sizes : [];
+            const meta = serviceCardMeta[categoryKey] || {};
+            const title = meta.title || cat.category || categoryKey;
+            const desc = meta.desc || '';
+            const img = meta.img || '{{ asset("images/braids.jpeg") }}';
+
+            const validPrices = sizes
+                .map(s => (typeof s.price === 'number' ? s.price : null))
+                .filter(v => v !== null && !isNaN(v));
+            const minPrice = validPrices.length ? Math.min.apply(null, validPrices) : null;
+            const allNoLength = sizes.length > 0 && sizes.every(s => s.noLength === true);
+
             const col = document.createElement('div');
             col.className = 'col-12 col-md-6 col-lg-4';
-            const btn = document.createElement('button');
-            btn.type = 'button';
-            btn.className = 'btn btn-outline-primary w-100';
-            btn.style.borderRadius = '12px';
-            btn.style.padding = '12px 10px';
-            btn.style.fontWeight = '700';
-            btn.textContent = serviceName;
-            btn.addEventListener('click', function () {
-                window.selectNonKidsService(serviceName);
+            col.innerHTML = `
+                <div class="service-card h-100" data-service-key="${categoryKey}">
+                    <img src="${img}" alt="${title}">
+                    <h4>${title}</h4>
+                    ${desc ? `<p class="mb-2">${desc}</p>` : ''}
+                    ${minPrice !== null ? `<p class="price"><strong>From $${minPrice}</strong> <small class="text-muted">(varies by size)</small></p>` : ''}
+                    <p class="mb-2"><small class="text-muted">${allNoLength ? 'No length adjustment required.' : 'Length adjustments apply.'}</small></p>
+                    <button class="btn btn-warning mt-2">Select Size & Book</button>
+                </div>
+            `;
+            col.querySelector('.service-card')?.addEventListener('click', function () {
+                window.openServiceSizeModal(categoryKey);
             });
-            col.appendChild(btn);
-
-            // Price hint (pulled from same config as Services section)
-            try {
-                const p = basePriceByServiceName[serviceName];
-                if (typeof p === 'number' && !isNaN(p) && p > 0) {
-                    const priceEl = document.createElement('div');
-                    priceEl.className = 'small text-muted mt-1 text-center';
-                    priceEl.textContent = 'Starting at $' + p;
-                    col.appendChild(priceEl);
-                }
-            } catch (e) {}
             container.appendChild(col);
         });
     };
@@ -6139,7 +6226,7 @@ console.log('=== LOADING BOOKING FUNCTIONS ===');
 
             // Reset the flag
             window.cameFromServiceSelection = false;
-            
+
             // Hide back button
             const backBtn = document.getElementById('backToServiceSelectionBtn');
             if (backBtn) {
@@ -6148,7 +6235,7 @@ console.log('=== LOADING BOOKING FUNCTIONS ===');
 
             // small delay to allow modal hide animation then open the appropriate chooser
             setTimeout(function(){
-                try{ 
+                try{
                     // Calendar-origin flow: go to kids selector page (not another modal).
                     // Everything else: go straight to the "Other Services" modal.
                     if (window.__bookingOrigin === 'calendar') {
@@ -6288,7 +6375,7 @@ console.log('=== LOADING BOOKING FUNCTIONS ===');
                 // Calculate adjustments total (length/type adjustments + addons) to match email format
                 const adjustmentsTotal = adjustments + addons;
                 const finalPrice = total;
-                
+
                 // Format with 2 decimal places to match email format
                 const kb = document.getElementById('kidsModal_base'); if(kb) kb.innerHTML = '$' + Number(base).toFixed(2);
                 const ka = document.getElementById('kidsModal_adjustments'); if(ka) ka.innerHTML = (adjustmentsTotal >= 0 ? '+' : '-') + '$' + Math.abs(Number(adjustmentsTotal)).toFixed(2);
@@ -6311,19 +6398,19 @@ console.log('=== LOADING BOOKING FUNCTIONS ===');
             try{
                 const inStudioKids = document.getElementById('appointment_type_in_studio_kids');
                 if(inStudioKids) inStudioKids.checked = true;
-                
+
                 const addressContainerKids = document.getElementById('addressFieldContainerKids');
                 if(addressContainerKids) {
                     addressContainerKids.classList.add('d-none');
                     addressContainerKids.style.display = 'none';
                 }
-                
+
                 const kidsAddress = document.getElementById('kids_address');
                 if(kidsAddress) {
                     kidsAddress.value = '';
                     kidsAddress.required = false;
                 }
-                
+
                 // Call toggle function to ensure proper state
                 if (typeof toggleAddressFieldKids === 'function') {
                     toggleAddressFieldKids();
@@ -6339,7 +6426,7 @@ console.log('=== LOADING BOOKING FUNCTIONS ===');
                     if(typeof toggleAddressFieldKids === 'function') toggleAddressFieldKids();
                 }, { once: true });
             }catch(e){ /* noop */ }
-            
+
             // Also call immediately in case modal is already shown
             if(typeof toggleAddressFieldKids === 'function') {
                 setTimeout(toggleAddressFieldKids, 100);
@@ -6417,7 +6504,7 @@ console.log('=== LOADING BOOKING FUNCTIONS ===');
                 lengthGuideBlock.style.display = 'none';
             }
         }
-        
+
         // Enable/disable length radio buttons based on service
         const lengthRadios = document.getElementsByName('hair_length');
         for (let i = 0; i < lengthRadios.length; i++) {
@@ -6480,14 +6567,14 @@ console.log('=== LOADING BOOKING FUNCTIONS ===');
 
         console.log('Quick service selected:', serviceName, 'Base price:', basePrice);
     };
-    
+
     // Also define as regular function for backward compatibility
     function selectQuickService(serviceName) {
         if (window.selectQuickService) {
             window.selectQuickService(serviceName);
         }
     };
-    
+
     // Also define as regular function for backward compatibility
     function selectQuickService(serviceName) {
         if (window.selectQuickService) {
@@ -6508,7 +6595,7 @@ console.log('=== LOADING BOOKING FUNCTIONS ===');
         // Collect all custom service form data
         const customForm = document.getElementById('customServiceForm');
         const formData = new FormData(customForm);
-        
+
         // Build custom service details object
         const customServiceDetails = {
             service_name: customService,
@@ -6547,7 +6634,7 @@ console.log('=== LOADING BOOKING FUNCTIONS ===');
         if (lengthGuideBlock) {
             lengthGuideBlock.style.display = '';
         }
-        
+
         // Re-enable all length radio buttons
         const lengthRadios = document.getElementsByName('hair_length');
         for (let i = 0; i < lengthRadios.length; i++) {
@@ -6622,18 +6709,60 @@ console.log('=== LOADING BOOKING FUNCTIONS ===');
 
     // Function to open custom service request modal
     function openCustomServiceRequestModal() {
-        const customInput = document.getElementById('customServiceInput');
-        const customService = customInput.value.trim();
-
-        if (!customService) {
-            alert('Please enter a service name');
+        const modalEl = document.getElementById('customServiceRequestModal');
+        if (!modalEl) {
+            alert('Custom service request form not found');
             return;
         }
 
-        // Store custom service details globally for submission
-        const customForm = document.getElementById('customServiceForm');
-        if (!customForm) {
-            alert('Custom service form not found');
+        const modal = new bootstrap.Modal(modalEl, {
+            backdrop: true,
+            keyboard: true
+        });
+
+        // Set z-index before showing to ensure it's on top
+        modalEl.style.zIndex = '1060';
+
+        modal.show();
+
+        // After modal is shown, ensure it stays on top
+        modalEl.addEventListener('shown.bs.modal', function() {
+            // Set z-index again after Bootstrap applies its own
+            modalEl.style.zIndex = '1060';
+
+            // Find and adjust only the backdrop for this modal
+            const backdrops = document.querySelectorAll('.modal-backdrop');
+            if (backdrops.length > 0) {
+                // Get the last backdrop (should be for this modal)
+                const lastBackdrop = backdrops[backdrops.length - 1];
+                // Only adjust if this modal is actually visible
+                if (modalEl.classList.contains('show')) {
+                    lastBackdrop.style.zIndex = '1055';
+                }
+            }
+
+            // Focus on service name field
+            const serviceField = document.getElementById('customServiceInput');
+            if (serviceField) {
+                setTimeout(() => serviceField.focus(), 100);
+            }
+        }, { once: true });
+
+        // Clean up z-index when modal is hidden to not interfere with other modals
+        modalEl.addEventListener('hidden.bs.modal', function() {
+            // Reset z-index so it doesn't interfere with other modals
+            modalEl.style.zIndex = '';
+        }, { once: false });
+    }
+
+    // Function to submit custom service request from the modal
+    function submitCustomServiceRequestFromModal() {
+        const customInput = document.getElementById('customServiceInput');
+        const customService = customInput?.value?.trim() || '';
+
+        if (!customService) {
+            alert('Please enter a service name');
+            customInput?.focus();
             return;
         }
 
@@ -6653,66 +6782,10 @@ console.log('=== LOADING BOOKING FUNCTIONS ===');
         // Store globally for submission
         window.customServiceRequestDetails = customServiceDetails;
 
-        // Open the custom service request modal
-        const modalEl = document.getElementById('customServiceRequestModal');
-        if (modalEl) {
-            const modal = new bootstrap.Modal(modalEl, {
-                backdrop: true,
-                keyboard: true
-            });
-            
-            // Set z-index before showing to ensure it's on top
-            modalEl.style.zIndex = '1060';
-            
-            modal.show();
-            
-            // After modal is shown, ensure it stays on top
-            modalEl.addEventListener('shown.bs.modal', function() {
-                // Set z-index again after Bootstrap applies its own
-                modalEl.style.zIndex = '1060';
-                
-                // Find and adjust only the backdrop for this modal
-                const backdrops = document.querySelectorAll('.modal-backdrop');
-                if (backdrops.length > 0) {
-                    // Get the last backdrop (should be for this modal)
-                    const lastBackdrop = backdrops[backdrops.length - 1];
-                    // Only adjust if this modal is actually visible
-                    if (modalEl.classList.contains('show')) {
-                        lastBackdrop.style.zIndex = '1055';
-                    }
-                }
-                
-                // Focus on name field
-                const nameField = document.getElementById('csrName');
-                if (nameField) {
-                    setTimeout(() => nameField.focus(), 100);
-                }
-            }, { once: true });
-            
-            // Clean up z-index when modal is hidden to not interfere with other modals
-            modalEl.addEventListener('hidden.bs.modal', function() {
-                // Reset z-index so it doesn't interfere with other modals
-                modalEl.style.zIndex = '';
-            }, { once: false });
-        }
-    }
-
-    // Function to submit custom service request from the modal
-    function submitCustomServiceRequestFromModal() {
-        // Validate contact info
-        const contactName = document.getElementById('csrName')?.value?.trim();
-        const contactEmail = document.getElementById('csrEmail')?.value?.trim();
-        const contactPhone = document.getElementById('csrPhone')?.value?.trim();
-
-        if (!contactName || !contactPhone) {
-            alert('Please fill in your name and phone number.');
-            if (!contactName) {
-                document.getElementById('csrName')?.focus();
-            } else {
-                document.getElementById('csrPhone')?.focus();
-            }
-            return;
-        }
+        // Optional contact info (if present elsewhere on the page)
+        const contactName = document.getElementById('csrName')?.value?.trim() || '';
+        const contactEmail = document.getElementById('csrEmail')?.value?.trim() || '';
+        const contactPhone = document.getElementById('csrPhone')?.value?.trim() || '';
 
         // Get custom service details from global storage
         if (!window.customServiceRequestDetails) {
@@ -6724,14 +6797,14 @@ console.log('=== LOADING BOOKING FUNCTIONS ===');
 
         // Build form data object
         const formData = new FormData();
-        
+
         // Add required contact fields
         formData.append('name', contactName);
-        formData.append('email', contactEmail || '');
+        formData.append('email', contactEmail);
         formData.append('phone', contactPhone);
         formData.append('service', details.service_name);
         // No appointment date/time for custom service requests
-        
+
         // Add custom service details
         if (details.service_category) formData.append('service_category', details.service_category);
         if (details.braid_size) formData.append('braid_size', details.braid_size);
@@ -6761,7 +6834,7 @@ console.log('=== LOADING BOOKING FUNCTIONS ===');
         formData.append('message', messageText);
 
         // Add CSRF token
-        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || 
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content ||
                          document.querySelector('input[name="_token"]')?.value;
         if (csrfToken) {
             formData.append('_token', csrfToken);
@@ -6802,8 +6875,6 @@ console.log('=== LOADING BOOKING FUNCTIONS ===');
                 // Reset forms
                 const customForm = document.getElementById('customServiceForm');
                 if (customForm) customForm.reset();
-                const requestForm = document.getElementById('customServiceRequestForm');
-                if (requestForm) requestForm.reset();
                 // Clear stored details
                 window.customServiceRequestDetails = null;
             } else {
@@ -6829,7 +6900,7 @@ console.log('=== LOADING BOOKING FUNCTIONS ===');
         if (customForm) {
             // Add event listeners to all radio buttons
             const radioGroups = ['service_category', 'braid_size', 'hair_length', 'budget_range', 'urgency'];
-            
+
             radioGroups.forEach(groupName => {
                 const radios = customForm.querySelectorAll(`input[name="${groupName}"]`);
                 radios.forEach(radio => {
@@ -6862,7 +6933,7 @@ console.log('=== LOADING BOOKING FUNCTIONS ===');
                 try { return window.localStorage && localStorage.getItem(KEY) === '1'; } catch(e) { return false; }
             };
             const termsWereAccepted = hasAccepted();
-            
+
             // Reset the form
             form.reset();
 
@@ -6951,7 +7022,7 @@ console.log('=== LOADING BOOKING FUNCTIONS ===');
                 alert('Please fill in all required fields: ' + missingFields.join(', '));
                 return;
             }
-            
+
             // Check if selected date is blocked (only block if it's a full-day block)
             const appointmentDateField = document.getElementById('appointment_date');
             const selectedDate = appointmentDateField ? appointmentDateField.value.trim() : '';
@@ -6960,7 +7031,7 @@ console.log('=== LOADING BOOKING FUNCTIONS ===');
                 if(blockedIndex[selectedDate]) {
                     const blockedInfo = blockedIndex[selectedDate];
                     const isFullDay = blockedInfo.full_day === true || blockedInfo.full_day === 1;
-                    
+
                     // Only prevent booking if it's a full-day block
                     if (isFullDay) {
                         e.preventDefault();
@@ -7028,7 +7099,7 @@ console.log('=== LOADING BOOKING FUNCTIONS ===');
                 }
             }
             const isHairMaskForm = (
-                serviceTypeLower.includes('hair-mask') || 
+                serviceTypeLower.includes('hair-mask') ||
                 serviceTypeLower.includes('relax') ||
                 serviceTypeLower.includes('retouch') ||
                 serviceNameLower.includes('hair mask') ||
@@ -7050,10 +7121,10 @@ console.log('=== LOADING BOOKING FUNCTIONS ===');
                 if (messageField) {
                     let existingMessage = messageField.value.trim();
                     let customDetailsText = '';
-                    
+
                     // Build custom service details text
                     const details = window.customServiceDetails;
-                    if (details.service_category || details.braid_size || details.budget_range || 
+                    if (details.service_category || details.braid_size || details.budget_range ||
                         details.urgency || details.style_preferences?.length > 0 || details.special_requirements) {
                         customDetailsText = '\n\n--- Custom Service Details ---\n';
                         if (details.service_category) {
@@ -7074,7 +7145,7 @@ console.log('=== LOADING BOOKING FUNCTIONS ===');
                         if (details.special_requirements) {
                             customDetailsText += `\nSpecial Requirements:\n${details.special_requirements}\n`;
                         }
-                        
+
                         // Append to existing message if it doesn't already contain custom details
                         if (!existingMessage.includes('--- Custom Service Details ---')) {
                             messageField.value = existingMessage + customDetailsText;
@@ -7225,18 +7296,18 @@ console.log('=== LOADING BOOKING FUNCTIONS ===');
     if (contactForm) {
         contactForm.addEventListener('submit', function(e) {
             e.preventDefault();
-            
+
             const submitBtn = contactForm.querySelector('button[type="submit"]');
             const originalText = submitBtn?.innerHTML;
-            
+
             if (submitBtn) {
                 submitBtn.disabled = true;
                 submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Sending...';
             }
-            
+
             // Get form data
             const formData = new FormData(contactForm);
-            
+
             // Submit via AJAX
             fetch(contactForm.action, {
                 method: 'POST',
@@ -7257,16 +7328,16 @@ console.log('=== LOADING BOOKING FUNCTIONS ===');
                         <strong>Success!</strong> ${data.message || 'Thank you for your message! We will get back to you soon.'}
                         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                     `;
-                    
+
                     // Insert before form
                     contactForm.parentNode.insertBefore(successAlert, contactForm);
-                    
+
                     // Scroll to success message
                     successAlert.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-                    
+
                     // Reset form
                     contactForm.reset();
-                    
+
                     // Auto-remove success message after 5 seconds
                     setTimeout(() => {
                         if (successAlert.parentNode) {
@@ -7602,7 +7673,7 @@ function backToKidsSelector(){
         var ln = document.getElementById('kids_length_input'); if(ln) sel.kb_length = ln.value;
         var ex = document.getElementById('kids_extras_input'); if(ex) sel.kb_extras = ex.value;
         var price = document.getElementById('kids_price_input'); if(price) sel.price = price.value;
-        
+
         // Also try to get from global selector data if available (more complete)
         try{
             if(window.__kidsSelectorData){
@@ -7904,10 +7975,10 @@ function toggleAddressField() {
     const inStudioRadio = document.getElementById('appointment_type_in_studio');
     const addressContainer = document.getElementById('addressFieldContainer');
     const addressInput = document.getElementById('address');
-    
+
     // Determine which is checked
     const isMobileSelected = mobileRadio && mobileRadio.checked;
-    
+
     console.log('Elements found:', {
         mobileRadio: !!mobileRadio,
         inStudioRadio: !!inStudioRadio,
@@ -7915,7 +7986,7 @@ function toggleAddressField() {
         addressInput: !!addressInput,
         mobileChecked: isMobileSelected
     });
-    
+
     if (isMobileSelected) {
         console.log('Mobile selected - showing address field');
         if (addressContainer) {
@@ -7953,10 +8024,10 @@ function toggleAddressFieldKids() {
     const inStudioRadio = document.getElementById('appointment_type_in_studio_kids');
     const addressContainer = document.getElementById('addressFieldContainerKids');
     const addressInput = document.getElementById('kids_address');
-    
+
     // Determine which is checked
     const isMobileSelected = mobileRadio && mobileRadio.checked;
-    
+
     console.log('Kids elements found:', {
         mobileRadio: !!mobileRadio,
         inStudioRadio: !!inStudioRadio,
@@ -7964,7 +8035,7 @@ function toggleAddressFieldKids() {
         addressInput: !!addressInput,
         mobileChecked: isMobileSelected
     });
-    
+
     if (isMobileSelected) {
         console.log('Kids Mobile selected - showing address field');
         if (addressContainer) {
@@ -8012,19 +8083,19 @@ function clearImagePreview() {
 document.addEventListener('DOMContentLoaded', function() {
     const bookingModal = document.getElementById('bookingModal');
     const kidsBookingModal = document.getElementById('kidsBookingModal');
-    
+
     if (bookingModal) {
         bookingModal.addEventListener('shown.bs.modal', function() {
             toggleAddressField();
         });
     }
-    
+
     if (kidsBookingModal) {
         kidsBookingModal.addEventListener('shown.bs.modal', function() {
             toggleAddressFieldKids();
         });
     }
-    
+
     // Add change event listeners as backup to onclick handlers
     // Main booking form
     const mainInStudio = document.getElementById('appointment_type_in_studio');
@@ -8049,7 +8120,7 @@ document.addEventListener('DOMContentLoaded', function() {
             setTimeout(toggleAddressField, 50);
         });
     }
-    
+
     // Kids booking form
     const kidsInStudio = document.getElementById('appointment_type_in_studio_kids');
     const kidsMobile = document.getElementById('appointment_type_mobile_kids');
@@ -8073,7 +8144,7 @@ document.addEventListener('DOMContentLoaded', function() {
             setTimeout(toggleAddressFieldKids, 50);
         });
     }
-    
+
     // Initial call on page load
     setTimeout(function() {
         if (typeof toggleAddressField === 'function') {
@@ -8319,12 +8390,12 @@ document.addEventListener('DOMContentLoaded', function(){
                     var baseText = (selBaseEl.textContent || selBaseEl.innerText || selBaseEl.innerHTML).replace(/[^0-9.]/g, '');
                     var adjustText = (selAdjustEl.textContent || selAdjustEl.innerText || selAdjustEl.innerHTML).replace(/[^0-9.\-+]/g, '');
                     var totalText = (selTotalEl.textContent || selTotalEl.innerText || selTotalEl.innerHTML).replace(/[^0-9.]/g, '');
-                    
+
                     var baseVal = parseFloat(baseText) || 0;
                     var adjustVal = parseFloat(adjustText.replace(/[+\-]/g, '')) || 0;
                     var adjustSign = (adjustText.indexOf('-') >= 0) ? '-' : '+';
                     var totalVal = parseFloat(totalText) || 0;
-                    
+
                     kb_base.innerHTML = '$' + baseVal.toFixed(2);
                     kb_adjust.innerHTML = adjustSign + '$' + adjustVal.toFixed(2);
                     kb_total.innerHTML = '$' + totalVal.toFixed(2);
@@ -8523,7 +8594,7 @@ document.addEventListener('DOMContentLoaded', function(){
             const serviceNameEl = document.getElementById('selectedService');
             const serviceName = serviceNameEl ? serviceNameEl.value : '';
             const hasWeaveAddon = serviceName.toLowerCase().includes('with weave');
-            
+
             const addon = hasWeaveAddon ? 30 : 0;
             const finalPrice = (typeof base === 'number' && !isNaN(base) ? base : 0) + addon;
 
@@ -8547,11 +8618,11 @@ document.addEventListener('DOMContentLoaded', function(){
 
         // Check if this is a popular service (no length adjustments)
         const isPopularService = window.currentServiceInfo?.isPopularService === true;
-        
+
         let finalPrice = base;
         let length = 'mid-back';
         let adj = 0;
-        
+
         if (!isPopularService) {
         // default flow for braided services uses length adjustment
         // collect diagnostics about the hair_length radios to help debug empty selections
@@ -8759,7 +8830,7 @@ document.addEventListener('DOMContentLoaded', function(){
                 const hasAccepted = () => {
                     try { return window.localStorage && localStorage.getItem(KEY) === '1'; } catch(e) { return false; }
                 };
-                
+
                 if (hasAccepted()) {
                     // Pre-check terms checkboxes if terms were already accepted
                     const termsMain = document.getElementById('termsAcceptedMain');
@@ -9483,7 +9554,7 @@ document.addEventListener('DOMContentLoaded', function(){
                     });
                 }
             });
-            
+
             // Also clear email errors when user types
             const emailField = document.getElementById('kids_email');
             if(emailField) {
@@ -9551,7 +9622,7 @@ document.addEventListener('DOMContentLoaded', function(){
                 const appointmentDateField = document.querySelector('input[name="appointment_date"]');
                 const appointmentDateValue = appointmentDateField ? appointmentDateField.value.trim() : '';
                 const selectedDate = appointmentDateValue || dateValue;
-                
+
                 if(!dateValue && !appointmentDateValue) {
                     showFieldError('kidsBookingDate', 'Please select a date for the appointment.');
                     isValid = false;
@@ -9562,7 +9633,7 @@ document.addEventListener('DOMContentLoaded', function(){
                     if(blockedIndex[selectedDate]) {
                         const blockedInfo = blockedIndex[selectedDate];
                         const isFullDay = blockedInfo.full_day === true || blockedInfo.full_day === 1;
-                        
+
                         // Only show error if it's a full-day block
                         if (isFullDay) {
                             const blockedTitle = blockedInfo.title || 'Blocked';
@@ -9607,7 +9678,7 @@ document.addEventListener('DOMContentLoaded', function(){
                     if(!validation.isValid) {
                         e.preventDefault();
                         e.stopPropagation();
-                        
+
                         // Scroll to first error field
                         const firstErrorField = document.querySelector('#kidsBookingForm .is-invalid');
                         if(firstErrorField) {
@@ -9632,7 +9703,7 @@ document.addEventListener('DOMContentLoaded', function(){
 function filterServices(category) {
     const serviceItems = document.querySelectorAll('.service-item');
     const filterChips = document.querySelectorAll('.filter-chip');
-    
+
     // Update active chip
     filterChips.forEach(chip => {
         if (chip.dataset.filter === category) {
@@ -9641,7 +9712,7 @@ function filterServices(category) {
             chip.classList.remove('active');
         }
     });
-    
+
     // Filter service cards
     serviceItems.forEach(item => {
         if (category === 'all') {
@@ -9661,10 +9732,10 @@ function toggleMobileServices() {
     const hiddenServices = document.querySelectorAll('.service-item.mobile-hidden');
     const btnText = document.getElementById('viewMoreServicesText');
     const btnIcon = document.getElementById('viewMoreServicesIcon');
-    
+
     // Check if services are currently hidden
     const isHidden = !hiddenServices[0].classList.contains('show');
-    
+
     hiddenServices.forEach(service => {
         if (isHidden) {
             service.classList.add('show');
@@ -9672,7 +9743,7 @@ function toggleMobileServices() {
             service.classList.remove('show');
         }
     });
-    
+
     // Update button text and icon
     if (isHidden) {
         btnText.textContent = 'View Less Services';

@@ -22,8 +22,23 @@ class PriceCalculator
     public function calculate(array $data = []): array
     {
         $serviceInput = Arr::get($data, 'service_input');
+        if (is_string($serviceInput)) {
+            // Strip UI-added suffixes like "(With Weave)", "(10+ Rows)", "(Front + Back)"
+            $serviceInput = trim(preg_replace('/\s*\((?:with\s*weav(?:e|ing)|10\+\s*rows|front\s*\+\s*back)\)\s*/i', '', $serviceInput));
+        }
         $serviceModel = Arr::get($data, 'service_model');
-        $serviceType = strtolower(trim((string) Arr::get($data, 'service_type', $serviceInput ?? '')));
+        $serviceTypeRaw = strtolower(trim((string) Arr::get($data, 'service_type', $serviceInput ?? '')));
+        $serviceType = str_replace([' ', '-'], ['_', '_'], $serviceTypeRaw);
+
+        $frontBackAddonRaw = Arr::get($data, 'frontback_addon') ?? Arr::get($data, 'front_back_addon');
+        $frontBackAddon = false;
+        if (is_bool($frontBackAddonRaw)) {
+            $frontBackAddon = $frontBackAddonRaw;
+        } elseif (is_numeric($frontBackAddonRaw)) {
+            $frontBackAddon = ((int)$frontBackAddonRaw) === 1;
+        } elseif (is_string($frontBackAddonRaw)) {
+            $frontBackAddon = in_array(strtolower(trim($frontBackAddonRaw)), ['1','true','yes','y','on'], true);
+        }
 
         // Prefer model base price when present
         $basePrice = $serviceModel && isset($serviceModel->base_price) ? (float) $serviceModel->base_price : null;
@@ -40,14 +55,48 @@ class PriceCalculator
             } elseif (str_contains($serviceType, 'kids')) {
                 $basePrice = (float) config('service_prices.kids_braids', 80);
             } else {
+                // Prefer config lookup by service_type (slugs like "small-natural-hair-twist")
+                $baseFromType = null;
+                try {
+                    $typeKeyUnderscore = $serviceType ?: null; // already underscore-normalized
+                    $typeKeyHyphen = $typeKeyUnderscore ? str_replace('_', '-', $typeKeyUnderscore) : null;
+                    if ($typeKeyUnderscore) {
+                        $baseFromType = config('service_prices.' . $typeKeyUnderscore, null);
+                    }
+                    if ($baseFromType === null && $typeKeyHyphen) {
+                        $baseFromType = config('service_prices.' . $typeKeyHyphen, null);
+                    }
+                } catch (\Throwable $e) {
+                    $baseFromType = null;
+                }
+                if ($baseFromType !== null && is_numeric($baseFromType)) {
+                    $basePrice = (float) $baseFromType;
+                } else {
                 // generic fallback
                 $slug = $serviceInput ? str_replace(' ', '_', strtolower($serviceInput)) : null;
                 $basePrice = $slug ? (float) config('service_prices.' . $slug, 150) : (float) config('service_prices.default', 150);
+                }
             }
         }
 
         $length = Arr::get($data, 'kb_length') ?? Arr::get($data, 'length') ?? 'mid_back';
         if (is_string($length)) $length = str_replace('-', '_', $length);
+
+        // Some services have fixed pricing (no length adjustments)
+        $noLengthServices = [
+            'weaving_crotchet',
+            'single_crotchet',
+            'natural_hair_twist',
+            'weaving_no_extension',
+            'weaving_no-extension',
+            'weaving-no-extension',
+            'under_wig_weave',
+            'under-wig-weave',
+            'chemical_relaxer',
+            'chemical-relaxer',
+        ];
+        $serviceInputNorm = is_string($serviceInput) ? str_replace([' ', '-'], ['_', '_'], strtolower(trim($serviceInput))) : '';
+        $noLength = in_array($serviceType, $noLengthServices, true) || in_array($serviceInputNorm, $noLengthServices, true);
 
         // Stitch rows option (tiny stitch >10 rows => +$30)
         $stitchRowsOption = Arr::get($data, 'stitch_rows_option');
@@ -74,12 +123,19 @@ class PriceCalculator
             }
         }
 
+        $serviceInputLower = is_string($serviceInput) ? strtolower($serviceInput) : '';
         $isHairMask = (
             $serviceType === 'hair-mask' ||
             str_contains($serviceType, 'hair-mask') ||
             str_contains($serviceType, 'mask') ||
             str_contains($serviceType, 'relax') ||
-            str_contains($serviceType, 'retouch')
+            str_contains($serviceType, 'retouch') ||
+            // Also detect by human-readable service label, since some flows use "Hair Treatment/Mask"
+            ($serviceInputLower !== '' && (
+                str_contains($serviceInputLower, 'mask') ||
+                str_contains($serviceInputLower, 'relax') ||
+                str_contains($serviceInputLower, 'retouch')
+            ))
         );
 
         $isStitch = (
@@ -131,10 +187,21 @@ class PriceCalculator
                 'classic' => 60.00,    // Same as tailbone
             ];
             
-            $lengthAdjustment = $lengthAdjustmentMap[$length] ?? 0.00;
+            $lengthAdjustment = $noLength ? 0.00 : ($lengthAdjustmentMap[$length] ?? 0.00);
             $stitchAddon = ($isStitch && $stitchRowsOptionNorm === 'more_than_ten') ? 30.00 : 0.00;
-            $addonsTotal = $stitchAddon;
-            $finalPrice = round($basePrice + $lengthAdjustment + $stitchAddon, 2);
+            $frontBackCost = 0.00;
+            if ($frontBackAddon) {
+                // Applies to "2/3 Line Single" crotchet when user selects "Front + Back" (+$20)
+                if (
+                    str_contains($serviceType, 'line_single') ||
+                    str_contains($serviceType, 'line-single') ||
+                    (is_string($serviceInput) && stripos($serviceInput, '2/3 line single') !== false)
+                ) {
+                    $frontBackCost = 20.00;
+                }
+            }
+            $addonsTotal = $stitchAddon + $frontBackCost;
+            $finalPrice = round($basePrice + $lengthAdjustment + $addonsTotal, 2);
         }
 
         // Kids selector extras parsing
