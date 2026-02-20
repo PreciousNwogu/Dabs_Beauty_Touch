@@ -134,13 +134,13 @@ $cases = [
         'expected_fmt' => '$80.00',
     ],
     [
-        'name' => '2/3 line single front+back add-on',
+        'name' => '2/3 Line Single Crochet front+back add-on',
         'payload' => [
             'name' => 'E2E Test LineSingle',
             'email' => 'e2e+line@example.com',
             'phone' => '+15555550103',
             'appointment_type' => 'in-studio',
-            'service' => '2/3 Line Single',
+            'service' => '2/3 Line Single Crochet',
             'service_type' => 'line-single',
             'length' => 'mid_back',
             'frontback_addon' => 'yes',

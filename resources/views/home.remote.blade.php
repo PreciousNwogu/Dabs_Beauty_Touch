@@ -170,14 +170,7 @@
                         "description": "Bold, statement-making jumbo knotless braids for a dramatic look."
                     }
                 },
-                {
-                    "@type": "Offer",
-                    "itemOffered": {
-                        "@type": "Service",
-                        "name": "Kids Braids",
-                        "description": "Specialized braiding services for children with gentle techniques."
-                    }
-                },
+
                 {
                     "@type": "Offer",
                     "itemOffered": {
@@ -1909,6 +1902,7 @@
             font-weight: 500;
             color: #030f68;
         }
+
     </style>
 
     <!-- CRITICAL: INLINE JAVASCRIPT TO ENSURE FUNCTIONS LOAD FIRST -->
@@ -2086,7 +2080,7 @@
                 sizes: [
                     { name: 'Stitch Weave', slug: 'stitch-weave', price: 100, time: '4–5 hrs', hasRowOptions: true },
                     { name: 'Cornrow Weave', slug: 'cornrow-weave', price: 100, time: '4–5 hrs', hasRowOptions: true },
-                    { name: 'Under-wig Weave', slug: 'under-wig-weave', price: 30, time: '30 min–1 hr', hasRowOptions: false, noLength: true },
+                    { name: 'Under-wig Weave (no extension)', slug: 'under-wig-weave', price: 30, time: '30 min–1 hr', hasRowOptions: false, noLength: true },
                     { name: 'Weave&Braid Mixed', slug: 'weave-braid-mixed', price: 150, time: '4–5 hrs', hasRowOptions: false }
                 ]
             },
@@ -2102,7 +2096,7 @@
             'crotchet': {
                 category: 'Crotchet Styles',
                 sizes: [
-                    { name: '2/3 Line Single', slug: 'line-single', price: 100, time: '2–3 hrs', hasFrontBackAddon: true, noLength: true },
+                    { name: '2/3 Line Single Crochet', slug: 'line-single', price: 100, time: '2–3 hrs', hasFrontBackAddon: true, noLength: true },
                     { name: 'Afro Crotchet', slug: 'afro-crotchet', price: 120, time: '3–4 hrs', hasFrontBackAddon: false, noLength: true },
                     { name: 'Individual Crotchet', slug: 'individual-crotchet', price: 150, time: '4–5 hrs', hasFrontBackAddon: false, noLength: true },
                     { name: 'Butterfly Locks', slug: 'butterfly-locks', price: 150, time: '3–4 hrs', hasFrontBackAddon: false, noLength: true },
@@ -2112,8 +2106,8 @@
             'hair-treatment': {
                 category: 'Hair Treatment Services',
                 sizes: [
-                    { name: 'Natural Hair Treatment/Mask', slug: 'natural-hair-treatment', price: {{ (int) config('service_prices.hair_mask', 50) }}, time: '45 min–1 hr', hasWeaveAddon: true },
-                    { name: 'Chemical Relaxer', slug: 'chemical-relaxer', price: 50, time: '1.5–2 hrs', hasWeaveAddon: true }
+                    { name: 'Natural Hair Treatment/Mask', slug: 'natural-hair-treatment', price: {{ (int) config('service_prices.hair_mask', 50) }}, time: '45 min–1 hr', hasWeaveAddon: true, noLength: true },
+                    { name: 'Chemical Relaxer', slug: 'chemical-relaxer', price: 50, time: '1.5–2 hrs', hasWeaveAddon: true, noLength: true }
                 ]
             }
         };
@@ -2251,7 +2245,7 @@
             }
             // Crotchet Styles
             if (name.includes('Crotchet') || name.includes('Lock') || name.includes('Line Single') || name.includes('Loc')) {
-                if (name.includes('2/3 Line Single')) return '{{ asset("images/Screenshot 2026-02-05 132501.png") }}';
+                if (name.includes('2/3 Line Single Crochet')) return '{{ asset("images/Screenshot 2026-02-05 132501.png") }}';
                 if (name.includes('Weave Crotchet')) return '{{ asset("images/weave-crotchet.jpg") }}';
                 if (name.includes('Afro Crotchet')) return '{{ asset("images/kinky crotchet.png") }}';
                 if (name.includes('Individual Crotchet')) return '{{ asset("images/individual_crotchet.png") }}';
@@ -2370,11 +2364,29 @@
             const selectedServiceDisplay = document.getElementById('selectedServiceDisplay');
             const selectedServiceName = document.getElementById('selectedServiceName');
             const selectedServicePrice = document.getElementById('selectedServicePrice');
+            const selectedServiceDescription = document.getElementById('selectedServiceDescription');
 
             if (selectedServiceDisplay && selectedServiceName && selectedServicePrice) {
                 selectedServiceDisplay.style.display = 'block';
                 selectedServiceName.textContent = name;
                 selectedServicePrice.textContent = '$' + price;
+                
+                // Set the description
+                const sizeName = getSizeName(name);
+                const sizeDesc = getSizeDescription(sizeName);
+                if (selectedServiceDescription) {
+                    selectedServiceDescription.textContent = sizeDesc;
+                }
+                
+                // Scroll to top of size selection section on mobile (viewport < 768px)
+                if (window.innerWidth < 768) {
+                    setTimeout(() => {
+                        const sizeSection = selectedServiceDisplay.closest('.mb-4');
+                        if (sizeSection) {
+                            sizeSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        }
+                    }, 100);
+                }
             }
 
             // Update price display
@@ -2585,7 +2597,6 @@
             // Listen for the modal to fully hide before opening booking modal
             let bookingOpened = false;
             const cleanupModalArtifacts = () => {
-                document.querySelectorAll('.modal-backdrop').forEach(backdrop => backdrop.remove());
                 document.body.classList.remove('modal-open');
                 document.body.style.paddingRight = '';
                 document.body.style.overflow = '';
@@ -2691,11 +2702,7 @@
                     document.body.appendChild(modal);
                 }
 
-                // Clean up any lingering modal artifacts before opening
-                document.querySelectorAll('.modal-backdrop').forEach(backdrop => backdrop.remove());
-                document.body.classList.remove('modal-open');
-                document.body.style.paddingRight = '';
-                document.body.style.overflow = '';
+                // Let Bootstrap manage the backdrop automatically
 
                 // Show modal using Bootstrap if available, otherwise fallback
                 if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
@@ -4021,29 +4028,19 @@
                         <img src="{{ asset('images/kinky crotchet.png') }}" alt="Crotchet Styles">
                         <h4>Crotchet Styles</h4>
                         <p class="mb-2">Quick protective styles with various crotchet options—versatile and low-maintenance.</p>
-                        <p class="mb-1"><strong>Time:</strong> 1.5–5 hrs • <strong>Types:</strong> 2/3 Line Single, Afro, Individual Crotchet, Butterfly, Weave Crotchet</p>
+                        <p class="mb-1"><strong>Time:</strong> 1.5–5 hrs • <strong>Types:</strong> 2/3 Line Single Crochet, Afro, Individual Crotchet, Butterfly, Weave Crotchet</p>
                         <p class="mb-3"><strong>Hair:</strong> Not included • <strong>Note:</strong> No length adjustment needed</p>
                         <p class="price"><strong>From $80</strong> <small class="text-muted">(varies by type)</small></p>
                         <button class="btn btn-warning mt-3">Select Type & Book</button>
                     </div>
                 </div>
-                <div class="col-lg-4 col-md-6 col-6 service-item mobile-hidden" data-category="kids">
-                    <div class="service-card h-100" onclick="window.location='{{ route('kids.selector') }}'">
-                        <img src="{{ asset('images/kids hair style.webp') }}" alt="Kids Braids">
-                        <h4>Kids Braids (3–8 yrs)</h4>
-                        <p class="mb-2">Gentle, age-appropriate styles with adorable results.</p>
-                        <p class="mb-1"><strong>Time:</strong> 2–4 hrs • <strong>Length:</strong> Choose in booking</p>
-                        <p class="mb-3"><strong>Hair:</strong> Not included • <strong>Note:</strong> Parent/guardian must stay</p>
-                        <p class="price"><strong>From ${{ number_format(config('service_prices.kids_braids', 80),0) }}</strong> <small class="text-muted">(varies by style/complexity)</small></p>
-                        <button class="btn btn-warning mt-3">Book this style</button>
-                    </div>
-                </div>
+
                 <div class="col-lg-4 col-md-6 col-6 service-item mobile-hidden" data-category="cornrow">
                     <div class="service-card h-100" onclick="openServiceSizeModal('cornrow')">
                         <img src="{{ asset('images/stitch braid.jpg') }}" alt="Cornrow/Feed-in Braids">
                         <h4>Cornrow/Feed-in Braids</h4>
                         <p class="mb-2">Classic cornrows and feed-in styles with or without weave extensions.</p>
-                        <p class="mb-1"><strong>Time:</strong> 1–5 hrs • <strong>Types:</strong> Stitch Weave, Cornrow Weave, Under-wig Weave, Weave&Braid Mixed</p>
+                        <p class="mb-1"><strong>Time:</strong> 1–5 hrs • <strong>Types:</strong> Stitch Weave, Cornrow Weave, Under-wig Weave (no extension), Weave&Braid Mixed</p>
                         <p class="mb-2"><strong>Hair:</strong> Not included</p>
                         <p class="mb-3" style="font-size: 0.9rem;"><strong>Note:</strong> Stitch/Cornrow: 8-10 rows $100, 10+ rows $130. Under-wig: $30 (no length). Mixed: $150</p>
                         <p class="price"><strong>From $30</strong> <small class="text-muted">(varies by type)</small></p>
@@ -4095,7 +4092,7 @@
                     <p class="lead mb-4" style="color: #6c757d;">
                         We offer many more services beyond what's listed above. Book a consultation and let us know what you need!
                     </p>
-                    <button type="button" class="btn btn-outline-primary btn-lg px-5" onclick="openOtherServicesModal()" style="font-weight: 600; border-radius: 25px; box-shadow: 0 4px 12px rgba(3, 15, 104, 0.2);">
+                    <button type="button" class="btn btn-outline-primary btn-lg px-5" onclick="window.openOtherServicesModal()" style="font-weight: 600; border-radius: 25px; box-shadow: 0 4px 12px rgba(3, 15, 104, 0.2);">
                         <i class="bi bi-plus-circle me-2"></i>Book Other Services
                     </button>
                     <div class="mt-3">
@@ -4203,18 +4200,16 @@
                         <h6 style="font-weight: 700; color: #030f68; margin-bottom: 15px;">
                             <i class="bi bi-grid-3x3 me-2"></i>Choose Braid Size
                         </h6>
-                        <div class="row g-3" id="sizeOptionsContainer">
-                            <!-- Size options will be dynamically populated -->
-                        </div>
 
-                        <!-- Selected Service Display -->
-                        <div id="selectedServiceDisplay" style="display: none; margin-top: 20px; padding: 15px; background: linear-gradient(135deg, #e7f3ff 0%, #cce5ff 100%); border-left: 6px solid #17a2b8; border-radius: 10px;">
+                        <!-- Selected Service Display (moved to top so it appears right away on mobile) -->
+                        <div id="selectedServiceDisplay" style="display: none; margin-bottom: 20px; padding: 15px; background: linear-gradient(135deg, #e7f3ff 0%, #cce5ff 100%); border-left: 6px solid #17a2b8; border-radius: 10px;">
                             <div style="display: flex; align-items: center; justify-content: space-between;">
                                 <div>
                                     <div style="font-size: 0.85rem; color: #6c757d; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 5px;">
                                         Selected Service
                                     </div>
                                     <div id="selectedServiceName" style="font-size: 1.1rem; font-weight: 700; color: #030f68;"></div>
+                                    <div id="selectedServiceDescription" style="font-size: 0.9rem; color: #6c757d; margin-top: 8px; font-style: italic;"></div>
                                 </div>
                                 <div style="text-align: right;">
                                     <div style="font-size: 0.85rem; color: #6c757d; margin-bottom: 3px;">Base Price</div>
@@ -4222,7 +4217,10 @@
                                 </div>
                             </div>
                         </div>
-                    </div>
+
+                        <div class="row g-3" id="sizeOptionsContainer">
+                            <!-- Size options will be dynamically populated -->
+                        </div>
 
                     <!-- Weave Add-on (shown for Hair Treatment Services) -->
                     <div class="mb-4" id="weaveAddonSection" style="display: none;">
@@ -4231,7 +4229,7 @@
                                 <i class="bi bi-plus-circle me-2"></i>Add Weave Treatment
                             </h6>
                             <p style="margin-bottom: 15px; color: #555; font-size: 0.95rem;">
-                                Do you have a weave/extension installed that needs treatment?
+                                Do you want to weave your hair in a simple cornrow too?
                             </p>
                             <div class="d-flex gap-3">
                                 <div class="form-check flex-fill" style="background: #fff; padding: 15px; border-radius: 10px; border: 2px solid #e9ecef; cursor: pointer;" onclick="toggleWeaveAddon(false)">
@@ -4979,7 +4977,7 @@
                         <button type="button" class="btn btn-primary btn-lg" onclick="openNonKidsServicesModal()" style="border-radius: 12px; font-weight: 700;">
                             <i class="bi bi-list-check me-2"></i>Browse Adult Services
                         </button>
-                        <button type="button" class="btn btn-outline-primary btn-lg" onclick="openOtherServicesModal()" style="border-radius: 12px; font-weight: 700;">
+                        <button type="button" class="btn btn-outline-primary btn-lg" onclick="window.openOtherServicesModal()" style="border-radius: 12px; font-weight: 700;">
                             <i class="bi bi-stars me-2"></i>Custom Service Request
                         </button>
                     </div>
@@ -5793,34 +5791,48 @@ console.log('=== LOADING BOOKING FUNCTIONS ===');
 
     // Other Services Modal function
     window.openOtherServicesModal = function() {
-        console.log('openOtherServicesModal called - opening custom service request form directly');
-
+        console.log('=== openOtherServicesModal CALLED ===');
+        
         try {
             // Open the custom service request modal directly (skip the guided flow)
             var modalEl = document.getElementById('customServiceRequestModal');
+            console.log('Modal element found:', !!modalEl);
+            
             if (!modalEl) {
                 console.warn('customServiceRequestModal not found on page');
                 alert('Custom service request form not found. Please try again.');
                 return;
             }
 
+            console.log('Bootstrap available:', typeof bootstrap !== 'undefined');
+            console.log('Bootstrap.Modal available:', bootstrap && bootstrap.Modal);
+
             // Show modal using Bootstrap
             if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
-                var modal = new bootstrap.Modal(modalEl);
+                console.log('Attempting to show modal with Bootstrap...');
+                var modal = new bootstrap.Modal(modalEl, {backdrop: 'static', keyboard: false});
                 modal.show();
-                console.log('Custom service request modal shown successfully');
+                console.log('✓ Custom service request modal shown successfully with Bootstrap');
             } else {
                 // Fallback - show modal manually
+                console.log('Using fallback method to show modal...');
                 modalEl.style.display = 'block';
                 modalEl.classList.add('show');
                 modalEl.setAttribute('aria-hidden', 'false');
                 document.body.classList.add('modal-open');
-                console.log('Custom service request modal shown with fallback method');
+                
+                // Create backdrop
+                const backdrop = document.createElement('div');
+                backdrop.className = 'modal-backdrop fade show';
+                document.body.appendChild(backdrop);
+                
+                console.log('✓ Custom service request modal shown with fallback method');
             }
 
         } catch (error) {
-            console.error('Error in openOtherServicesModal:', error);
-            alert('Error opening custom service request form: ' + error.message);
+            console.error('✗ Error in openOtherServicesModal:', error);
+            console.error('Error stack:', error.stack);
+            alert('Error: ' + error.message);
         }
     };
 
@@ -6064,7 +6076,6 @@ console.log('=== LOADING BOOKING FUNCTIONS ===');
                 'Smedium Knotless Braids' => (int) config('service_prices.smedium_knotless', 150),
                 'Medium Knotless Braids' => (int) config('service_prices.medium_knotless', 130),
                 'Jumbo Knotless Braids' => (int) config('service_prices.jumbo_knotless', 100),
-                'Kids Braids' => (int) config('service_prices.kids_braids', 80),
                 '8–10 Rows Stitch Braids' => (int) config('service_prices.stitch_braids', 120),
                 'Hair Mask/Relaxing' => (int) config('service_prices.hair_mask', 50),
                 'Smedium Boho Braids' => (int) config('service_prices.boho_braids', 150),
@@ -8449,7 +8460,6 @@ document.addEventListener('DOMContentLoaded', function(){
         'Wig Installation': {{ (int) config('service_prices.wig_installation', 150) }},
         'Medium Knotless Braids': {{ (int) config('service_prices.medium_knotless', 130) }},
         'Jumbo Knotless Braids': {{ (int) config('service_prices.jumbo_knotless', 100) }},
-        'Kids Braids': {{ (int) config('service_prices.kids_braids', 80) }},
         '8–10 Rows Stitch Braids': {{ (int) config('service_prices.stitch_braids', 120) }},
         'Hair Mask/Relaxing': {{ (int) config('service_prices.hair_mask', 50) }},
         'Smedium Boho Braids': {{ (int) config('service_prices.boho_braids', 150) }},
@@ -9222,6 +9232,28 @@ document.addEventListener('DOMContentLoaded', function(){
     });
 
     // Debug function to test Other Services button - can be called from console
+    // Debug: Test opening the other services modal directly
+    window.testModalOpen = function() {
+        console.log('🧪 Testing modal open...');
+        
+        // Check if function exists
+        if (typeof window.openOtherServicesModal === 'function') {
+            console.log('✓ openOtherServicesModal function exists');
+            window.openOtherServicesModal();
+        } else {
+            console.log('✗ openOtherServicesModal function NOT found');
+        }
+        
+        // Check modal element
+        const modalEl = document.getElementById('customServiceRequestModal');
+        console.log('✓ Modal element exists:', !!modalEl);
+        if (modalEl) {
+            console.log('  - Modal classes:', modalEl.className);
+            console.log('  - Modal display:', window.getComputedStyle(modalEl).display);
+            console.log('  - Modal visibility:', window.getComputedStyle(modalEl).visibility);
+        }
+    };
+
     window.testOtherServicesButton = function() {
         console.log('=== TESTING OTHER SERVICES BUTTON ===');
 

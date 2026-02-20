@@ -191,11 +191,11 @@ class PriceCalculator
             $stitchAddon = ($isStitch && $stitchRowsOptionNorm === 'more_than_ten') ? 30.00 : 0.00;
             $frontBackCost = 0.00;
             if ($frontBackAddon) {
-                // Applies to "2/3 Line Single" crotchet when user selects "Front + Back" (+$20)
+                // Applies to "2/3 Line Single Crochet" crotchet when user selects "Front + Back" (+$20)
                 if (
                     str_contains($serviceType, 'line_single') ||
                     str_contains($serviceType, 'line-single') ||
-                    (is_string($serviceInput) && stripos($serviceInput, '2/3 line single') !== false)
+                    (is_string($serviceInput) && (stripos($serviceInput, '2/3 line single crochet') !== false || stripos($serviceInput, '2/3 line single') !== false))
                 ) {
                     $frontBackCost = 20.00;
                 }

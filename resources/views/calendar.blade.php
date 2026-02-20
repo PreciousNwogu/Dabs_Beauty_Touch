@@ -546,7 +546,6 @@
                                 <option value="Wig Installation">Wig Installation</option>
                                 <option value="Medium Knotless Braids">Medium Knotless Braids</option>
                                 <option value="Jumbo Knotless Braids">Jumbo Knotless Braids</option>
-                                <option value="Kids Braids">Kids Braids</option>
                                 <option value="8–10 Rows Stitch Braids">8–10 Rows Stitch Braids</option>
                                 <option value="Hair Mask/Relaxing">Hair Mask/Relaxing</option>
                                 <option value="Smedium Boho Braids">Smedium Boho Braids</option>
@@ -768,7 +767,6 @@
                 'Wig Installation' => (int) config('service_prices.wig_installation', 150),
                 'Medium Knotless Braids' => (int) config('service_prices.medium_knotless', 130),
                 'Jumbo Knotless Braids' => (int) config('service_prices.jumbo_knotless', 100),
-                'Kids Braids' => (int) config('service_prices.kids_braids', 80),
                 '8–10 Rows Stitch Braids' => (int) config('service_prices.stitch_braids', 120),
                 'Hair Mask/Relaxing' => (int) config('service_prices.hair_mask', 50),
                 'Smedium Boho Braids' => (int) config('service_prices.boho_braids', 150),
@@ -823,7 +821,7 @@
                 sizes: [
                     { name: 'Stitch Weave', slug: 'stitch-weave', price: 100, time: '4–5 hrs', hasRowOptions: true },
                     { name: 'Cornrow Weave', slug: 'cornrow-weave', price: 100, time: '4–5 hrs', hasRowOptions: true },
-                    { name: 'Under-wig Weave', slug: 'under-wig-weave', price: 30, time: '30 min–1 hr', hasRowOptions: false, noLength: true },
+                    { name: 'Under-wig Weave (no extension)', slug: 'under-wig-weave', price: 30, time: '30 min–1 hr', hasRowOptions: false, noLength: true },
                     { name: 'Weave&Braid Mixed', slug: 'weave-braid-mixed', price: 150, time: '4–5 hrs', hasRowOptions: false }
                 ]
             },
@@ -839,7 +837,7 @@
             'crotchet': {
                 category: 'Crotchet Styles',
                 sizes: [
-                    { name: '2/3 Line Single', slug: 'line-single', price: 100, time: '2–3 hrs', hasFrontBackAddon: true, noLength: true },
+                    { name: '2/3 Line Single Crochet', slug: 'line-single', price: 100, time: '2–3 hrs', hasFrontBackAddon: true, noLength: true },
                     { name: 'Afro Crotchet', slug: 'afro-crotchet', price: 120, time: '3–4 hrs', hasFrontBackAddon: false, noLength: true },
                     { name: 'Individual Crotchet', slug: 'individual-crotchet', price: 150, time: '4–5 hrs', hasFrontBackAddon: false, noLength: true },
                     { name: 'Butterfly Locks', slug: 'butterfly-locks', price: 150, time: '3–4 hrs', hasFrontBackAddon: false, noLength: true },
@@ -849,8 +847,8 @@
             'hair-treatment': {
                 category: 'Hair Treatment Services',
                 sizes: [
-                    { name: 'Natural Hair Treatment/Mask', slug: 'natural-hair-treatment', price: {{ (int) config('service_prices.hair_mask', 50) }}, time: '45 min–1 hr', hasWeaveAddon: true },
-                    { name: 'Chemical Relaxer', slug: 'chemical-relaxer', price: 50, time: '1.5–2 hrs', hasWeaveAddon: true }
+                    { name: 'Natural Hair Treatment/Mask', slug: 'natural-hair-treatment', price: {{ (int) config('service_prices.hair_mask', 50) }}, time: '45 min–1 hr', hasWeaveAddon: true, noLength: true },
+                    { name: 'Chemical Relaxer', slug: 'chemical-relaxer', price: 50, time: '1.5–2 hrs', hasWeaveAddon: true, noLength: true }
                 ]
             }
         };
