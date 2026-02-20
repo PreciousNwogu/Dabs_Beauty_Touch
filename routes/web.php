@@ -998,6 +998,7 @@ Route::post('/bookings', function(Request $request) {
         'hair_mask_option' => 'nullable|string|max:50',
         'stitch_rows_option' => 'nullable|string|in:ten_or_less,more_than_ten',
         'frontback_addon' => 'nullable|string|in:yes,no',
+        'final_price' => 'nullable|numeric|min:0|max:9999.99',
         // Must accept terms at submit time (server-side enforcement)
         'terms_accepted' => 'accepted',
     ];
@@ -1235,7 +1236,17 @@ Route::post('/bookings', function(Request $request) {
 
                 $bookingData['base_price'] = $break['base_price'] ?? ($serviceModel ? (float)$serviceModel->base_price : (float) config('service_prices.default', 150));
                 $bookingData['length_adjustment'] = $break['length_adjustment'] ?? 0.00;
-                $bookingData['final_price'] = $break['final_price'] ?? $bookingData['base_price'];
+                
+                // Use client-submitted final_price if available (from size modal), otherwise use calculated price
+                $clientFinalPrice = $request->input('final_price');
+                if (!empty($clientFinalPrice) && is_numeric($clientFinalPrice)) {
+                    $bookingData['final_price'] = (float)$clientFinalPrice;
+                    Log::info('Using client-submitted final_price', ['final_price' => $clientFinalPrice]);
+                } else {
+                    $bookingData['final_price'] = $break['final_price'] ?? $bookingData['base_price'];
+                    Log::info('Using server-calculated final_price', ['final_price' => $bookingData['final_price']]);
+                }
+                
                 $bookingData['length'] = $length;
 
                 // Persist hair mask option when provided (used in emails for "with weaving")
@@ -1406,7 +1417,7 @@ Route::post('/bookings', function(Request $request) {
 
         // Attempt to notify admin about new booking
         try {
-            $adminEmail = config('mail.admin_address') ?: env('ADMIN_EMAIL') ?: 'admin@example.com';
+            $adminEmail = env('BOOKING_NOTIFICATION_EMAIL') ?: env('ADMIN_EMAIL') ?: config('mail.from.address');
             \Illuminate\Support\Facades\Notification::route('mail', $adminEmail)
                 ->notify(new \App\Notifications\AdminBookingNotification($booking));
             Log::info('Admin booking notification queued/sent', ['booking_id' => $booking->id, 'admin_email' => $adminEmail]);
@@ -1515,12 +1526,11 @@ Route::post('/contact', function(Request $request) {
 
         // Send notification to admin
         try {
-            $adminEmail = config('mail.admin_address') ?: env('ADMIN_EMAIL') ?: 'admin@example.com';
+            $adminEmail = env('BOOKING_NOTIFICATION_EMAIL') ?: env('ADMIN_EMAIL') ?: config('mail.from.address');
             
-            if (empty($adminEmail) || $adminEmail === 'admin@example.com') {
+            if (empty($adminEmail) || $adminEmail === config('mail.from.address')) {
                 Log::warning('Admin email not configured for contact form notification', [
-                    'contact_name' => $contactData['name'],
-                    'config_mail_admin' => config('mail.admin_address'),
+                    'booking_notification_email' => env('BOOKING_NOTIFICATION_EMAIL'),
                     'env_admin_email' => env('ADMIN_EMAIL'),
                 ]);
             }
@@ -1986,7 +1996,7 @@ Route::post('/bookings/confirm/{id}/{code}/modify', function(\Illuminate\Http\Re
 
         // Send modification notifications to customer + admin
         try {
-            $adminEmail = config('mail.admin_address') ?: env('ADMIN_EMAIL') ?: 'admin@example.com';
+            $adminEmail = env('BOOKING_NOTIFICATION_EMAIL') ?: env('ADMIN_EMAIL') ?: config('mail.from.address');
             $notif = new \App\Notifications\BookingModifiedNotification($booking, $before, $after);
             if (!empty($booking->email) && $booking->email !== 'no-email@example.com') {
                 \Illuminate\Support\Facades\Notification::route('mail', $booking->email)->notify($notif);
@@ -2037,7 +2047,7 @@ Route::match(['get','post'], '/_debug/send-booking-notifs/{id}', function($id) {
             Log::info('[_debug] sent booking confirmation', ['booking_id' => $booking->id, 'email' => $booking->email]);
         }
 
-        $adminEmail = config('mail.admin_address') ?: env('ADMIN_EMAIL') ?: 'admin@example.com';
+        $adminEmail = env('BOOKING_NOTIFICATION_EMAIL') ?: env('ADMIN_EMAIL') ?: config('mail.from.address');
         \Illuminate\Support\Facades\Notification::route('mail', $adminEmail)
             ->notify(new \App\Notifications\AdminBookingNotification($booking));
         Log::info('[_debug] sent admin booking notification', ['booking_id' => $booking->id, 'admin_email' => $adminEmail]);

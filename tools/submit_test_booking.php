@@ -113,7 +113,7 @@ try {
 
     // Attempt to notify admin
     try {
-        $adminEmail = config('mail.admin_address') ?: env('ADMIN_EMAIL') ?: 'admin@example.com';
+        $adminEmail = env('BOOKING_NOTIFICATION_EMAIL') ?: env('ADMIN_EMAIL') ?: config('mail.from.address');
         try {
             \Illuminate\Support\Facades\Notification::route('mail', $adminEmail)->sendNow(new \App\Notifications\AdminBookingNotification($booking));
             echo "Admin notification sent to {$adminEmail}\n";

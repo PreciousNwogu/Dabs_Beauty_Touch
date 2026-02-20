@@ -75,6 +75,7 @@ return [
     'natural_hair_twist' => 50,
     'weaving_no_extension' => 30,
     'kinky_twist' => 120,
+    'passion_twist' => 130,
     'twist_braids' => 130,
     
     // Default fallback

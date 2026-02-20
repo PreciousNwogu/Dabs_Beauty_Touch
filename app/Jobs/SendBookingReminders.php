@@ -34,7 +34,7 @@ class SendBookingReminders implements ShouldQueue
             ->whereRaw("STR_TO_DATE(CONCAT(appointment_date, ' ', appointment_time), '%Y-%m-%d %H:%i') BETWEEN ? AND ?", [$windowStart->format('Y-m-d H:i:s'), $windowEnd->format('Y-m-d H:i:s')])
             ->get();
 
-        $adminEmail = config('mail.admin_address') ?: env('ADMIN_EMAIL');
+        $adminEmail = env('BOOKING_NOTIFICATION_EMAIL') ?: env('ADMIN_EMAIL') ?: config('mail.from.address');
 
         foreach ($bookings as $booking) {
             try {

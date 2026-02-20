@@ -1,5 +1,4 @@
- service card
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -1961,12 +1960,18 @@
                     try { return window.localStorage && localStorage.getItem(KEY) === '1'; } catch(e) { return false; }
                 };
                 const termsWereAccepted = hasAccepted();
+                
+                // Preserve price data from size modal before clearing form
+                const finalPriceInput = document.getElementById('final_price_input');
+                const preservedFinalPrice = finalPriceInput ? finalPriceInput.value : '';
+                const selectedPriceInput = document.getElementById('selectedPrice');
+                const preservedBasePrice = selectedPriceInput ? selectedPriceInput.value : '';
 
                 form.reset();
-                // Clear all inputs except CSRF token
+                // Clear all inputs except CSRF token and price fields
                 var inputs = form.querySelectorAll('input, textarea, select');
                 inputs.forEach(function(input) {
-                    if (input.name !== '_token') {
+                    if (input.name !== '_token' && input.id !== 'final_price_input' && input.id !== 'selectedPrice') {
                         // IMPORTANT: do not overwrite checkbox/radio values (breaks terms_accepted='accepted' validation)
                         if (input.type === 'checkbox' || input.type === 'radio') {
                             input.checked = false;
@@ -1975,6 +1980,16 @@
                         }
                     }
                 });
+                
+                // Restore preserved price values
+                if (preservedFinalPrice && finalPriceInput) {
+                    finalPriceInput.value = preservedFinalPrice;
+                    console.log('Restored final_price_input:', preservedFinalPrice);
+                }
+                if (preservedBasePrice && selectedPriceInput) {
+                    selectedPriceInput.value = preservedBasePrice;
+                    console.log('Restored selectedPrice:', preservedBasePrice);
+                }
 
                 // Restore terms checkbox if terms were already accepted
                 if (termsWereAccepted) {
@@ -2583,11 +2598,26 @@
                 // Clean up any leftover modal artifacts from the size modal
                 cleanupModalArtifacts();
 
-                // Open booking modal with the selected service
+                // Open booking modal with the selected service and complete price data
                 setTimeout(() => {
+                    // Calculate the total price from the modal selections
+                    const totalPrice = window.serviceSizeData.basePrice + 
+                                     (window.serviceSizeData.lengthAdjustment || 0) + 
+                                     (window.serviceSizeData.weaveAddonCost || 0) + 
+                                     (window.serviceSizeData.rowAddonCost || 0) + 
+                                     (window.serviceSizeData.frontBackAddonCost || 0);
+                    
+                    // Store the complete service data for the booking form
+                    window.serviceSizeDataForBooking = {
+                        ...window.serviceSizeData,
+                        totalPrice: totalPrice,
+                        serviceName: serviceName
+                    };
+                    
                     window.openBookingModal(
                         serviceName,
-                        window.serviceSizeData.serviceType
+                        window.serviceSizeData.serviceType,
+                        window.serviceSizeDataForBooking
                     );
 
                     // Pre-select the length in booking form (skip for crotchet and hair treatment)
@@ -2615,8 +2645,8 @@
         };
 
         // Main booking modal function
-        window.openBookingModal = function(serviceName, serviceType) {
-            console.log('Opening booking modal for:', serviceName);
+        window.openBookingModal = function(serviceName, serviceType, sizeData) {
+            console.log('Opening booking modal for:', serviceName, 'with size data:', sizeData);
 
             // Clear form first
             if (window.clearBookingForm) {
@@ -2645,6 +2675,15 @@
                 var modalTitle = document.getElementById('bookingModalLabel');
                 if (modalTitle) {
                     modalTitle.textContent = 'Book ' + serviceName;
+                }
+                
+                // If sizeData is provided (from size modal), set the final price immediately
+                if (sizeData && typeof sizeData.totalPrice === 'number') {
+                    const finalInput = document.getElementById('final_price_input');
+                    if (finalInput) {
+                        finalInput.value = Number(sizeData.totalPrice).toFixed(2);
+                        console.log('Set final_price_input from size modal to:', finalInput.value);
+                    }
                 }
 
                 // Ensure modal is a direct child of body to avoid stacking issues
@@ -2847,21 +2886,35 @@
             });
         })();
 
-        // Deep link support: /?openBooking=1&service=Service%20Name
+        // Deep link support: /?openBooking=1&service=Service%20Name or /?openServiceSizeModal=1&serviceCategory=knotless
         document.addEventListener('DOMContentLoaded', function () {
             try {
                 const url = new URL(window.location.href);
-                const shouldOpen = url.searchParams.get('openBooking') === '1';
-                const serviceName = url.searchParams.get('service');
-                if (shouldOpen && serviceName && typeof window.openBookingModal === 'function') {
-                    // Mark this booking as originating from the calendar page flow
-                    window.__bookingOrigin = 'calendar';
-                    window.openBookingModal(serviceName, null);
-
+                
+                // New flow: open service size modal for a specific category from calendar
+                const openServiceSizeMode = url.searchParams.get('openServiceSizeModal') === '1';
+                const serviceCategory = url.searchParams.get('serviceCategory');
+                if (openServiceSizeMode && serviceCategory && typeof window.openServiceSizeModal === 'function') {
+                    window.openServiceSizeModal(serviceCategory);
+                    
                     // Clean the URL so refresh doesn't re-open the modal
-                    url.searchParams.delete('openBooking');
-                    url.searchParams.delete('service');
+                    url.searchParams.delete('openServiceSizeModal');
+                    url.searchParams.delete('serviceCategory');
                     window.history.replaceState({}, document.title, url.pathname + (url.search ? url.search : '') + (url.hash ? url.hash : ''));
+                } else {
+                    // Original flow: open booking modal with full service name
+                    const shouldOpen = url.searchParams.get('openBooking') === '1';
+                    const serviceName = url.searchParams.get('service');
+                    if (shouldOpen && serviceName && typeof window.openBookingModal === 'function') {
+                        // Mark this booking as originating from the calendar page flow
+                        window.__bookingOrigin = 'calendar';
+                        window.openBookingModal(serviceName, null);
+
+                        // Clean the URL so refresh doesn't re-open the modal
+                        url.searchParams.delete('openBooking');
+                        url.searchParams.delete('service');
+                        window.history.replaceState({}, document.title, url.pathname + (url.search ? url.search : '') + (url.hash ? url.hash : ''));
+                    }
                 }
             } catch (e) {
                 // no-op
@@ -4910,7 +4963,7 @@
 
     <!-- Service Selection Modal -->
     <div class="modal fade" id="serviceSelectionModal" tabindex="-1" aria-labelledby="serviceSelectionModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
             <div class="modal-content" style="border-radius: 20px; border: none;">
                 <div class="modal-header" style="background: linear-gradient(135deg, #030f68 0%, #4a8bc2 100%); color: white; border-radius: 20px 20px 0 0;">
                     <h5 class="modal-title" id="serviceSelectionModalLabel">
@@ -4919,82 +4972,19 @@
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body p-4">
-                    <div class="row g-3">
-                        <!-- Quick Service Selection -->
-                        <div class="col-12">
-                            <h6 class="fw-bold mb-3">Popular Services</h6>
-                            <div class="row g-2">
-                                <div class="col-md-6 col-lg-4">
-                                    <button type="button" class="btn btn-outline-primary w-100 service-quick-btn" onclick="selectQuickService('Weaving Crotchet')">
-                                    <!-- Custom Service Input -->
-                                    <div class="col-12 mt-4">
-                                        <div class="border-top pt-4 text-center">
-                                            <h6 class="fw-bold mb-2">
-                                                <i class="bi bi-stars me-2" style="color: #ff6600;"></i>Custom Service Request
-                                            </h6>
-                                            <p class="mb-3 text-muted" style="font-size: 0.95rem;">
-                                                Tell us about the style you want and any preferences in a dedicated request form.
-                                            </p>
-                                            <button type="button" class="btn btn-primary btn-lg" onclick="openOtherServicesModal()" style="border-radius: 8px; font-weight: 600;">
-                                                <i class="bi bi-send me-2"></i>Open Custom Request Form
-                                            </button>
-                                        </div>
-                                    </div>
-                                </small>
-                            </div>
-
-                                        <!-- Urgency/Timeline -->
-                                        <div class="col-md-6 mb-3">
-                                            <label class="form-label fw-semibold">
-                                                <i class="bi bi-clock me-1"></i>When do you need this service?
-                                            </label>
-                                            <div class="radio-group-container">
-                                                <div class="form-check mb-2">
-                                                    <input class="form-check-input" type="radio" name="urgency" id="urgent_asap" value="asap">
-                                                    <label class="form-check-label" for="urgent_asap">As Soon As Possible</label>
-                                                </div>
-                                                <div class="form-check mb-2">
-                                                    <input class="form-check-input" type="radio" name="urgency" id="urgent_week" value="within-week">
-                                                    <label class="form-check-label" for="urgent_week">Within a Week</label>
-                                                </div>
-                                                <div class="form-check mb-2">
-                                                    <input class="form-check-input" type="radio" name="urgency" id="urgent_month" value="within-month">
-                                                    <label class="form-check-label" for="urgent_month">Within a Month</label>
-                                                </div>
-                                                <div class="form-check mb-2">
-                                                    <input class="form-check-input" type="radio" name="urgency" id="urgent_flexible" value="flexible">
-                                                    <label class="form-check-label" for="urgent_flexible">Flexible</label>
-                                                </div>
-                                                <div class="form-check">
-                                                    <input class="form-check-input" type="radio" name="urgency" id="urgent_specific" value="specific-date">
-                                                    <label class="form-check-label" for="urgent_specific">I have a specific date in mind</label>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <!-- Reference Image Upload -->
-                                        <div class="col-md-6">
-                                            <label for="customReferenceImage" class="form-label fw-semibold">
-                                                <i class="bi bi-image me-1"></i>Reference Image (Optional)
-                                            </label>
-                                            <input type="file" class="form-control form-control-lg" id="customReferenceImage" name="reference_image" accept="image/*" style="border-radius: 8px;">
-                                            <small class="form-text text-muted d-block mt-1">
-                                                Upload a photo of the style you want (max 5MB)
-                                            </small>
-                                        </div>
-                                    </div>
-
-                                    <div class="mt-4">
-                                        <button type="button" class="btn btn-primary btn-lg w-100" onclick="openCustomServiceRequestModal()" style="border-radius: 8px; font-weight: 600;">
-                                            <i class="bi bi-send me-2"></i>Submit Request
-                                        </button>
-                                    </div>
-                                </form>
-                            </div>
-                        </div>
+                    <div class="alert alert-info" style="background:#e7f3ff; border-left: 4px solid #17a2b8; border-radius: 10px;">
+                        <i class="bi bi-info-circle me-2"></i>Choose a service to continue booking, or submit a custom request.
+                    </div>
+                    <div class="d-grid gap-3">
+                        <button type="button" class="btn btn-primary btn-lg" onclick="openNonKidsServicesModal()" style="border-radius: 12px; font-weight: 700;">
+                            <i class="bi bi-list-check me-2"></i>Browse Adult Services
+                        </button>
+                        <button type="button" class="btn btn-outline-primary btn-lg" onclick="openOtherServicesModal()" style="border-radius: 12px; font-weight: 700;">
+                            <i class="bi bi-stars me-2"></i>Custom Service Request
+                        </button>
                     </div>
                 </div>
-                <div class="modal-footer">
+                <div class="modal-footer" style="border-top: none;">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                 </div>
             </div>
@@ -6464,7 +6454,7 @@ console.log('=== LOADING BOOKING FUNCTIONS ===');
             'Natural Hair Twist': {{ (int) config('service_prices.natural_hair_twist', 50) }},
             'Weaving No-Extension': {{ (int) config('service_prices.weaving_no_extension', 30) }},
             'Kinky Twist': {{ (int) config('service_prices.kinky_twist', 120) }},
-            'Twist Braids': {{ (int) config('service_prices.twist_braids', 130) }}
+            'Passion Twist': {{ (int) config('service_prices.passion_twist', 130) }}
         };
 
         // Get base price from the map
@@ -6491,8 +6481,8 @@ console.log('=== LOADING BOOKING FUNCTIONS ===');
             serviceDisplayInput.value = serviceName;
         }
 
-        // Check if this service should allow length adjustments (Kinky Twist and Twist Braids only)
-        const servicesWithLengthAdjustment = ['Kinky Twist', 'Twist Braids'];
+        // Check if this service should allow length adjustments (Kinky Twist and Passion Twist only)
+        const servicesWithLengthAdjustment = ['Kinky Twist', 'Passion Twist'];
         const allowsLengthAdjustment = servicesWithLengthAdjustment.includes(serviceName);
 
         // Show/hide and enable/disable length selection based on service
@@ -8449,6 +8439,8 @@ document.addEventListener('DOMContentLoaded', function(){
         'hair-mask': {{ (int) config('service_prices.hair_mask', 50) }},
         'retouching': {{ (int) config('service_prices.hair_mask', 50) }},
         'boho-braids': {{ (int) config('service_prices.boho_braids', 150) }},
+        'kinky-twist': 120,
+        'passion-twist': 130,
         'custom': 100
     };
 
@@ -8468,7 +8460,7 @@ document.addEventListener('DOMContentLoaded', function(){
         'Natural Hair Twist': {{ (int) config('service_prices.natural_hair_twist', 50) }},
         'Weaving No-Extension': {{ (int) config('service_prices.weaving_no_extension', 30) }},
         'Kinky Twist': {{ (int) config('service_prices.kinky_twist', 120) }},
-        'Twist Braids': {{ (int) config('service_prices.twist_braids', 130) }},
+        'Passion Twist': 130,
     };
 
     function lengthAdjustment(lengthValue) {
@@ -8558,6 +8550,30 @@ document.addEventListener('DOMContentLoaded', function(){
     }
 
     function updatePriceDisplay(basePrice) {
+        // Check if we have price data from the size modal (from continueToBooking)
+        if (window.serviceSizeDataForBooking && typeof window.serviceSizeDataForBooking.totalPrice === 'number') {
+            const totalPrice = window.serviceSizeDataForBooking.totalPrice;
+            console.log('Using price from size modal:', totalPrice);
+            
+            const disp = document.getElementById('priceDisplay');
+            if (disp) {
+                disp.textContent = '$' + totalPrice.toFixed(2);
+                console.log('Updated price display to:', disp.textContent);
+            }
+            
+            // Ensure final_price_input is set with the exact totalPrice from size modal
+            try {
+                const finalInput = document.getElementById('final_price_input');
+                if (finalInput) {
+                    finalInput.value = Number(totalPrice).toFixed(2);
+                    console.log('Preserved final_price_input from size modal:', finalInput.value);
+                }
+            } catch (e) { /* noop */ }
+            
+            return totalPrice;
+        }
+        
+        // Original calculation for bookings without size modal data
         const serviceType = window.currentServiceInfo.serviceType || document.getElementById('selectedServiceType')?.value || 'custom';
         const serviceNameDisplay = (window.currentServiceInfo && window.currentServiceInfo.serviceName) || document.getElementById('serviceDisplay')?.value || '';
         const stLower = (''+serviceType).toLowerCase();
