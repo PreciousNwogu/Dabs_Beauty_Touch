@@ -3920,9 +3920,6 @@
                     <button class="btn btn-sm btn-outline-primary filter-chip" data-filter="knotless" onclick="filterServices('knotless')">
                         Knotless Braids
                     </button>
-                    <button class="btn btn-sm btn-outline-primary filter-chip" data-filter="box" onclick="filterServices('box')">
-                        Box Braids
-                    </button>
                     <button class="btn btn-sm btn-outline-primary filter-chip" data-filter="french" onclick="filterServices('french')">
                         French Curl
                     </button>
@@ -3934,9 +3931,6 @@
                     </button>
                     <button class="btn btn-sm btn-outline-primary filter-chip" data-filter="kinky-passion-twist" onclick="filterServices('kinky-passion-twist')">
                         Kinky & Passion Twist
-                    </button>
-                    <button class="btn btn-sm btn-outline-primary filter-chip" data-filter="kids" onclick="filterServices('kids')">
-                        Kids
                     </button>
                     <button class="btn btn-sm btn-outline-primary filter-chip" data-filter="cornrow" onclick="filterServices('cornrow')">
                         Cornrow/Feed-in
@@ -9763,23 +9757,19 @@ function filterServices(category) {
 
     // Update active chip
     filterChips.forEach(chip => {
-        if (chip.dataset.filter === category) {
-            chip.classList.add('active');
-        } else {
-            chip.classList.remove('active');
-        }
+        chip.classList.toggle('active', chip.dataset.filter === category);
     });
 
     // Filter service cards
     serviceItems.forEach(item => {
         if (category === 'all') {
             item.classList.remove('hidden');
+            item.style.display = ''; // restore mobile-hidden behaviour
         } else {
-            if (item.dataset.category === category) {
-                item.classList.remove('hidden');
-            } else {
-                item.classList.add('hidden');
-            }
+            const matches = item.dataset.category === category;
+            item.classList.toggle('hidden', !matches);
+            // Force-show matching items even if they carry mobile-hidden
+            item.style.display = matches ? 'block' : '';
         }
     });
 }
