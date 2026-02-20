@@ -10,7 +10,7 @@ return [
     'stitch_braids' => 120,
     'hair_mask' => 50,
     'boho_braids' => 150,
-    
+
     // Boho Braids variations
     'small_boho' => 180,
     'small-boho' => 180,
@@ -20,7 +20,7 @@ return [
     'medium-boho' => 130,
     'jumbo_boho' => 100,
     'jumbo-boho' => 100,
-    
+
     // Twist Styles
     'small_twist' => 150,
     'small-twist' => 150,
@@ -32,7 +32,7 @@ return [
     'small-natural-hair-twist' => 80,
     'medium_natural_hair_twist' => 60,
     'medium-natural-hair-twist' => 60,
-    
+
     // Cornrow/Weave Styles
     'stitch_weave' => 100,
     'stitch-weave' => 100,
@@ -42,7 +42,7 @@ return [
     'under-wig-weave' => 30,
     'weave_braid_mixed' => 150,
     'weave-braid-mixed' => 150,
-    
+
     // French Curl Braids
     'small_french_curl' => 200,
     'small-french-curl' => 200,
@@ -52,7 +52,7 @@ return [
     'medium-french-curl' => 150,
     'large_french_curl' => 120,
     'large-french-curl' => 120,
-    
+
     // Crotchet Styles
     'line_single' => 100,
     'line-single' => 100,
@@ -64,11 +64,11 @@ return [
     'butterfly-locks' => 150,
     'weave_crotchet' => 80,
     'weave-crotchet' => 80,
-    
+
     // Hair Treatment
     'chemical_relaxer' => 50,
     'chemical-relaxer' => 50,
-    
+
     // Popular Services (legacy entries)
     'weaving_crotchet' => 80,
     'single_crotchet' => 150,
@@ -77,7 +77,7 @@ return [
     'kinky_twist' => 120,
     'passion_twist' => 130,
     'twist_braids' => 130,
-    
+
     // Default fallback
     'default' => 150,
 ];

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    
+
     <!-- Primary Meta Tags -->
     <title>Book Appointment - Dab's Beauty Touch | Online Booking</title>
     <meta name="title" content="Book Appointment - Dab's Beauty Touch | Online Booking">
@@ -1035,7 +1035,7 @@
                         <button class="btn btn-warning w-100" style="border-radius: 8px; font-weight: 700;">Browse & Book</button>
                     </div>
                 `;
-                
+
                 col.querySelector('.service-card')?.addEventListener('click', function () {
                     selectNonKidsServiceCal(categoryKey);
                 });
@@ -1077,7 +1077,7 @@
             const mobileRadio = document.getElementById('appointment_type_mobile_cal');
             const addressContainer = document.getElementById('addressFieldContainerCal');
             const addressInput = document.getElementById('address');
-            
+
             if (mobileRadio && mobileRadio.checked) {
                 if (addressContainer) addressContainer.style.display = 'block';
                 if (addressInput) addressInput.required = true;
@@ -1591,7 +1591,7 @@
                     } else if (blockedIndex[dateString]) {
                         const blockedInfo = blockedIndex[dateString];
                         const isFullDay = blockedInfo.full_day === true || blockedInfo.full_day === 1;
-                        
+
                         if (isFullDay) {
                             // Mark as blocked-range and show title text
                             dayElement.classList.add('blocked-range');

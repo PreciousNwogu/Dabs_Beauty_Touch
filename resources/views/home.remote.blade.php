@@ -1960,7 +1960,7 @@
                     try { return window.localStorage && localStorage.getItem(KEY) === '1'; } catch(e) { return false; }
                 };
                 const termsWereAccepted = hasAccepted();
-                
+
                 // Preserve price data from size modal before clearing form
                 const finalPriceInput = document.getElementById('final_price_input');
                 const preservedFinalPrice = finalPriceInput ? finalPriceInput.value : '';
@@ -1980,7 +1980,7 @@
                         }
                     }
                 });
-                
+
                 // Restore preserved price values
                 if (preservedFinalPrice && finalPriceInput) {
                     finalPriceInput.value = preservedFinalPrice;
@@ -2601,19 +2601,19 @@
                 // Open booking modal with the selected service and complete price data
                 setTimeout(() => {
                     // Calculate the total price from the modal selections
-                    const totalPrice = window.serviceSizeData.basePrice + 
-                                     (window.serviceSizeData.lengthAdjustment || 0) + 
-                                     (window.serviceSizeData.weaveAddonCost || 0) + 
-                                     (window.serviceSizeData.rowAddonCost || 0) + 
+                    const totalPrice = window.serviceSizeData.basePrice +
+                                     (window.serviceSizeData.lengthAdjustment || 0) +
+                                     (window.serviceSizeData.weaveAddonCost || 0) +
+                                     (window.serviceSizeData.rowAddonCost || 0) +
                                      (window.serviceSizeData.frontBackAddonCost || 0);
-                    
+
                     // Store the complete service data for the booking form
                     window.serviceSizeDataForBooking = {
                         ...window.serviceSizeData,
                         totalPrice: totalPrice,
                         serviceName: serviceName
                     };
-                    
+
                     window.openBookingModal(
                         serviceName,
                         window.serviceSizeData.serviceType,
@@ -2676,7 +2676,7 @@
                 if (modalTitle) {
                     modalTitle.textContent = 'Book ' + serviceName;
                 }
-                
+
                 // If sizeData is provided (from size modal), set the final price immediately
                 if (sizeData && typeof sizeData.totalPrice === 'number') {
                     const finalInput = document.getElementById('final_price_input');
@@ -2890,13 +2890,13 @@
         document.addEventListener('DOMContentLoaded', function () {
             try {
                 const url = new URL(window.location.href);
-                
+
                 // New flow: open service size modal for a specific category from calendar
                 const openServiceSizeMode = url.searchParams.get('openServiceSizeModal') === '1';
                 const serviceCategory = url.searchParams.get('serviceCategory');
                 if (openServiceSizeMode && serviceCategory && typeof window.openServiceSizeModal === 'function') {
                     window.openServiceSizeModal(serviceCategory);
-                    
+
                     // Clean the URL so refresh doesn't re-open the modal
                     url.searchParams.delete('openServiceSizeModal');
                     url.searchParams.delete('serviceCategory');
@@ -4421,7 +4421,7 @@
                                     <label for="serviceSelection" class="form-label">Service *</label>
                                     <div class="input-group">
                                         <input type="text" class="form-control" id="serviceDisplay" name="service_display" readonly style="background-color: #f8f9fa;">
-<button class="btn btn-outline-secondary" type="button" onclick="openSelectServiceModal()">
+<button class="btn btn-outline-secondary" type="button" onclick="openServiceSelectionModal()">
                                             <i class="bi bi-pencil"></i> Change
                                         </button>
                                     </div>
@@ -5935,19 +5935,17 @@ console.log('=== LOADING BOOKING FUNCTIONS ===');
 
     // Function to open service selection modal
     window.openServiceSelectionModal = function() {
-        // New guided flow: ask who the service is for first
-        if (typeof window.openServiceForWhoModal === 'function') {
-            window.openServiceForWhoModal();
-            return;
-        }
-        // Fallback to old modal if needed
         const modalEl = document.getElementById('serviceSelectionModal');
         if (!modalEl) {
             console.error('Service selection modal not found');
             return;
         }
-        const serviceModal = new bootstrap.Modal(modalEl);
-        serviceModal.show();
+        try {
+            const serviceModal = new bootstrap.Modal(modalEl);
+            serviceModal.show();
+        } catch (e) {
+            console.error('Error opening service selection modal:', e);
+        }
     };
 
     // Always open the "Select Service" modal (Popular Services + Custom Service Request)
@@ -8554,13 +8552,13 @@ document.addEventListener('DOMContentLoaded', function(){
         if (window.serviceSizeDataForBooking && typeof window.serviceSizeDataForBooking.totalPrice === 'number') {
             const totalPrice = window.serviceSizeDataForBooking.totalPrice;
             console.log('Using price from size modal:', totalPrice);
-            
+
             const disp = document.getElementById('priceDisplay');
             if (disp) {
                 disp.textContent = '$' + totalPrice.toFixed(2);
                 console.log('Updated price display to:', disp.textContent);
             }
-            
+
             // Ensure final_price_input is set with the exact totalPrice from size modal
             try {
                 const finalInput = document.getElementById('final_price_input');
@@ -8569,10 +8567,10 @@ document.addEventListener('DOMContentLoaded', function(){
                     console.log('Preserved final_price_input from size modal:', finalInput.value);
                 }
             } catch (e) { /* noop */ }
-            
+
             return totalPrice;
         }
-        
+
         // Original calculation for bookings without size modal data
         const serviceType = window.currentServiceInfo.serviceType || document.getElementById('selectedServiceType')?.value || 'custom';
         const serviceNameDisplay = (window.currentServiceInfo && window.currentServiceInfo.serviceName) || document.getElementById('serviceDisplay')?.value || '';

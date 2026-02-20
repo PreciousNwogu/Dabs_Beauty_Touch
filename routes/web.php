@@ -216,7 +216,7 @@ Route::get('/debug/security', function (Request $request) {
 Route::get('/sitemap.xml', function () {
     $baseUrl = config('app.url');
     $now = now()->toAtomString();
-    
+
     $urls = [
         [
             'loc' => $baseUrl,
@@ -237,10 +237,10 @@ Route::get('/sitemap.xml', function () {
             'priority' => '0.8'
         ],
     ];
-    
+
     $xml = '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
     $xml .= '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' . "\n";
-    
+
     foreach ($urls as $url) {
         $xml .= "  <url>\n";
         $xml .= "    <loc>" . htmlspecialchars($url['loc']) . "</loc>\n";
@@ -249,9 +249,9 @@ Route::get('/sitemap.xml', function () {
         $xml .= "    <priority>" . htmlspecialchars($url['priority']) . "</priority>\n";
         $xml .= "  </url>\n";
     }
-    
+
     $xml .= '</urlset>';
-    
+
     return response($xml, 200)->header('Content-Type', 'application/xml');
 })->name('sitemap');
 
@@ -357,9 +357,9 @@ Route::get('/create-admin', function () {
     try {
         $adminEmail = 'admin@dabsbeautytouch.com';
         $adminPassword = 'admin123!@#';
-        
+
         $existingAdmin = \App\Models\User::where('email', $adminEmail)->first();
-        
+
         if ($existingAdmin) {
             // Update existing user to be admin
             $existingAdmin->update([
@@ -380,7 +380,7 @@ Route::get('/create-admin', function () {
                 'password' => \Illuminate\Support\Facades\Hash::make($adminPassword),
                 'is_admin' => true,
             ]);
-            
+
             return [
                 'success' => true,
                 'message' => 'Admin user created successfully',
@@ -482,7 +482,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
                 'file' => $e->getFile(),
                 'line' => $e->getLine()
             ]);
-            
+
             // Return error response
             if (request()->expectsJson() || request()->ajax()) {
                 return response()->json([
@@ -490,7 +490,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
                     'message' => 'An error occurred while loading the dashboard: ' . $e->getMessage()
                 ], 500);
             }
-            
+
             // For web requests, redirect to login with error message
             return redirect()->route('admin.login')
                 ->with('error', 'An error occurred while loading the dashboard. Please try again later.');
@@ -539,7 +539,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
     // Update email
     Route::post('/profile/update-email', function (Request $request) {
         $user = Auth::user();
-        
+
         $validated = $request->validate([
             'email' => 'required|email|unique:users,email,' . $user->id,
             'password' => 'required',
@@ -571,7 +571,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
     // Update password
     Route::post('/profile/update-password', function (Request $request) {
         $user = Auth::user();
-        
+
         $validated = $request->validate([
             'current_password' => 'required',
             'password' => 'required|min:8|confirmed',
@@ -621,7 +621,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
         try {
             // Accept both booking_id and appointment_id for compatibility
             $bookingId = $request->booking_id ?? $request->appointment_id;
-            
+
             if (!$bookingId) {
                 Log::warning('Booking status update failed: No booking ID provided');
                 return response()->json([
@@ -629,7 +629,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
                     'message' => 'Booking ID is required'
                 ], 400);
             }
-            
+
             $booking = \App\Models\Booking::findOrFail($bookingId);
             $booking->status = $request->status;
 
@@ -890,14 +890,14 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::put('/schedules/{id}', [\App\Http\Controllers\Admin\ScheduleController::class, 'update'])->name('schedules.update');
     Route::delete('/schedules/{id}', [\App\Http\Controllers\Admin\ScheduleController::class, 'destroy'])->name('schedules.destroy');
     Route::post('/schedules/reschedule', [\App\Http\Controllers\Admin\ScheduleController::class, 'reschedule'])->name('schedules.reschedule');
-    
+
     // Temporary route to unblock all January dates (GET for easy browser access)
     Route::get('/schedules/unblock-january', function(Request $request) {
         try {
             $year = $request->input('year', date('Y')); // Default to current year
             $janStart = \Carbon\Carbon::create($year, 1, 1)->startOfDay();
             $janEnd = \Carbon\Carbon::create($year, 1, 31)->endOfDay();
-            
+
             // Find all blocked schedules that overlap with January
             $blockedSchedules = \App\Models\Schedule::where('type', 'blocked')
                 ->where(function($query) use ($janStart, $janEnd) {
@@ -908,7 +908,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
                     });
                 })
                 ->get();
-            
+
             if ($blockedSchedules->isEmpty()) {
                 return response()->json([
                     'success' => true,
@@ -916,22 +916,22 @@ Route::prefix('admin')->name('admin.')->group(function () {
                     'deleted_count' => 0
                 ]);
             }
-            
+
             $deletedCount = 0;
             $deletedTitles = [];
-            
+
             foreach ($blockedSchedules as $schedule) {
                 $deletedTitles[] = $schedule->title ?? 'Untitled';
                 $schedule->delete();
                 $deletedCount++;
             }
-            
+
             \Illuminate\Support\Facades\Log::info('Unblocked January dates', [
                 'year' => $year,
                 'deleted_count' => $deletedCount,
                 'deleted_schedules' => $deletedTitles
             ]);
-            
+
             return response()->json([
                 'success' => true,
                 'message' => "Unblocked {$deletedCount} schedule(s) for January {$year}",
@@ -1236,7 +1236,7 @@ Route::post('/bookings', function(Request $request) {
 
                 $bookingData['base_price'] = $break['base_price'] ?? ($serviceModel ? (float)$serviceModel->base_price : (float) config('service_prices.default', 150));
                 $bookingData['length_adjustment'] = $break['length_adjustment'] ?? 0.00;
-                
+
                 // Use client-submitted final_price if available (from size modal), otherwise use calculated price
                 $clientFinalPrice = $request->input('final_price');
                 if (!empty($clientFinalPrice) && is_numeric($clientFinalPrice)) {
@@ -1246,7 +1246,7 @@ Route::post('/bookings', function(Request $request) {
                     $bookingData['final_price'] = $break['final_price'] ?? $bookingData['base_price'];
                     Log::info('Using server-calculated final_price', ['final_price' => $bookingData['final_price']]);
                 }
-                
+
                 $bookingData['length'] = $length;
 
                 // Persist hair mask option when provided (used in emails for "with weaving")
@@ -1271,7 +1271,7 @@ Route::post('/bookings', function(Request $request) {
             try {
                 $appointmentDate = \Carbon\Carbon::parse($bookingData['appointment_date'])->startOfDay();
                 $appointmentTime = $bookingData['appointment_time'] ?? null;
-                
+
                 // Get all blocked schedules that overlap with this date
                 $blockedSchedules = \App\Models\Schedule::where('type', 'blocked')
                     ->where('start', '<=', $appointmentDate->copy()->endOfDay())
@@ -1281,17 +1281,17 @@ Route::post('/bookings', function(Request $request) {
                 foreach ($blockedSchedules as $blockedSchedule) {
                     $startParsed = \Carbon\Carbon::parse($blockedSchedule->start)->utc();
                     $endParsed = \Carbon\Carbon::parse($blockedSchedule->end)->utc();
-                    
+
                     // Check if it's a full-day block
-                    $isAllDay = $startParsed->format('H:i:s') === '00:00:00' && 
+                    $isAllDay = $startParsed->format('H:i:s') === '00:00:00' &&
                                $endParsed->format('H:i:s') === '00:00:00';
-                    
+
                     if ($isAllDay) {
                         // Full-day block: check if this date falls within the block range
                         $blockStartDate = $startParsed->format('Y-m-d');
                         $blockEndDate = $endParsed->format('Y-m-d');
                         $requestedDate = $appointmentDate->format('Y-m-d');
-                        
+
                         if ($requestedDate >= $blockStartDate && $requestedDate < $blockEndDate) {
                             $blockedTitle = $blockedSchedule->title ?? 'Blocked';
                             $isApiRequest = $request->wantsJson() || $request->header('X-Requested-With') === 'XMLHttpRequest';
@@ -1316,12 +1316,12 @@ Route::post('/bookings', function(Request $request) {
                                 $requestedDateTime = \Carbon\Carbon::parse($bookingData['appointment_date'] . ' ' . $appointmentTime);
                                 $blockStart = $startParsed->copy()->setTimezone(config('app.timezone') ?: 'UTC');
                                 $blockEnd = $endParsed->copy()->setTimezone(config('app.timezone') ?: 'UTC');
-                                
+
                                 // Check if the requested date matches the block date(s)
                                 $blockStartDate = $blockStart->format('Y-m-d');
                                 $blockEndDate = $blockEnd->format('Y-m-d');
                                 $requestedDate = $appointmentDate->format('Y-m-d');
-                                
+
                                 if ($requestedDate >= $blockStartDate && $requestedDate <= $blockEndDate) {
                                     // Check if the time falls within the blocked range
                                     if ($requestedDateTime->gte($blockStart) && $requestedDateTime->lt($blockEnd)) {
@@ -1503,7 +1503,7 @@ Route::post('/contact', function(Request $request) {
         // Prepare contact data with correct timezone
         $timezone = 'America/Toronto'; // Always use Toronto timezone
         $submittedAt = \Carbon\Carbon::now($timezone);
-        
+
         $contactData = [
             'name' => $validated['name'],
             'email' => $validated['email'],
@@ -1527,27 +1527,27 @@ Route::post('/contact', function(Request $request) {
         // Send notification to admin
         try {
             $adminEmail = env('BOOKING_NOTIFICATION_EMAIL') ?: env('ADMIN_EMAIL') ?: config('mail.from.address');
-            
+
             if (empty($adminEmail) || $adminEmail === config('mail.from.address')) {
                 Log::warning('Admin email not configured for contact form notification', [
                     'booking_notification_email' => env('BOOKING_NOTIFICATION_EMAIL'),
                     'env_admin_email' => env('ADMIN_EMAIL'),
                 ]);
             }
-            
+
             Log::info('Sending admin notification for contact form submission', [
                 'admin_email' => $adminEmail,
                 'contact_name' => $contactData['name'],
                 'contact_email' => $contactData['email'],
             ]);
-            
+
             // Create notification instance
             $notification = new \App\Notifications\AdminContactNotification($contactData);
-            
+
             // Send notification immediately (not queued) to ensure admin receives it right away
             \Illuminate\Support\Facades\Notification::route('mail', $adminEmail)
                 ->notifyNow($notification);
-            
+
             Log::info('Admin notification sent successfully for contact form submission', [
                 'admin_email' => $adminEmail,
                 'contact_name' => $contactData['name'],
@@ -1573,7 +1573,7 @@ Route::post('/contact', function(Request $request) {
         }
 
         return redirect()->back()->with('success', 'Thank you for your message! We will get back to you soon.');
-        
+
     } catch (\Illuminate\Validation\ValidationException $e) {
         if ($request->wantsJson() || $request->ajax()) {
             return response()->json([
@@ -1694,14 +1694,14 @@ Route::post('/custom-service', function(Request $request) {
                 'admin_email' => $adminEmail,
                 'request_id' => $record->id ?? null,
             ]);
-            
+
             // Create notification instance
             $notification = new \App\Notifications\CustomServiceRequest(array_merge($payload, ['is_admin' => true]));
-            
+
             // Send notification immediately (not queued) to ensure admin receives it right away
             \Illuminate\Support\Facades\Notification::route('mail', $adminEmail)
                 ->notifyNow($notification);
-            
+
             \Illuminate\Support\Facades\Log::info('Admin notification sent for custom service request', [
                 'admin_email' => $adminEmail,
                 'request_id' => $record->id ?? null,
