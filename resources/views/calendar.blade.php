@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    
+
     <!-- Primary Meta Tags -->
     <title>Book Appointment - Dab's Beauty Touch | Online Booking</title>
     <meta name="title" content="Book Appointment - Dab's Beauty Touch | Online Booking">
@@ -546,7 +546,6 @@
                                 <option value="Wig Installation">Wig Installation</option>
                                 <option value="Medium Knotless Braids">Medium Knotless Braids</option>
                                 <option value="Jumbo Knotless Braids">Jumbo Knotless Braids</option>
-                                <option value="Kids Braids">Kids Braids</option>
                                 <option value="8–10 Rows Stitch Braids">8–10 Rows Stitch Braids</option>
                                 <option value="Hair Mask/Relaxing">Hair Mask/Relaxing</option>
                                 <option value="Smedium Boho Braids">Smedium Boho Braids</option>
@@ -768,13 +767,140 @@
                 'Wig Installation' => (int) config('service_prices.wig_installation', 150),
                 'Medium Knotless Braids' => (int) config('service_prices.medium_knotless', 130),
                 'Jumbo Knotless Braids' => (int) config('service_prices.jumbo_knotless', 100),
-                'Kids Braids' => (int) config('service_prices.kids_braids', 80),
                 '8–10 Rows Stitch Braids' => (int) config('service_prices.stitch_braids', 120),
                 'Hair Mask/Relaxing' => (int) config('service_prices.hair_mask', 50),
                 'Smedium Boho Braids' => (int) config('service_prices.boho_braids', 150),
             ];
         @endphp
         const basePriceByServiceNameCal = @json($basePriceByServiceNameCal);
+
+        // Service categories and their available sizes (matching home.remote.blade.php)
+        window.serviceSizesMapCal = {
+            'knotless': {
+                category: 'Knotless Braids',
+                sizes: [
+                    { name: 'Small Knotless Braids', slug: 'small-knotless', price: {{ (int) config('service_prices.small_knotless', 170) }}, time: '6–7 hrs' },
+                    { name: 'Smedium Knotless Braids', slug: 'smedium-knotless', price: {{ (int) config('service_prices.smedium_knotless', 150) }}, time: '5–6 hrs' },
+                    { name: 'Medium Knotless Braids', slug: 'medium-knotless', price: {{ (int) config('service_prices.medium_knotless', 130) }}, time: '4–4.5 hrs' },
+                    { name: 'Jumbo Knotless Braids', slug: 'jumbo-knotless', price: {{ (int) config('service_prices.jumbo_knotless', 100) }}, time: '2–3 hrs' }
+                ]
+            },
+            'boho': {
+                category: 'Boho Braids',
+                sizes: [
+                    { name: 'Small Boho Braids', slug: 'small-boho', price: 180, time: '6–7 hrs' },
+                    { name: 'Smedium Boho Braids', slug: 'smedium-boho', price: {{ (int) config('service_prices.boho_braids', 150) }}, time: '5–6 hrs' },
+                    { name: 'Medium Boho Braids', slug: 'medium-boho', price: 130, time: '4–5 hrs' },
+                    { name: 'Jumbo/Large Boho Braids', slug: 'jumbo-boho', price: 100, time: '3–4 hrs' }
+                ]
+            },
+            'twist': {
+                category: 'Twist Styles',
+                sizes: [
+                    { name: 'Small Twists', slug: 'small-twist', price: 150, time: '5–6 hrs' },
+                    { name: 'Medium Twists', slug: 'medium-twist', price: 120, time: '4–5 hrs' },
+                    { name: 'Jumbo/Large Twists', slug: 'jumbo-twist', price: 100, time: '3–4 hrs' }
+                ]
+            },
+            'natural-hair-twist': {
+                category: 'Natural Hair Twist',
+                sizes: [
+                    { name: 'Small Natural Hair Twist', slug: 'small-natural-hair-twist', price: 80, time: '2–3 hrs', noLength: true },
+                    { name: 'Medium Natural Hair Twist', slug: 'medium-natural-hair-twist', price: 60, time: '2–3 hrs', noLength: true }
+                ]
+            },
+            'kinky-passion-twist': {
+                category: 'Kinky & Passion Twists',
+                sizes: [
+                    { name: 'Kinky Twist', slug: 'kinky-twist', price: 120, time: '3–4 hrs' },
+                    { name: 'Passion Twist', slug: 'passion-twist', price: 130, time: '3–4 hrs' }
+                ]
+            },
+            'cornrow': {
+                category: 'Cornrow/Feed-in Braids',
+                sizes: [
+                    { name: 'Stitch Weave', slug: 'stitch-weave', price: 100, time: '4–5 hrs', hasRowOptions: true },
+                    { name: 'Cornrow Weave', slug: 'cornrow-weave', price: 100, time: '4–5 hrs', hasRowOptions: true },
+                    { name: 'Under-wig Weave (no extension)', slug: 'under-wig-weave', price: 30, time: '30 min–1 hr', hasRowOptions: false, noLength: true },
+                    { name: 'Weave&Braid Mixed', slug: 'weave-braid-mixed', price: 150, time: '4–5 hrs', hasRowOptions: false }
+                ]
+            },
+            'french-curl': {
+                category: 'French Curl Braids',
+                sizes: [
+                    { name: 'Small French Curl Braids', slug: 'small-french-curl', price: 200, time: '6–7 hrs' },
+                    { name: 'Smedium French Curl Braids', slug: 'smedium-french-curl', price: 170, time: '5–6 hrs' },
+                    { name: 'Medium French Curl Braids', slug: 'medium-french-curl', price: 150, time: '4–5 hrs' },
+                    { name: 'Large French Curl Braids', slug: 'large-french-curl', price: 120, time: '3–4 hrs' }
+                ]
+            },
+            'crotchet': {
+                category: 'Crotchet Styles',
+                sizes: [
+                    { name: '2/3 Line Single Crochet', slug: 'line-single', price: 100, time: '2–3 hrs', hasFrontBackAddon: true, noLength: true },
+                    { name: 'Afro Crotchet', slug: 'afro-crotchet', price: 120, time: '3–4 hrs', hasFrontBackAddon: false, noLength: true },
+                    { name: 'Individual Crotchet', slug: 'individual-crotchet', price: 150, time: '4–5 hrs', hasFrontBackAddon: false, noLength: true },
+                    { name: 'Butterfly Locks', slug: 'butterfly-locks', price: 150, time: '3–4 hrs', hasFrontBackAddon: false, noLength: true },
+                    { name: 'Weave Crotchet', slug: 'weave-crotchet', price: 80, time: '1.5–2 hrs', hasFrontBackAddon: false, noLength: true }
+                ]
+            },
+            'hair-treatment': {
+                category: 'Hair Treatment Services',
+                sizes: [
+                    { name: 'Natural Hair Treatment/Mask', slug: 'natural-hair-treatment', price: {{ (int) config('service_prices.hair_mask', 50) }}, time: '45 min–1 hr', hasWeaveAddon: true, noLength: true },
+                    { name: 'Chemical Relaxer', slug: 'chemical-relaxer', price: 50, time: '1.5–2 hrs', hasWeaveAddon: true, noLength: true }
+                ]
+            }
+        };
+
+        // Service card metadata
+        const serviceCardMetaCal = {
+            'knotless': {
+                title: 'Knotless Braids',
+                img: '{{ asset("images/webbraids2.jpg") }}',
+                desc: 'Versatile protective style in multiple sizes.'
+            },
+            'french-curl': {
+                title: 'French Curl Braids',
+                img: '{{ asset("images/french curl braid.jpg") }}',
+                desc: 'Elegant braids with curly ends for a romantic look.'
+            },
+            'twist': {
+                title: 'Twist Styles',
+                img: '{{ asset("images/twist-main.jpg") }}',
+                desc: 'Two-strand twists with extensions.'
+            },
+            'natural-hair-twist': {
+                title: 'Natural Hair Twist',
+                img: '{{ asset("images/twists-natural-hair.jpg") }}',
+                desc: 'Twists using your natural hair.'
+            },
+            'kinky-passion-twist': {
+                title: 'Kinky & Passion Twists',
+                img: '{{ asset("images/kinky braid.jpeg") }}',
+                desc: 'Textured twists with lots of dimension.'
+            },
+            'crotchet': {
+                title: 'Crotchet Styles',
+                img: '{{ asset("images/kinky crotchet.png") }}',
+                desc: 'Quick protective styles with various options.'
+            },
+            'cornrow': {
+                title: 'Cornrow/Feed-in Braids',
+                img: '{{ asset("images/stitch braid.jpg") }}',
+                desc: 'Classic cornrows and feed-in styles.'
+            },
+            'hair-treatment': {
+                title: 'Hair Treatment Services',
+                img: '{{ asset("images/hair_mask.png") }}',
+                desc: 'Professional treatments for natural and relaxed hair.'
+            },
+            'boho': {
+                title: 'Boho Braids',
+                img: '{{ asset("images/boho braid.jpg") }}',
+                desc: 'Knotless braids with curly ends for a boho look.'
+            }
+        };
 
         // --- Booking draft (persist typed info across service flows / redirects) ---
         const DBT_BOOKING_DRAFT_KEY = 'dbt_booking_draft_v1';
@@ -870,64 +996,65 @@
 
         function populateNonKidsServicesListCal() {
             const container = document.getElementById('nonKidsServicesListCal');
-            const select = document.getElementById('service');
-            if (!container || !select) return;
+            if (!container) return;
             container.innerHTML = '';
 
-            const services = Array.from(select.querySelectorAll('option'))
-                .map(o => (o.value || '').trim())
-                .filter(v => v.length > 0)
-                .filter(v => !/kids/i.test(v)); // exclude Kids Braids
-
-            const unique = Array.from(new Set(services));
-            if (!unique.length) {
+            // Get all categories from serviceSizesMapCal (excludes Kids Braids by default)
+            const categories = Object.keys(window.serviceSizesMapCal || {});
+            if (!categories.length) {
                 container.innerHTML = '<div class="col-12"><div class="alert alert-warning mb-0">No services available.</div></div>';
                 return;
             }
 
-            unique.forEach(serviceName => {
+            categories.forEach(categoryKey => {
+                const cat = window.serviceSizesMapCal[categoryKey] || {};
+                const sizes = Array.isArray(cat.sizes) ? cat.sizes : [];
+                const meta = serviceCardMetaCal[categoryKey] || {};
+                const title = meta.title || cat.category || categoryKey;
+                const desc = meta.desc || '';
+                const img = meta.img || '{{ asset("images/braids.jpeg") }}';
+
+                // Calculate min price from sizes
+                const validPrices = sizes
+                    .map(s => (typeof s.price === 'number' ? s.price : null))
+                    .filter(v => v !== null && !isNaN(v));
+                const minPrice = validPrices.length ? Math.min.apply(null, validPrices) : null;
+                const allNoLength = sizes.length > 0 && sizes.every(s => s.noLength === true);
+
                 const col = document.createElement('div');
                 col.className = 'col-12 col-md-6 col-lg-4';
-                const btn = document.createElement('button');
-                btn.type = 'button';
-                btn.className = 'btn btn-outline-primary w-100';
-                btn.style.borderRadius = '12px';
-                btn.style.padding = '12px 10px';
-                btn.style.fontWeight = '700';
-                btn.textContent = serviceName;
-                btn.addEventListener('click', function () {
-                    selectNonKidsServiceCal(serviceName);
-                });
-                col.appendChild(btn);
+                col.innerHTML = `
+                    <div class="service-card h-100" data-service-key="${categoryKey}" style="border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1); padding: 15px; text-align: center; cursor: pointer; transition: all 0.3s ease;">
+                        <img src="${img}" alt="${title}" style="width: 100%; height: 200px; object-fit: cover; border-radius: 8px; margin-bottom: 12px;">
+                        <h5 style="color: #030f68; font-weight: 700; margin-bottom: 8px;">${title}</h5>
+                        ${desc ? `<p style="color: #666; font-size: 0.95rem; margin-bottom: 10px;">${desc}</p>` : ''}
+                        ${minPrice !== null ? `<p style="font-weight: 700; color: #ff6600; margin-bottom: 8px;"><strong>From $${minPrice}</strong></p>` : ''}
+                        <p style="font-size: 0.85rem; color: #999; margin-bottom: 10px;">${allNoLength ? 'No length adjustment required.' : 'Length adjustments apply.'}</p>
+                        <button class="btn btn-warning w-100" style="border-radius: 8px; font-weight: 700;">Browse & Book</button>
+                    </div>
+                `;
 
-                // Price hint (pulled from same config as Services section)
-                try {
-                    const p = basePriceByServiceNameCal[serviceName];
-                    if (typeof p === 'number' && !isNaN(p) && p > 0) {
-                        const priceEl = document.createElement('div');
-                        priceEl.className = 'small text-muted mt-1 text-center';
-                        priceEl.textContent = 'Starting at $' + p;
-                        col.appendChild(priceEl);
-                    }
-                } catch (e) {}
+                col.querySelector('.service-card')?.addEventListener('click', function () {
+                    selectNonKidsServiceCal(categoryKey);
+                });
                 container.appendChild(col);
             });
         }
 
-        function selectNonKidsServiceCal(serviceName) {
+        function selectNonKidsServiceCal(serviceCategory) {
             // Persist any typed draft details before redirecting
             saveBookingDraftCal();
 
-            // Redirect to home and open the main booking modal with this service preselected
+            // Redirect to home and open the service size modal for this category
             const homeUrl = @json(route('home'));
             try {
                 const u = new URL(homeUrl, window.location.origin);
-                u.searchParams.set('openBooking', '1');
-                u.searchParams.set('service', serviceName);
+                u.searchParams.set('openServiceSizeModal', '1');
+                u.searchParams.set('serviceCategory', serviceCategory);
                 window.location.href = u.toString();
             } catch (e) {
                 // Fallback: simple redirect
-                window.location.href = '/?openBooking=1&service=' + encodeURIComponent(serviceName);
+                window.location.href = '/?openServiceSizeModal=1&serviceCategory=' + encodeURIComponent(serviceCategory);
             }
         }
 
@@ -948,7 +1075,7 @@
             const mobileRadio = document.getElementById('appointment_type_mobile_cal');
             const addressContainer = document.getElementById('addressFieldContainerCal');
             const addressInput = document.getElementById('address');
-            
+
             if (mobileRadio && mobileRadio.checked) {
                 if (addressContainer) addressContainer.style.display = 'block';
                 if (addressInput) addressInput.required = true;
@@ -1462,7 +1589,7 @@
                     } else if (blockedIndex[dateString]) {
                         const blockedInfo = blockedIndex[dateString];
                         const isFullDay = blockedInfo.full_day === true || blockedInfo.full_day === 1;
-                        
+
                         if (isFullDay) {
                             // Mark as blocked-range and show title text
                             dayElement.classList.add('blocked-range');

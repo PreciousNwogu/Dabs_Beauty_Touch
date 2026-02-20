@@ -496,7 +496,6 @@
                                 <input type="radio" name="kb_finish" id="kb_finish_plain" value="plain" checked>
                                 <div class="kb-option-label">
                                     Without Curl
-                                    <span class="kb-option-price">Base price</span>
                                 </div>
                             </label>
                             
@@ -522,7 +521,6 @@
                                 <input type="radio" name="kb_length" id="kb_len_shoulder" value="shoulder" checked>
                                 <div class="kb-option-label">
                                     Shoulder
-                                    <span class="kb-option-price">Base price</span>
                                 </div>
                             </label>
                             
@@ -608,12 +606,6 @@
                     @php $kidsBaseServer = config('service_prices.kids_braids', 80); @endphp
                     
                     <div id="kb_itemized_pricing">
-                        <!-- Base Price -->
-                        <div class="kb-price-item">
-                            <span>Kids Braids base</span>
-                            <strong>$80</strong>
-                        </div>
-                        
                         <!-- Braid Type Adjustment -->
                         <div class="kb-price-item" id="kb_braid_type_line" style="display: none;">
                             <span id="kb_braid_type_name">• Adjustment</span>
