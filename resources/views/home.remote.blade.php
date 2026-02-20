@@ -2578,81 +2578,65 @@
                 return;
             }
 
-            // Update service name with add-ons
+            // Build service name with add-ons
             let serviceName = window.serviceSizeData.serviceName;
-            if (window.serviceSizeData.weaveAddon) {
-                serviceName += ' (With Weave)';
-            }
-            if (window.serviceSizeData.rowOption === '10+') {
-                serviceName += ' (10+ Rows)';
-            }
-            if (window.serviceSizeData.frontBackAddon) {
-                serviceName += ' (Front + Back)';
-            }
+            if (window.serviceSizeData.weaveAddon)          serviceName += ' (With Weave)';
+            if (window.serviceSizeData.rowOption === '10+')  serviceName += ' (10+ Rows)';
+            if (window.serviceSizeData.frontBackAddon)       serviceName += ' (Front + Back)';
 
-            // Get the size modal element and instance
+            // Calculate total price
+            const totalPrice = (window.serviceSizeData.basePrice || 0) +
+                               (window.serviceSizeData.lengthAdjustment || 0) +
+                               (window.serviceSizeData.weaveAddonCost || 0) +
+                               (window.serviceSizeData.rowAddonCost || 0) +
+                               (window.serviceSizeData.frontBackAddonCost || 0);
+
+            window.serviceSizeDataForBooking = {
+                ...window.serviceSizeData,
+                totalPrice: totalPrice,
+                serviceName: serviceName
+            };
+
+            // --- Imperatively tear down the size modal ---
             const sizeModalEl = document.getElementById('serviceSizeLengthModal');
-            const sizeModal = bootstrap.Modal.getInstance(sizeModalEl);
 
-            // Listen for the modal to fully hide before opening booking modal
-            let bookingOpened = false;
-            const cleanupModalArtifacts = () => {
-                document.body.classList.remove('modal-open');
-                document.body.style.paddingRight = '';
-                document.body.style.overflow = '';
-            };
-            const openBooking = () => {
-                if (bookingOpened) return;
-                bookingOpened = true;
-                sizeModalEl.removeEventListener('hidden.bs.modal', openBooking);
+            // Dispose Bootstrap instance so it doesn't fight us
+            try {
+                const inst = bootstrap.Modal.getInstance(sizeModalEl);
+                if (inst) inst.dispose();
+            } catch(e) {}
 
-                // Clean up any leftover modal artifacts from the size modal
-                cleanupModalArtifacts();
+            // Hide and clean up immediately
+            sizeModalEl.classList.remove('show');
+            sizeModalEl.style.display = 'none';
+            sizeModalEl.setAttribute('aria-hidden', 'true');
+            sizeModalEl.removeAttribute('aria-modal');
+            document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+            document.body.classList.remove('modal-open');
+            document.body.style.paddingRight = '';
+            document.body.style.overflow = '';
 
-                // Open booking modal with the selected service and complete price data
-                setTimeout(() => {
-                    // Calculate the total price from the modal selections
-                    const totalPrice = window.serviceSizeData.basePrice +
-                                     (window.serviceSizeData.lengthAdjustment || 0) +
-                                     (window.serviceSizeData.weaveAddonCost || 0) +
-                                     (window.serviceSizeData.rowAddonCost || 0) +
-                                     (window.serviceSizeData.frontBackAddonCost || 0);
+            // Open booking modal after a short delay to let the DOM settle
+            setTimeout(function() {
+                window.openBookingModal(
+                    serviceName,
+                    window.serviceSizeData.serviceType,
+                    window.serviceSizeDataForBooking
+                );
 
-                    // Store the complete service data for the booking form
-                    window.serviceSizeDataForBooking = {
-                        ...window.serviceSizeData,
-                        totalPrice: totalPrice,
-                        serviceName: serviceName
-                    };
-
-                    window.openBookingModal(
-                        serviceName,
-                        window.serviceSizeData.serviceType,
-                        window.serviceSizeDataForBooking
+                // Pre-select length in booking form (skip for crotchet / hair-treatment)
+                if (window.serviceSizeData.serviceCategory !== 'crotchet' &&
+                    window.serviceSizeData.serviceCategory !== 'hair-treatment' &&
+                    window.serviceSizeData.selectedLength) {
+                    const lengthRadio = document.getElementById(
+                        'length_' + window.serviceSizeData.selectedLength.replace('-', '')
                     );
-
-                    // Pre-select the length in booking form (skip for crotchet and hair treatment)
-                    if (window.serviceSizeData.serviceCategory !== 'crotchet' && window.serviceSizeData.serviceCategory !== 'hair-treatment') {
-                        const lengthRadio = document.getElementById(`length_${window.serviceSizeData.selectedLength.replace('-', '')}`);
-                        if (lengthRadio) {
-                            lengthRadio.checked = true;
-                            // Trigger change event to update price
-                            lengthRadio.dispatchEvent(new Event('change', { bubbles: true }));
-                        }
+                    if (lengthRadio) {
+                        lengthRadio.checked = true;
+                        lengthRadio.dispatchEvent(new Event('change', { bubbles: true }));
                     }
-                }, 100);
-            };
-
-            // Add event listener and hide modal
-            if (sizeModal) {
-                sizeModalEl.addEventListener('hidden.bs.modal', openBooking, { once: true });
-                sizeModal.hide();
-                // Fallback in case the hidden event never fires
-                setTimeout(openBooking, 450);
-            } else {
-                // Fallback if modal instance not found
-                openBooking();
-            }
+                }
+            }, 150);
         };
 
         // Main booking modal function
@@ -4082,6 +4066,19 @@
     </section>
 
     <!-- Book Other Services Section -->
+<script>
+function openOtherServicesModal() {
+    var modalEl = document.getElementById('customServiceRequestModal');
+    if (!modalEl) { alert('Custom service request form not found.'); return; }
+    if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+        new bootstrap.Modal(modalEl).show();
+    } else {
+        modalEl.style.display = 'block';
+        modalEl.classList.add('show');
+        document.body.classList.add('modal-open');
+    }
+}
+</script>
     <section class="text-center py-5" style="background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);">
         <div class="container">
             <div class="row justify-content-center">
@@ -4092,7 +4089,7 @@
                     <p class="lead mb-4" style="color: #6c757d;">
                         We offer many more services beyond what's listed above. Book a consultation and let us know what you need!
                     </p>
-                    <button type="button" class="btn btn-outline-primary btn-lg px-5" onclick="window.openOtherServicesModal()" style="font-weight: 600; border-radius: 25px; box-shadow: 0 4px 12px rgba(3, 15, 104, 0.2);">
+                    <button type="button" class="btn btn-outline-primary btn-lg px-5" onclick="openOtherServicesModal()" style="font-weight: 600; border-radius: 25px; box-shadow: 0 4px 12px rgba(3, 15, 104, 0.2);">
                         <i class="bi bi-plus-circle me-2"></i>Book Other Services
                     </button>
                     <div class="mt-3">
@@ -4221,6 +4218,7 @@
                         <div class="row g-3" id="sizeOptionsContainer">
                             <!-- Size options will be dynamically populated -->
                         </div>
+                    </div>
 
                     <!-- Weave Add-on (shown for Hair Treatment Services) -->
                     <div class="mb-4" id="weaveAddonSection" style="display: none;">
@@ -4977,7 +4975,7 @@
                         <button type="button" class="btn btn-primary btn-lg" onclick="openNonKidsServicesModal()" style="border-radius: 12px; font-weight: 700;">
                             <i class="bi bi-list-check me-2"></i>Browse Adult Services
                         </button>
-                        <button type="button" class="btn btn-outline-primary btn-lg" onclick="window.openOtherServicesModal()" style="border-radius: 12px; font-weight: 700;">
+                        <button type="button" class="btn btn-outline-primary btn-lg" onclick="openOtherServicesModal()" style="border-radius: 12px; font-weight: 700;">
                             <i class="bi bi-stars me-2"></i>Custom Service Request
                         </button>
                     </div>
@@ -5841,6 +5839,19 @@ console.log('=== LOADING BOOKING FUNCTIONS ===');
     console.log('openBookingModal:', typeof window.openBookingModal);
 
 })();
+
+// Global fallback — ensures openOtherServicesModal is always callable from onclick
+function openOtherServicesModal() {
+    var modalEl = document.getElementById('customServiceRequestModal');
+    if (!modalEl) { alert('Custom service request form not found.'); return; }
+    if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+        new bootstrap.Modal(modalEl).show();
+    } else {
+        modalEl.style.display = 'block';
+        modalEl.classList.add('show');
+        document.body.classList.add('modal-open');
+    }
+}
 
 // IMMEDIATE BUTTON TEST - runs as soon as script loads
     console.log('=== BUTTON DEBUG TEST ===');
