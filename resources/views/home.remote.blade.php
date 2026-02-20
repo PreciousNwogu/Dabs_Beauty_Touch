@@ -2054,7 +2054,7 @@
                 ]
             },
             'twist': {
-                category: 'Twist Styles',
+                category: 'Twist Braid',
                 sizes: [
                     { name: 'Small Twists', slug: 'small-twist', price: 150, time: '5–6 hrs' },
                     { name: 'Medium Twists', slug: 'medium-twist', price: 120, time: '4–5 hrs' },
@@ -3976,9 +3976,9 @@
                 </div>
                 <div class="col-lg-4 col-md-6 col-6 service-item" data-category="twist">
                     <div class="service-card h-100" onclick="openServiceSizeModal('twist')">
-                        <img src="{{ asset('images/twist-main.jpg') }}" alt="Twist Styles">
-                        <h4>Twist Styles</h4>
-                        <p class="mb-2">Protective two-strand twists in various sizes—low-tension, versatile styling with hair extensions.</p>
+                        <img src="{{ asset('images/twist-main.jpg') }}" alt="Twist Braid">
+                        <h4>Twist Braid</h4>
+                        <p class="mb-2">Twist braid</p>
                         <p class="mb-1"><strong>Time:</strong> 3–6 hrs • <strong>Sizes:</strong> Small, Medium, Jumbo/Large</p>
                         <p class="mb-3"><strong>Hair:</strong> Not included</p>
                         <p class="price"><strong>From $100</strong> <small class="text-muted">(varies by size & length)</small></p>
@@ -6123,7 +6123,7 @@ function openOtherServicesModal() {
                 desc: 'Elegant braids with curly ends for a romantic look.'
             },
             'twist': {
-                title: 'Twist Styles',
+                title: 'Twist Braid',
                 img: '{{ asset("images/twist-main.jpg") }}',
                 desc: 'Two-strand twists with extensions.'
             },
