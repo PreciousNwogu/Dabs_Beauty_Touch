@@ -33,6 +33,7 @@ Route::get('/__clear', function (Request $request) {
 
 // Main route - show the home page
 Route::get('/', function () {
+    // AppServiceProvider already overrides config('service_prices.*') with live DB values.
     $servicePrices = Service::pluck('base_price', 'slug')->toArray();
     return view('home', compact('servicePrices'));
 })->name('home');
