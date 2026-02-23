@@ -37,11 +37,16 @@ Route::get('/', function () {
     return view('home', compact('servicePrices'));
 })->name('home');
 
-// Basic admin routes for services (protect with middleware in production)
-Route::prefix('admin')->name('admin.')->middleware('auth')->group(function() {
-    Route::get('services', [AdminServiceController::class, 'index'])->name('services.index');
-    Route::get('services/{service}/edit', [AdminServiceController::class, 'edit'])->name('services.edit');
-    Route::post('services/{service}', [AdminServiceController::class, 'update'])->name('services.update');
+// Admin CMS routes for services
+Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
+    // Service CMS
+    Route::get('services',                       [AdminServiceController::class, 'index'])          ->name('services.index');
+    Route::get('services/create',                [AdminServiceController::class, 'create'])         ->name('services.create');
+    Route::post('services',                      [AdminServiceController::class, 'store'])          ->name('services.store');
+    Route::get('services/{service}/edit',        [AdminServiceController::class, 'edit'])           ->name('services.edit');
+    Route::put('services/{service}',             [AdminServiceController::class, 'update'])         ->name('services.update');
+    Route::patch('services/{service}/discount',  [AdminServiceController::class, 'updateDiscount'])->name('services.discount');
+    Route::delete('services/{service}',          [AdminServiceController::class, 'destroy'])       ->name('services.destroy');
 });
 
 // CSRF Token refresh route
