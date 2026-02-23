@@ -4093,7 +4093,7 @@
             @if(isset($extraServices) && $extraServices->isNotEmpty())
                 @foreach($extraServices as $extraSvc)
                 <div class="col-lg-4 col-md-6 col-6 service-item" data-category="{{ Str::slug($extraSvc->category ?? 'other') }}">
-                    <div class="service-card h-100" onclick="openCustomServiceBooking('{{ addslashes($extraSvc->name) }}', {{ (int) $extraSvc->effective_price }})">
+                    <div class="service-card h-100" onclick="(function(){ var i=document.getElementById('customServiceInput'); if(i) i.value='{{ addslashes($extraSvc->name) }}'; if(typeof openOtherServicesModal==='function') openOtherServicesModal(); else { var m=document.getElementById('customServiceRequestModal'); if(m && typeof bootstrap!=='undefined') new bootstrap.Modal(m).show(); } })();">
                         @if($extraSvc->image_url)
                             <img src="{{ $extraSvc->image_url }}" alt="{{ $extraSvc->name }}" style="width:100%;height:200px;object-fit:cover;border-radius:10px 10px 0 0;">
                         @else
@@ -5913,23 +5913,6 @@ console.log('=== LOADING BOOKING FUNCTIONS ===');
 function openOtherServicesModal() {
     var modalEl = document.getElementById('customServiceRequestModal');
     if (!modalEl) { alert('Custom service request form not found.'); return; }
-    if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
-        new bootstrap.Modal(modalEl).show();
-    } else {
-        modalEl.style.display = 'block';
-        modalEl.classList.add('show');
-        document.body.classList.add('modal-open');
-    }
-}
-
-// Opens the booking modal for a CMS-created service, pre-filling the service name.
-function openCustomServiceBooking(name, price) {
-    var modalEl = document.getElementById('customServiceRequestModal');
-    if (!modalEl) { alert('Booking form not found.'); return; }
-    // Pre-fill the service name field
-    var nameInput = document.getElementById('customServiceInput');
-    if (nameInput) nameInput.value = name;
-    // Show modal
     if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
         new bootstrap.Modal(modalEl).show();
     } else {
