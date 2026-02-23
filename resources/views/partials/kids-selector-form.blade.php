@@ -871,6 +871,10 @@ document.addEventListener('DOMContentLoaded', function(){
             const braidTypeName = braidTypeNames[braidTypeValue] || 'Unknown';
             const braidTypeAdj = braidTypeAdjustments[braidTypeValue] || 0;
 
+            // protective and cornrows always use the original (non-discounted) base — their prices are fixed
+            const fixedPriceTypes = ['protective', 'cornrows'];
+            const effectiveBase = fixedPriceTypes.indexOf(braidTypeValue) !== -1 ? kidsOriginalBase : basePrice;
+
             // Show/hide and populate braid type line
             const braidTypeLine = document.getElementById('kb_braid_type_line');
             const braidTypeNameEl = document.getElementById('kb_braid_type_name');
@@ -955,8 +959,8 @@ document.addEventListener('DOMContentLoaded', function(){
 
             if(addonsContainer) addonsContainer.innerHTML = addonsHTML;
 
-            // Calculate total
-            const totalPrice = basePrice + braidTypeAdj + finishAdj + lengthAdj + addonsTotal;
+            // Calculate total (protective/cornrows use effectiveBase = originalBase so their price is unaffected by CMS discount)
+            const totalPrice = effectiveBase + braidTypeAdj + finishAdj + lengthAdj + addonsTotal;
 
             // Update total display
             const totalPriceEl = document.getElementById('kb_total_price');
@@ -980,7 +984,7 @@ document.addEventListener('DOMContentLoaded', function(){
             const kbBaseEl = document.getElementById('kb_base_price');
             const kbAdjustEl = document.getElementById('kb_adjustments');
             const kbTotalEl2 = document.getElementById('kb_total_price');
-            if(kbBaseEl) kbBaseEl.textContent = '$' + basePrice;
+            if(kbBaseEl) kbBaseEl.textContent = '$' + effectiveBase;
             if(kbAdjustEl) kbAdjustEl.textContent = (braidTypeAdj + finishAdj + lengthAdj + addonsTotal >= 0 ? '+' : '') + '$' + Math.abs(braidTypeAdj + finishAdj + lengthAdj + addonsTotal);
 
         }catch(e){
