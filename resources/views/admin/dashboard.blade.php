@@ -704,6 +704,11 @@
                         <a class="nav-link active" href="{{ route('admin.dashboard') }}">Admin</a>
                     </li>
                     <li class="nav-item">
+                        <a class="nav-link" href="{{ route('admin.services.index') }}" style="color:#ff6600;font-weight:700">
+                            <i class="bi bi-grid me-1"></i>Services CMS
+                        </a>
+                    </li>
+                    <li class="nav-item">
                         <a class="nav-link" href="{{ route('admin.profile') }}">
                             <i class="bi bi-person-circle me-1"></i>Profile
                         </a>
@@ -776,6 +781,22 @@
                         <div class="stats-number">{{ $stats['completed_bookings'] }}</div>
                         <div class="stats-label">Completed</div>
                     </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="row mb-4 px-4 px-md-4 px-3">
+                <div class="col-12">
+                    <a href="{{ route('admin.services.index') }}" class="d-flex align-items-center gap-3 text-decoration-none p-4" style="background:linear-gradient(135deg,#030f68,#1a2fa8);border-radius:16px;box-shadow:0 4px 20px rgba(3,15,104,.2);transition:transform .15s" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform=''">
+                        <div style="width:52px;height:52px;background:rgba(255,255,255,.15);border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                            <i class="bi bi-grid-3x3-gap-fill" style="font-size:1.6rem;color:#fff"></i>
+                        </div>
+                        <div>
+                            <div style="font-weight:800;font-size:1.05rem;color:#fff">Services CMS</div>
+                            <div style="font-size:.85rem;color:rgba(255,255,255,.75)">Edit prices, add or remove services, manage discounts</div>
+                        </div>
+                        <i class="bi bi-arrow-right-circle-fill ms-auto" style="font-size:1.6rem;color:rgba(255,102,0,.9)"></i>
+                    </a>
                 </div>
             </div>
 

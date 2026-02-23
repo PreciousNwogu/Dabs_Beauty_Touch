@@ -120,7 +120,7 @@
                         <label class="form-label">Service Image URL <span class="text-muted fw-normal">(optional)</span></label>
                         <div class="row g-3 align-items-start">
                             <div class="col-md-8">
-                                <input type="url" name="image_url" id="imageUrlInput"
+                                <input type="text" name="image_url" id="imageUrlInput"
                                        class="form-control @error('image_url') is-invalid @enderror"
                                        value="{{ old('image_url', $service->image_url ?? '') }}"
                                        placeholder="https://… or /images/my-service.jpg"

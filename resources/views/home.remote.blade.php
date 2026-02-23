@@ -2209,7 +2209,7 @@
                         <div style="font-weight: 700; color: #030f68; font-size: 0.9rem; margin-bottom: 4px;">${sizeName}</div>
                         ${sizeDesc ? `<div style="font-size: 0.7rem; color: #6c757d; margin-bottom: 6px; line-height: 1.2;">${sizeDesc}</div>` : ''}
                         ${originalPricesMap[size.slug]
-                            ? `<div style="font-size:1.2rem;font-weight:800;color:#ff6600">$${size.price} <span class="badge bg-danger" style="font-size:.6rem;vertical-align:middle">SALE</span></div>
+                            ? `<div style="font-size:1.2rem;font-weight:800;color:#ff6600">$${size.price} <span class="badge bg-danger" style="font-size:.6rem;vertical-align:middle">DISCOUNTED</span></div>
                                <div style="font-size:.82rem;color:#999;text-decoration:line-through">was $${originalPricesMap[size.slug]}</div>`
                             : `<div style="font-size: 1.2rem; font-weight: 800; color: #ff6600;">$${size.price}</div>`
                         }
@@ -4089,6 +4089,41 @@
                 </div>
             </div>
 
+            {{-- ── CMS-created services (dynamically added via /admin/services) ── --}}
+            @if(isset($extraServices) && $extraServices->isNotEmpty())
+                @foreach($extraServices as $extraSvc)
+                <div class="col-lg-4 col-md-6 col-6 service-item" data-category="{{ Str::slug($extraSvc->category ?? 'other') }}">
+                    <div class="service-card h-100" onclick="openCustomServiceBooking('{{ addslashes($extraSvc->name) }}', {{ (int) $extraSvc->effective_price }})">
+                        @if($extraSvc->image_url)
+                            <img src="{{ $extraSvc->image_url }}" alt="{{ $extraSvc->name }}" style="width:100%;height:200px;object-fit:cover;border-radius:10px 10px 0 0;">
+                        @else
+                            <div style="width:100%;height:200px;background:linear-gradient(135deg,#030f68,#1a2fa8);border-radius:10px 10px 0 0;display:flex;align-items:center;justify-content:center;">
+                                <i class="bi bi-scissors" style="font-size:3rem;color:rgba(255,255,255,.5)"></i>
+                            </div>
+                        @endif
+                        <h4>{{ $extraSvc->name }}</h4>
+                        @if($extraSvc->description)
+                            <p class="mb-2">{{ $extraSvc->description }}</p>
+                        @endif
+                        @if($extraSvc->category)
+                            <p class="mb-2"><strong>Category:</strong> {{ $extraSvc->category }}</p>
+                        @endif
+                        <p class="price">
+                            @if($extraSvc->has_discount)
+                                <strong style="color:#ff6600">From ${{ number_format($extraSvc->discount_price, 0) }}</strong>&nbsp;
+                                <del class="text-muted" style="font-weight:600;font-size:.88em">${{ number_format($extraSvc->base_price, 0) }}</del>&nbsp;
+                                <span class="badge bg-danger" style="font-size:.65rem;vertical-align:middle;padding:3px 6px;border-radius:6px">DISCOUNTED</span>
+                            @else
+                                <strong>From ${{ number_format($extraSvc->base_price, 0) }}</strong>
+                            @endif
+                        </p>
+                        <button class="btn btn-warning mt-3">Book Now</button>
+                    </div>
+                </div>
+                @endforeach
+            @endif
+            {{-- ── end CMS services ── --}}
+
             <!-- View More Services Button for Mobile -->
             <div class="text-center mt-4 d-md-none" id="viewMoreServicesContainer">
                 <button class="btn btn-primary" id="viewMoreServicesBtn" onclick="toggleMobileServices()" style="border-radius: 20px; padding: 8px 24px; font-size: 0.95rem; font-weight: 600; box-shadow: 0 3px 10px rgba(3, 15, 104, 0.15);">
@@ -5878,6 +5913,23 @@ console.log('=== LOADING BOOKING FUNCTIONS ===');
 function openOtherServicesModal() {
     var modalEl = document.getElementById('customServiceRequestModal');
     if (!modalEl) { alert('Custom service request form not found.'); return; }
+    if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+        new bootstrap.Modal(modalEl).show();
+    } else {
+        modalEl.style.display = 'block';
+        modalEl.classList.add('show');
+        document.body.classList.add('modal-open');
+    }
+}
+
+// Opens the booking modal for a CMS-created service, pre-filling the service name.
+function openCustomServiceBooking(name, price) {
+    var modalEl = document.getElementById('customServiceRequestModal');
+    if (!modalEl) { alert('Booking form not found.'); return; }
+    // Pre-fill the service name field
+    var nameInput = document.getElementById('customServiceInput');
+    if (nameInput) nameInput.value = name;
+    // Show modal
     if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
         new bootstrap.Modal(modalEl).show();
     } else {

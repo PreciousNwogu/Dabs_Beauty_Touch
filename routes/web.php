@@ -35,7 +35,30 @@ Route::get('/__clear', function (Request $request) {
 Route::get('/', function () {
     // AppServiceProvider already overrides config('service_prices.*') with live DB values.
     $servicePrices = Service::pluck('base_price', 'slug')->toArray();
-    return view('home', compact('servicePrices'));
+
+    // Slugs that are already rendered as hardcoded service cards on the homepage.
+    $hardcodedSlugs = [
+        'small-knotless','smedium-knotless','medium-knotless','jumbo-knotless',
+        'small-boho','smedium-boho','medium-boho','jumbo-boho',
+        'small-twist','medium-twist','jumbo-twist',
+        'small-natural-hair-twist','medium-natural-hair-twist',
+        'kinky-twist','passion-twist','twist-braids',
+        'stitch-weave','cornrow-weave','under-wig-weave','weave-braid-mixed',
+        'small-french-curl','smedium-french-curl','medium-french-curl','large-french-curl',
+        'line-single','afro-crotchet','individual-loc','individual-crotchet','butterfly-locks','weave-crotchet',
+        'natural-hair-treatment','chemical-relaxer','chemical-relaxer',
+        'kids-braids','stitch-braids','hair-mask',
+        'weaving-crotchet','single-crotchet','natural-hair-twist','weaving-no-extension',
+        'wig-installation','custom',
+    ];
+
+    // Any active service NOT in the hardcoded set is a "new" CMS service to show dynamically.
+    $extraServices = Service::where('is_active', true)
+        ->whereNotIn('slug', $hardcodedSlugs)
+        ->orderBy('category')->orderBy('name')
+        ->get();
+
+    return view('home', compact('servicePrices', 'extraServices'));
 })->name('home');
 
 // Admin CMS routes for services
