@@ -4093,7 +4093,7 @@
             @if(isset($extraServices) && $extraServices->isNotEmpty())
                 @foreach($extraServices as $extraSvc)
                 <div class="col-lg-4 col-md-6 col-6 service-item" data-category="{{ Str::slug($extraSvc->category ?? 'other') }}">
-                    <div class="service-card h-100" onclick="(function(){ var i=document.getElementById('customServiceInput'); if(i) i.value='{{ addslashes($extraSvc->name) }}'; if(typeof openOtherServicesModal==='function') openOtherServicesModal(); else { var m=document.getElementById('customServiceRequestModal'); if(m && typeof bootstrap!=='undefined') new bootstrap.Modal(m).show(); } })();">
+                    <div class="service-card h-100" onclick="window.openBookingModal('{{ addslashes($extraSvc->name) }}', '{{ $extraSvc->slug }}')">
                         @if($extraSvc->image_url)
                             <img src="{{ $extraSvc->image_url }}" alt="{{ $extraSvc->name }}" style="width:100%;height:200px;object-fit:cover;border-radius:10px 10px 0 0;">
                         @else
