@@ -23,6 +23,10 @@
         .section-title { font-size:.75rem; font-weight:800; text-transform:uppercase; letter-spacing:.08em; color:#ff6600; border-bottom:2px solid #fff0e6; padding-bottom:8px; margin-bottom:18px; }
         .slug-hint { font-size:.78rem; color:#888; margin-top:4px; }
         .new-cat-toggle { font-size:.82rem; color:#ff6600; font-weight:700; cursor:pointer; text-decoration:underline; }
+        .img-preview-box { width:100%; aspect-ratio:4/3; border-radius:14px; border:2px dashed #d0d8f0; background:#f4f6fb; display:flex; align-items:center; justify-content:center; overflow:hidden; transition:border-color .2s; }
+        .img-preview-box img { width:100%; height:100%; object-fit:cover; border-radius:12px; }
+        .img-preview-placeholder { text-align:center; color:#aaa; padding:16px; }
+        .img-preview-placeholder i { font-size:2.5rem; display:block; margin-bottom:8px; }
     </style>
 </head>
 <body>
@@ -112,6 +116,33 @@
                         @error('description')<div class="invalid-feedback">{{ $message }}</div>@enderror
                     </div>
 
+                    <div class="mb-3">
+                        <label class="form-label">Service Image URL <span class="text-muted fw-normal">(optional)</span></label>
+                        <div class="row g-3 align-items-start">
+                            <div class="col-md-8">
+                                <input type="url" name="image_url" id="imageUrlInput"
+                                       class="form-control @error('image_url') is-invalid @enderror"
+                                       value="{{ old('image_url', $service->image_url ?? '') }}"
+                                       placeholder="https://… or /images/my-service.jpg"
+                                       oninput="previewImage(this.value)">
+                                <div class="slug-hint">Paste a full URL or a relative path like <code>/images/webbraids2.jpg</code>.</div>
+                                @error('image_url')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                            </div>
+                            <div class="col-md-4">
+                                <div class="img-preview-box" id="imgPreviewBox">
+                                    @if(!empty($service->image_url ?? ''))
+                                        <img id="imgPreview" src="{{ $service->image_url }}" alt="Preview">
+                                    @else
+                                        <div class="img-preview-placeholder" id="imgPlaceholder">
+                                            <i class="bi bi-image"></i>
+                                            <span style="font-size:.8rem">Image preview</span>
+                                        </div>
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     {{-- PRICING --}}
                     <p class="section-title mt-4"><i class="bi bi-currency-dollar me-2"></i>Pricing</p>
 
@@ -199,6 +230,28 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
+function previewImage(url) {
+    const box  = document.getElementById('imgPreviewBox');
+    const ph   = document.getElementById('imgPlaceholder');
+    let   img  = document.getElementById('imgPreview');
+    if (!url.trim()) {
+        if (img) img.remove();
+        if (!ph) { box.innerHTML = '<div class="img-preview-placeholder" id="imgPlaceholder"><i class="bi bi-image"></i><span style="font-size:.8rem">Image preview</span></div>'; }
+        return;
+    }
+    if (!img) {
+        if (ph) ph.remove();
+        img = document.createElement('img');
+        img.id = 'imgPreview';
+        img.style.cssText = 'width:100%;height:100%;object-fit:cover;border-radius:12px';
+        box.appendChild(img);
+    }
+    img.src = url;
+    img.onerror = () => {
+        img.remove();
+        box.innerHTML = '<div class="img-preview-placeholder text-danger" id="imgPlaceholder"><i class="bi bi-exclamation-triangle" style="font-size:2rem;display:block;margin-bottom:6px"></i><span style="font-size:.78rem">Could not load image</span></div>';
+    };
+}
 function suggestSlug(name) {
     const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
     const input = document.getElementById('slugInput');

@@ -31,10 +31,15 @@ class AppServiceProvider extends ServiceProvider
         try {
             $services = \App\Models\Service::select('slug', 'base_price', 'discount_price')->get();
             foreach ($services as $svc) {
+                $base      = (int) $svc->base_price;
                 $effective = ($svc->discount_price !== null && $svc->discount_price < $svc->base_price)
                     ? (int) $svc->discount_price
-                    : (int) $svc->base_price;
+                    : $base;
                 $underscore = str_replace('-', '_', $svc->slug);
+                // Always keep the original base price accessible for strikethrough display.
+                Config::set('service_prices_original.' . $underscore, $base);
+                Config::set('service_prices_original.' . $svc->slug,  $base);
+                // Override active price with effective (discounted if applicable).
                 Config::set('service_prices.' . $underscore, $effective);
                 Config::set('service_prices.' . $svc->slug,  $effective);
             }

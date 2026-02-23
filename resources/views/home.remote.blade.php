@@ -2034,6 +2034,28 @@
         };
 
         // Service categories and their available sizes
+        @php
+            // Build a slug → original-base-price map for any service that has a discount active.
+            $originalPricesPhp = [];
+            $allSlugs = [
+                'small-knotless','smedium-knotless','medium-knotless','jumbo-knotless',
+                'small-boho','smedium-boho','medium-boho','jumbo-boho',
+                'small-twist','medium-twist','jumbo-twist',
+                'small-natural-hair-twist','medium-natural-hair-twist',
+                'kinky-twist','passion-twist',
+                'stitch-weave','cornrow-weave','under-wig-weave','weave-braid-mixed',
+                'small-french-curl','smedium-french-curl','medium-french-curl','large-french-curl',
+                'line-single','afro-crotchet','individual-loc','butterfly-locks','weave-crotchet',
+                'natural-hair-treatment','chemical-relaxer',
+            ];
+            foreach ($allSlugs as $_s) {
+                $_k  = str_replace('-', '_', $_s);
+                $_ef = (int) config('service_prices.' . $_k, 0);
+                $_or = (int) config('service_prices_original.' . $_k, $_ef);
+                if ($_or > $_ef && $_ef > 0) $originalPricesPhp[$_s] = $_or;
+            }
+        @endphp
+        const originalPricesMap = @json($originalPricesPhp); // slug → original price (only when discounted)
         window.serviceSizesMap = {
             'knotless': {
                 category: 'Knotless Braids',
@@ -2186,7 +2208,11 @@
                         </div>
                         <div style="font-weight: 700; color: #030f68; font-size: 0.9rem; margin-bottom: 4px;">${sizeName}</div>
                         ${sizeDesc ? `<div style="font-size: 0.7rem; color: #6c757d; margin-bottom: 6px; line-height: 1.2;">${sizeDesc}</div>` : ''}
-                        <div style="font-size: 1.2rem; font-weight: 800; color: #ff6600;">$${size.price}</div>
+                        ${originalPricesMap[size.slug]
+                            ? `<div style="font-size:1.2rem;font-weight:800;color:#ff6600">$${size.price} <span class="badge bg-danger" style="font-size:.6rem;vertical-align:middle">SALE</span></div>
+                               <div style="font-size:.82rem;color:#999;text-decoration:line-through">was $${originalPricesMap[size.slug]}</div>`
+                            : `<div style="font-size: 1.2rem; font-weight: 800; color: #ff6600;">$${size.price}</div>`
+                        }
                         <div style="font-size: 0.75rem; color: #999; margin-top: 4px;">${size.time}</div>
                     </div>
                 `;
@@ -3956,7 +3982,7 @@
                         <p class="mb-2">Versatile protective style available in multiple sizes—from ultra-fine to jumbo.</p>
                         <p class="mb-1"><strong>Time:</strong> 2–7 hrs • <strong>Sizes:</strong> Small, Smedium, Medium, Jumbo</p>
                         <p class="mb-3"><strong>Hair:</strong> Not included</p>
-                        <p class="price"><strong>From ${{ number_format(config('service_prices.jumbo_knotless', 100),0) }}</strong> <small class="text-muted">(varies by size & length)</small></p>
+                        @include('partials.service-price', ['priceKey' => 'jumbo_knotless', 'priceDefault' => 100, 'priceLabel' => '(varies by size & length)'])
                         <button class="btn btn-warning mt-3">Select Size & Book</button>
                     </div>
                 </div>
@@ -3967,7 +3993,7 @@
                         <p class="mb-2">Elegant braids with beautiful curly ends for a sophisticated, romantic look.</p>
                         <p class="mb-1"><strong>Time:</strong> 3–7 hrs • <strong>Sizes:</strong> Small, Smedium, Medium, Large</p>
                         <p class="mb-3"><strong>Hair:</strong> Not included</p>
-                        <p class="price"><strong>From ${{ number_format(config('service_prices.large_french_curl', 120),0) }}</strong> <small class="text-muted">(varies by size & length)</small></p>
+                        @include('partials.service-price', ['priceKey' => 'large_french_curl', 'priceDefault' => 120, 'priceLabel' => '(varies by size & length)'])
                         <button class="btn btn-warning mt-3">Select Size & Book</button>
                     </div>
                 </div>
@@ -3978,7 +4004,7 @@
                         <p class="mb-2">Twist braid</p>
                         <p class="mb-1"><strong>Time:</strong> 3–6 hrs • <strong>Sizes:</strong> Small, Medium, Jumbo/Large</p>
                         <p class="mb-3"><strong>Hair:</strong> Not included</p>
-                        <p class="price"><strong>From ${{ number_format(config('service_prices.jumbo_twist', 100),0) }}</strong> <small class="text-muted">(varies by size & length)</small></p>
+                        @include('partials.service-price', ['priceKey' => 'jumbo_twist', 'priceDefault' => 100, 'priceLabel' => '(varies by size & length)'])
                         <button class="btn btn-warning mt-3">Select Size & Book</button>
                     </div>
                 </div>
@@ -3989,7 +4015,7 @@
                         <p class="mb-2">Two-strand twists using your natural hair—no extensions needed, perfect for low-manipulation styling.</p>
                         <p class="mb-1"><strong>Time:</strong> 2–3 hrs • <strong>Sizes:</strong> Small, Medium</p>
                         <p class="mb-3"><strong>Hair:</strong> Not needed • <strong>Note:</strong> No length adjustment</p>
-                        <p class="price"><strong>From ${{ number_format(config('service_prices.medium_natural_hair_twist', 60),0) }}</strong> <small class="text-muted">(varies by size)</small></p>
+                        @include('partials.service-price', ['priceKey' => 'medium_natural_hair_twist', 'priceDefault' => 60, 'priceLabel' => '(varies by size)'])
                         <button class="btn btn-warning mt-3">Select Size & Book</button>
                     </div>
                 </div>
@@ -4000,7 +4026,7 @@
                         <p class="mb-2">Stylish kinky and passion twists in various sizes—versatile protective styles with plenty of texture and dimension.</p>
                         <p class="mb-1"><strong>Time:</strong> 2.5–5 hrs • <strong>Types:</strong> Kinky & Passion Twists</p>
                         <p class="mb-3"><strong>Hair:</strong> Not included • <strong>Sizes:</strong> Small, Medium, Jumbo</p>
-                        <p class="price"><strong>From ${{ number_format(config('service_prices.kinky_twist', 90),0) }}</strong> <small class="text-muted">(varies by type & size)</small></p>
+                        @include('partials.service-price', ['priceKey' => 'kinky_twist', 'priceDefault' => 90, 'priceLabel' => '(varies by type & size)'])
                         <button class="btn btn-warning mt-3">Select Size & Book</button>
                     </div>
                 </div>
@@ -4011,7 +4037,7 @@
                         <p class="mb-2">Quick protective styles with various crotchet options—versatile and low-maintenance.</p>
                         <p class="mb-1"><strong>Time:</strong> 1.5–5 hrs • <strong>Types:</strong> 2/3 Line Single Crochet, Afro, Individual Crotchet, Butterfly, Weave Crotchet</p>
                         <p class="mb-3"><strong>Hair:</strong> Not included • <strong>Note:</strong> No length adjustment needed</p>
-                        <p class="price"><strong>From ${{ number_format(config('service_prices.weave_crotchet', 80),0) }}</strong> <small class="text-muted">(varies by type)</small></p>
+                        @include('partials.service-price', ['priceKey' => 'weave_crotchet', 'priceDefault' => 80, 'priceLabel' => '(varies by type)'])
                         <button class="btn btn-warning mt-3">Select Type & Book</button>
                     </div>
                 </div>
@@ -4023,7 +4049,7 @@
                         <p class="mb-2">Fun, gentle braiding styles designed for children—knotless, cornrows, and more.</p>
                         <p class="mb-1"><strong>Time:</strong> 1–3 hrs • <strong>Sizes:</strong> Small, Medium, Large</p>
                         <p class="mb-3"><strong>Hair:</strong> Not included</p>
-                        <p class="price"><strong>From ${{ number_format(config('service_prices.kids_braids', 80),0) }}</strong> <small class="text-muted">(varies by style & length)</small></p>
+                        @include('partials.service-price', ['priceKey' => 'kids_braids', 'priceDefault' => 80, 'priceLabel' => '(varies by style & length)'])
                         <button class="btn btn-warning mt-3">Select Style & Book</button>
                     </div>
                 </div>
@@ -4035,7 +4061,7 @@
                         <p class="mb-1"><strong>Time:</strong> 1–5 hrs • <strong>Types:</strong> Stitch Weave, Cornrow Weave, Under-wig Weave (no extension), Weave&Braid Mixed</p>
                         <p class="mb-2"><strong>Hair:</strong> Not included</p>
                         <p class="mb-3" style="font-size: 0.9rem;"><strong>Note:</strong> Stitch/Cornrow: 8-10 rows $100, 10+ rows $130. Under-wig: $30 (no length). Mixed: $150</p>
-                        <p class="price"><strong>From ${{ number_format(config('service_prices.under_wig_weave', 30),0) }}</strong> <small class="text-muted">(varies by type)</small></p>
+                        @include('partials.service-price', ['priceKey' => 'under_wig_weave', 'priceDefault' => 30, 'priceLabel' => '(varies by type)'])
                         <button class="btn btn-warning mt-3">Select Type & Book</button>
                     </div>
                 </div>
@@ -4046,7 +4072,7 @@
                         <p class="mb-2">Professional hair care treatments for natural and relaxed hair.</p>
                         <p class="mb-1"><strong>Time:</strong> 45 min–2 hrs • <strong>Options:</strong> Natural Hair Mask, Chemical Relaxer</p>
                         <p class="mb-3"><strong>Note:</strong> Optional weave treatment adds $30 to any service</p>
-                        <p class="price"><strong>From ${{ number_format(config('service_prices.hair_mask', 50),0) }}</strong> <small class="text-muted">(all treatments $50-$80)</small></p>
+                        @include('partials.service-price', ['priceKey' => 'hair_mask', 'priceDefault' => 50, 'priceLabel' => '(all treatments $50-$80)'])
                         <button class="btn btn-warning mt-3">Select Treatment & Book</button>
                     </div>
                 </div>
@@ -4057,7 +4083,7 @@
                         <p class="mb-2">Knotless braids with curly ends left out for a free-spirited, bohemian look.</p>
                         <p class="mb-1"><strong>Time:</strong> 3–7 hrs • <strong>Sizes:</strong> Small, Smedium, Medium, Jumbo/Large</p>
                         <p class="mb-3"><strong>Hair:</strong> Not included</p>
-                        <p class="price"><strong>From ${{ number_format(config('service_prices.jumbo_boho', 100),0) }}</strong> <small class="text-muted">(varies by size & length)</small></p>
+                        @include('partials.service-price', ['priceKey' => 'jumbo_boho', 'priceDefault' => 100, 'priceLabel' => '(varies by size & length)'])
                         <button class="btn btn-warning mt-3">Select Size & Book</button>
                     </div>
                 </div>

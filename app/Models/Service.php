@@ -15,6 +15,7 @@ class Service extends Model
         'base_price',
         'discount_price',
         'description',
+        'image_url',
         'category',
         'is_active',
     ];
