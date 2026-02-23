@@ -2047,67 +2047,67 @@
             'boho': {
                 category: 'Boho Braids',
                 sizes: [
-                    { name: 'Small Boho Braids', slug: 'small-boho', price: 180, time: '6–7 hrs' },
-                    { name: 'Smedium Boho Braids', slug: 'smedium-boho', price: {{ (int) config('service_prices.boho_braids', 150) }}, time: '5–6 hrs' },
-                    { name: 'Medium Boho Braids', slug: 'medium-boho', price: 130, time: '4–5 hrs' },
-                    { name: 'Jumbo/Large Boho Braids', slug: 'jumbo-boho', price: 100, time: '3–4 hrs' }
+                    { name: 'Small Boho Braids', slug: 'small-boho', price: {{ (int) config('service_prices.small_boho', 180) }}, time: '6–7 hrs' },
+                    { name: 'Smedium Boho Braids', slug: 'smedium-boho', price: {{ (int) config('service_prices.smedium_boho', 150) }}, time: '5–6 hrs' },
+                    { name: 'Medium Boho Braids', slug: 'medium-boho', price: {{ (int) config('service_prices.medium_boho', 130) }}, time: '4–5 hrs' },
+                    { name: 'Jumbo/Large Boho Braids', slug: 'jumbo-boho', price: {{ (int) config('service_prices.jumbo_boho', 100) }}, time: '3–4 hrs' }
                 ]
             },
             'twist': {
                 category: 'Twist Braid',
                 sizes: [
-                    { name: 'Small Twists', slug: 'small-twist', price: 150, time: '5–6 hrs' },
-                    { name: 'Medium Twists', slug: 'medium-twist', price: 120, time: '4–5 hrs' },
-                    { name: 'Jumbo/Large Twists', slug: 'jumbo-twist', price: 100, time: '3–4 hrs' }
+                    { name: 'Small Twists', slug: 'small-twist', price: {{ (int) config('service_prices.small_twist', 150) }}, time: '5–6 hrs' },
+                    { name: 'Medium Twists', slug: 'medium-twist', price: {{ (int) config('service_prices.medium_twist', 120) }}, time: '4–5 hrs' },
+                    { name: 'Jumbo/Large Twists', slug: 'jumbo-twist', price: {{ (int) config('service_prices.jumbo_twist', 100) }}, time: '3–4 hrs' }
                 ]
             },
             'natural-hair-twist': {
                 category: 'Natural Hair Twist',
                 sizes: [
-                    { name: 'Small Natural Hair Twist', slug: 'small-natural-hair-twist', price: 80, time: '2–3 hrs', noLength: true },
-                    { name: 'Medium Natural Hair Twist', slug: 'medium-natural-hair-twist', price: 60, time: '2–3 hrs', noLength: true }
+                    { name: 'Small Natural Hair Twist', slug: 'small-natural-hair-twist', price: {{ (int) config('service_prices.small_natural_hair_twist', 80) }}, time: '2–3 hrs', noLength: true },
+                    { name: 'Medium Natural Hair Twist', slug: 'medium-natural-hair-twist', price: {{ (int) config('service_prices.medium_natural_hair_twist', 60) }}, time: '2–3 hrs', noLength: true }
                 ]
             },
             'kinky-passion-twist': {
                 category: 'Kinky & Passion Twists',
                 sizes: [
-                    { name: 'Kinky Twist', slug: 'kinky-twist', price: 120, time: '3–4 hrs' },
-                    { name: 'Passion Twist', slug: 'passion-twist', price: 130, time: '3–4 hrs' }
+                    { name: 'Kinky Twist', slug: 'kinky-twist', price: {{ (int) config('service_prices.kinky_twist', 120) }}, time: '3–4 hrs' },
+                    { name: 'Passion Twist', slug: 'passion-twist', price: {{ (int) config('service_prices.passion_twist', 130) }}, time: '3–4 hrs' }
                 ]
             },
             'cornrow': {
                 category: 'Cornrow/Feed-in Braids',
                 sizes: [
-                    { name: 'Stitch Weave', slug: 'stitch-weave', price: 100, time: '4–5 hrs', hasRowOptions: true },
-                    { name: 'Cornrow Weave', slug: 'cornrow-weave', price: 100, time: '4–5 hrs', hasRowOptions: true },
-                    { name: 'Under-wig Weave (no extension)', slug: 'under-wig-weave', price: 30, time: '30 min–1 hr', hasRowOptions: false, noLength: true },
-                    { name: 'Weave&Braid Mixed', slug: 'weave-braid-mixed', price: 150, time: '4–5 hrs', hasRowOptions: false }
+                    { name: 'Stitch Weave', slug: 'stitch-weave', price: {{ (int) config('service_prices.stitch_weave', 100) }}, time: '4–5 hrs', hasRowOptions: true },
+                    { name: 'Cornrow Weave', slug: 'cornrow-weave', price: {{ (int) config('service_prices.cornrow_weave', 100) }}, time: '4–5 hrs', hasRowOptions: true },
+                    { name: 'Under-wig Weave (no extension)', slug: 'under-wig-weave', price: {{ (int) config('service_prices.under_wig_weave', 30) }}, time: '30 min–1 hr', hasRowOptions: false, noLength: true },
+                    { name: 'Weave&Braid Mixed', slug: 'weave-braid-mixed', price: {{ (int) config('service_prices.weave_braid_mixed', 150) }}, time: '4–5 hrs', hasRowOptions: false }
                 ]
             },
             'french-curl': {
                 category: 'French Curl Braids',
                 sizes: [
-                    { name: 'Small French Curl Braids', slug: 'small-french-curl', price: 200, time: '6–7 hrs' },
-                    { name: 'Smedium French Curl Braids', slug: 'smedium-french-curl', price: 170, time: '5–6 hrs' },
-                    { name: 'Medium French Curl Braids', slug: 'medium-french-curl', price: 150, time: '4–5 hrs' },
-                    { name: 'Large French Curl Braids', slug: 'large-french-curl', price: 120, time: '3–4 hrs' }
+                    { name: 'Small French Curl Braids', slug: 'small-french-curl', price: {{ (int) config('service_prices.small_french_curl', 200) }}, time: '6–7 hrs' },
+                    { name: 'Smedium French Curl Braids', slug: 'smedium-french-curl', price: {{ (int) config('service_prices.smedium_french_curl', 170) }}, time: '5–6 hrs' },
+                    { name: 'Medium French Curl Braids', slug: 'medium-french-curl', price: {{ (int) config('service_prices.medium_french_curl', 150) }}, time: '4–5 hrs' },
+                    { name: 'Large French Curl Braids', slug: 'large-french-curl', price: {{ (int) config('service_prices.large_french_curl', 120) }}, time: '3–4 hrs' }
                 ]
             },
             'crotchet': {
                 category: 'Crotchet Styles',
                 sizes: [
-                    { name: '2/3 Line Single Crochet', slug: 'line-single', price: 100, time: '2–3 hrs', hasFrontBackAddon: true, noLength: true },
-                    { name: 'Afro Crotchet', slug: 'afro-crotchet', price: 120, time: '3–4 hrs', hasFrontBackAddon: false, noLength: true },
-                    { name: 'Individual Crotchet', slug: 'individual-crotchet', price: 150, time: '4–5 hrs', hasFrontBackAddon: false, noLength: true },
-                    { name: 'Butterfly Locks', slug: 'butterfly-locks', price: 150, time: '3–4 hrs', hasFrontBackAddon: false, noLength: true },
-                    { name: 'Weave Crotchet', slug: 'weave-crotchet', price: 80, time: '1.5–2 hrs', hasFrontBackAddon: false, noLength: true }
+                    { name: '2/3 Line Single Crochet', slug: 'line-single', price: {{ (int) config('service_prices.line_single', 100) }}, time: '2–3 hrs', hasFrontBackAddon: true, noLength: true },
+                    { name: 'Afro Crotchet', slug: 'afro-crotchet', price: {{ (int) config('service_prices.afro_crotchet', 120) }}, time: '3–4 hrs', hasFrontBackAddon: false, noLength: true },
+                    { name: 'Individual Crotchet', slug: 'individual-crotchet', price: {{ (int) config('service_prices.individual_loc', 150) }}, time: '4–5 hrs', hasFrontBackAddon: false, noLength: true },
+                    { name: 'Butterfly Locks', slug: 'butterfly-locks', price: {{ (int) config('service_prices.butterfly_locks', 150) }}, time: '3–4 hrs', hasFrontBackAddon: false, noLength: true },
+                    { name: 'Weave Crotchet', slug: 'weave-crotchet', price: {{ (int) config('service_prices.weave_crotchet', 80) }}, time: '1.5–2 hrs', hasFrontBackAddon: false, noLength: true }
                 ]
             },
             'hair-treatment': {
                 category: 'Hair Treatment Services',
                 sizes: [
                     { name: 'Natural Hair Treatment/Mask', slug: 'natural-hair-treatment', price: {{ (int) config('service_prices.hair_mask', 50) }}, time: '45 min–1 hr', hasWeaveAddon: true, noLength: true },
-                    { name: 'Chemical Relaxer', slug: 'chemical-relaxer', price: 50, time: '1.5–2 hrs', hasWeaveAddon: true, noLength: true }
+                    { name: 'Chemical Relaxer', slug: 'chemical-relaxer', price: {{ (int) config('service_prices.chemical_relaxer', 50) }}, time: '1.5–2 hrs', hasWeaveAddon: true, noLength: true }
                 ]
             }
         };
@@ -3967,7 +3967,7 @@
                         <p class="mb-2">Elegant braids with beautiful curly ends for a sophisticated, romantic look.</p>
                         <p class="mb-1"><strong>Time:</strong> 3–7 hrs • <strong>Sizes:</strong> Small, Smedium, Medium, Large</p>
                         <p class="mb-3"><strong>Hair:</strong> Not included</p>
-                        <p class="price"><strong>From $120</strong> <small class="text-muted">(varies by size & length)</small></p>
+                        <p class="price"><strong>From ${{ number_format(config('service_prices.large_french_curl', 120),0) }}</strong> <small class="text-muted">(varies by size & length)</small></p>
                         <button class="btn btn-warning mt-3">Select Size & Book</button>
                     </div>
                 </div>
@@ -3978,7 +3978,7 @@
                         <p class="mb-2">Twist braid</p>
                         <p class="mb-1"><strong>Time:</strong> 3–6 hrs • <strong>Sizes:</strong> Small, Medium, Jumbo/Large</p>
                         <p class="mb-3"><strong>Hair:</strong> Not included</p>
-                        <p class="price"><strong>From $100</strong> <small class="text-muted">(varies by size & length)</small></p>
+                        <p class="price"><strong>From ${{ number_format(config('service_prices.jumbo_twist', 100),0) }}</strong> <small class="text-muted">(varies by size & length)</small></p>
                         <button class="btn btn-warning mt-3">Select Size & Book</button>
                     </div>
                 </div>
@@ -3989,7 +3989,7 @@
                         <p class="mb-2">Two-strand twists using your natural hair—no extensions needed, perfect for low-manipulation styling.</p>
                         <p class="mb-1"><strong>Time:</strong> 2–3 hrs • <strong>Sizes:</strong> Small, Medium</p>
                         <p class="mb-3"><strong>Hair:</strong> Not needed • <strong>Note:</strong> No length adjustment</p>
-                        <p class="price"><strong>From $60</strong> <small class="text-muted">(varies by size)</small></p>
+                        <p class="price"><strong>From ${{ number_format(config('service_prices.medium_natural_hair_twist', 60),0) }}</strong> <small class="text-muted">(varies by size)</small></p>
                         <button class="btn btn-warning mt-3">Select Size & Book</button>
                     </div>
                 </div>
@@ -4000,7 +4000,7 @@
                         <p class="mb-2">Stylish kinky and passion twists in various sizes—versatile protective styles with plenty of texture and dimension.</p>
                         <p class="mb-1"><strong>Time:</strong> 2.5–5 hrs • <strong>Types:</strong> Kinky & Passion Twists</p>
                         <p class="mb-3"><strong>Hair:</strong> Not included • <strong>Sizes:</strong> Small, Medium, Jumbo</p>
-                        <p class="price"><strong>From $90</strong> <small class="text-muted">(varies by type & size)</small></p>
+                        <p class="price"><strong>From ${{ number_format(config('service_prices.kinky_twist', 90),0) }}</strong> <small class="text-muted">(varies by type & size)</small></p>
                         <button class="btn btn-warning mt-3">Select Size & Book</button>
                     </div>
                 </div>
@@ -4011,7 +4011,7 @@
                         <p class="mb-2">Quick protective styles with various crotchet options—versatile and low-maintenance.</p>
                         <p class="mb-1"><strong>Time:</strong> 1.5–5 hrs • <strong>Types:</strong> 2/3 Line Single Crochet, Afro, Individual Crotchet, Butterfly, Weave Crotchet</p>
                         <p class="mb-3"><strong>Hair:</strong> Not included • <strong>Note:</strong> No length adjustment needed</p>
-                        <p class="price"><strong>From $80</strong> <small class="text-muted">(varies by type)</small></p>
+                        <p class="price"><strong>From ${{ number_format(config('service_prices.weave_crotchet', 80),0) }}</strong> <small class="text-muted">(varies by type)</small></p>
                         <button class="btn btn-warning mt-3">Select Type & Book</button>
                     </div>
                 </div>
@@ -4035,7 +4035,7 @@
                         <p class="mb-1"><strong>Time:</strong> 1–5 hrs • <strong>Types:</strong> Stitch Weave, Cornrow Weave, Under-wig Weave (no extension), Weave&Braid Mixed</p>
                         <p class="mb-2"><strong>Hair:</strong> Not included</p>
                         <p class="mb-3" style="font-size: 0.9rem;"><strong>Note:</strong> Stitch/Cornrow: 8-10 rows $100, 10+ rows $130. Under-wig: $30 (no length). Mixed: $150</p>
-                        <p class="price"><strong>From $30</strong> <small class="text-muted">(varies by type)</small></p>
+                        <p class="price"><strong>From ${{ number_format(config('service_prices.under_wig_weave', 30),0) }}</strong> <small class="text-muted">(varies by type)</small></p>
                         <button class="btn btn-warning mt-3">Select Type & Book</button>
                     </div>
                 </div>
@@ -4057,7 +4057,7 @@
                         <p class="mb-2">Knotless braids with curly ends left out for a free-spirited, bohemian look.</p>
                         <p class="mb-1"><strong>Time:</strong> 3–7 hrs • <strong>Sizes:</strong> Small, Smedium, Medium, Jumbo/Large</p>
                         <p class="mb-3"><strong>Hair:</strong> Not included</p>
-                        <p class="price"><strong>From $100</strong> <small class="text-muted">(varies by size & length)</small></p>
+                        <p class="price"><strong>From ${{ number_format(config('service_prices.jumbo_boho', 100),0) }}</strong> <small class="text-muted">(varies by size & length)</small></p>
                         <button class="btn btn-warning mt-3">Select Size & Book</button>
                     </div>
                 </div>
