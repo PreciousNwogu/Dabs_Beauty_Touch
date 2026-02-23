@@ -341,13 +341,36 @@
                     @endif
                 @endif
 
+                <div style="background:linear-gradient(135deg,#fff7ed,#fff3e0);border:2px solid #ff6600;border-radius:14px;padding:20px;margin:20px 0;">
+                    <h6 style="color:#ff6600;font-weight:800;margin-bottom:12px;">
+                        <i class="fas fa-credit-card me-2"></i>Deposit Required to Confirm Your Appointment
+                    </h6>
+                    <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:14px;">
+                        <div style="background:linear-gradient(135deg,#ff6600,#ff8533);color:#fff;border-radius:10px;padding:12px 24px;text-align:center;min-width:100px;">
+                            <div style="font-size:1.6rem;font-weight:800;">$20.00</div>
+                            <div style="font-size:0.75rem;opacity:0.9;">Deposit due</div>
+                        </div>
+                        <div style="font-size:0.92rem;color:#555;flex:1;min-width:180px;">
+                            Your booking is <strong>pending</strong> until the $20 deposit is received.<br>
+                            The deposit is <strong>non-refundable</strong> once confirmed.
+                        </div>
+                    </div>
+                    <div style="font-size:0.9rem;color:#333;margin-bottom:8px;"><strong>How to pay:</strong></div>
+                    <ol style="font-size:0.88rem;color:#444;line-height:1.9;margin:0 0 12px 0;padding-left:20px;">
+                        <li>Contact us via phone, email, or WhatsApp</li>
+                        <li>Make a <strong>bank transfer</strong> of $20.00</li>
+                        <li>Send us your payment receipt</li>
+                        <li>We'll confirm your appointment within 24 hours</li>
+                    </ol>
+                    <div style="display:flex;gap:10px;flex-wrap:wrap;">
+                        <a href="tel:+13432548848" class="btn btn-sm" style="background:#030f68;color:#fff;border-radius:8px;font-weight:600;"><i class="fas fa-phone me-1"></i>(343) 254-8848</a>
+                        <a href="mailto:info@dabsbeautytouch.com" class="btn btn-sm" style="background:#030f68;color:#fff;border-radius:8px;font-weight:600;"><i class="fas fa-envelope me-1"></i>Email Us</a>
+                        <a href="https://wa.me/13432548848" target="_blank" rel="noopener" class="btn btn-sm" style="background:#25d366;color:#fff;border-radius:8px;font-weight:600;"><i class="fab fa-whatsapp me-1"></i>WhatsApp</a>
+                    </div>
+                </div>
                 <div class="alert alert-info">
-                    <h6><i class="fas fa-info-circle me-2"></i>What's Next?</h6>
-                    <ul class="mb-0 ps-3">
-                        <li>We'll contact you within 24 hours to confirm your appointment</li>
-                        <li>A $20 deposit will be required to secure your booking</li>
-                        <li>Please keep your Booking ID and Confirmation Code for reference</li>
-                    </ul>
+                    <i class="fas fa-info-circle me-2"></i>
+                    <strong>Important:</strong> Save your Booking ID and Confirmation Code. Your appointment is pending until the $20 deposit is received and verified.
                 </div>
 
                 <div class="text-center mt-4">

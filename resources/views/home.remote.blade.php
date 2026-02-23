@@ -7645,27 +7645,34 @@ function openOtherServicesModal() {
                     </div>
                 </div>
 
-                <!-- Deposit Notice (full width) -->
-                <div class="mb-3" style="margin:12px -12px 18px -12px;">
-                    <div style="background:#fff3cd; border-radius:12px; padding:14px 16px; display:flex; align-items:center; justify-content:center; gap:12px; border-left:6px solid #f59e0b;">
-                        <span style="font-size:1.4rem; color:#b45309;">&#9888;</span>
-                        <div style="font-weight:700; color:#7c4a0a; font-size:1rem;">Please contact us to arrange the $20 deposit payment.</div>
+                <!-- Deposit Info Block -->
+                <div style="background:linear-gradient(135deg,#fff7ed,#fff3e0);border:2px solid #ff6600;border-radius:14px;padding:20px;margin:10px 0 14px 0;text-align:left;">
+                    <h6 style="color:#ff6600;font-weight:800;margin-bottom:12px;">
+                        <i class="bi bi-credit-card-fill me-2"></i>Deposit Required to Confirm Your Appointment
+                    </h6>
+                    <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:14px;">
+                        <div style="background:linear-gradient(135deg,#ff6600,#ff8533);color:#fff;border-radius:10px;padding:12px 24px;text-align:center;min-width:100px;">
+                            <div style="font-size:1.6rem;font-weight:800;">$20.00</div>
+                            <div style="font-size:0.75rem;opacity:0.9;">Deposit due</div>
+                        </div>
+                        <div style="font-size:0.92rem;color:#555;flex:1;min-width:160px;">
+                            Your booking is <strong>pending</strong> until the $20 deposit is received.<br>
+                            The deposit is <strong>non-refundable</strong> once confirmed.
+                        </div>
+                    </div>
+                    <div style="font-size:0.9rem;color:#333;margin-bottom:8px;"><strong>How to pay:</strong></div>
+                    <ol style="font-size:0.85rem;color:#444;line-height:1.9;margin:0 0 12px 0;padding-left:18px;">
+                        <li>Contact us via phone, email, or WhatsApp</li>
+                        <li>Make a <strong>bank transfer</strong> of $20.00</li>
+                        <li>Send us your payment receipt</li>
+                        <li>We'll confirm your appointment within 24 hours</li>
+                    </ol>
+                    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                        <a href="tel:+13432548848" class="btn btn-sm" style="background:#030f68;color:#fff;border-radius:8px;font-weight:600;"><i class="bi bi-telephone-fill me-1"></i>(343) 254-8848</a>
+                        <a href="mailto:info@dabsbeautytouch.com" class="btn btn-sm" style="background:#030f68;color:#fff;border-radius:8px;font-weight:600;"><i class="bi bi-envelope-fill me-1"></i>Email Us</a>
+                        <a href="https://wa.me/13432548848" target="_blank" rel="noopener" class="btn btn-sm" style="background:#25d366;color:#fff;border-radius:8px;font-weight:600;"><i class="bi bi-whatsapp me-1"></i>WhatsApp</a>
                     </div>
                 </div>
-
-                <!-- Contact Info Row -->
-                <div class="row" style="margin-bottom:14px;">
-                    <div class="col-6 text-center" style="padding:0 12px;">
-                        <div style="font-weight:700; color:#05204a; margin-bottom:6px;"><i class="bi bi-telephone-fill me-2" style="color:#111827;"></i>Phone:</div>
-                        <a href="tel:+13432458848" style="color:#007bff; text-decoration:underline; font-size:16px;">(+1)343-245-8848</a>
-                    </div>
-                    <div class="col-6 text-center" style="padding:0 12px;">
-                        <div style="font-weight:700; color:#05204a; margin-bottom:6px;"><i class="bi bi-envelope-fill me-2" style="color:#111827;"></i>Email:</div>
-                        <a href="mailto:info@dabsbeautytouch.com" style="color:#007bff; text-decoration:underline; font-size:16px;">info@dabsbeautytouch.com</a>
-                    </div>
-                </div>
-
-                <p class="text-muted" style="font-size:0.98rem; margin-bottom:18px;">We'll confirm your appointment once payment is received!</p>
 
                 <div class="text-center" style="margin-bottom:8px;">
                     <button type="button" class="btn" data-bs-dismiss="modal" style="background: linear-gradient(90deg,#06b6d4 0%,#10b981 100%); border:none; color:#05204a; color:#fff; padding:12px 60px; border-radius:999px; font-weight:800; font-size:16px;">OK</button>
