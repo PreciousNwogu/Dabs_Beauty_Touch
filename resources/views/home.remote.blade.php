@@ -7518,95 +7518,59 @@ function openOtherServicesModal() {
 
 <!-- Deposit Payment Instructions Modal -->
 <div class="modal fade" id="depositModal" tabindex="-1" aria-labelledby="depositModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content" style="border-radius: 20px; border: none;">
-            <div class="modal-header" style="background: linear-gradient(135deg, #030f68 0%, #05137c 100%); color: white; border-radius: 20px 20px 0 0;">
-                <h5 class="modal-title" id="depositModalLabel">Complete Your Booking - Deposit Required</h5>
+    <div class="modal-dialog modal-dialog-centered" style="max-width:600px;">
+        <div class="modal-content" style="border-radius:20px;border:none;overflow:hidden;">
+            <div class="modal-header" style="background:linear-gradient(135deg,#16a34a,#059669);color:white;padding:18px 24px;">
+                <h5 class="modal-title" id="depositModalLabel">
+                    <i class="bi bi-check-circle-fill me-2"></i>Booking Confirmed!
+                </h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body" style="padding: 30px;">
-                <!-- Booking success message removed (handled by the primary success modal) -->
+            <div class="modal-body" style="padding:28px 28px 22px;">
+                <div class="text-center mb-3">
+                    <div style="width:64px;height:64px;border-radius:50%;background:linear-gradient(180deg,#16a34a,#059669);display:flex;align-items:center;justify-content:center;margin:0 auto 14px;">
+                        <span style="font-size:32px;color:#fff;">&#10004;</span>
+                    </div>
+                    <h4 style="color:#0f5132;font-weight:800;margin-bottom:4px;">Appointment Booked Successfully!</h4>
+                    <p style="color:#6b7280;font-size:0.93rem;margin:0;">Check your email for booking details.</p>
+                </div>
 
-                <div class="row">
-                    <div class="col-lg-8">
-                        <h4 style="color: #030f68; font-weight: 700; margin-bottom: 20px;">
-                            <i class="bi bi-credit-card me-2" style="color: #ff6600;"></i>
-                            Deposit Payment Instructions
-                        </h4>
-
-                        <div class="payment-methods mb-4">
-                            <h5 style="color: #030f68; font-weight: 600; margin-bottom: 15px;">Payment Methods:</h5>
-                            <div class="row g-3">
-                                <div class="col-12">
-                                    <div class="payment-option" style="border: 2px solid #e3e3e0; border-radius: 10px; padding: 15px; text-align: center; transition: all 0.3s ease;">
-                                        <i class="bi bi-bank" style="font-size: 2rem; color: #ff6600; margin-bottom: 10px;"></i>
-                                        <h6 style="color: #030f68; font-weight: 600;">Bank Transfer</h6>
-                                        <p style="font-size: 0.9rem; color: #666; margin: 0;">Direct bank deposit</p>
-                                    </div>
-                                </div>
-                            </div>
+                {{-- Deposit block --}}
+                <div style="background:linear-gradient(135deg,#fff7ed,#fff3e0);border:2px solid #ff6600;border-radius:14px;padding:20px;">
+                    <h6 style="color:#ff6600;font-weight:800;margin-bottom:12px;">
+                        <i class="bi bi-credit-card-fill me-2"></i>Deposit Required to Confirm Your Appointment
+                    </h6>
+                    <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:14px;">
+                        <div style="background:linear-gradient(135deg,#ff6600,#ff8533);color:#fff;border-radius:10px;padding:12px 24px;text-align:center;min-width:100px;">
+                            <div style="font-size:1.6rem;font-weight:800;">$20.00</div>
+                            <div style="font-size:0.75rem;opacity:0.9;">Deposit due</div>
                         </div>
-
-                        <div class="deposit-amount mb-4">
-                            <h5 style="color: #030f68; font-weight: 600; margin-bottom: 15px;">Deposit Amount:</h5>
-                            <div class="amount-display" style="background: linear-gradient(135deg, #ff6600 0%, #ff8533 100%); color: white; padding: 20px; border-radius: 15px; text-align: center;">
-                                <h3 style="font-weight: 700; margin: 0; font-size: 2rem;">$20.00</h3>
-                                <p style="margin: 5px 0 0 0; opacity: 0.9;">(Standard deposit for all services)</p>
-                            </div>
-                        </div>
-
-                        <div class="payment-steps mb-4">
-                            <h5 style="color: #030f68; font-weight: 600; margin-bottom: 15px;">Next Steps:</h5>
-                            <ol style="font-size: 1rem; line-height: 1.8; color: #333;">
-                                <li class="mb-2">Contact us via phone or email for payment details</li>
-                                <li class="mb-2">Make the deposit payment using your preferred method</li>
-                                <li class="mb-2">Send payment confirmation (screenshot/receipt)</li>
-                                <li class="mb-2">We'll confirm your appointment within 24 hours</li>
-                            </ol>
+                        <div style="font-size:0.92rem;color:#555;flex:1;min-width:160px;">
+                            Your booking is <strong>pending</strong> until the $20 deposit is received.<br>
+                            The deposit is <strong>non-refundable</strong> once confirmed.
                         </div>
                     </div>
-
-                    <div class="col-lg-4">
-                        <div class="contact-card" style="background: linear-gradient(135deg, #f8f9fa 0%, #e3eafc 100%); border-radius: 15px; padding: 25px; border: 2px solid #ff6600;">
-                            <h5 style="color: #030f68; font-weight: 700; text-align: center; margin-bottom: 20px;">
-                                <i class="bi bi-telephone-fill me-2" style="color: #ff6600;"></i>
-                                Contact for Payment
-                            </h5>
-
-                            <div class="contact-info" style="font-size: 1rem; line-height: 1.8;">
-                                <div class="mb-3">
-                                    <i class="bi bi-telephone-fill text-success me-2"></i>
-                                    <strong>Phone:</strong><br>
-                                    <a href="tel:+13432548848" style="color: #ff6600; text-decoration: none; font-weight: 600;">(343) 254-8848</a>
-                                </div>
-                                <div class="mb-3">
-                                    <i class="bi bi-envelope-fill text-success me-2"></i>
-                                    <strong>Email:</strong><br>
-                                    <a href="mailto:info@dabsbeautytouch.com" style="color: #ff6600; text-decoration: none; font-weight: 600;">info@dabsbeautytouch.com</a>
-                                </div>
-                                <div class="mb-3">
-                                    <i class="bi bi-whatsapp text-success me-2"></i>
-                                    <strong>WhatsApp:</strong><br>
-                                    <a href="https://wa.me/13432548848" style="color: #ff6600; text-decoration: none; font-weight: 600;" target="_blank" rel="noopener noreferrer">Send Message</a>
-                                </div>
-                            </div>
-
-                            <div class="text-center mt-4">
-                                <button class="btn btn-warning" style="font-weight: 600; padding: 12px 30px;" onclick="contactForPayment()">
-                                    <i class="bi bi-telephone me-2"></i>
-                                    Contact Now
-                                </button>
-                            </div>
-                        </div>
+                    <div style="font-size:0.9rem;color:#333;margin-bottom:8px;"><strong>How to pay:</strong></div>
+                    <ol style="font-size:0.85rem;color:#444;line-height:1.9;margin:0 0 12px 0;padding-left:18px;">
+                        <li>Contact us via phone, email, or WhatsApp</li>
+                        <li>Make a <strong>bank transfer</strong> of $20.00</li>
+                        <li>Send us your payment receipt</li>
+                        <li>We'll confirm your appointment within 24 hours</li>
+                    </ol>
+                    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                        <a href="tel:+13432548848" class="btn btn-sm" style="background:#030f68;color:#fff;border-radius:8px;font-weight:600;"><i class="bi bi-telephone-fill me-1"></i>(343) 254-8848</a>
+                        <a href="mailto:info@dabsbeautytouch.com" class="btn btn-sm" style="background:#030f68;color:#fff;border-radius:8px;font-weight:600;"><i class="bi bi-envelope-fill me-1"></i>Email Us</a>
+                        <a href="https://wa.me/13432548848" target="_blank" rel="noopener" class="btn btn-sm" style="background:#25d366;color:#fff;border-radius:8px;font-weight:600;"><i class="bi bi-whatsapp me-1"></i>WhatsApp</a>
                     </div>
                 </div>
 
-                <div class="important-notice mt-4">
-                    <div class="alert alert-warning" style="border-left: 4px solid #ff6600;">
-                        <i class="bi bi-exclamation-triangle-fill me-2" style="color: #ff6600;"></i>
-                        <strong>Important:</strong> Your appointment will only be confirmed after deposit payment is received and verified.
-                    </div>
+                <div class="alert alert-info mt-3 mb-0">
+                    <i class="bi bi-info-circle me-2"></i>
+                    <strong>Important:</strong> Save your Booking ID and Confirmation Code. Your appointment is pending until the $20 deposit is received and verified.
                 </div>
+            </div>
+            <div class="modal-footer" style="border-top:none;padding:0 28px 20px;">
+                <a href="{{ route('home') }}" class="btn btn-secondary">Close</a>
             </div>
         </div>
     </div>
