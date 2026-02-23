@@ -8563,7 +8563,11 @@ document.addEventListener('DOMContentLoaded', function(){
         'boho-braids': {{ (int) config('service_prices.boho_braids', 150) }},
         'kinky-twist': 120,
         'passion-twist': 130,
-        'custom': 100
+        'custom': 100,
+        // CMS-added services
+        @foreach($extraServices ?? [] as $__s)
+        '{{ $__s->slug }}': {{ (int) $__s->effective_price }},
+        @endforeach
     };
 
     // Name → base price (used when we only have a serviceName, not a serviceType)
@@ -8582,6 +8586,10 @@ document.addEventListener('DOMContentLoaded', function(){
         'Weaving No-Extension': {{ (int) config('service_prices.weaving_no_extension', 30) }},
         'Kinky Twist': {{ (int) config('service_prices.kinky_twist', 120) }},
         'Passion Twist': 130,
+        // CMS-added services
+        @foreach($extraServices ?? [] as $__s)
+        '{{ $__s->name }}': {{ (int) $__s->effective_price }},
+        @endforeach
     };
 
     function lengthAdjustment(lengthValue) {

@@ -40,8 +40,13 @@ class PriceCalculator
             $frontBackAddon = in_array(strtolower(trim($frontBackAddonRaw)), ['1','true','yes','y','on'], true);
         }
 
-        // Prefer model base price when present
-        $basePrice = $serviceModel && isset($serviceModel->base_price) ? (float) $serviceModel->base_price : null;
+        // Prefer model effective price (respects discount) when present
+        $basePrice = null;
+        if ($serviceModel && isset($serviceModel->effective_price)) {
+            $basePrice = (float) $serviceModel->effective_price;
+        } elseif ($serviceModel && isset($serviceModel->base_price)) {
+            $basePrice = (float) $serviceModel->base_price;
+        }
 
         // Fallbacks from config
         if ($basePrice === null) {
