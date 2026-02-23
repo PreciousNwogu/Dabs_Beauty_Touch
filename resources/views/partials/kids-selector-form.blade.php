@@ -640,22 +640,16 @@
                         <div id="kb_addons_lines"></div>
                     </div>
 
-                    <!-- Original (strikethrough) — only when discounted -->
-                    @if($kidsOrigServer > $kidsBaseServer)
-                    <div id="kb_original_price_row" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;padding-bottom:6px;border-bottom:1px solid #e3e3e0;">
+                    <!-- Original (strikethrough) — shown by JS only for discounted braid types -->
+                    <div id="kb_original_price_row" style="display:none;justify-content:space-between;align-items:center;margin-bottom:6px;padding-bottom:6px;border-bottom:1px solid #e3e3e0;">
                         <span style="font-size:0.85rem;color:#999;">Original price:</span>
-                        <span style="font-size:0.85rem;color:#999;text-decoration:line-through;">${{ $kidsOrigServer }}</span>
+                        <span id="kb_original_price_val" style="font-size:0.85rem;color:#999;text-decoration:line-through;">${{ $kidsOrigServer }}</span>
                     </div>
-                    @endif
 
                     <!-- Total -->
                     <div class="kb-price-total">
-                        <span>Total
-                            @if($kidsOrigServer > $kidsBaseServer)
-                            <span style="background:#ff6600;color:#fff;font-size:0.65rem;font-weight:700;padding:2px 6px;border-radius:4px;margin-left:4px;vertical-align:middle;">DISCOUNTED</span>
-                            @endif
-                        </span>
-                        <span class="kb-price-total-amount" id="kb_total_price" @if($kidsOrigServer > $kidsBaseServer) style="color:#ff6600;" @endif>${{ $kidsBaseServer }}</span>
+                        <span>Total <span id="kb_discount_badge" style="background:#ff6600;color:#fff;font-size:0.65rem;font-weight:700;padding:2px 6px;border-radius:4px;margin-left:4px;vertical-align:middle;display:none;">DISCOUNTED</span></span>
+                        <span class="kb-price-total-amount" id="kb_total_price">${{ $kidsBaseServer }}</span>
                     </div>
 
                     <!-- Action Buttons -->
@@ -847,6 +841,9 @@ document.addEventListener('DOMContentLoaded', function(){
     function updatePricingDisplay(braidTypeValue){
         try{
             const basePrice = {{ (int) config('service_prices.kids_braids', 80) }}; // Kids Braids base price (from CMS/config)
+            const kidsOriginalBase = {{ (int) config('service_prices_original.kids_braids', config('service_prices.kids_braids', 80)) }}; // Original before discount
+            // Braid types that have the CMS discount applied
+            const discountedBraidTypes = ['cornrow_weave', 'knotless_small', 'knotless_med', 'box_small', 'box_med', 'stitch'];
 
             // Braid type names and adjustments
             const braidTypeNames = {
@@ -964,6 +961,16 @@ document.addEventListener('DOMContentLoaded', function(){
             // Update total display
             const totalPriceEl = document.getElementById('kb_total_price');
             if(totalPriceEl) totalPriceEl.textContent = '$' + totalPrice;
+
+            // Discount display: show only for selected discounted braid types
+            const showDiscount = kidsOriginalBase > basePrice && discountedBraidTypes.indexOf(braidTypeValue) !== -1;
+            const origRow = document.getElementById('kb_original_price_row');
+            const discBadge = document.getElementById('kb_discount_badge');
+            const origVal = document.getElementById('kb_original_price_val');
+            if(origRow)  { origRow.style.display  = showDiscount ? 'flex' : 'none'; }
+            if(discBadge){ discBadge.style.display = showDiscount ? 'inline' : 'none'; }
+            if(origVal && showDiscount){ origVal.textContent = '$' + kidsOriginalBase; }
+            if(totalPriceEl){ totalPriceEl.style.color = showDiscount ? '#ff6600' : ''; }
 
             // Update hidden price input
             const priceInput = document.getElementById('kb_price_input');

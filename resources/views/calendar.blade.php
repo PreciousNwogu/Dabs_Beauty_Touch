@@ -773,10 +773,10 @@
                 '8–10 Rows Stitch Braids' => (int) config('service_prices.stitch_braids', 120),
                 'Hair Mask/Relaxing' => (int) config('service_prices.hair_mask', 50),
                 'Smedium Boho Braids' => (int) config('service_prices.boho_braids', 150),
-                @foreach($extraServices ?? [] as $extraSvc)
-                '{{ $extraSvc->name }}' => {{ (int) $extraSvc->effective_price }},
-                @endforeach
             ];
+            foreach ($extraServices ?? [] as $extraSvc) {
+                $basePriceByServiceNameCal[$extraSvc->name] = (int) $extraSvc->effective_price;
+            }
         @endphp
         const basePriceByServiceNameCal = @json($basePriceByServiceNameCal);
 
