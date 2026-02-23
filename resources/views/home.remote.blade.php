@@ -6351,6 +6351,8 @@ function openOtherServicesModal() {
             try{
                 const sel = (typeof window !== 'undefined') ? window.__kidsSelectorData : null;
                 const baseConfigured = {{ (int) config('service_prices.kids_braids', 80) }};
+                const originalBaseConfigured = {{ (int) config('service_prices_original.kids_braids', config('service_prices.kids_braids', 80)) }};
+                window.__kidsOriginalBase = originalBaseConfigured;
 
                 // Helper maps
                 const typeAdj = { protective: -20, cornrows: -40, knotless_small: 20, knotless_med: 0, box_small: 10, box_med: 0, stitch: 20 };
@@ -6459,6 +6461,18 @@ function openOtherServicesModal() {
                 const kb = document.getElementById('kidsModal_base'); if(kb) kb.innerHTML = '$' + Number(base).toFixed(2);
                 const ka = document.getElementById('kidsModal_adjustments'); if(ka) ka.innerHTML = (adjustmentsTotal >= 0 ? '+' : '-') + '$' + Math.abs(Number(adjustmentsTotal)).toFixed(2);
                 const kt = document.getElementById('kidsModal_total'); if(kt) kt.innerHTML = '$' + (finalPrice ? Number(finalPrice).toFixed(2) : '--');
+                // Discount display on base price
+                const kbOrig = document.getElementById('kidsModal_base_original');
+                const kbBadge = document.getElementById('kidsModal_discount_badge');
+                if (originalBaseConfigured > baseConfigured) {
+                    if(kbOrig){ kbOrig.innerHTML = '$' + Number(originalBaseConfigured).toFixed(2); kbOrig.style.display = 'inline'; }
+                    if(kbBadge) kbBadge.style.display = 'inline';
+                    if(kb) kb.style.color = '#ff6600';
+                } else {
+                    if(kbOrig) kbOrig.style.display = 'none';
+                    if(kbBadge) kbBadge.style.display = 'none';
+                    if(kb) kb.style.color = '#0b3a66';
+                }
             }catch(e){ console.warn('Kids price preview compute failed', e); }
 
             // show modal
@@ -8348,7 +8362,11 @@ document.addEventListener('DOMContentLoaded', function() {
                                     <div style="margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid #e3e3e0;">
                                         <div style="display:flex;justify-content:space-between;align-items:center;">
                                             <span style="color:#666;font-size:0.95rem;">Base Price:</span>
-                                            <span id="kidsModal_base" style="font-size:1.1rem;font-weight:600;color:#0b3a66;">$--</span>
+                                            <span>
+                                                <span id="kidsModal_base_original" style="font-size:0.85rem;color:#999;text-decoration:line-through;margin-right:4px;display:none;"></span>
+                                                <span id="kidsModal_base" style="font-size:1.1rem;font-weight:600;color:#0b3a66;">$--</span>
+                                                <span id="kidsModal_discount_badge" style="background:#ff6600;color:#fff;font-size:0.65rem;font-weight:700;padding:2px 6px;border-radius:4px;margin-left:4px;display:none;">DISCOUNTED</span>
+                                            </span>
                                         </div>
                                     </div>
                                     <div style="margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid #e3e3e0;">
@@ -8480,6 +8498,19 @@ document.addEventListener('DOMContentLoaded', function(){
                     kb_base.innerHTML = '$' + baseVal.toFixed(2);
                     kb_adjust.innerHTML = adjustSign + '$' + adjustVal.toFixed(2);
                     kb_total.innerHTML = '$' + totalVal.toFixed(2);
+                    // Discount display
+                    var kbOrig2 = document.getElementById('kidsModal_base_original');
+                    var kbBadge2 = document.getElementById('kidsModal_discount_badge');
+                    var origBase = (window.__kidsOriginalBase || 0);
+                    if(origBase > baseVal && origBase > 0){
+                        if(kbOrig2){ kbOrig2.innerHTML = '$' + origBase.toFixed(2); kbOrig2.style.display = 'inline'; }
+                        if(kbBadge2) kbBadge2.style.display = 'inline';
+                        if(kb_base) kb_base.style.color = '#ff6600';
+                    } else {
+                        if(kbOrig2) kbOrig2.style.display = 'none';
+                        if(kbBadge2) kbBadge2.style.display = 'none';
+                        if(kb_base) kb_base.style.color = '#0b3a66';
+                    }
                     // set hidden inputs
                     var priceMatch = (selTotalEl.textContent||selTotalEl.innerText||'').match(/\$\s*([0-9,\.]+)/);
                     if(priceMatch){
