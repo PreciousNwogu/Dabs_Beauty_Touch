@@ -3938,6 +3938,9 @@
                     <button class="btn btn-sm btn-outline-primary filter-chip" data-filter="crotchet" onclick="filterServices('crotchet')">
                         Crotchet
                     </button>
+                    <button class="btn btn-sm btn-outline-primary filter-chip" data-filter="kids" onclick="filterServices('kids')">
+                        Kids Braid
+                    </button>
                     <button class="btn btn-sm btn-outline-primary filter-chip" data-filter="other" onclick="filterServices('other')">
                         Other
                     </button>
@@ -4013,6 +4016,17 @@
                     </div>
                 </div>
 
+                <div class="col-lg-4 col-md-6 col-6 service-item" data-category="kids">
+                    <div class="service-card h-100" onclick="window.location.href='/kids-selector'">
+                        <img src="{{ asset('images/kids hair style.webp') }}" alt="Kids Braids">
+                        <h4>Kids Braids</h4>
+                        <p class="mb-2">Fun, gentle braiding styles designed for children—knotless, cornrows, and more.</p>
+                        <p class="mb-1"><strong>Time:</strong> 1–3 hrs • <strong>Sizes:</strong> Small, Medium, Large</p>
+                        <p class="mb-3"><strong>Hair:</strong> Not included</p>
+                        <p class="price"><strong>From ${{ number_format(config('service_prices.kids_braids', 80),0) }}</strong> <small class="text-muted">(varies by style & length)</small></p>
+                        <button class="btn btn-warning mt-3">Select Style & Book</button>
+                    </div>
+                </div>
                 <div class="col-lg-4 col-md-6 col-6 service-item mobile-hidden" data-category="cornrow">
                     <div class="service-card h-100" onclick="openServiceSizeModal('cornrow')">
                         <img src="{{ asset('images/stitch braid.jpg') }}" alt="Cornrow/Feed-in Braids">
@@ -6437,6 +6451,8 @@ function openOtherServicesModal() {
             }
         }catch(e){ console.warn('openKidsBookingModal failed', e); }
     }
+    // Expose globally so inline onclick="openKidsBookingModal(...)" can reach it
+    window.openKidsBookingModal = openKidsBookingModal;
 
     // Show the booking panel inside the kids modal (used when selector is embedded)
     window.showKidsBookingPanel = function(sel){
