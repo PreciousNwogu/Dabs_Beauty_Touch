@@ -1048,15 +1048,20 @@
 
             // --- CMS-added services (from /admin/services) ---
             @if(($extraServices ?? collect())->isNotEmpty())
-            const cmsServices = @json(($extraServices ?? collect())->map(fn($s) => [
-                'name'  => $s->name,
-                'slug'  => $s->slug,
-                'price' => (int) $s->effective_price,
-                'original' => (int) ($s->has_discount ? $s->base_price : $s->effective_price),
-                'image' => $s->image_url ?: '{{ asset("images/braids.jpeg") }}',
-                'description' => $s->description ?? '',
-                'has_discount' => (bool) $s->has_discount,
-            ]));
+            @php
+                $cmsServicesCal = ($extraServices ?? collect())->map(function($s) {
+                    return [
+                        'name'         => $s->name,
+                        'slug'         => $s->slug,
+                        'price'        => (int) $s->effective_price,
+                        'original'     => (int) ($s->has_discount ? $s->base_price : $s->effective_price),
+                        'image'        => $s->image_url ?: asset('images/braids.jpeg'),
+                        'description'  => $s->description ?? '',
+                        'has_discount' => (bool) $s->has_discount,
+                    ];
+                })->values()->all();
+            @endphp
+            const cmsServices = @json($cmsServicesCal);
 
             if (cmsServices.length && container) {
                 const divider = document.createElement('div');
