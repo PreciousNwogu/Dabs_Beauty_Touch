@@ -186,7 +186,7 @@ class PriceCalculator
                 'tailbone' => 60.00,    // Same as classic
                 'classic' => 60.00,    // Same as tailbone
             ];
-            
+
             $lengthAdjustment = $noLength ? 0.00 : ($lengthAdjustmentMap[$length] ?? 0.00);
             $stitchAddon = ($isStitch && $stitchRowsOptionNorm === 'more_than_ten') ? 30.00 : 0.00;
             $frontBackCost = 0.00;
@@ -214,37 +214,37 @@ class PriceCalculator
             $kb_base_price = $serviceModel && isset($serviceModel->base_price) ? (float) $serviceModel->base_price : (float) config('service_prices.kids_braids', 80);
             $kb_length = Arr::get($data, 'kb_length') ?? Arr::get($data, 'length');
             if (is_string($kb_length)) $kb_length = str_replace(['-', ' '], '_', strtolower($kb_length));
-            
+
             // Kids selector adjustments: type + length + finish (matching UI calculation)
             $typeAdj = ['protective'=>-20,'cornrows'=>-40,'knotless_small'=>20,'knotless_med'=>0,'box_small'=>10,'box_med'=>0,'stitch'=>20];
             $lengthAdj = ['shoulder'=>0,'armpit'=>10,'mid_back'=>20,'waist'=>30];
             $finishAdj = ['curled'=>-10,'plain'=>0];
-            
+
             $kb_braid_type = Arr::get($data, 'kb_braid_type');
             $kb_finish = Arr::get($data, 'kb_finish');
-            
+
             // Calculate type adjustment
             $typeAdjustment = 0.00;
             if ($kb_braid_type && isset($typeAdj[$kb_braid_type])) {
                 $typeAdjustment = (float) $typeAdj[$kb_braid_type];
             }
-            
+
             // Calculate length adjustment (using the selector mapping, not regular booking map)
             $lengthAdjustment = 0.00;
             if ($kb_length && isset($lengthAdj[$kb_length])) {
                 $lengthAdjustment = (float) $lengthAdj[$kb_length];
             }
-            
+
             // Calculate finish adjustment
             $finishAdjustment = 0.00;
             if ($kb_finish && isset($finishAdj[$kb_finish])) {
                 $finishAdjustment = (float) $finishAdj[$kb_finish];
             }
-            
+
             // Total adjustments = type + length + finish
             $kb_total_adjustments = $typeAdjustment + $lengthAdjustment + $finishAdjustment;
             $kb_length_adjustment = $kb_total_adjustments;
-            
+
             // Parse extras
             $kb_extras_raw = Arr::get($data, 'kb_extras');
             if (!empty($kb_extras_raw)) {

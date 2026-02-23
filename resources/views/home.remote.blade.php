@@ -2054,7 +2054,7 @@
                 ]
             },
             'twist': {
-                category: 'Twist Styles',
+                category: 'Twist Braid',
                 sizes: [
                     { name: 'Small Twists', slug: 'small-twist', price: 150, time: '5–6 hrs' },
                     { name: 'Medium Twists', slug: 'medium-twist', price: 120, time: '4–5 hrs' },
@@ -3920,9 +3920,6 @@
                     <button class="btn btn-sm btn-outline-primary filter-chip" data-filter="knotless" onclick="filterServices('knotless')">
                         Knotless Braids
                     </button>
-                    <button class="btn btn-sm btn-outline-primary filter-chip" data-filter="box" onclick="filterServices('box')">
-                        Box Braids
-                    </button>
                     <button class="btn btn-sm btn-outline-primary filter-chip" data-filter="french" onclick="filterServices('french')">
                         French Curl
                     </button>
@@ -3935,14 +3932,14 @@
                     <button class="btn btn-sm btn-outline-primary filter-chip" data-filter="kinky-passion-twist" onclick="filterServices('kinky-passion-twist')">
                         Kinky & Passion Twist
                     </button>
-                    <button class="btn btn-sm btn-outline-primary filter-chip" data-filter="kids" onclick="filterServices('kids')">
-                        Kids
-                    </button>
                     <button class="btn btn-sm btn-outline-primary filter-chip" data-filter="cornrow" onclick="filterServices('cornrow')">
                         Cornrow/Feed-in
                     </button>
                     <button class="btn btn-sm btn-outline-primary filter-chip" data-filter="crotchet" onclick="filterServices('crotchet')">
                         Crotchet
+                    </button>
+                    <button class="btn btn-sm btn-outline-primary filter-chip" data-filter="kids" onclick="filterServices('kids')">
+                        Kids Braid
                     </button>
                     <button class="btn btn-sm btn-outline-primary filter-chip" data-filter="other" onclick="filterServices('other')">
                         Other
@@ -3976,9 +3973,9 @@
                 </div>
                 <div class="col-lg-4 col-md-6 col-6 service-item" data-category="twist">
                     <div class="service-card h-100" onclick="openServiceSizeModal('twist')">
-                        <img src="{{ asset('images/twist-main.jpg') }}" alt="Twist Styles">
-                        <h4>Twist Styles</h4>
-                        <p class="mb-2">Protective two-strand twists in various sizes—low-tension, versatile styling with hair extensions.</p>
+                        <img src="{{ asset('images/twist-main.jpg') }}" alt="Twist Braid">
+                        <h4>Twist Braid</h4>
+                        <p class="mb-2">Twist braid</p>
                         <p class="mb-1"><strong>Time:</strong> 3–6 hrs • <strong>Sizes:</strong> Small, Medium, Jumbo/Large</p>
                         <p class="mb-3"><strong>Hair:</strong> Not included</p>
                         <p class="price"><strong>From $100</strong> <small class="text-muted">(varies by size & length)</small></p>
@@ -4019,6 +4016,17 @@
                     </div>
                 </div>
 
+                <div class="col-lg-4 col-md-6 col-6 service-item" data-category="kids">
+                    <div class="service-card h-100" onclick="window.location.href='/kids-selector'">
+                        <img src="{{ asset('images/kids hair style.webp') }}" alt="Kids Braids">
+                        <h4>Kids Braids</h4>
+                        <p class="mb-2">Fun, gentle braiding styles designed for children—knotless, cornrows, and more.</p>
+                        <p class="mb-1"><strong>Time:</strong> 1–3 hrs • <strong>Sizes:</strong> Small, Medium, Large</p>
+                        <p class="mb-3"><strong>Hair:</strong> Not included</p>
+                        <p class="price"><strong>From ${{ number_format(config('service_prices.kids_braids', 80),0) }}</strong> <small class="text-muted">(varies by style & length)</small></p>
+                        <button class="btn btn-warning mt-3">Select Style & Book</button>
+                    </div>
+                </div>
                 <div class="col-lg-4 col-md-6 col-6 service-item mobile-hidden" data-category="cornrow">
                     <div class="service-card h-100" onclick="openServiceSizeModal('cornrow')">
                         <img src="{{ asset('images/stitch braid.jpg') }}" alt="Cornrow/Feed-in Braids">
@@ -6123,7 +6131,7 @@ function openOtherServicesModal() {
                 desc: 'Elegant braids with curly ends for a romantic look.'
             },
             'twist': {
-                title: 'Twist Styles',
+                title: 'Twist Braid',
                 img: '{{ asset("images/twist-main.jpg") }}',
                 desc: 'Two-strand twists with extensions.'
             },
@@ -6443,6 +6451,8 @@ function openOtherServicesModal() {
             }
         }catch(e){ console.warn('openKidsBookingModal failed', e); }
     }
+    // Expose globally so inline onclick="openKidsBookingModal(...)" can reach it
+    window.openKidsBookingModal = openKidsBookingModal;
 
     // Show the booking panel inside the kids modal (used when selector is embedded)
     window.showKidsBookingPanel = function(sel){
@@ -9763,23 +9773,19 @@ function filterServices(category) {
 
     // Update active chip
     filterChips.forEach(chip => {
-        if (chip.dataset.filter === category) {
-            chip.classList.add('active');
-        } else {
-            chip.classList.remove('active');
-        }
+        chip.classList.toggle('active', chip.dataset.filter === category);
     });
 
     // Filter service cards
     serviceItems.forEach(item => {
         if (category === 'all') {
             item.classList.remove('hidden');
+            item.style.display = ''; // restore mobile-hidden behaviour
         } else {
-            if (item.dataset.category === category) {
-                item.classList.remove('hidden');
-            } else {
-                item.classList.add('hidden');
-            }
+            const matches = item.dataset.category === category;
+            item.classList.toggle('hidden', !matches);
+            // Force-show matching items even if they carry mobile-hidden
+            item.style.display = matches ? 'block' : '';
         }
     });
 }
