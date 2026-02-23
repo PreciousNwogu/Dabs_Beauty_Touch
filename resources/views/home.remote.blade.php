@@ -6461,10 +6461,12 @@ function openOtherServicesModal() {
                 const kb = document.getElementById('kidsModal_base'); if(kb) kb.innerHTML = '$' + Number(base).toFixed(2);
                 const ka = document.getElementById('kidsModal_adjustments'); if(ka) ka.innerHTML = (adjustmentsTotal >= 0 ? '+' : '-') + '$' + Math.abs(Number(adjustmentsTotal)).toFixed(2);
                 const kt = document.getElementById('kidsModal_total'); if(kt) kt.innerHTML = '$' + (finalPrice ? Number(finalPrice).toFixed(2) : '--');
-                // Discount display on base price
+                // Discount display on base price — only for eligible braid types
                 const kbOrig = document.getElementById('kidsModal_base_original');
                 const kbBadge = document.getElementById('kidsModal_discount_badge');
-                if (originalBaseConfigured > baseConfigured) {
+                const kidsDiscountedTypes = ['cornrow_weave', 'knotless_small', 'knotless_med', 'box_small', 'box_med', 'stitch'];
+                const showKidsDiscount = originalBaseConfigured > baseConfigured && kidsDiscountedTypes.indexOf(bt) !== -1;
+                if (showKidsDiscount) {
                     if(kbOrig){ kbOrig.innerHTML = '$' + Number(originalBaseConfigured).toFixed(2); kbOrig.style.display = 'inline'; }
                     if(kbBadge) kbBadge.style.display = 'inline';
                     if(kb) kb.style.color = '#ff6600';
@@ -8498,11 +8500,13 @@ document.addEventListener('DOMContentLoaded', function(){
                     kb_base.innerHTML = '$' + baseVal.toFixed(2);
                     kb_adjust.innerHTML = adjustSign + '$' + adjustVal.toFixed(2);
                     kb_total.innerHTML = '$' + totalVal.toFixed(2);
-                    // Discount display
+                    // Discount display — only for eligible braid types
                     var kbOrig2 = document.getElementById('kidsModal_base_original');
                     var kbBadge2 = document.getElementById('kidsModal_discount_badge');
                     var origBase = (window.__kidsOriginalBase || 0);
-                    if(origBase > baseVal && origBase > 0){
+                    var syncBt = (document.querySelector('input[name="kb_braid_type"]:checked') || {}).value || '';
+                    var kidsDiscountedTypes2 = ['cornrow_weave', 'knotless_small', 'knotless_med', 'box_small', 'box_med', 'stitch'];
+                    if(origBase > baseVal && origBase > 0 && kidsDiscountedTypes2.indexOf(syncBt) !== -1){
                         if(kbOrig2){ kbOrig2.innerHTML = '$' + origBase.toFixed(2); kbOrig2.style.display = 'inline'; }
                         if(kbBadge2) kbBadge2.style.display = 'inline';
                         if(kb_base) kb_base.style.color = '#ff6600';
