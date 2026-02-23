@@ -612,7 +612,10 @@
                 <div class="kb-price-summary">
                     <h3 class="kb-price-title">💰 Price Summary</h3>
 
-                    @php $kidsBaseServer = config('service_prices.kids_braids', 80); @endphp
+                    @php
+                        $kidsBaseServer = (int) config('service_prices.kids_braids', 80);
+                        $kidsOrigServer = (int) config('service_prices_original.kids_braids', $kidsBaseServer);
+                    @endphp
 
                     <div id="kb_itemized_pricing">
                         <!-- Braid Type Adjustment -->
@@ -637,10 +640,22 @@
                         <div id="kb_addons_lines"></div>
                     </div>
 
+                    <!-- Original (strikethrough) — only when discounted -->
+                    @if($kidsOrigServer > $kidsBaseServer)
+                    <div id="kb_original_price_row" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;padding-bottom:6px;border-bottom:1px solid #e3e3e0;">
+                        <span style="font-size:0.85rem;color:#999;">Original price:</span>
+                        <span style="font-size:0.85rem;color:#999;text-decoration:line-through;">${{ $kidsOrigServer }}</span>
+                    </div>
+                    @endif
+
                     <!-- Total -->
                     <div class="kb-price-total">
-                        <span>Total</span>
-                        <span class="kb-price-total-amount" id="kb_total_price">$60</span>
+                        <span>Total
+                            @if($kidsOrigServer > $kidsBaseServer)
+                            <span style="background:#ff6600;color:#fff;font-size:0.65rem;font-weight:700;padding:2px 6px;border-radius:4px;margin-left:4px;vertical-align:middle;">DISCOUNTED</span>
+                            @endif
+                        </span>
+                        <span class="kb-price-total-amount" id="kb_total_price" @if($kidsOrigServer > $kidsBaseServer) style="color:#ff6600;" @endif>${{ $kidsBaseServer }}</span>
                     </div>
 
                     <!-- Action Buttons -->
@@ -831,7 +846,7 @@ document.addEventListener('DOMContentLoaded', function(){
 
     function updatePricingDisplay(braidTypeValue){
         try{
-            const basePrice = 80; // Kids Braids base price
+            const basePrice = {{ (int) config('service_prices.kids_braids', 80) }}; // Kids Braids base price (from CMS/config)
 
             // Braid type names and adjustments
             const braidTypeNames = {

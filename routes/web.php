@@ -293,7 +293,26 @@ Route::get('/booking/success', function () {
 
 // Calendar booking page
 Route::get('/calendar', function () {
-    return view('calendar');
+    // Same hardcoded slugs as home — anything NOT in this list is a CMS-added service
+    $hardcodedSlugs = [
+        'small-knotless','smedium-knotless','medium-knotless','jumbo-knotless',
+        'small-boho','smedium-boho','medium-boho','jumbo-boho',
+        'small-twist','medium-twist','jumbo-twist',
+        'small-natural-hair-twist','medium-natural-hair-twist',
+        'kinky-twist','passion-twist','twist-braids',
+        'stitch-weave','cornrow-weave','under-wig-weave','weave-braid-mixed',
+        'small-french-curl','smedium-french-curl','medium-french-curl','large-french-curl',
+        'line-single','afro-crotchet','individual-loc','individual-crotchet','butterfly-locks','weave-crotchet',
+        'natural-hair-treatment','chemical-relaxer',
+        'kids-braids','stitch-braids','hair-mask',
+        'weaving-crotchet','single-crotchet','natural-hair-twist','weaving-no-extension',
+        'wig-installation','custom',
+    ];
+    $extraServices = \App\Models\Service::where('is_active', true)
+        ->whereNotIn('slug', $hardcodedSlugs)
+        ->orderBy('category')->orderBy('name')
+        ->get();
+    return view('calendar', compact('extraServices'));
 })->name('calendar');
 
 // Public auth (optional accounts)

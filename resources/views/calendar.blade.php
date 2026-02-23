@@ -549,6 +549,9 @@
                                 <option value="8–10 Rows Stitch Braids">8–10 Rows Stitch Braids</option>
                                 <option value="Hair Mask/Relaxing">Hair Mask/Relaxing</option>
                                 <option value="Smedium Boho Braids">Smedium Boho Braids</option>
+                                @foreach($extraServices ?? [] as $extraSvc)
+                                <option value="{{ $extraSvc->name }}">{{ $extraSvc->name }}</option>
+                                @endforeach
                             </select>
                             <div class="input-group">
                                 <input type="text"
@@ -770,6 +773,9 @@
                 '8–10 Rows Stitch Braids' => (int) config('service_prices.stitch_braids', 120),
                 'Hair Mask/Relaxing' => (int) config('service_prices.hair_mask', 50),
                 'Smedium Boho Braids' => (int) config('service_prices.boho_braids', 150),
+                @foreach($extraServices ?? [] as $extraSvc)
+                '{{ $extraSvc->name }}' => {{ (int) $extraSvc->effective_price }},
+                @endforeach
             ];
         @endphp
         const basePriceByServiceNameCal = @json($basePriceByServiceNameCal);
@@ -1039,6 +1045,47 @@
                 });
                 container.appendChild(col);
             });
+
+            // --- CMS-added services (from /admin/services) ---
+            @if(($extraServices ?? collect())->isNotEmpty())
+            const cmsServices = @json(($extraServices ?? collect())->map(fn($s) => [
+                'name'  => $s->name,
+                'slug'  => $s->slug,
+                'price' => (int) $s->effective_price,
+                'original' => (int) ($s->has_discount ? $s->base_price : $s->effective_price),
+                'image' => $s->image_url ?: '{{ asset("images/braids.jpeg") }}',
+                'description' => $s->description ?? '',
+                'has_discount' => (bool) $s->has_discount,
+            ]));
+
+            if (cmsServices.length && container) {
+                const divider = document.createElement('div');
+                divider.className = 'col-12';
+                divider.innerHTML = '<hr style="margin:12px 0;"><p class="text-muted" style="font-size:0.85rem;margin-bottom:4px;"><strong>More Services</strong></p>';
+                container.appendChild(divider);
+
+                cmsServices.forEach(function(svc) {
+                    const priceHtml = svc.has_discount
+                        ? `<p style="font-weight:700;color:#ff6600;margin-bottom:4px;"><strong>$${svc.price}</strong> <span style="color:#999;text-decoration:line-through;font-size:0.85rem;">$${svc.original}</span> <span style="background:#ff6600;color:#fff;font-size:0.65rem;padding:2px 5px;border-radius:3px;">DISCOUNTED</span></p>`
+                        : `<p style="font-weight:700;color:#ff6600;margin-bottom:4px;"><strong>From $${ svc.price}</strong></p>`;
+                    const col = document.createElement('div');
+                    col.className = 'col-12 col-md-6 col-lg-4';
+                    col.innerHTML = `
+                        <div class="service-card h-100" style="border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.1);padding:15px;text-align:center;cursor:pointer;transition:all 0.3s ease;">
+                            <img src="${svc.image}" alt="${svc.name}" style="width:100%;height:160px;object-fit:cover;border-radius:8px;margin-bottom:10px;">
+                            <h5 style="color:#030f68;font-weight:700;margin-bottom:6px;">${svc.name}</h5>
+                            ${svc.description ? `<p style="color:#666;font-size:0.9rem;margin-bottom:8px;">${svc.description}</p>` : ''}
+                            ${priceHtml}
+                            <button class="btn btn-warning w-100" style="border-radius:8px;font-weight:700;">Book Now</button>
+                        </div>
+                    `;
+                    col.querySelector('.service-card')?.addEventListener('click', function() {
+                        selectCmsServiceDirectCal(svc.name, svc.price);
+                    });
+                    container.appendChild(col);
+                });
+            }
+            @endif
         }
 
         function selectNonKidsServiceCal(serviceCategory) {
@@ -1056,6 +1103,42 @@
                 // Fallback: simple redirect
                 window.location.href = '/?openServiceSizeModal=1&serviceCategory=' + encodeURIComponent(serviceCategory);
             }
+        }
+
+        // Directly selects a CMS-added service without redirecting to the size-selector
+        function selectCmsServiceDirectCal(serviceName, servicePrice) {
+            try {
+                // Close the picker modal
+                const pickerEl = document.getElementById('nonKidsServicesModalCal');
+                if (pickerEl) {
+                    const pickerModal = bootstrap.Modal.getInstance(pickerEl);
+                    if (pickerModal) pickerModal.hide();
+                }
+            } catch (e) { /* noop */ }
+
+            // Set hidden select
+            const select = document.getElementById('service');
+            if (select) {
+                // Ensure option exists (in case it wasn't pre-rendered)
+                let opt = Array.from(select.options).find(o => o.value === serviceName);
+                if (!opt) {
+                    opt = document.createElement('option');
+                    opt.value = serviceName;
+                    opt.text = serviceName;
+                    select.appendChild(opt);
+                }
+                select.value = serviceName;
+            }
+
+            // Update visible display
+            const display = document.getElementById('serviceDisplay');
+            if (display) display.value = serviceName;
+
+            // Set price
+            const priceInput = document.getElementById('final_price_input');
+            if (priceInput) priceInput.value = servicePrice;
+
+            saveBookingDraftCal();
         }
 
         // Helper: format a Date as local YYYY-MM-DD (avoids timezone shifts from toISOString())
