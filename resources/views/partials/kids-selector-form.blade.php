@@ -1327,9 +1327,6 @@ if(typeof window.showKidsBookingPanel !== 'function'){
                     var selBaseEl = document.getElementById('kb_base_price');
                     var selAdjustEl = document.getElementById('kb_adjustments');
                     var selTotalEl = document.getElementById('kb_total_price');
-                    var kb_base = document.getElementById('kidsModal_base');
-                    var kb_adjust = document.getElementById('kidsModal_adjustments');
-                    var kb_total = document.getElementById('kidsModal_total');
                     if(selBaseEl && selAdjustEl && selTotalEl && kb_base && kb_adjust && kb_total){
                         // copy inner contents (selector displays simple values)
                         kb_base.innerHTML = 'Base: <strong>' + (selBaseEl.textContent || selBaseEl.innerText || selBaseEl.innerHTML).replace(/^\$/,'') + '</strong>';

@@ -40,8 +40,8 @@ document.addEventListener('DOMContentLoaded', function(){
         const typeEl = document.querySelector('input[name="kb_braid_type"]:checked');
         const type = typeEl ? typeEl.value : '';
         
-        // Hide for protective and cornrows, show for others
-        const shouldHide = (type === 'protective' || type === 'cornrows');
+        // Hide for protective, cornrows, and any CMS-managed braid types (data-disable-steps attr)
+        const shouldHide = (type === 'protective' || type === 'cornrows') || (typeEl && typeEl.dataset.disableSteps === '1');
         
         console.log('toggleFinishAndLength - type:', type, 'shouldHide:', shouldHide);
         
