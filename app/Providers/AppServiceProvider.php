@@ -29,12 +29,13 @@ class AppServiceProvider extends ServiceProvider
         // This ensures CMS edits (price changes, discounts) are reflected everywhere
         // on the site without touching the config file.
         try {
-            $services = \App\Models\Service::select('slug', 'base_price', 'discount_price')->get();
+            $services = \App\Models\Service::select('slug', 'base_price', 'discount_price', 'discount_ends_at')->get();
             foreach ($services as $svc) {
-                $base      = (int) $svc->base_price;
-                $effective = ($svc->discount_price !== null && $svc->discount_price < $svc->base_price)
-                    ? (int) $svc->discount_price
-                    : $base;
+                $base = (int) $svc->base_price;
+                $discountActive = $svc->discount_price !== null
+                    && $svc->discount_price < $svc->base_price
+                    && ($svc->discount_ends_at === null || \Carbon\Carbon::parse($svc->discount_ends_at)->isFuture());
+                $effective = $discountActive ? (int) $svc->discount_price : $base;
                 $underscore = str_replace('-', '_', $svc->slug);
                 // Always keep the original base price accessible for strikethrough display.
                 Config::set('service_prices_original.' . $underscore, $base);

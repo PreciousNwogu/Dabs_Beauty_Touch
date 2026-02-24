@@ -4113,6 +4113,12 @@
                                 <strong style="color:#ff6600">From ${{ number_format($extraSvc->discount_price, 0) }}</strong>&nbsp;
                                 <del class="text-muted" style="font-weight:600;font-size:.88em">${{ number_format($extraSvc->base_price, 0) }}</del>&nbsp;
                                 <span class="badge bg-danger" style="font-size:.65rem;vertical-align:middle;padding:3px 6px;border-radius:6px">DISCOUNTED</span>
+                                @if($extraSvc->discount_ends_at)
+                                    <div class="svc-countdown mt-1" data-ends="{{ $extraSvc->discount_ends_at->toIso8601String() }}"
+                                         style="font-size:.78rem;font-weight:700;color:#cc0000;background:#fff3f3;border:1px solid #ffcccc;border-radius:6px;padding:3px 8px;display:inline-block">
+                                        <i class="bi bi-alarm me-1"></i><span class="svc-countdown-text">calculating…</span>
+                                    </div>
+                                @endif
                             @else
                                 <strong>From ${{ number_format($extraSvc->base_price, 0) }}</strong>
                             @endif
@@ -4123,6 +4129,40 @@
                 @endforeach
             @endif
             {{-- ── end CMS services ── --}}
+
+            {{-- Countdown timer for discounted CMS service cards --}}
+            <script>
+            (function(){
+                function updateCountdowns(){
+                    document.querySelectorAll('.svc-countdown[data-ends]').forEach(function(el){
+                        var ends = new Date(el.getAttribute('data-ends'));
+                        var now  = new Date();
+                        var diff = ends - now;
+                        var txt  = el.querySelector('.svc-countdown-text');
+                        if (!txt) return;
+                        if (diff <= 0) {
+                            txt.textContent = 'Offer ended';
+                            el.style.color = '#888';
+                            el.style.background = '#f5f5f5';
+                            el.style.borderColor = '#ddd';
+                            return;
+                        }
+                        var d = Math.floor(diff / 86400000);
+                        var h = Math.floor((diff % 86400000) / 3600000);
+                        var m = Math.floor((diff % 3600000) / 60000);
+                        var s = Math.floor((diff % 60000) / 1000);
+                        var parts = [];
+                        if (d > 0) parts.push(d + 'd');
+                        parts.push((h < 10 ? '0' : '') + h + 'h');
+                        parts.push((m < 10 ? '0' : '') + m + 'm');
+                        parts.push((s < 10 ? '0' : '') + s + 's');
+                        txt.textContent = 'Ends in ' + parts.join(' ');
+                    });
+                }
+                updateCountdowns();
+                setInterval(updateCountdowns, 1000);
+            })();
+            </script>
 
             <!-- View More Services Button for Mobile -->
             <div class="text-center mt-4 d-md-none" id="viewMoreServicesContainer">

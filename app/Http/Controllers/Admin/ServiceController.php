@@ -29,6 +29,7 @@ class ServiceController extends Controller
             'slug'           => 'nullable|string|max:255',
             'base_price'     => 'required|numeric|min:0',
             'discount_price' => 'nullable|numeric|min:0|lt:base_price',
+            'discount_ends_at' => 'nullable|date|after:now',
             'description'    => 'nullable|string',
             'image_url'      => 'nullable|string|max:500',
             'category'       => 'nullable|string|max:100',
@@ -50,6 +51,9 @@ class ServiceController extends Controller
         $data['is_active'] = !empty($data['is_active']);
         $data['for_kids']  = !empty($data['for_kids']);
         $data['discount_price'] = $data['discount_price'] !== '' ? $data['discount_price'] : null;
+        if (empty($data['discount_price'])) {
+            $data['discount_ends_at'] = null;
+        }
 
         Service::create($data);
 
@@ -69,6 +73,7 @@ class ServiceController extends Controller
             'slug'           => 'nullable|string|max:255',
             'base_price'     => 'required|numeric|min:0',
             'discount_price' => 'nullable|numeric|min:0',
+            'discount_ends_at' => 'nullable|date',
             'description'    => 'nullable|string',
             'image_url'      => 'nullable|string|max:500',
             'category'       => 'nullable|string|max:100',
@@ -89,6 +94,9 @@ class ServiceController extends Controller
         $data['is_active'] = !empty($data['is_active']);
         $data['for_kids']  = !empty($data['for_kids']);
         $data['discount_price'] = (isset($data['discount_price']) && $data['discount_price'] !== '') ? $data['discount_price'] : null;
+        if (empty($data['discount_price'])) {
+            $data['discount_ends_at'] = null;
+        }
 
         $service->update($data);
 
@@ -100,8 +108,10 @@ class ServiceController extends Controller
         $data = $request->validate([
             'discount_price' => 'nullable|numeric|min:0',
         ]);
+        $discountPrice = ($data['discount_price'] !== null && $data['discount_price'] !== '') ? $data['discount_price'] : null;
         $service->update([
-            'discount_price' => ($data['discount_price'] !== null && $data['discount_price'] !== '') ? $data['discount_price'] : null,
+            'discount_price'   => $discountPrice,
+            'discount_ends_at' => $discountPrice === null ? null : $service->discount_ends_at,
         ]);
         return redirect()->route('admin.services.index')->with('success', 'Discount updated.');
     }

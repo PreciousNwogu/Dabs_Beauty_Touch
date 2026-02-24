@@ -133,6 +133,22 @@
                         <td>
                             @if($service->discount_price !== null)
                                 <span class="price-main price-discounted">${{ number_format($service->discount_price, 0) }}</span><br>
+                                @if($service->discount_ends_at)
+                                    @php
+                                        $endsAt = $service->discount_ends_at;
+                                        $diff   = now()->diffInDays($endsAt, false);
+                                        $expired = $diff < 0;
+                                        $diffHours = now()->diffInHours($endsAt, false);
+                                    @endphp
+                                    @if($expired)
+                                        <span class="badge bg-danger" style="font-size:.7rem">EXPIRED</span>
+                                    @elseif($diff < 1)
+                                        <span class="badge bg-warning text-dark" style="font-size:.7rem">Ends in {{ $diffHours }}h</span>
+                                    @else
+                                        <span class="badge bg-info text-dark" style="font-size:.7rem">{{ $diff }}d left</span>
+                                    @endif
+                                    <div style="font-size:.7rem;color:#888;">until {{ $endsAt->format('M j, g:ia') }}</div>
+                                @endif
                                 <button class="btn btn-sm btn-link p-0 text-danger fw-bold" style="font-size:.75rem" onclick="removeDiscount({{ $service->id }})">
                                     <i class="bi bi-x-circle me-1"></i>Remove
                                 </button>

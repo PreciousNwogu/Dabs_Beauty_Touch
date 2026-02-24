@@ -162,13 +162,25 @@
                             <label class="form-label">Discount Price ($) <span class="text-muted fw-normal">(optional)</span></label>
                             <div class="input-group">
                                 <span class="input-group-text">$</span>
-                                <input type="number" name="discount_price" step="1" min="0"
+                                <input type="number" name="discount_price" id="discountPriceInput" step="1" min="0"
                                        class="form-control @error('discount_price') is-invalid @enderror"
                                        value="{{ old('discount_price', isset($service) && $service->discount_price !== null ? (int)$service->discount_price : '') }}"
-                                       placeholder="Leave blank for no discount">
+                                       placeholder="Leave blank for no discount"
+                                       oninput="toggleDiscountExpiry(this.value)">
                                 @error('discount_price')<div class="invalid-feedback">{{ $message }}</div>@enderror
                             </div>
                             <div class="slug-hint">Must be less than base price. Leave blank to disable.</div>
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mb-3" id="discountExpiryRow" style="{{ old('discount_price', isset($service) && $service->discount_price !== null ? $service->discount_price : '') !== '' ? '' : 'display:none' }}">
+                        <div class="col-md-6 offset-md-6">
+                            <label class="form-label">Discount Ends At <span class="text-muted fw-normal">(optional)</span></label>
+                            <input type="datetime-local" name="discount_ends_at" id="discountEndsAt"
+                                   class="form-control @error('discount_ends_at') is-invalid @enderror"
+                                   value="{{ old('discount_ends_at', isset($service) && $service->discount_ends_at ? $service->discount_ends_at->format('Y-m-d\TH:i') : '') }}">
+                            <div class="slug-hint">Leave blank for no expiry. Countdown shows on service cards.</div>
+                            @error('discount_ends_at')<div class="invalid-feedback">{{ $message }}</div>@enderror
                         </div>
                     </div>
 
@@ -280,6 +292,20 @@ function toggleNewCategory(val) {
 (function() {
     const sel = document.getElementById('categorySelect');
     if (sel && sel.value === '__new__') toggleNewCategory('__new__');
+})();
+function toggleDiscountExpiry(val) {
+    const row = document.getElementById('discountExpiryRow');
+    if (!row) return;
+    row.style.display = val.trim() !== '' ? '' : 'none';
+    if (val.trim() === '') {
+        const dt = document.getElementById('discountEndsAt');
+        if (dt) dt.value = '';
+    }
+}
+// Restore expiry row state on validation error
+(function() {
+    const dp = document.getElementById('discountPriceInput');
+    if (dp) toggleDiscountExpiry(dp.value);
 })();
 </script>
 </body>
