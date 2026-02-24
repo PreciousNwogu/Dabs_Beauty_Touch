@@ -420,7 +420,7 @@
 
                         <div class="kb-braid-grid" id="kb-braid-types">
                             <label class="kb-braid-card" for="kb_type_protective">
-                                <input type="radio" name="kb_braid_type" id="kb_type_protective" value="protective" checked>
+                                <input type="radio" name="kb_braid_type" id="kb_type_protective" value="protective" checked data-disable-steps="1">
                                 <div class="kb-braid-content">
                                     <div class="kb-braid-name">Natural Hair Twist</div>
                                     <div class="kb-braid-price">$60</div>
@@ -429,7 +429,7 @@
                             </label>
 
                             <label class="kb-braid-card" for="kb_type_cornrows">
-                                <input type="radio" name="kb_braid_type" id="kb_type_cornrows" value="cornrows">
+                                <input type="radio" name="kb_braid_type" id="kb_type_cornrows" value="cornrows" data-disable-steps="1">
                                 <div class="kb-braid-content">
                                     <div class="kb-braid-name">Cornrow (without extension)</div>
                                     <div class="kb-braid-price">$40</div>
@@ -493,9 +493,19 @@
 
                             {{-- CMS-managed kids braid types --}}
                             @foreach($cmsKidsServices ?? [] as $cksvc)
-                                @php $cksSlug = 'cms_' . $cksvc->id; $cksPrice = (int) $cksvc->effective_price; @endphp
+                                @php
+                                    $cksSlug  = 'cms_' . $cksvc->id;
+                                    $cksPrice = (int) $cksvc->effective_price;
+                                    $cksEnds  = ($cksvc->has_discount && $cksvc->discount_ends_at)
+                                                    ? $cksvc->discount_ends_at->toIso8601String()
+                                                    : '';
+                                @endphp
                                 <label class="kb-braid-card" for="kb_type_{{ $cksSlug }}">
-                                    <input type="radio" name="kb_braid_type" id="kb_type_{{ $cksSlug }}" value="{{ $cksSlug }}">
+                                    <input type="radio" name="kb_braid_type"
+                                           id="kb_type_{{ $cksSlug }}"
+                                           value="{{ $cksSlug }}"
+                                           data-disable-steps="1"
+                                           {{ $cksEnds ? 'data-discount-ends="'.$cksEnds.'"' : '' }}>
                                     <div class="kb-braid-content">
                                         <div class="kb-braid-name">{{ $cksvc->name }}</div>
                                         <div class="kb-braid-price">${{ $cksPrice }}</div>
@@ -729,11 +739,8 @@ document.addEventListener('DOMContentLoaded', function(){
         try{
             const braidType = document.querySelector('input[name="kb_braid_type"]:checked');
             const braidTypeValue = braidType ? braidType.value : '';
-            let disabledTypes = ['protective', 'cornrows'];
-            @foreach($cmsKidsServices ?? [] as $cksvc)
-            disabledTypes.push('cms_{{ $cksvc->id }}');
-            @endforeach
-            const shouldHideFinishLength = disabledTypes.includes(braidTypeValue);
+            // Use data-disable-steps attribute set directly on each radio in Blade
+            const shouldHideFinishLength = braidType ? (braidType.dataset.disableSteps === '1') : true;
 
             // Update step indicators
             const steps = document.querySelectorAll('.kb-progress-step');
@@ -906,11 +913,8 @@ document.addEventListener('DOMContentLoaded', function(){
             const braidTypeAdj = braidTypeAdjustments[braidTypeValue] !== undefined ? braidTypeAdjustments[braidTypeValue] : 0;
 
             // protective and cornrows always use the original (non-discounted) base — their prices are fixed
-            let fixedPriceTypes = ['protective', 'cornrows'];
-            @foreach($cmsKidsServices ?? [] as $cksvc)
-            fixedPriceTypes.push('cms_{{ $cksvc->id }}');
-            @endforeach
-            const effectiveBase = fixedPriceTypes.indexOf(braidTypeValue) !== -1 ? kidsOriginalBase : basePrice;
+            // CMS types also use original base (price set directly in cmsKidsFixedPrices)
+            const effectiveBase = (braidType && braidType.dataset.disableSteps === '1') ? kidsOriginalBase : basePrice;
 
             // Show/hide and populate braid type line
             const braidTypeLine = document.getElementById('kb_braid_type_line');
@@ -925,12 +929,8 @@ document.addEventListener('DOMContentLoaded', function(){
                 if(braidTypeLine) braidTypeLine.style.display = 'none';
             }
 
-            // For protective/cornrows, hide finish and length
-            let disabledTypes = ['protective', 'cornrows'];
-            @foreach($cmsKidsServices ?? [] as $cksvc)
-            disabledTypes.push('cms_{{ $cksvc->id }}');
-            @endforeach
-            const shouldDisable = disabledTypes.indexOf(braidTypeValue) !== -1;
+            // For protective/cornrows/CMS types, hide finish and length
+            const shouldDisable = braidType ? (braidType.dataset.disableSteps === '1') : true;
 
             // Finish adjustment
             let finishAdj = 0;
@@ -1018,15 +1018,14 @@ document.addEventListener('DOMContentLoaded', function(){
             if(discBadge){ discBadge.style.display = showDiscount ? '' : 'none'; }
             if(origVal)  { origVal.textContent = '$' + kidsOriginalBase; }
 
-            // Countdown timer: show for hardcoded discounted types (no end date currently)
-            // and for CMS kids services that have a discount_ends_at set
-            const countdownEl = document.getElementById('kb_discount_countdown');
+            // Countdown timer: read discount end date from data attribute on the selected radio
+            const countdownEl  = document.getElementById('kb_discount_countdown');
             const countdownTxt = document.getElementById('kb_countdown_text');
-            const cmsEndsAt = cmsKidsDiscountEnds[braidTypeValue] || null;
+            const selectedRadio = document.querySelector('input[name="kb_braid_type"]:checked');
+            const cmsEndsAt = selectedRadio ? (selectedRadio.dataset.discountEnds || null) : null;
             if (countdownEl) {
                 if (cmsEndsAt) {
                     countdownEl.style.display = '';
-                    // start/restart interval
                     if (window._kbCountdownInterval) clearInterval(window._kbCountdownInterval);
                     function kbTickCountdown() {
                         var ends = new Date(cmsEndsAt);
@@ -1081,14 +1080,9 @@ document.addEventListener('DOMContentLoaded', function(){
         try{
             const cur = document.querySelector('input[name="kb_braid_type"]:checked');
             const val = cur ? cur.value : 'protective';
-            console.log('evaluateBraidType called, selected value:', val);
-            // Hide finish & length for specific braid types
-            let disabledTypes = ['protective', 'cornrows'];
-            @foreach($cmsKidsServices ?? [] as $cksvc)
-            disabledTypes.push('cms_{{ $cksvc->id }}');
-            @endforeach
-            const shouldDisable = disabledTypes.indexOf(val) !== -1;
-            console.log('shouldDisable:', shouldDisable);
+            // Reliable: check data-disable-steps attribute set directly on each radio in Blade
+            const shouldDisable = cur ? (cur.dataset.disableSteps === '1') : true;
+            console.log('evaluateBraidType called, selected value:', val, 'shouldDisable:', shouldDisable);
             setFinishAndLengthDisabled(shouldDisable, val);
 
             // Ensure hidden mirror fields reflect any default selections immediately
