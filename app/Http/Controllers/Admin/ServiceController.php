@@ -34,6 +34,7 @@ class ServiceController extends Controller
             'category'       => 'nullable|string|max:100',
             'new_category'   => 'nullable|string|max:100',
             'is_active'      => 'nullable|boolean',
+            'for_kids'       => 'nullable|boolean',
         ]);
 
         // Prefer hand-typed new category
@@ -47,6 +48,7 @@ class ServiceController extends Controller
             : Service::makeSlug($data['name']);
 
         $data['is_active'] = !empty($data['is_active']);
+        $data['for_kids']  = !empty($data['for_kids']);
         $data['discount_price'] = $data['discount_price'] !== '' ? $data['discount_price'] : null;
 
         Service::create($data);
@@ -72,6 +74,7 @@ class ServiceController extends Controller
             'category'       => 'nullable|string|max:100',
             'new_category'   => 'nullable|string|max:100',
             'is_active'      => 'nullable|boolean',
+            'for_kids'       => 'nullable|boolean',
         ]);
 
         if (!empty($data['new_category'])) {
@@ -84,6 +87,7 @@ class ServiceController extends Controller
         }
 
         $data['is_active'] = !empty($data['is_active']);
+        $data['for_kids']  = !empty($data['for_kids']);
         $data['discount_price'] = (isset($data['discount_price']) && $data['discount_price'] !== '') ? $data['discount_price'] : null;
 
         $service->update($data);

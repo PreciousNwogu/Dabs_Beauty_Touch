@@ -331,7 +331,8 @@ Route::get('/my-bookings/{booking}', [AccountController::class, 'showBooking'])-
 Route::get('/kids-selector', function () {
     // Pass service prices to the selector page (from config or Service model)
     $servicePrices = config('service_prices', []);
-    return view('kids-selector', compact('servicePrices'));
+    $cmsKidsServices = Service::where('for_kids', true)->where('is_active', true)->orderBy('name')->get();
+    return view('kids-selector', compact('servicePrices', 'cmsKidsServices'));
 })->name('kids.selector');
 
 // Handle kids selector submission (server-side) and redirect to home with flashed session

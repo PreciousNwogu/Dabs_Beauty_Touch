@@ -490,6 +490,19 @@
                                 </div>
                                 <span class="kb-checkmark">✓</span>
                             </label>
+
+                            {{-- CMS-managed kids braid types --}}
+                            @foreach($cmsKidsServices ?? [] as $cksvc)
+                                @php $cksSlug = 'cms_' . $cksvc->id; $cksPrice = (int) $cksvc->effective_price; @endphp
+                                <label class="kb-braid-card" for="kb_type_{{ $cksSlug }}">
+                                    <input type="radio" name="kb_braid_type" id="kb_type_{{ $cksSlug }}" value="{{ $cksSlug }}">
+                                    <div class="kb-braid-content">
+                                        <div class="kb-braid-name">{{ $cksvc->name }}</div>
+                                        <div class="kb-braid-price">${{ $cksPrice }}</div>
+                                    </div>
+                                    <span class="kb-checkmark">✓</span>
+                                </label>
+                            @endforeach
                         </div>
                     </div>
 
@@ -711,7 +724,7 @@ document.addEventListener('DOMContentLoaded', function(){
         try{
             const braidType = document.querySelector('input[name="kb_braid_type"]:checked');
             const braidTypeValue = braidType ? braidType.value : '';
-            const disabledTypes = ['protective', 'cornrows'];
+            const disabledTypes = ['protective', 'cornrows'@foreach($cmsKidsServices ?? [] as $cksvc), 'cms_{{ $cksvc->id }}'@endforeach];
             const shouldHideFinishLength = disabledTypes.includes(braidTypeValue);
 
             // Update step indicators
@@ -868,11 +881,18 @@ document.addEventListener('DOMContentLoaded', function(){
                 'cornrow_weave': 0
             };
 
+            @php $kidsOriginalConfigBase = (int) config('service_prices_original.kids_braids', config('service_prices.kids_braids', 80)); @endphp
+            @foreach($cmsKidsServices ?? [] as $cksvc)
+                @php $cksSlug = 'cms_' . $cksvc->id; @endphp
+                braidTypeNames['{{ $cksSlug }}'] = '{{ addslashes($cksvc->name) }}';
+                braidTypeAdjustments['{{ $cksSlug }}'] = {{ (int) $cksvc->effective_price - $kidsOriginalConfigBase }};
+            @endforeach
+
             const braidTypeName = braidTypeNames[braidTypeValue] || 'Unknown';
             const braidTypeAdj = braidTypeAdjustments[braidTypeValue] || 0;
 
             // protective and cornrows always use the original (non-discounted) base — their prices are fixed
-            const fixedPriceTypes = ['protective', 'cornrows'];
+            const fixedPriceTypes = ['protective', 'cornrows'@foreach($cmsKidsServices ?? [] as $cksvc), 'cms_{{ $cksvc->id }}'@endforeach];
             const effectiveBase = fixedPriceTypes.indexOf(braidTypeValue) !== -1 ? kidsOriginalBase : basePrice;
 
             // Show/hide and populate braid type line
@@ -889,7 +909,7 @@ document.addEventListener('DOMContentLoaded', function(){
             }
 
             // For protective/cornrows, hide finish and length
-            const disabledTypes = ['protective', 'cornrows'];
+            const disabledTypes = ['protective', 'cornrows'@foreach($cmsKidsServices ?? [] as $cksvc), 'cms_{{ $cksvc->id }}'@endforeach];
             const shouldDisable = disabledTypes.indexOf(braidTypeValue) !== -1;
 
             // Finish adjustment
@@ -998,7 +1018,7 @@ document.addEventListener('DOMContentLoaded', function(){
             const val = cur ? cur.value : 'protective';
             console.log('evaluateBraidType called, selected value:', val);
             // Hide finish & length for specific braid types
-            const disabledTypes = ['protective', 'cornrows'];
+            const disabledTypes = ['protective', 'cornrows'@foreach($cmsKidsServices ?? [] as $cksvc), 'cms_{{ $cksvc->id }}'@endforeach];
             const shouldDisable = disabledTypes.indexOf(val) !== -1;
             console.log('shouldDisable:', shouldDisable);
             setFinishAndLengthDisabled(shouldDisable, val);

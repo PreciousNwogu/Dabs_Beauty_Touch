@@ -18,12 +18,14 @@ class Service extends Model
         'image_url',
         'category',
         'is_active',
+        'for_kids',
     ];
 
     protected $casts = [
         'base_price'     => 'decimal:2',
         'discount_price' => 'decimal:2',
         'is_active'      => 'boolean',
+        'for_kids'       => 'boolean',
     ];
 
     /** Effective price: discount if set, otherwise base. */

@@ -211,6 +211,16 @@
                         </div>
                     </div>
 
+                    <div class="mb-4">
+                        <label class="form-label d-block">Service Audience</label>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" name="for_kids" id="forKids" value="1"
+                                   {{ old('for_kids', $service->for_kids ?? false) ? 'checked' : '' }}
+                                   style="width:2.5em;height:1.3em">
+                            <label class="form-check-label fw-bold" for="forKids">For Kids (appears in Kids Braids selector)</label>
+                        </div>
+                    </div>
+
                     {{-- SUBMIT --}}
                     <div class="d-flex gap-3">
                         <button type="submit" class="btn btn-warning fw-bold px-5" style="font-size:1rem">
