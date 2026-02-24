@@ -53,7 +53,9 @@ Route::get('/', function () {
     ];
 
     // Any active service NOT in the hardcoded set is a "new" CMS service to show dynamically.
+    // Exclude for_kids services — they appear only in the kids selector, not the main services section.
     $extraServices = Service::where('is_active', true)
+        ->where('for_kids', false)
         ->whereNotIn('slug', $hardcodedSlugs)
         ->orderBy('category')->orderBy('name')
         ->get();
@@ -308,7 +310,9 @@ Route::get('/calendar', function () {
         'weaving-crotchet','single-crotchet','natural-hair-twist','weaving-no-extension',
         'wig-installation','custom',
     ];
+    // Exclude for_kids services — they appear only in the kids selector, not the main services section.
     $extraServices = \App\Models\Service::where('is_active', true)
+        ->where('for_kids', false)
         ->whereNotIn('slug', $hardcodedSlugs)
         ->orderBy('category')->orderBy('name')
         ->get();

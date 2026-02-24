@@ -885,14 +885,16 @@ document.addEventListener('DOMContentLoaded', function(){
             };
 
             @php $kidsOriginalConfigBase = (int) config('service_prices_original.kids_braids', config('service_prices.kids_braids', 80)); @endphp
+            const cmsKidsFixedPrices = {};
             @foreach($cmsKidsServices ?? [] as $cksvc)
                 @php $cksSlug = 'cms_' . $cksvc->id; @endphp
                 braidTypeNames['{{ $cksSlug }}'] = '{{ addslashes($cksvc->name) }}';
                 braidTypeAdjustments['{{ $cksSlug }}'] = {{ (int) $cksvc->effective_price - $kidsOriginalConfigBase }};
+                cmsKidsFixedPrices['{{ $cksSlug }}'] = {{ (int) $cksvc->effective_price }};
             @endforeach
 
             const braidTypeName = braidTypeNames[braidTypeValue] || 'Unknown';
-            const braidTypeAdj = braidTypeAdjustments[braidTypeValue] || 0;
+            const braidTypeAdj = braidTypeAdjustments[braidTypeValue] !== undefined ? braidTypeAdjustments[braidTypeValue] : 0;
 
             // protective and cornrows always use the original (non-discounted) base — their prices are fixed
             let fixedPriceTypes = ['protective', 'cornrows'];
