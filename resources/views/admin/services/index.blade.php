@@ -204,6 +204,14 @@
                                     <div class="text-muted mt-1" style="font-size:.75rem">
                                         Base: ${{ number_format($service->base_price, 0) }}. Leave blank to clear discount.
                                     </div>
+                                    <div class="mt-2">
+                                        <label class="form-label fw-bold mb-1" style="font-size:.82rem;color:#888">
+                                            <i class="bi bi-alarm me-1"></i>Discount Ends At <span class="fw-normal">(optional)</span>
+                                        </label>
+                                        <input type="datetime-local" name="discount_ends_at" class="form-control form-control-sm"
+                                               value="{{ $service->discount_ends_at ? $service->discount_ends_at->format('Y-m-d\TH:i') : '' }}">
+                                        <div class="text-muted mt-1" style="font-size:.73rem">Leave blank for no expiry. A countdown will show on the services page.</div>
+                                    </div>
                                 </form>
                             </div>
 

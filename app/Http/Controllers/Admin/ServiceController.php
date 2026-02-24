@@ -106,12 +106,14 @@ class ServiceController extends Controller
     public function updateDiscount(Request $request, Service $service)
     {
         $data = $request->validate([
-            'discount_price' => 'nullable|numeric|min:0',
+            'discount_price'  => 'nullable|numeric|min:0',
+            'discount_ends_at' => 'nullable|date',
         ]);
         $discountPrice = ($data['discount_price'] !== null && $data['discount_price'] !== '') ? $data['discount_price'] : null;
+        $endsAt = !empty($data['discount_ends_at']) ? $data['discount_ends_at'] : null;
         $service->update([
             'discount_price'   => $discountPrice,
-            'discount_ends_at' => $discountPrice === null ? null : $service->discount_ends_at,
+            'discount_ends_at' => $discountPrice === null ? null : $endsAt,
         ]);
         return redirect()->route('admin.services.index')->with('success', 'Discount updated.');
     }
