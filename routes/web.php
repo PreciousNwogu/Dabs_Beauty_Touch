@@ -1190,9 +1190,19 @@ Route::post('/bookings', function(Request $request) {
                 $fi = $selectorFields['finish'] ?? null;
                 $ex = $selectorFields['extras'] ?? null;
 
-                if($bt && isset($typeAdj[$bt])) $adjustments += $typeAdj[$bt];
-                if($ln && isset($lengthAdj[$ln])) $adjustments += $lengthAdj[$ln];
-                if($fi && isset($finishAdj[$fi])) $adjustments += $finishAdj[$fi];
+                // CMS kids service (cms_{id}) — use service's own price as the base, ignore typeAdj
+                if ($bt && str_starts_with($bt, 'cms_')) {
+                    $cmsId = (int) substr($bt, 4);
+                    $cmsSvc = Service::find($cmsId);
+                    if ($cmsSvc) {
+                        $baseConfigured = (float) $cmsSvc->effective_price;
+                    }
+                    // CMS kids services have no finish/length adjustment
+                } else {
+                    if ($bt && isset($typeAdj[$bt])) $adjustments += $typeAdj[$bt];
+                    if ($ln && isset($lengthAdj[$ln])) $adjustments += $lengthAdj[$ln];
+                    if ($fi && isset($finishAdj[$fi])) $adjustments += $finishAdj[$fi];
+                }
 
                 if($ex){
                     if(is_string($ex) && strpos($ex,'kb_add_')!==false){
@@ -1896,7 +1906,7 @@ Route::post('/bookings/confirm/{id}/{code}/modify', function(\Illuminate\Http\Re
 
     $data = $request->validate([
         'length' => 'nullable|string|in:neck,shoulder,armpit,bra_strap,mid_back,waist,hip,tailbone,classic',
-        'kb_braid_type' => 'nullable|string|in:protective,cornrows,knotless_small,knotless_med,box_small,box_med,stitch',
+        'kb_braid_type' => 'nullable|string|regex:/^(protective|cornrows|knotless_small|knotless_med|box_small|box_med|stitch|cms_\d+)$/',
         // Allow kids length override (accept the same canonical set used elsewhere)
         'kb_length' => 'nullable|string|in:neck,shoulder,armpit,bra_strap,mid_back,waist,hip,tailbone,classic',
         // For non-kids braid bookings, allow changing the braid style (service)

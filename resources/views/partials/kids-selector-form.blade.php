@@ -990,8 +990,11 @@ document.addEventListener('DOMContentLoaded', function(){
 
             if(addonsContainer) addonsContainer.innerHTML = addonsHTML;
 
-            // Calculate total (protective/cornrows use effectiveBase = originalBase so their price is unaffected by CMS discount)
-            const totalPrice = effectiveBase + braidTypeAdj + finishAdj + lengthAdj + addonsTotal;
+            // Calculate total — CMS kids services use their exact DB price, not base+adj
+            const isCmsType = braidTypeValue.startsWith('cms_');
+            const totalPrice = (isCmsType && cmsKidsFixedPrices[braidTypeValue] !== undefined)
+                ? cmsKidsFixedPrices[braidTypeValue] + addonsTotal
+                : effectiveBase + braidTypeAdj + finishAdj + lengthAdj + addonsTotal;
 
             // Update total display
             const totalPriceEl = document.getElementById('kb_total_price');
