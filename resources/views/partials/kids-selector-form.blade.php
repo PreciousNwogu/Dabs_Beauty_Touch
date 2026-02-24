@@ -724,7 +724,10 @@ document.addEventListener('DOMContentLoaded', function(){
         try{
             const braidType = document.querySelector('input[name="kb_braid_type"]:checked');
             const braidTypeValue = braidType ? braidType.value : '';
-            const disabledTypes = ['protective', 'cornrows'@foreach($cmsKidsServices ?? [] as $cksvc), 'cms_{{ $cksvc->id }}'@endforeach];
+            let disabledTypes = ['protective', 'cornrows'];
+            @foreach($cmsKidsServices ?? [] as $cksvc)
+            disabledTypes.push('cms_{{ $cksvc->id }}');
+            @endforeach
             const shouldHideFinishLength = disabledTypes.includes(braidTypeValue);
 
             // Update step indicators
@@ -892,7 +895,10 @@ document.addEventListener('DOMContentLoaded', function(){
             const braidTypeAdj = braidTypeAdjustments[braidTypeValue] || 0;
 
             // protective and cornrows always use the original (non-discounted) base — their prices are fixed
-            const fixedPriceTypes = ['protective', 'cornrows'@foreach($cmsKidsServices ?? [] as $cksvc), 'cms_{{ $cksvc->id }}'@endforeach];
+            let fixedPriceTypes = ['protective', 'cornrows'];
+            @foreach($cmsKidsServices ?? [] as $cksvc)
+            fixedPriceTypes.push('cms_{{ $cksvc->id }}');
+            @endforeach
             const effectiveBase = fixedPriceTypes.indexOf(braidTypeValue) !== -1 ? kidsOriginalBase : basePrice;
 
             // Show/hide and populate braid type line
@@ -909,7 +915,10 @@ document.addEventListener('DOMContentLoaded', function(){
             }
 
             // For protective/cornrows, hide finish and length
-            const disabledTypes = ['protective', 'cornrows'@foreach($cmsKidsServices ?? [] as $cksvc), 'cms_{{ $cksvc->id }}'@endforeach];
+            let disabledTypes = ['protective', 'cornrows'];
+            @foreach($cmsKidsServices ?? [] as $cksvc)
+            disabledTypes.push('cms_{{ $cksvc->id }}');
+            @endforeach
             const shouldDisable = disabledTypes.indexOf(braidTypeValue) !== -1;
 
             // Finish adjustment
@@ -1018,7 +1027,10 @@ document.addEventListener('DOMContentLoaded', function(){
             const val = cur ? cur.value : 'protective';
             console.log('evaluateBraidType called, selected value:', val);
             // Hide finish & length for specific braid types
-            const disabledTypes = ['protective', 'cornrows'@foreach($cmsKidsServices ?? [] as $cksvc), 'cms_{{ $cksvc->id }}'@endforeach];
+            let disabledTypes = ['protective', 'cornrows'];
+            @foreach($cmsKidsServices ?? [] as $cksvc)
+            disabledTypes.push('cms_{{ $cksvc->id }}');
+            @endforeach
             const shouldDisable = disabledTypes.indexOf(val) !== -1;
             console.log('shouldDisable:', shouldDisable);
             setFinishAndLengthDisabled(shouldDisable, val);
