@@ -505,6 +505,7 @@
                                            id="kb_type_{{ $cksSlug }}"
                                            value="{{ $cksSlug }}"
                                            data-disable-steps="1"
+                                           data-price="{{ (int) $cksvc->effective_price }}"
                                            {{ $cksEnds ? 'data-discount-ends="'.$cksEnds.'"' : '' }}>
                                     <div class="kb-braid-content">
                                         <div class="kb-braid-name">{{ $cksvc->name }}</div>
