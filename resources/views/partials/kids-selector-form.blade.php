@@ -665,6 +665,11 @@
                         <span class="kb-price-total-amount" id="kb_total_price">${{ $kidsBaseServer }}</span>
                     </div>
 
+                    <!-- Discount countdown (shown for discounted braid types with an end date) -->
+                    <div id="kb_discount_countdown" style="display:none;margin-top:8px;font-size:.8rem;font-weight:700;color:#cc0000;background:#fff3f3;border:1px solid #ffcccc;border-radius:8px;padding:5px 10px;text-align:center;">
+                        <i class="bi bi-alarm me-1"></i><span id="kb_countdown_text">Offer ends soon</span>
+                    </div>
+
                     <!-- Action Buttons -->
                     <div class="kb-action-buttons">
                         <button id="kb_proceed_btn" class="kb-btn-continue" type="submit" form="kidsSelectorForm">
@@ -886,11 +891,15 @@ document.addEventListener('DOMContentLoaded', function(){
 
             @php $kidsOriginalConfigBase = (int) config('service_prices_original.kids_braids', config('service_prices.kids_braids', 80)); @endphp
             const cmsKidsFixedPrices = {};
+            const cmsKidsDiscountEnds = {};
             @foreach($cmsKidsServices ?? [] as $cksvc)
                 @php $cksSlug = 'cms_' . $cksvc->id; @endphp
                 braidTypeNames['{{ $cksSlug }}'] = '{{ addslashes($cksvc->name) }}';
                 braidTypeAdjustments['{{ $cksSlug }}'] = {{ (int) $cksvc->effective_price - $kidsOriginalConfigBase }};
                 cmsKidsFixedPrices['{{ $cksSlug }}'] = {{ (int) $cksvc->effective_price }};
+                @if($cksvc->discount_ends_at && $cksvc->has_discount)
+                cmsKidsDiscountEnds['{{ $cksSlug }}'] = '{{ $cksvc->discount_ends_at->toIso8601String() }}';
+                @endif
             @endforeach
 
             const braidTypeName = braidTypeNames[braidTypeValue] || 'Unknown';
@@ -1006,6 +1015,48 @@ document.addEventListener('DOMContentLoaded', function(){
             const discBadge = document.getElementById('kb_discount_badge');
             const origVal = document.getElementById('kb_original_price_val');
             if(origRow)  { origRow.style.display  = showDiscount ? 'flex' : 'none'; }
+            if(discBadge){ discBadge.style.display = showDiscount ? '' : 'none'; }
+            if(origVal)  { origVal.textContent = '$' + kidsOriginalBase; }
+
+            // Countdown timer: show for hardcoded discounted types (no end date currently)
+            // and for CMS kids services that have a discount_ends_at set
+            const countdownEl = document.getElementById('kb_discount_countdown');
+            const countdownTxt = document.getElementById('kb_countdown_text');
+            const cmsEndsAt = cmsKidsDiscountEnds[braidTypeValue] || null;
+            if (countdownEl) {
+                if (cmsEndsAt) {
+                    countdownEl.style.display = '';
+                    // start/restart interval
+                    if (window._kbCountdownInterval) clearInterval(window._kbCountdownInterval);
+                    function kbTickCountdown() {
+                        var ends = new Date(cmsEndsAt);
+                        var diff = ends - new Date();
+                        if (!countdownTxt) return;
+                        if (diff <= 0) {
+                            countdownTxt.textContent = 'Offer ended';
+                            countdownEl.style.color = '#888';
+                            if (window._kbCountdownInterval) clearInterval(window._kbCountdownInterval);
+                            return;
+                        }
+                        var d = Math.floor(diff / 86400000);
+                        var h = Math.floor((diff % 86400000) / 3600000);
+                        var m = Math.floor((diff % 3600000) / 60000);
+                        var s = Math.floor((diff % 60000) / 1000);
+                        var parts = [];
+                        if (d > 0) parts.push(d + 'd');
+                        parts.push((h<10?'0':'')+h+'h');
+                        parts.push((m<10?'0':'')+m+'m');
+                        parts.push((s<10?'0':'')+s+'s');
+                        countdownTxt.textContent = 'Ends in ' + parts.join(' ');
+                        countdownEl.style.color = '#cc0000';
+                    }
+                    kbTickCountdown();
+                    window._kbCountdownInterval = setInterval(kbTickCountdown, 1000);
+                } else {
+                    countdownEl.style.display = 'none';
+                    if (window._kbCountdownInterval) clearInterval(window._kbCountdownInterval);
+                }
+            }
             if(discBadge){ discBadge.style.display = showDiscount ? 'inline' : 'none'; }
             if(origVal && showDiscount){ origVal.textContent = '$' + kidsOriginalBase; }
             if(totalPriceEl){ totalPriceEl.style.color = showDiscount ? '#ff6600' : ''; }
