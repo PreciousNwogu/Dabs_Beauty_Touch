@@ -24,6 +24,10 @@ php artisan view:cache
 echo "🗃️ Running database migrations..."
 php artisan migrate --force
 
+# Seed services data (upsert — safe to run every deploy)
+echo "🌱 Seeding services..."
+php artisan db:seed --class=ServiceSeeder --force
+
 # Create storage link
 echo "🔗 Creating storage link..."
 php artisan storage:link
