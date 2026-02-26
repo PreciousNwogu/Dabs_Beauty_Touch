@@ -9,7 +9,9 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('services', function (Blueprint $table) {
-            $table->boolean('for_kids')->default(false)->after('is_active');
+            if (!Schema::hasColumn('services', 'for_kids')) {
+                $table->boolean('for_kids')->default(false)->after('is_active');
+            }
         });
     }
 

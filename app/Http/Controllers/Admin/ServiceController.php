@@ -6,13 +6,21 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Service;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Schema;
 
 class ServiceController extends Controller
 {
     public function index()
     {
-        $services = Service::orderBy('category')->orderBy('name')->get();
-        $categories = Service::whereNotNull('category')->distinct()->pluck('category')->sort()->values();
+        $hasCat = \Illuminate\Support\Facades\Schema::hasColumn('services', 'category');
+        $q = Service::orderBy('name');
+        if ($hasCat) {
+            $q = Service::orderBy('category')->orderBy('name');
+            $categories = Service::whereNotNull('category')->distinct()->pluck('category')->sort()->values();
+        } else {
+            $categories = collect();
+        }
+        $services = $q->get();
         return view('admin.services.index', compact('services', 'categories'));
     }
 

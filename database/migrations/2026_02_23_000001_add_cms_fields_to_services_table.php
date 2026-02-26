@@ -8,9 +8,15 @@ return new class extends Migration {
     public function up(): void
     {
         Schema::table('services', function (Blueprint $table) {
-            $table->decimal('discount_price', 8, 2)->nullable()->after('base_price');
-            $table->string('category', 100)->nullable()->after('description');
-            $table->boolean('is_active')->default(true)->after('category');
+            if (!Schema::hasColumn('services', 'discount_price')) {
+                $table->decimal('discount_price', 8, 2)->nullable()->after('base_price');
+            }
+            if (!Schema::hasColumn('services', 'category')) {
+                $table->string('category', 100)->nullable()->after('description');
+            }
+            if (!Schema::hasColumn('services', 'is_active')) {
+                $table->boolean('is_active')->default(true)->after('category');
+            }
         });
     }
 

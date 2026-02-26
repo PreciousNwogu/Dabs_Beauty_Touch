@@ -38,10 +38,12 @@ Route::get('/', function () {
 
     // Slugs that are already rendered as hardcoded service cards on the homepage.
     // Any active non-kids service is shown dynamically via CMS cards.
-    $extraServices = Service::where('is_active', true)
-        ->where('for_kids', false)
-        ->orderBy('category')->orderBy('name')
-        ->get();
+    $forKidsExists = \Illuminate\Support\Facades\Schema::hasColumn('services', 'for_kids');
+    $extraServicesQuery = Service::where('is_active', true);
+    if ($forKidsExists) {
+        $extraServicesQuery->where('for_kids', false);
+    }
+    $extraServices = $extraServicesQuery->orderBy('name')->get();
 
     return view('home', compact('servicePrices', 'extraServices'));
 })->name('home');
@@ -294,10 +296,12 @@ Route::get('/calendar', function () {
         'wig-installation','custom',
     ];
     // Exclude for_kids services — they appear only in the kids selector, not the main services section.
-    $extraServices = \App\Models\Service::where('is_active', true)
-        ->where('for_kids', false)
-        ->orderBy('category')->orderBy('name')
-        ->get();
+    $forKidsExists = \Illuminate\Support\Facades\Schema::hasColumn('services', 'for_kids');
+    $calExtraQuery = \App\Models\Service::where('is_active', true);
+    if ($forKidsExists) {
+        $calExtraQuery->where('for_kids', false);
+    }
+    $extraServices = $calExtraQuery->orderBy('name')->get();
     return view('calendar', compact('extraServices'));
 })->name('calendar');
 
@@ -317,7 +321,10 @@ Route::get('/my-bookings/{booking}', [AccountController::class, 'showBooking'])-
 Route::get('/kids-selector', function () {
     // Pass service prices to the selector page (from config or Service model)
     $servicePrices = config('service_prices', []);
-    $cmsKidsServices = Service::where('for_kids', true)->where('is_active', true)->orderBy('name')->get();
+    $forKidsExists2 = \Illuminate\Support\Facades\Schema::hasColumn('services', 'for_kids');
+    $cmsKidsServices = $forKidsExists2
+        ? Service::where('for_kids', true)->where('is_active', true)->orderBy('name')->get()
+        : collect();
     return view('kids-selector', compact('servicePrices', 'cmsKidsServices'));
 })->name('kids.selector');
 

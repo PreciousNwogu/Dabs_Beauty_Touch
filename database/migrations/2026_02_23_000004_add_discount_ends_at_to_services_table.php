@@ -9,7 +9,9 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('services', function (Blueprint $table) {
-            $table->dateTime('discount_ends_at')->nullable()->after('discount_price');
+            if (!Schema::hasColumn('services', 'discount_ends_at')) {
+                $table->dateTime('discount_ends_at')->nullable()->after('discount_price');
+            }
         });
     }
 
