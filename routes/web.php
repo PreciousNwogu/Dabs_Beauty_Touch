@@ -37,26 +37,9 @@ Route::get('/', function () {
     $servicePrices = Service::pluck('base_price', 'slug')->toArray();
 
     // Slugs that are already rendered as hardcoded service cards on the homepage.
-    $hardcodedSlugs = [
-        'small-knotless','smedium-knotless','medium-knotless','jumbo-knotless',
-        'small-boho','smedium-boho','medium-boho','jumbo-boho',
-        'small-twist','medium-twist','jumbo-twist',
-        'small-natural-hair-twist','medium-natural-hair-twist',
-        'kinky-twist','passion-twist','twist-braids',
-        'stitch-weave','cornrow-weave','under-wig-weave','weave-braid-mixed',
-        'small-french-curl','smedium-french-curl','medium-french-curl','large-french-curl',
-        'line-single','afro-crotchet','individual-loc','individual-crotchet','butterfly-locks','weave-crotchet',
-        'natural-hair-treatment','chemical-relaxer','chemical-relaxer',
-        'kids-braids','stitch-braids','hair-mask',
-        'weaving-crotchet','single-crotchet','natural-hair-twist','weaving-no-extension',
-        'wig-installation','custom',
-    ];
-
-    // Any active service NOT in the hardcoded set is a "new" CMS service to show dynamically.
-    // Exclude for_kids services — they appear only in the kids selector, not the main services section.
+    // Any active non-kids service is shown dynamically via CMS cards.
     $extraServices = Service::where('is_active', true)
         ->where('for_kids', false)
-        ->whereNotIn('slug', $hardcodedSlugs)
         ->orderBy('category')->orderBy('name')
         ->get();
 
@@ -313,7 +296,6 @@ Route::get('/calendar', function () {
     // Exclude for_kids services — they appear only in the kids selector, not the main services section.
     $extraServices = \App\Models\Service::where('is_active', true)
         ->where('for_kids', false)
-        ->whereNotIn('slug', $hardcodedSlugs)
         ->orderBy('category')->orderBy('name')
         ->get();
     return view('calendar', compact('extraServices'));
