@@ -9828,31 +9828,36 @@ function filterServices(category) {
             item.classList.toggle('hidden', !matches);
             // Force-show matching items even if they carry mobile-hidden
             item.style.display = matches ? 'block' : '';
+                  return false;
+                }
+            });
         }
     });
-}
+})();
+</script>
 
-// Toggle Mobile Services - Show/Hide additional services on mobile
-function toggleMobileServices() {
-    const hiddenServices = document.querySelectorAll('.service-item.mobile-hidden');
-    const btnText = document.getElementById('viewMoreServicesText');
-    const btnIcon = document.getElementById('viewMoreServicesIcon');
+<script>
+// Service Filter Functionality
+function filterServices(category) {
+    const serviceItems = document.querySelectorAll('.service-item');
+    const filterChips = document.querySelectorAll('.filter-chip');
 
-    // Check if services are currently hidden
-    const isHidden = !hiddenServices[0].classList.contains('show');
+    // Update active chip
+    filterChips.forEach(chip => {
+        chip.classList.toggle('active', chip.dataset.filter === category);
+    });
 
-    hiddenServices.forEach(service => {
-        if (isHidden) {
-            service.classList.add('show');
+    // Filter service cards
+    serviceItems.forEach(item => {
+        if (category === 'all') {
+            item.classList.remove('hidden');
+            item.style.display = ''; // restore mobile-hidden behaviour
         } else {
-            service.classList.remove('show');
-        }
-    });
-
-    // Update button text and icon
-    if (isHidden) {
-        btnText.textContent = 'View Less Services';
-        btnIcon.classList.remove('bi-chevron-down');
+            const matches = item.dataset.category === category;
+            item.classList.toggle('hidden', !matches);
+            // Force-show matching items even if they carry mobile-hidden
+            item.style.display = matches ? 'block' : '';
+st.remove('bi-chevron-down');
         btnIcon.classList.add('bi-chevron-up');
     } else {
         btnText.textContent = 'View More Services';
