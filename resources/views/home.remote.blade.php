@@ -2604,6 +2604,22 @@
                 return;
             }
 
+            const continueBtn = document.getElementById('continueToBookingBtn');
+            if (continueBtn && continueBtn.dataset.processing === '1') {
+                return;
+            }
+
+            if (continueBtn) {
+                continueBtn.dataset.processing = '1';
+                continueBtn.disabled = true;
+            }
+
+            const unlockContinueButton = function() {
+                if (!continueBtn) return;
+                continueBtn.dataset.processing = '0';
+                continueBtn.disabled = false;
+            };
+
             // Build service name with add-ons
             let serviceName = window.serviceSizeData.serviceName;
             if (window.serviceSizeData.weaveAddon)          serviceName += ' (With Weave)';
@@ -2623,46 +2639,82 @@
                 serviceName: serviceName
             };
 
-            // --- Imperatively tear down the size modal ---
+            const openBookingAfterTransition = function() {
+                try {
+                    // Remove stale backdrop/body state only when no modal is visible.
+                    if (!document.querySelector('.modal.show')) {
+                        document.querySelectorAll('.modal-backdrop').forEach(function(el) { el.remove(); });
+                        document.body.classList.remove('modal-open');
+                        document.body.style.removeProperty('padding-right');
+                        document.body.style.removeProperty('overflow');
+                    }
+
+                    window.openBookingModal(
+                        serviceName,
+                        window.serviceSizeData.serviceType,
+                        window.serviceSizeDataForBooking
+                    );
+
+                    // Pre-select length in booking form (skip for crotchet / hair-treatment)
+                    if (window.serviceSizeData.serviceCategory !== 'crotchet' &&
+                        window.serviceSizeData.serviceCategory !== 'hair-treatment' &&
+                        window.serviceSizeData.selectedLength) {
+                        const normalizedLength = String(window.serviceSizeData.selectedLength).replace(/-/g, '_');
+                        const lengthRadio = document.querySelector(
+                            'input[name="hair_length"][value="' + normalizedLength + '"]'
+                        );
+
+                        if (lengthRadio) {
+                            lengthRadio.checked = true;
+                            lengthRadio.dispatchEvent(new Event('change', { bubbles: true }));
+                        }
+                    }
+                } finally {
+                    unlockContinueButton();
+                }
+            };
+
             const sizeModalEl = document.getElementById('serviceSizeLengthModal');
+            if (!sizeModalEl) {
+                openBookingAfterTransition();
+                return;
+            }
 
-            // Dispose Bootstrap instance so it doesn't fight us
-            try {
-                const inst = bootstrap.Modal.getInstance(sizeModalEl);
-                if (inst) inst.dispose();
-            } catch(e) {}
+            let opened = false;
+            const proceedOnce = function() {
+                if (opened) return;
+                opened = true;
 
-            // Hide and clean up immediately
+                // Force-hide in case Bootstrap did not fully complete transition.
+                sizeModalEl.classList.remove('show');
+                sizeModalEl.style.display = 'none';
+                sizeModalEl.setAttribute('aria-hidden', 'true');
+                sizeModalEl.removeAttribute('aria-modal');
+
+                setTimeout(openBookingAfterTransition, 40);
+            };
+
+            if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+                sizeModalEl.addEventListener('hidden.bs.modal', proceedOnce, { once: true });
+                try {
+                    const inst = bootstrap.Modal.getOrCreateInstance(sizeModalEl);
+                    inst.hide();
+                } catch (e) {
+                    console.warn('Failed to hide size modal cleanly, using fallback:', e);
+                    proceedOnce();
+                }
+
+                // Fallback in case hidden event does not fire due interrupted transition.
+                setTimeout(proceedOnce, 500);
+                return;
+            }
+
+            // No Bootstrap available: perform direct fallback hide.
             sizeModalEl.classList.remove('show');
             sizeModalEl.style.display = 'none';
             sizeModalEl.setAttribute('aria-hidden', 'true');
             sizeModalEl.removeAttribute('aria-modal');
-            document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
-            document.body.classList.remove('modal-open');
-            document.body.style.paddingRight = '';
-            document.body.style.overflow = '';
-
-            // Open booking modal after a short delay to let the DOM settle
-            setTimeout(function() {
-                window.openBookingModal(
-                    serviceName,
-                    window.serviceSizeData.serviceType,
-                    window.serviceSizeDataForBooking
-                );
-
-                // Pre-select length in booking form (skip for crotchet / hair-treatment)
-                if (window.serviceSizeData.serviceCategory !== 'crotchet' &&
-                    window.serviceSizeData.serviceCategory !== 'hair-treatment' &&
-                    window.serviceSizeData.selectedLength) {
-                    const lengthRadio = document.getElementById(
-                        'length_' + window.serviceSizeData.selectedLength.replace('-', '')
-                    );
-                    if (lengthRadio) {
-                        lengthRadio.checked = true;
-                        lengthRadio.dispatchEvent(new Event('change', { bubbles: true }));
-                    }
-                }
-            }, 150);
+            setTimeout(openBookingAfterTransition, 40);
         };
 
         // Main booking modal function
@@ -5743,7 +5795,7 @@ console.log('=== LOADING BOOKING FUNCTIONS ===');
     };
 
     // Main booking modal function
-    window.openBookingModal = function(serviceName, serviceType) {
+    window.openBookingModal = function(serviceName, serviceType, sizeData) {
         console.log('openBookingModal called:', serviceName);
 
         try {
@@ -5776,6 +5828,16 @@ console.log('=== LOADING BOOKING FUNCTIONS ===');
             const backBtn = document.getElementById('backToServiceSelectionBtn');
             if (backBtn) {
                 backBtn.style.display = 'none';
+            }
+
+            // If sizeData is provided (from continueToBooking), store price immediately
+            if (sizeData && typeof sizeData.totalPrice === 'number') {
+                try {
+                    var finalPriceEl = document.getElementById('final_price_input');
+                    if (finalPriceEl) {
+                        finalPriceEl.value = Number(sizeData.totalPrice).toFixed(2);
+                    }
+                } catch (e) { /* noop */ }
             }
 
             // Show modal using Bootstrap
@@ -8878,7 +8940,7 @@ document.addEventListener('DOMContentLoaded', function(){
 
     // Wrap existing openBookingModal
     const prevOpen = window.openBookingModal;
-    window.openBookingModal = function(serviceName, serviceType) {
+    window.openBookingModal = function(serviceName, serviceType, sizeData) {
         const run = () => {
             console.log('Opening booking modal for:', serviceName, serviceType);
 
@@ -8903,7 +8965,7 @@ document.addEventListener('DOMContentLoaded', function(){
             // Call original modal opener first (it may clear the form)
             if (typeof prevOpen === 'function') {
                 try {
-                    prevOpen(serviceName, serviceType);
+                    prevOpen(serviceName, serviceType, sizeData);
                 } catch(e) {
                     console.error('openBookingModal inner error', e);
                 }

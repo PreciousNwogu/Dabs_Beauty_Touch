@@ -484,29 +484,39 @@ Route::prefix('admin')->name('admin.')->group(function () {
                 $query->where('service', 'LIKE', '%' . request('service') . '%');
             }
 
-            // Paginate bookings (10 per page)
+// Paginate bookings (10 per page)
             $bookings = $query->orderBy('appointment_date', 'desc')
                 ->orderBy('appointment_time', 'desc')
                 ->paginate(10);
+
+            // Revenue fallback: prefer final_price, then kids final price, then base+adjustment.
+            $revenueAmountSql = 'COALESCE(final_price, kb_final_price, (COALESCE(base_price, 0) + COALESCE(length_adjustment, 0)), 0)';
+            // Date fallback: some legacy completed rows may miss completed_at.
+            $revenueDateSql = 'DATE(COALESCE(completed_at, appointment_date))';
+            $todayRevenue = (float) (\App\Models\Booking::where('status', 'completed')
+                ->whereRaw($revenueDateSql . ' = ?', [today()->toDateString()])
+                ->selectRaw('COALESCE(SUM(' . $revenueAmountSql . '), 0) as total')
+                ->value('total') ?? 0);
+            $monthlyRevenue = (float) (\App\Models\Booking::where('status', 'completed')
+                ->whereRaw($revenueDateSql . ' BETWEEN ? AND ?', [now()->startOfMonth()->toDateString(), now()->endOfMonth()->toDateString()])
+                ->selectRaw('COALESCE(SUM(' . $revenueAmountSql . '), 0) as total')
+                ->value('total') ?? 0);
 
             $stats = [
                 'total_bookings' => \App\Models\Booking::count(),
                 'pending_bookings' => \App\Models\Booking::where('status', 'pending')->count(),
                 'confirmed_bookings' => \App\Models\Booking::where('status', 'confirmed')->count(),
                 'completed_bookings' => \App\Models\Booking::where('status', 'completed')->count(),
-                'today_bookings' => \App\Models\Booking::whereDate('appointment_date', today())->count(),
+                'today_bookings' => \App\Models\Booking::whereDate('appointment_date', today())
+                    ->whereIn('status', ['pending', 'confirmed', 'completed'])
+                    ->count(),
                 'this_week_bookings' => \App\Models\Booking::whereBetween('appointment_date', [
                     now()->startOfWeek(),
                     now()->endOfWeek()
                 ])->count(),
                 // Revenue calculations for completed bookings only
-                'today_revenue' => \App\Models\Booking::where('status', 'completed')
-                    ->whereDate('completed_at', today())
-                    ->sum('final_price') ?? 0,
-                'monthly_revenue' => \App\Models\Booking::where('status', 'completed')
-                    ->whereYear('completed_at', now()->year)
-                    ->whereMonth('completed_at', now()->month)
-                    ->sum('final_price') ?? 0,
+                'today_revenue' => $todayRevenue,
+                'monthly_revenue' => $monthlyRevenue,
             ];
 
             // Also fetch recent custom service requests for admin review
@@ -538,6 +548,87 @@ Route::prefix('admin')->name('admin.')->group(function () {
                 ->with('error', 'An error occurred while loading the dashboard. Please try again later.');
         }
     })->name('dashboard');
+
+    // Completed services page
+    Route::get('/completed-services', function () {
+        $completedServicesQuery = \App\Models\Booking::completed()
+            ->orderBy('completed_at', 'desc');
+
+        if (request('date')) {
+            $completedServicesQuery->whereDate('appointment_date', request('date'));
+        }
+
+        if (request('service')) {
+            $completedServicesQuery->where('service', 'LIKE', '%' . request('service') . '%');
+        }
+
+        $completedServices = $completedServicesQuery->paginate(15)
+            ->appends(request()->all());
+
+        $stats = [
+            'completed_bookings' => \App\Models\Booking::where('status', 'completed')->count(),
+        ];
+
+        return view('admin.completed-services', compact('completedServices', 'stats'));
+    })->name('completed-services');
+
+    // Revenue history page for growth tracking
+    Route::get('/revenue-history', function () {
+        $revenueAmountSql = 'COALESCE(final_price, kb_final_price, (COALESCE(base_price, 0) + COALESCE(length_adjustment, 0)), 0)';
+        $revenueDateSql = 'DATE(COALESCE(completed_at, appointment_date))';
+
+        $monthlyRows = \App\Models\Booking::where('status', 'completed')
+            ->whereRaw($revenueDateSql . ' IS NOT NULL')
+            ->selectRaw($revenueDateSql . ' as revenue_date')
+            ->selectRaw($revenueAmountSql . ' as revenue_amount')
+            ->get();
+
+        $monthlyRevenueMap = [];
+        foreach ($monthlyRows as $row) {
+            if (!$row->revenue_date) {
+                continue;
+            }
+
+            $monthKey = \Carbon\Carbon::parse($row->revenue_date)->format('Y-m');
+            $monthlyRevenueMap[$monthKey] = ($monthlyRevenueMap[$monthKey] ?? 0) + (float) ($row->revenue_amount ?? 0);
+        }
+
+        $history = [];
+        $cursor = now()->startOfMonth();
+        for ($i = 0; $i < 12; $i++) {
+            $monthKey = $cursor->format('Y-m');
+            $monthLabel = $cursor->format('F Y');
+            $currentRevenue = (float) ($monthlyRevenueMap[$monthKey] ?? 0);
+
+            $prevKey = $cursor->copy()->subMonth()->format('Y-m');
+            $prevRevenue = (float) ($monthlyRevenueMap[$prevKey] ?? 0);
+
+            $growthPercent = null;
+            if ($prevRevenue > 0) {
+                $growthPercent = (($currentRevenue - $prevRevenue) / $prevRevenue) * 100;
+            } elseif ($currentRevenue > 0) {
+                $growthPercent = 100;
+            }
+
+            $history[] = [
+                'month_key' => $monthKey,
+                'month_label' => $monthLabel,
+                'revenue' => $currentRevenue,
+                'previous_revenue' => $prevRevenue,
+                'growth_percent' => $growthPercent,
+            ];
+
+            $cursor->subMonth();
+        }
+
+        $summary = [
+            'current_month_revenue' => (float) ($history[0]['revenue'] ?? 0),
+            'previous_month_revenue' => (float) ($history[0]['previous_revenue'] ?? 0),
+            'current_month_growth_percent' => $history[0]['growth_percent'] ?? null,
+        ];
+
+        return view('admin.revenue-history', compact('history', 'summary'));
+    })->name('revenue-history');
 
     // Get booking details for modal
     Route::get('/booking-details/{id}', function ($id) {
@@ -929,6 +1020,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::get('/schedules', [\App\Http\Controllers\Admin\ScheduleController::class, 'index'])->name('schedules.index');
     Route::get('/schedules/events', [\App\Http\Controllers\Admin\ScheduleController::class, 'events'])->name('schedules.events');
     Route::post('/schedules', [\App\Http\Controllers\Admin\ScheduleController::class, 'store'])->name('schedules.store');
+    Route::post('/schedules/reuse-previous-month', [\App\Http\Controllers\Admin\ScheduleController::class, 'reusePreviousMonthBlockedDates'])->name('schedules.reuse-previous-month');
     Route::put('/schedules/{id}', [\App\Http\Controllers\Admin\ScheduleController::class, 'update'])->name('schedules.update');
     Route::delete('/schedules/{id}', [\App\Http\Controllers\Admin\ScheduleController::class, 'destroy'])->name('schedules.destroy');
     Route::post('/schedules/reschedule', [\App\Http\Controllers\Admin\ScheduleController::class, 'reschedule'])->name('schedules.reschedule');
