@@ -23,6 +23,7 @@ class Booking extends Model
         'phone',
         'address',
         'appointment_type',
+        'parking_type',
         'service',
         'length',
         'appointment_date',
@@ -412,8 +413,11 @@ class Booking extends Model
             $selector_friendly = ['braid_type' => $bt ? ($friendlyBraid[$bt] ?? ucwords(str_replace(['_','-'], ' ', $bt))) : null, 'finish' => $fi ? ($friendlyFinish[$fi] ?? ucwords(str_replace(['_','-'], ' ', $fi))) : null, 'length' => $ln ? ($friendlyLength[$ln] ?? ucwords(str_replace(['_','-'], ' ', $ln))) : null, 'extras' => $extrasList];
         } catch (\Exception $e) { $selector_friendly = null; }
 
-        // fallback for addons parsing when not computed above
-        if ($addonsTotal === 0 && !empty($selector['extras'])) {
+        // Prefer persisted kb_addons_total if available (most authoritative)
+        if (!empty($b->kb_addons_total) && is_numeric($b->kb_addons_total)) {
+            $addonsTotal = (float) $b->kb_addons_total;
+        } elseif ($addonsTotal === 0 && !empty($selector['extras'])) {
+            // fallback for addons parsing when not computed above
             $ex = $selector['extras'];
             if (is_array($ex)) {
                 $addonMap = ['kb_add_detangle'=>15,'kb_add_beads'=>10,'kb_add_beads_full'=>15,'kb_add_extension'=>20,'kb_add_rest'=>5];

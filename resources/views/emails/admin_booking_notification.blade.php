@@ -49,6 +49,7 @@
         <tr><td style="font-weight:700;">Name</td><td>{{ $booking->name ?? 'N/A' }}</td></tr>
         <tr style="background:#f8fafc;"><td style="font-weight:700;">Email</td><td>{{ $booking->email ?? 'N/A' }}</td></tr>
         <tr><td style="font-weight:700;">Phone</td><td>{{ $booking->phone ?? 'N/A' }}</td></tr>
+        <tr style="background:#f8fafc;"><td style="font-weight:700;">User Comment</td><td>{{ trim((string)($booking->message ?? '')) !== '' ? $booking->message : 'None' }}</td></tr>
         <tr style="background:#f8fafc;"><td style="font-weight:700;">Service</td><td>
           @php
             $serviceDisplay = $booking->service ?? 'N/A';
@@ -102,18 +103,86 @@
         }
 
         $sf = $selector_friendly ?? ($breakdown['selector_friendly'] ?? null);
-        $braidType = $sf['braid_type'] ?? $selector['braid_type'] ?? ($booking->kb_braid_type ?? ($booking->service ?? null));
-        $finishVal = $sf['finish'] ?? $selector['finish'] ?? ($booking->kb_finish ?? null);
-        $lengthVal = $sf['length'] ?? $selector['length'] ?? ($booking->kb_length ?? ($booking->length ?? null));
+        $kidsBraidMap = [
+          'protective' => 'Natural Hair Twist',
+          'cornrows' => 'Cornrows (without extension)',
+          'cornrow_weave' => 'Cornrow Weave (with extension)',
+          'knotless_small' => 'Knotless Small',
+          'knotless_med' => 'Knotless Medium',
+          'box_small' => 'Box Braids Small',
+          'box_med' => 'Box Braids Medium',
+          'stitch' => 'Stitch Braids',
+        ];
+        $braidRaw = $selector['braid_type'] ?? $selector['kb_braid_type'] ?? ($booking->kb_braid_type ?? null);
+        $braidType = $sf['braid_type'] ?? ($braidRaw ? ($kidsBraidMap[$braidRaw] ?? ucwords(str_replace(['_','-'], ' ', (string)$braidRaw))) : null);
+        if (empty($braidType) && is_string($booking->service ?? null) && str_contains(strtolower((string)$booking->service), 'kids braids')) {
+          $serviceParts = explode('—', (string)$booking->service, 2);
+          if (count($serviceParts) === 2 && trim((string)$serviceParts[1]) !== '') {
+            $braidType = trim((string)$serviceParts[1]);
+          }
+        }
+        $finishVal = $sf['finish'] ?? $selector['finish'] ?? $selector['kb_finish'] ?? ($booking->kb_finish ?? null);
+        $lengthVal = $sf['length'] ?? $selector['length'] ?? $selector['kb_length'] ?? ($booking->kb_length ?? ($booking->length ?? null));
+
+        // Determine a reliable finish label for non-kids services as well.
+        $serviceLowerForFinish = strtolower((string)($booking->service ?? ''));
+        $finishDisplay = $finishVal;
+        if (!empty($finishDisplay)) {
+          $finishDisplayLower = strtolower(trim((string)$finishDisplay));
+          if ($finishDisplayLower === 'plain') {
+            $finishDisplay = 'Without curl';
+          } elseif ($finishDisplayLower === 'curled') {
+            $finishDisplay = 'With curl';
+          } elseif ($finishDisplayLower === 'natural') {
+            $finishDisplay = 'Natural finish';
+          } elseif ($finishDisplayLower === 'sleek') {
+            $finishDisplay = 'Sleek finish';
+          }
+        } else {
+          if (str_contains($serviceLowerForFinish, 'finished tip')) {
+            $finishDisplay = 'Finished Tip';
+          } elseif (
+            str_contains($serviceLowerForFinish, 'knotless') ||
+            str_contains($serviceLowerForFinish, 'boho') ||
+            str_contains($serviceLowerForFinish, 'french curl')
+          ) {
+            $finishDisplay = 'Curled Tip';
+          }
+        }
 
         // `hideLengthFinish` should be provided by the Notification; default to false if not passed
         $hideLengthFinish = $hideLengthFinish ?? false;
         $extrasVal = null;
+        $addonNameMap = [
+          'kb_add_detangle' => 'Detangle',
+          'kb_add_beads' => 'Beads',
+          'kb_add_beads_full' => 'Beads (full)',
+          'kb_add_extension' => 'Extension',
+          'kb_add_rest' => 'Resting',
+        ];
         if(!empty($sf['extras']) && is_array($sf['extras'])){
-            $extrasVal = implode(', ', $sf['extras']);
+            $extrasVal = implode(', ', array_map(function($it) use ($addonNameMap){
+              return $addonNameMap[$it] ?? ucwords(str_replace(['_','-'], ' ', (string)$it));
+            }, $sf['extras']));
         } else {
             $extrasVal = $selector['extras'] ?? ($booking->kb_extras ?? null);
-            if(is_array($extrasVal)) $extrasVal = implode(', ', $extrasVal);
+            if(is_array($extrasVal)) {
+              $extrasVal = implode(', ', array_map(function($it) use ($addonNameMap){
+                return $addonNameMap[$it] ?? ucwords(str_replace(['_','-'], ' ', (string)$it));
+              }, $extrasVal));
+            } elseif (is_string($extrasVal) && preg_match('/^\d+(?:\.\d+)?(?:,\d+(?:\.\d+)?)*$/', $extrasVal)) {
+              $sum = 0;
+              foreach(explode(',', $extrasVal) as $n) $sum += floatval($n);
+              $extrasVal = $sum > 0 ? ('$' . number_format($sum, 2)) : null;
+            } elseif (is_string($extrasVal) && str_contains($extrasVal, 'kb_add_')) {
+              $labels = [];
+              foreach(explode(',', $extrasVal) as $id){
+                $id = trim($id);
+                if($id === '') continue;
+                $labels[] = $addonNameMap[$id] ?? ucwords(str_replace(['_','-'], ' ', $id));
+              }
+              $extrasVal = !empty($labels) ? implode(', ', $labels) : null;
+            }
         }
 
         // Determine authoritative pricing values - prefer breakdown and selector-aware fields
@@ -125,7 +194,7 @@
         $typeLengthFinishAdjust = $bd['adjustments_total'] ?? $bd['selector_adjust'] ?? $bd['length_adjust'] ?? $booking->length_adjustment ?? $booking->kb_length_adjustment ?? 0;
 
         // Determine addons from breakdown or booking extras (numeric CSV or named ids)
-        $addons = $bd['addons_total'] ?? $bd['selector_addons'] ?? null;
+        $addons = $bd['addons_total'] ?? $booking->kb_addons_total ?? $bd['selector_addons'] ?? null;
         if((is_null($addons) || $addons == 0)){
           if(!empty($booking->kb_extras)){
             if(is_string($booking->kb_extras) && preg_match('/^\d+(?:\.\d+)?(?:,\d+(?:\.\d+)?)*$/', $booking->kb_extras)){
@@ -200,9 +269,8 @@
             </td>
           </tr>
         @endif
-        @if(!$hideLengthFinish)
-          <tr><td style="font-weight:700;">Finish</td><td>{{ $finishVal ?? '—' }}</td></tr>
-        @endif
+        <tr><td style="font-weight:700;">Finish</td><td>{{ $finishDisplay ?? '—' }}</td></tr>
+        <tr style="background:#f8fafc;"><td style="font-weight:700;">Kids Length</td><td>{{ $lengthVal ? ucwords(str_replace(['_', '-'], ' ', (string)$lengthVal)) : '—' }}</td></tr>
         <tr><td style="font-weight:700;">Add-ons</td><td>{{ $extrasVal ?: 'None' }}</td></tr>
       </table>
 
@@ -225,21 +293,12 @@
       <p style="margin-top:14px;">Quick actions:</p>
       @php
         $bookingId = $booking->id ?? null;
-        $code = $booking->confirmation_code ?? null;
-        // Prefer the public confirmation link so it works from email without admin login.
-        $publicUrl = ($bookingId && $code)
-          ? secure_url('/bookings/confirm/' . $bookingId . '/' . $code)
-          : null;
-        // Read-only view link (no edit form)
-        $viewUrl = ($bookingId && $code)
-          ? (secure_url('/bookings/confirm/' . $bookingId . '/' . $code) . '?view=1')
-          : null;
-        // Fallback: admin view (requires login)
-        $adminUrl = $bookingId ? secure_url('/admin/bookings/' . $bookingId) : null;
+        // Open admin booking details directly by booking ID.
+        $adminUrl = $bookingId ? (secure_url('/admin/bookings/' . $bookingId) . '?view=1') : null;
       @endphp
 
       <div style="margin-top:10px;">
-        <a href="{{ $viewUrl ?: ($adminUrl ?: '#') }}"
+        <a href="{{ $adminUrl ?: '#' }}"
            style="display:block;width:100%;text-align:center;background:#0b3a66;color:#ffffff !important;text-decoration:none;padding:12px 16px;border-radius:12px;font-weight:800;font-size:14px;margin-top:10px;white-space:nowrap;">
           View Booking Details
         </a>

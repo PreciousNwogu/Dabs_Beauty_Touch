@@ -2026,8 +2026,10 @@
         window.serviceSizeData = {
             selectedSize: null,
             selectedLength: 'mid-back',
+            selectedTipOption: 'curled',
             basePrice: 0,
             lengthAdjustment: 0,
+            tipAddonCost: 0,
             serviceCategory: '',
             serviceName: '',
             serviceType: ''
@@ -2159,6 +2161,25 @@
             // Reset selections
             window.serviceSizeData.selectedSize = null;
             window.serviceSizeData.selectedLength = 'mid-back';
+            window.serviceSizeData.selectedTipOption = 'curled';
+
+            // Auto-select the first size so Continue flow is never blocked by null selected size.
+            try {
+                if (Array.isArray(categoryData.sizes) && categoryData.sizes.length > 0) {
+                    const first = categoryData.sizes[0];
+                    if (first && typeof window.selectSize === 'function') {
+                        window.selectSize(
+                            first.slug,
+                            first.name,
+                            first.price,
+                            !!first.hasWeaveAddon,
+                            !!first.hasRowOptions,
+                            !!first.hasFrontBackAddon,
+                            !!first.noLength
+                        );
+                    }
+                }
+            } catch (e) { console.warn('Default size auto-selection failed', e); }
 
             // Show/hide length selection based on service type
             const lengthSection = document.getElementById('lengthSelectionSection');
@@ -2183,6 +2204,59 @@
                 modal.show();
             }
         };
+
+        function isTipOptionEligible(category) {
+            return ['knotless', 'boho', 'french-curl'].includes((category || '').toLowerCase());
+        }
+
+        function isTipLengthEligible(length) {
+            return ['mid-back', 'waist', 'hip', 'tailbone', 'classic'].includes((length || '').toLowerCase());
+        }
+
+        function refreshTipOptionStyles() {
+            const selected = window.serviceSizeData.selectedTipOption || 'curled';
+            const curledOption = document.getElementById('tip_curled')?.closest('.form-check');
+            const finishedOption = document.getElementById('tip_finished')?.closest('.form-check');
+
+            if (!curledOption || !finishedOption) return;
+
+            if (selected === 'finished') {
+                curledOption.style.border = '2px solid #e9ecef';
+                curledOption.style.background = '#fff';
+                finishedOption.style.border = '2px solid #4a8bc2';
+                finishedOption.style.background = '#eef4ff';
+            } else {
+                curledOption.style.border = '2px solid #4a8bc2';
+                curledOption.style.background = '#eef4ff';
+                finishedOption.style.border = '2px solid #e9ecef';
+                finishedOption.style.background = '#fff';
+            }
+        }
+
+        function updateTipOptionSectionVisibility() {
+            const tipSection = document.getElementById('tipOptionSection');
+            if (!tipSection) return;
+
+            const selectedLength = window.serviceSizeData.selectedLength || 'mid-back';
+            const showTipOption = isTipOptionEligible(window.serviceSizeData.serviceCategory) && isTipLengthEligible(selectedLength);
+            tipSection.style.display = showTipOption ? 'block' : 'none';
+
+            if (!showTipOption) {
+                window.serviceSizeData.selectedTipOption = 'curled';
+            }
+
+            const curledRadio = document.getElementById('tip_curled');
+            const finishedRadio = document.getElementById('tip_finished');
+            if (curledRadio) curledRadio.checked = (window.serviceSizeData.selectedTipOption !== 'finished');
+            if (finishedRadio) finishedRadio.checked = (window.serviceSizeData.selectedTipOption === 'finished');
+
+            const tipOptionInput = document.getElementById('tip_option_input');
+            if (tipOptionInput) {
+                tipOptionInput.value = window.serviceSizeData.selectedTipOption === 'finished' ? 'finished' : 'curled';
+            }
+
+            refreshTipOptionStyles();
+        }
 
         // Populate size options dynamically
         function populateSizeOptions(sizes) {
@@ -2331,6 +2405,7 @@
             window.serviceSizeData.weaveAddon = false; // Reset weave addon
             window.serviceSizeData.rowOption = '8-10'; // Reset row option to default
             window.serviceSizeData.frontBackAddon = false; // Reset front/back addon
+            window.serviceSizeData.selectedTipOption = 'curled'; // Reset tip option
             window.serviceSizeData.noLength = noLength || false; // Track if length should be hidden
 
             // Show/hide weave add-on section based on service
@@ -2385,6 +2460,9 @@
                     }
                 }
             }
+
+            // Show/hide tip finish section for eligible services
+            updateTipOptionSectionVisibility();
 
             // Display selected service info
             const selectedServiceDisplay = document.getElementById('selectedServiceDisplay');
@@ -2508,6 +2586,18 @@
             updateSizeLengthPrice();
         };
 
+        // Toggle tip option
+        window.toggleTipOption = function(option) {
+            const normalizedOption = option === 'finished' ? 'finished' : 'curled';
+            window.serviceSizeData.selectedTipOption = normalizedOption;
+
+            const tipRadio = document.getElementById(normalizedOption === 'finished' ? 'tip_finished' : 'tip_curled');
+            if (tipRadio) tipRadio.checked = true;
+
+            refreshTipOptionStyles();
+            updateSizeLengthPrice();
+        };
+
         // Select a length
         window.selectSizeLength = function(length) {
             const radio = document.getElementById(`size_length_${length}`);
@@ -2529,6 +2619,8 @@
                 selectedOption.style.background = '#fff7e0';
             }
 
+            updateTipOptionSectionVisibility();
+
             // Update price display
             updateSizeLengthPrice();
         };
@@ -2541,11 +2633,17 @@
             const weaveAddon = window.serviceSizeData.weaveAddon || false;
             const rowOption = window.serviceSizeData.rowOption || '8-10';
             const frontBackAddon = window.serviceSizeData.frontBackAddon || false;
+            const selectedTipOption = window.serviceSizeData.selectedTipOption || 'curled';
+            const tipEligible = isTipOptionEligible(window.serviceSizeData.serviceCategory);
 
             let adjustment = 0;
             let weaveAddonCost = 0;
             let rowAddonCost = 0;
             let frontBackAddonCost = 0;
+            let tipAddonCost = 0;
+
+            // Keep tip selector state synced with selected length/category.
+            updateTipOptionSectionVisibility();
 
             // Only apply length adjustments for braid services (not crotchet or hair treatment)
             if (serviceCategory !== 'crotchet' && serviceCategory !== 'hair-treatment') {
@@ -2578,12 +2676,17 @@
                 frontBackAddonCost = 20;
             }
 
+            if (tipEligible && selectedTipOption === 'finished' && isTipLengthEligible(length)) {
+                tipAddonCost = 20;
+            }
+
             window.serviceSizeData.lengthAdjustment = adjustment;
             window.serviceSizeData.weaveAddonCost = weaveAddonCost;
             window.serviceSizeData.rowAddonCost = rowAddonCost;
             window.serviceSizeData.frontBackAddonCost = frontBackAddonCost;
+            window.serviceSizeData.tipAddonCost = tipAddonCost;
 
-            const totalPrice = basePrice + adjustment + weaveAddonCost + rowAddonCost + frontBackAddonCost;
+            const totalPrice = basePrice + adjustment + weaveAddonCost + rowAddonCost + frontBackAddonCost + tipAddonCost;
 
             const priceDisplay = document.getElementById('sizeLengthPriceDisplay');
             if (priceDisplay) {
@@ -2625,13 +2728,15 @@
             if (window.serviceSizeData.weaveAddon)          serviceName += ' (With Weave)';
             if (window.serviceSizeData.rowOption === '10+')  serviceName += ' (10+ Rows)';
             if (window.serviceSizeData.frontBackAddon)       serviceName += ' (Front + Back)';
+            if (window.serviceSizeData.selectedTipOption === 'finished') serviceName += ' (Finished Tip)';
 
             // Calculate total price
             const totalPrice = (window.serviceSizeData.basePrice || 0) +
                                (window.serviceSizeData.lengthAdjustment || 0) +
                                (window.serviceSizeData.weaveAddonCost || 0) +
                                (window.serviceSizeData.rowAddonCost || 0) +
-                               (window.serviceSizeData.frontBackAddonCost || 0);
+                               (window.serviceSizeData.frontBackAddonCost || 0) +
+                               (window.serviceSizeData.tipAddonCost || 0);
 
             window.serviceSizeDataForBooking = {
                 ...window.serviceSizeData,
@@ -2641,13 +2746,11 @@
 
             const openBookingAfterTransition = function() {
                 try {
-                    // Remove stale backdrop/body state only when no modal is visible.
-                    if (!document.querySelector('.modal.show')) {
-                        document.querySelectorAll('.modal-backdrop').forEach(function(el) { el.remove(); });
-                        document.body.classList.remove('modal-open');
-                        document.body.style.removeProperty('padding-right');
-                        document.body.style.removeProperty('overflow');
-                    }
+                    // Ensure no stale modal artifacts block pointer events on the booking modal.
+                    document.querySelectorAll('.modal-backdrop').forEach(function(el) { el.remove(); });
+                    document.body.classList.remove('modal-open');
+                    document.body.style.removeProperty('padding-right');
+                    document.body.style.removeProperty('overflow');
 
                     window.openBookingModal(
                         serviceName,
@@ -2675,47 +2778,42 @@
             };
 
             const sizeModalEl = document.getElementById('serviceSizeLengthModal');
-            if (!sizeModalEl) {
-                openBookingAfterTransition();
-                return;
-            }
+            try {
+                if (sizeModalEl) {
+                    if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+                        try {
+                            const inst = bootstrap.Modal.getInstance(sizeModalEl) || bootstrap.Modal.getOrCreateInstance(sizeModalEl);
+                            inst.hide();
+                        } catch (e) { /* noop */ }
+                    }
 
-            let opened = false;
-            const proceedOnce = function() {
-                if (opened) return;
-                opened = true;
-
-                // Force-hide in case Bootstrap did not fully complete transition.
-                sizeModalEl.classList.remove('show');
-                sizeModalEl.style.display = 'none';
-                sizeModalEl.setAttribute('aria-hidden', 'true');
-                sizeModalEl.removeAttribute('aria-modal');
-
-                setTimeout(openBookingAfterTransition, 40);
-            };
-
-            if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
-                sizeModalEl.addEventListener('hidden.bs.modal', proceedOnce, { once: true });
-                try {
-                    const inst = bootstrap.Modal.getOrCreateInstance(sizeModalEl);
-                    inst.hide();
-                } catch (e) {
-                    console.warn('Failed to hide size modal cleanly, using fallback:', e);
-                    proceedOnce();
+                    // Hard fallback cleanup regardless of Bootstrap internals.
+                    sizeModalEl.classList.remove('show');
+                    sizeModalEl.style.display = 'none';
+                    sizeModalEl.setAttribute('aria-hidden', 'true');
+                    sizeModalEl.removeAttribute('aria-modal');
                 }
-
-                // Fallback in case hidden event does not fire due interrupted transition.
-                setTimeout(proceedOnce, 500);
-                return;
+            } catch (e) {
+                console.warn('Error while closing size modal before booking:', e);
             }
 
-            // No Bootstrap available: perform direct fallback hide.
-            sizeModalEl.classList.remove('show');
-            sizeModalEl.style.display = 'none';
-            sizeModalEl.setAttribute('aria-hidden', 'true');
-            sizeModalEl.removeAttribute('aria-modal');
-            setTimeout(openBookingAfterTransition, 40);
+            // Open the booking modal immediately after forced cleanup.
+            setTimeout(openBookingAfterTransition, 30);
         };
+
+        // Defensive binding: ensure the Continue button always triggers the handler.
+        document.addEventListener('DOMContentLoaded', function(){
+            try {
+                const continueBtn = document.getElementById('continueToBookingBtn');
+                if (continueBtn && !continueBtn.__dbtBound) {
+                    continueBtn.addEventListener('click', function(e){
+                        e.preventDefault();
+                        window.continueToBooking();
+                    });
+                    continueBtn.__dbtBound = true;
+                }
+            } catch (e) { console.warn('Failed to bind continueToBooking button', e); }
+        });
 
         // Main booking modal function
         window.openBookingModal = function(serviceName, serviceType, sizeData) {
@@ -2756,6 +2854,11 @@
                     if (finalInput) {
                         finalInput.value = Number(sizeData.totalPrice).toFixed(2);
                         console.log('Set final_price_input from size modal to:', finalInput.value);
+                    }
+
+                    const tipOptionInput = document.getElementById('tip_option_input');
+                    if (tipOptionInput) {
+                        tipOptionInput.value = sizeData.selectedTipOption === 'finished' ? 'finished' : 'curled';
                     }
                 }
 
@@ -3622,6 +3725,37 @@
     </div>
     @endif
 
+    @if($errors->any() && !session('booking_success') && !session('booking_error'))
+    <div class="alert alert-danger alert-dismissible fade show m-0" role="alert" style="border-radius: 0; border: none; background: linear-gradient(135deg, #b91c1c 0%, #dc2626 100%); color: white; box-shadow: 0 2px 8px rgba(185, 28, 28, 0.3); z-index: 1050; position: relative;">
+        <div class="container text-center py-3">
+            <h4 class="alert-heading mb-2">
+                <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                Please Fix These Booking Details
+            </h4>
+            <p class="mb-0">{{ $errors->first() }}</p>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert" aria-label="Close" style="position: absolute; top: 15px; right: 15px;"></button>
+        </div>
+    </div>
+    @endif
+
+    @if(session('booking_success') || session('success'))
+    <div class="alert alert-success alert-dismissible fade show m-0" role="alert" style="border-radius: 0; border: none; background: linear-gradient(135deg, #16a34a 0%, #22c55e 100%); color: white; box-shadow: 0 2px 8px rgba(34, 197, 94, 0.28); z-index: 1050; position: relative;">
+        <div class="container text-center py-3">
+            <h4 class="alert-heading mb-2">
+                <i class="bi bi-check-circle-fill me-2"></i>
+                Booking Submitted Successfully
+            </h4>
+            <p class="mb-0">
+                {{ session('success', 'Your appointment request has been received.') }}
+                @if(data_get(session('booking_details'), 'email'))
+                    A confirmation email has been sent to <strong>{{ data_get(session('booking_details'), 'email') }}</strong>.
+                @endif
+            </p>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert" aria-label="Close" style="position: absolute; top: 15px; right: 15px;"></button>
+        </div>
+    </div>
+    @endif
+
     @include('partials.cookie-consent')
     @include('partials.site-header')
 
@@ -3644,7 +3778,7 @@
                 <p style="font-size: 0.95rem; opacity: 0.9; font-weight: 500; margin-top: 1rem;">
                     <i class="bi bi-geo-alt-fill me-2"></i>Ottawa
                     <span class="mx-2">•</span>
-                    <i class="bi bi-telephone-fill me-2"></i><a href="tel:+13432548848" style="color: #fff; text-decoration: none;">343-254-8848</a>
+                    <i class="bi bi-telephone-fill me-2"></i><a href="tel:+3432548848" style="color: #fff; text-decoration: none;">343-254-8848</a>
                     <span class="mx-2">•</span>
                     By Appointment Only
                 </p>
@@ -4392,6 +4526,35 @@ function openOtherServicesModal() {
                         </div>
                     </div>
 
+                    <!-- Tip Finish Option (shown for Knotless, Boho and French Curl) -->
+                    <div class="mb-4" id="tipOptionSection" style="display: none;">
+                        <div class="alert" style="background: linear-gradient(135deg, #f5f8ff 0%, #e7f3ff 100%); border-left: 6px solid #4a8bc2; border-radius: 12px; padding: 20px;">
+                            <h6 style="font-weight: 700; color: #030f68; margin-bottom: 15px;">
+                                <i class="bi bi-stars me-2"></i>Choose Tip Finish
+                            </h6>
+                            <p style="margin-bottom: 15px; color: #555; font-size: 0.95rem;">
+                                Curled tip keeps base pricing. Finished tip adds <strong>+$20</strong> for mid-back to tailbone lengths.
+                            </p>
+                            <div class="d-flex gap-3">
+                                <div class="form-check flex-fill" style="background: #fff; padding: 15px; border-radius: 10px; border: 2px solid #4a8bc2; cursor: pointer;" onclick="toggleTipOption('curled')">
+                                    <input class="form-check-input" type="radio" name="tip_option" id="tip_curled" value="curled" checked>
+                                    <label class="form-check-label w-100" for="tip_curled" style="cursor: pointer; font-weight: 600;">
+                                        <i class="bi bi-scissors me-2"></i>Curled Tip
+                                        <span class="float-end text-muted">+$0</span>
+                                    </label>
+                                </div>
+                                <div class="form-check flex-fill" style="background: #fff; padding: 15px; border-radius: 10px; border: 2px solid #e9ecef; cursor: pointer;" onclick="toggleTipOption('finished')">
+                                    <input class="form-check-input" type="radio" name="tip_option" id="tip_finished" value="finished">
+                                    <label class="form-check-label w-100" for="tip_finished" style="cursor: pointer; font-weight: 600;">
+                                        <i class="bi bi-check2-circle me-2"></i>Finished Tip
+                                        <span class="float-end text-info">+$20*</span>
+                                    </label>
+                                </div>
+                            </div>
+                            <small class="text-muted d-block mt-2">* Applies to mid-back, waist, hip and tailbone/classic lengths.</small>
+                        </div>
+                    </div>
+
                     <!-- Length Selection with Guide -->
                     <div class="mb-4" id="lengthSelectionSection">
                         <h6 style="font-weight: 700; color: #030f68; margin-bottom: 15px;">
@@ -4497,6 +4660,7 @@ function openOtherServicesModal() {
                         <input type="hidden" id="selectedPrice" name="price">
                         <input type="hidden" id="final_price_input" name="final_price" value="">
                         <input type="hidden" id="stitch_rows_option" name="stitch_rows_option" value="">
+                        <input type="hidden" id="tip_option_input" name="tip_option" value="curled">
 
                         <div class="row g-4">
                             <!-- Service Selection -->
@@ -4572,13 +4736,13 @@ function openOtherServicesModal() {
                                     <label class="form-label">Appointment Type *</label>
                                     <div class="d-flex gap-3">
                                         <div class="form-check">
-                                            <input class="form-check-input" type="radio" name="appointment_type" id="appointment_type_in_studio" value="in-studio" checked>
+                                            <input class="form-check-input" type="radio" name="appointment_type" id="appointment_type_in_studio" value="in-studio" checked onclick="toggleAddressField()" onchange="toggleAddressField()">
                                             <label class="form-check-label" for="appointment_type_in_studio">
                                                 <i class="bi bi-house-door me-1"></i>Stylist address
                                             </label>
                                         </div>
                                         <div class="form-check">
-                                            <input class="form-check-input" type="radio" name="appointment_type" id="appointment_type_mobile" value="mobile">
+                                            <input class="form-check-input" type="radio" name="appointment_type" id="appointment_type_mobile" value="mobile" onclick="toggleAddressField()" onchange="toggleAddressField()">
                                             <label class="form-check-label" for="appointment_type_mobile">
                                                 <i class="bi bi-truck me-1"></i>Mobile (I want you to come to me)
                                             </label>
@@ -4591,17 +4755,46 @@ function openOtherServicesModal() {
                             </div>
 
                             <!-- Service Address (conditional) -->
-                            <div class="col-12 d-none" id="addressFieldContainer">
+                            <div class="col-12" id="addressFieldContainer" style="display: none;">
                                 <div class="form-group">
                                     <label for="address" class="form-label">Mobile Service Address (Ottawa) *</label>
-                                    <input type="text" class="form-control" id="address" name="address" placeholder="Enter your complete address" autocomplete="off">
+                                    <input type="text" class="form-control" id="address" name="address" placeholder="Enter your complete address" autocomplete="off" minlength="10">
+                                    <div class="invalid-feedback">Please enter a complete mobile address (at least 10 characters).</div>
                                     <small class="form-text text-muted mt-2">
                                         <i class="bi bi-geo-alt me-1"></i>Required for mobile appointments so we can confirm travel availability and any travel fee.
                                     </small>
                                 </div>
                             </div>
 
+                            <div class="col-12" id="parkingFieldContainer" style="display: none;">
+                                <div class="form-group">
+                                    <label class="form-label">Parking at Address *</label>
+                                    <div class="d-flex gap-3">
+                                        <div class="form-check">
+                                            <input class="form-check-input parking-option-main" type="radio" name="parking_type" id="parking_type_free" value="free">
+                                            <label class="form-check-label" for="parking_type_free">Free parking</label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input parking-option-main" type="radio" name="parking_type" id="parking_type_paid" value="paid">
+                                            <label class="form-check-label" for="parking_type_paid">Paid parking</label>
+                                        </div>
+                                    </div>
+                                    <small class="form-text text-muted mt-2">
+                                        <i class="bi bi-p-circle me-1"></i>Required for mobile appointments.
+                                    </small>
+                                </div>
+                            </div>
+
                             <div class="col-12">
+                                <div class="alert" style="background: linear-gradient(135deg, #fff7e0 0%, #ffe8cc 100%); border-left: 5px solid #ff6600; border-radius: 10px; margin-bottom: 14px;">
+                                    <div style="font-weight: 700; color: #030f68; margin-bottom: 6px;">
+                                        <i class="bi bi-megaphone me-2"></i>Announcement: Braiding Extensions Available
+                                    </div>
+                                    <div style="font-size: 0.95rem; color: #444;">
+                                        We now have braiding extensions in various colors for sale. Please tell your stylist your preferred color in the comment box below, or message admin on
+                                        <a href="https://wa.me/3432548848" target="_blank" rel="noopener" style="font-weight: 700; color: #128c7e; text-decoration: none;">WhatsApp</a>.
+                                    </div>
+                                </div>
                                 <div class="form-group">
                                     <label for="message" class="form-label">Special Requests or Notes</label>
                                     <textarea class="form-control" id="message" name="message" placeholder="Any special requests or additional information..." rows="3" autocomplete="off"></textarea>
@@ -5166,6 +5359,21 @@ function openOtherServicesModal() {
 
     <!-- Important Information Section -->
     <script>
+        // Ensure the main booking modal is a direct child of <body>
+        // so backdrops and focus trapping work reliably across transitions.
+        (function(){
+            try{
+                function moveMainBookingModal(){
+                    var el = document.getElementById('bookingModal');
+                    if(!el) return;
+                    if(el.parentNode !== document.body){
+                        document.body.appendChild(el);
+                    }
+                }
+                if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', moveMainBookingModal); else moveMainBookingModal();
+            }catch(e){ console.warn('moveMainBookingModal failed', e); }
+        })();
+
         // Ensure the kids booking modal is a direct child of <body>
         // This prevents the modal from enclosing or visually attaching subsequent page sections.
         (function(){
@@ -5237,7 +5445,7 @@ function openOtherServicesModal() {
                                                         <i class="bi bi-whatsapp" style="color: #25D366; font-size: 1.2rem; margin-right: 8px;"></i>
                                                         <strong style="color: #030f68;">WhatsApp:</strong>
                                                     </div>
-                                                    <a href="https://wa.me/13432548848" target="_blank" rel="noopener noreferrer" style="color: #ff6600; text-decoration: none; font-weight: 600; font-size: 1.1rem;">
+                                                    <a href="https://wa.me/3432548848" target="_blank" rel="noopener noreferrer" style="color: #ff6600; text-decoration: none; font-weight: 600; font-size: 1.1rem;">
                                                         <i class="bi bi-whatsapp" aria-hidden="true" style="font-size:1.4rem; vertical-align:middle;"></i>
                                                          (+1) 343-254-8848</span>
                                                     </a>
@@ -5354,7 +5562,7 @@ function openOtherServicesModal() {
                             <div class="social-links mt-3">
                                 <a href="#" class="btn btn-outline-primary me-2"><i class="bi bi-facebook me-1"></i>Facebook</a>
                                 <a href="https://www.instagram.com/dabs_beauty_touch?igsh=MXYycGNraGxwem5tZw%3D%3D&utm_source=qr" class="btn btn-outline-info me-2" target="_blank" rel="noopener noreferrer"><i class="bi bi-instagram me-1"></i>Instagram</a>
-                                <a href="https://wa.me/13432548848" class="btn btn-outline-success" target="_blank" rel="noopener noreferrer"><i class="bi bi-whatsapp me-1"></i>WhatsApp</a>
+                                <a href="https://wa.me/3432548848" class="btn btn-outline-success" target="_blank" rel="noopener noreferrer"><i class="bi bi-whatsapp me-1"></i>WhatsApp</a>
                             </div>
                         </div>
                         <div class="col-md-6 p-5 d-flex flex-column justify-content-center">
@@ -5706,7 +5914,7 @@ function openOtherServicesModal() {
         if(depositModal) depositModal.hide();
 
         // Show contact information
-        alert('Please contact us at:\n\nPhone: (343) 254-8848\nEmail: info@dabsbeautytouch.com\nWhatsApp: https://wa.me/13432548848\n\nWe will provide you with payment details and confirm your appointment once payment is received.');
+        alert('Please contact us at:\n\nPhone: (343) 254-8848\nEmail: info@dabsbeautytouch.com\nWhatsApp: https://wa.me/3432548848\n\nWe will provide you with payment details and confirm your appointment once payment is received.');
     }
 
     // Function to scroll to services section
@@ -5806,6 +6014,27 @@ console.log('=== LOADING BOOKING FUNCTIONS ===');
                 return;
             }
 
+            // Clean up any stale modal artifacts that can block interaction.
+            try {
+                var sizeModalEl = document.getElementById('serviceSizeLengthModal');
+                if (sizeModalEl) {
+                    sizeModalEl.classList.remove('show');
+                    sizeModalEl.style.display = 'none';
+                    sizeModalEl.setAttribute('aria-hidden', 'true');
+                    sizeModalEl.removeAttribute('aria-modal');
+                    if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+                        var sizeInst = bootstrap.Modal.getInstance(sizeModalEl);
+                        if (sizeInst) sizeInst.dispose();
+                    }
+                }
+                document.querySelectorAll('.modal-backdrop').forEach(function(el){ el.remove(); });
+                document.body.classList.remove('modal-open');
+                document.body.style.removeProperty('padding-right');
+                document.body.style.removeProperty('overflow');
+            } catch (cleanupErr) {
+                console.warn('Modal state cleanup failed:', cleanupErr);
+            }
+
             // Set service name in form
             var serviceInput = document.getElementById('selectedService');
             if (serviceInput) {
@@ -5842,8 +6071,9 @@ console.log('=== LOADING BOOKING FUNCTIONS ===');
 
             // Show modal using Bootstrap
             if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
-                var modal = new bootstrap.Modal(modalEl);
+                var modal = bootstrap.Modal.getOrCreateInstance(modalEl);
                 modal.show();
+                try { setTimeout(function(){ window.__dbtSyncTermsButtons && window.__dbtSyncTermsButtons(); }, 60); } catch (e) { /* noop */ }
                 console.log('Modal shown successfully');
             } else {
                 // Fallback - show modal manually
@@ -5851,6 +6081,7 @@ console.log('=== LOADING BOOKING FUNCTIONS ===');
                 modalEl.classList.add('show');
                 modalEl.setAttribute('aria-hidden', 'false');
                 document.body.classList.add('modal-open');
+                try { setTimeout(function(){ window.__dbtSyncTermsButtons && window.__dbtSyncTermsButtons(); }, 60); } catch (e) { /* noop */ }
                 console.log('Modal shown with fallback method');
             }
 
@@ -6254,7 +6485,6 @@ function openOtherServicesModal() {
                 title: 'Boho Braids',
                 img: '{{ asset("images/boho braid.jpg") }}',
                 desc: 'Knotless braids with curly ends for a boho look.'
-            },
             }
         };
 
@@ -6392,11 +6622,12 @@ function openOtherServicesModal() {
                 let adjustments = 0;
                 let addons = 0;
                 let total = 0;
+                let selectedBraidTypeForDiscount = '';
 
                 if(sel){
                     // type adj
-                    const bt = sel.braid_type || sel.kb_braid_type || sel.braidType || '';
-                    adjustments += (typeAdj[bt] || 0);
+                    selectedBraidTypeForDiscount = sel.braid_type || sel.kb_braid_type || sel.braidType || '';
+                    adjustments += (typeAdj[selectedBraidTypeForDiscount] || 0);
 
                     // length adj
                     const hl = sel.hair_length || sel.kb_length || sel.hairLength || '';
@@ -6473,13 +6704,20 @@ function openOtherServicesModal() {
                 const kp = document.getElementById('kids_price_input'); if(kp) kp.value = total;
                 // also populate mapping hidden fields so the booking POST includes selector choices
                 try{
-                    const bt = sel ? (sel.braid_type || sel.kb_braid_type || '') : '';
-                    const fin = sel ? (sel.finish || sel.kb_finish || '') : '';
-                    const ln = sel ? (sel.hair_length || sel.kb_length || '') : '';
-                    const ex = sel ? (sel.extras || '') : '';
+                    const selectedBraid = document.querySelector('input[name="kb_braid_type"]:checked');
+                    const selectedFinish = document.querySelector('input[name="kb_finish"]:checked');
+                    const selectedLength = document.querySelector('input[name="kb_length"]:checked');
+                    const selectedExtras = [];
+                    document.querySelectorAll('#kb-addons input[type="checkbox"]:checked').forEach(function(cb){ selectedExtras.push(cb.id || cb.value || ''); });
+
+                    const bt = sel ? (sel.braid_type || sel.kb_braid_type || (selectedBraid ? selectedBraid.value : '')) : (selectedBraid ? selectedBraid.value : '');
+                    const fin = sel ? (sel.finish || sel.kb_finish || (selectedFinish ? selectedFinish.value : '')) : (selectedFinish ? selectedFinish.value : '');
+                    const ln = sel ? (sel.hair_length || sel.kb_length || (selectedLength ? selectedLength.value : '')) : (selectedLength ? selectedLength.value : '');
+                    const ex = sel ? (sel.extras || (selectedExtras.length ? selectedExtras.join(',') : '')) : (selectedExtras.length ? selectedExtras.join(',') : '');
+                    if(!selectedBraidTypeForDiscount) selectedBraidTypeForDiscount = bt || '';
                     const ibt = document.getElementById('kids_braid_type_input'); if(ibt) ibt.value = bt;
                     const ifin = document.getElementById('kids_finish_input'); if(ifin) ifin.value = fin;
-                    const iln = document.getElementById('kids_length_input'); if(iln) iln.value = ln;
+                    const iln = document.getElementById('kids_length_input'); if(iln) iln.value = (ln || '').toString().replace(/-/g, '_');
                     const iex = document.getElementById('kids_extras_input'); if(iex) iex.value = ex;
                 }catch(e){ /* noop */ }
                 // Calculate adjustments total (length/type adjustments + addons) to match email format
@@ -6494,7 +6732,7 @@ function openOtherServicesModal() {
                 const kbOrig = document.getElementById('kidsModal_base_original');
                 const kbBadge = document.getElementById('kidsModal_discount_badge');
                 const kidsDiscountedTypes = ['cornrow_weave', 'knotless_small', 'knotless_med', 'box_small', 'box_med', 'stitch'];
-                const showKidsDiscount = originalBaseConfigured > baseConfigured && kidsDiscountedTypes.indexOf(bt) !== -1;
+                const showKidsDiscount = originalBaseConfigured > baseConfigured && kidsDiscountedTypes.indexOf(selectedBraidTypeForDiscount) !== -1;
                 if (showKidsDiscount) {
                     if(kbOrig){ kbOrig.innerHTML = '$' + Number(originalBaseConfigured).toFixed(2); kbOrig.style.display = 'inline'; }
                     if(kbBadge) kbBadge.style.display = 'inline';
@@ -7188,6 +7426,39 @@ function openOtherServicesModal() {
                 return;
             }
 
+            // If mobile service is selected, require address before submitting.
+            const mobileAppointment = document.getElementById('appointment_type_mobile');
+            const addressField = document.getElementById('address');
+            const parkingOptions = document.querySelectorAll('#bookingForm input[name="parking_type"]');
+            if (mobileAppointment && mobileAppointment.checked) {
+                const addressValue = addressField ? addressField.value.trim() : '';
+                if (!addressValue || addressValue.length < 10) {
+                    e.preventDefault();
+                    if (addressField) {
+                        addressField.required = true;
+                        addressField.classList.add('is-invalid');
+                        addressField.setCustomValidity('Please enter a complete mobile address (at least 10 characters).');
+                        try { addressField.focus(); } catch (focusErr) {}
+                    }
+                    alert('Please enter a complete mobile service address (at least 10 characters) before submitting.');
+                    return;
+                }
+                if (addressField) {
+                    addressField.value = addressValue;
+                    addressField.setCustomValidity('');
+                    addressField.classList.remove('is-invalid');
+                }
+
+                const hasParkingSelection = Array.from(parkingOptions || []).some(opt => opt.checked);
+                if (!hasParkingSelection) {
+                    e.preventDefault();
+                    alert('Please choose whether parking is free or paid for the mobile address.');
+                    const firstParking = document.getElementById('parking_type_free') || document.getElementById('parking_type_paid');
+                    try { firstParking && firstParking.focus(); } catch (focusErr) {}
+                    return;
+                }
+            }
+
             // Ensure hidden 'length' follows hair_length radios unless hair mask is selected
             let selectedLengthInput = this.querySelector('input[name="length"]');
             const selectedHairLength = (function(){
@@ -7207,6 +7478,131 @@ function openOtherServicesModal() {
             const serviceNameHidden = this.querySelector('input[name="service"]')?.value || document.getElementById('selectedService')?.value || document.getElementById('serviceDisplay')?.value || '';
             const serviceTypeLower = (serviceTypeHidden || '').toLowerCase();
             const serviceNameLower = (serviceNameHidden || '').toLowerCase();
+            const isKidsMainFlow = (serviceTypeLower === 'kids-braids' || serviceNameLower.includes('kids braids'));
+
+            // Important: if this is not a kids flow, clear stale kids selector fields that may
+            // have been appended in a previous session. Otherwise server-side fallbacks can
+            // misclassify a normal booking as kids and redirect to kids selector.
+            if (!isKidsMainFlow) {
+                ['kb_braid_type','kb_finish','kb_length','kb_extras','braid_type','finish','extras'].forEach((name) => {
+                    const el = this.querySelector('input[name="' + name + '"]');
+                    if (el) el.value = '';
+                });
+            }
+
+            // Ensure kids selector fields are present when booking through the main form.
+            if (isKidsMainFlow) {
+                const ensureHiddenInput = (name, id) => {
+                    let el = this.querySelector('input[name="' + name + '"]');
+                    if (!el) {
+                        el = document.createElement('input');
+                        el.type = 'hidden';
+                        el.name = name;
+                        if (id) el.id = id;
+                        this.appendChild(el);
+                    }
+                    return el;
+                };
+
+                const sel = window.__kidsSelectorData || {};
+                const hydratedSel = {
+                    kb_braid_type: sel.kb_braid_type || sel.braid_type || '',
+                    kb_finish: sel.kb_finish || sel.finish || '',
+                    kb_length: sel.kb_length || sel.length || sel.hair_length || '',
+                    kb_extras: sel.kb_extras || sel.extras || ''
+                };
+
+                // Fallback to persisted selector snapshot when in-memory state was lost.
+                if (!hydratedSel.kb_braid_type || !hydratedSel.kb_length) {
+                    try {
+                        const raw = localStorage.getItem('kb_selector');
+                        if (raw) {
+                            const parsed = JSON.parse(raw);
+                            if (parsed && typeof parsed === 'object') {
+                                hydratedSel.kb_braid_type = hydratedSel.kb_braid_type || parsed.kb_braid_type || parsed.braid_type || '';
+                                hydratedSel.kb_finish = hydratedSel.kb_finish || parsed.kb_finish || parsed.finish || '';
+                                hydratedSel.kb_length = hydratedSel.kb_length || parsed.kb_length || parsed.length || parsed.hair_length || '';
+                                hydratedSel.kb_extras = hydratedSel.kb_extras || parsed.kb_extras || parsed.extras || '';
+                            }
+                        }
+                    } catch (storageErr) {
+                        console.warn('Failed reading kb_selector localStorage snapshot', storageErr);
+                    }
+                }
+
+                // Final fallback from current URL query params used by /kids-selector redirects.
+                if (!hydratedSel.kb_braid_type || !hydratedSel.kb_length) {
+                    try {
+                        const params = new URLSearchParams(window.location.search || '');
+                        hydratedSel.kb_braid_type = hydratedSel.kb_braid_type || params.get('kb_braid_type') || params.get('braid_type') || '';
+                        hydratedSel.kb_finish = hydratedSel.kb_finish || params.get('kb_finish') || params.get('finish') || '';
+                        hydratedSel.kb_length = hydratedSel.kb_length || params.get('kb_length') || params.get('hair_length') || '';
+                        hydratedSel.kb_extras = hydratedSel.kb_extras || params.get('kb_extras') || params.get('extras') || '';
+                    } catch (paramErr) {
+                        console.warn('Failed reading selector params from URL', paramErr);
+                    }
+                }
+
+                const selectedBraid = document.querySelector('input[name="kb_braid_type"]:checked');
+                const selectedFinish = document.querySelector('input[name="kb_finish"]:checked');
+                const selectedLength = document.querySelector('input[name="kb_length"]:checked');
+
+                const braid = (
+                    hydratedSel.kb_braid_type ||
+                    document.getElementById('kids_braid_type_input')?.value ||
+                    (selectedBraid ? selectedBraid.value : '')
+                );
+                const finish = (
+                    hydratedSel.kb_finish ||
+                    document.getElementById('kids_finish_input')?.value ||
+                    (selectedFinish ? selectedFinish.value : '') ||
+                    'plain'
+                );
+                const length = (
+                    hydratedSel.kb_length ||
+                    document.getElementById('kids_length_input')?.value ||
+                    selectedLength?.value ||
+                    selectedHairLength ||
+                    ''
+                );
+
+                // Keep extras as comma-separated addon IDs so backend can map to prices.
+                let extras = (
+                    hydratedSel.kb_extras ||
+                    document.getElementById('kids_extras_input')?.value ||
+                    ''
+                );
+                if (!extras) {
+                    const selectedExtras = [];
+                    document.querySelectorAll('#kb-addons input[type="checkbox"]:checked').forEach(function (cb) {
+                        selectedExtras.push((cb.id || cb.value || '').trim());
+                    });
+                    extras = selectedExtras.filter(Boolean).join(',');
+                }
+
+                if (!String(braid || '').trim()) {
+                    e.preventDefault();
+                    alert('Please choose braid type in Kids Selector before submitting. Redirecting now.');
+                    try { window.location.href = '/kids-selector'; } catch (navErr) { console.warn('Failed to redirect to kids selector on missing braid', navErr); }
+                    return;
+                }
+
+                ensureHiddenInput('kb_braid_type').value = String(braid).trim();
+                ensureHiddenInput('kb_finish').value = String(finish).trim();
+                ensureHiddenInput('kb_length').value = String(length).trim().replace(/-/g, '_');
+                ensureHiddenInput('kb_extras').value = extras ? String(extras).trim() : '';
+
+                // Keep modal hidden inputs in sync so both booking flows use the same selector payload.
+                const kidsBtInput = document.getElementById('kids_braid_type_input'); if (kidsBtInput) kidsBtInput.value = String(braid).trim();
+                const kidsFinInput = document.getElementById('kids_finish_input'); if (kidsFinInput) kidsFinInput.value = String(finish).trim();
+                const kidsLenInput = document.getElementById('kids_length_input'); if (kidsLenInput) kidsLenInput.value = String(length).trim().replace(/-/g, '_');
+                const kidsExInput = document.getElementById('kids_extras_input'); if (kidsExInput) kidsExInput.value = extras ? String(extras).trim() : '';
+
+                // Maintain compatibility with legacy fields used in older request readers.
+                ensureHiddenInput('braid_type').value = String(braid).trim();
+                ensureHiddenInput('finish').value = String(finish).trim();
+                if (extras) ensureHiddenInput('extras').value = String(extras).trim();
+            }
 
             // Stitch braids rows choice is required and affects pricing (+$30 for >10 rows)
             const isStitch = serviceTypeLower.includes('stitch') || serviceNameLower.includes('stitch');
@@ -7587,9 +7983,9 @@ function openOtherServicesModal() {
                         <li>We'll confirm your appointment within 24 hours</li>
                     </ol>
                     <div style="display:flex;gap:8px;flex-wrap:wrap;">
-                        <a href="tel:+13432548848" class="btn btn-sm" style="background:#030f68;color:#fff;border-radius:8px;font-weight:600;"><i class="bi bi-telephone-fill me-1"></i>(343) 254-8848</a>
+                        <a href="tel:+3432548848" class="btn btn-sm" style="background:#030f68;color:#fff;border-radius:8px;font-weight:600;"><i class="bi bi-telephone-fill me-1"></i>(343) 254-8848</a>
                         <a href="mailto:info@dabsbeautytouch.com" class="btn btn-sm" style="background:#030f68;color:#fff;border-radius:8px;font-weight:600;"><i class="bi bi-envelope-fill me-1"></i>Email Us</a>
-                        <a href="https://wa.me/13432548848" target="_blank" rel="noopener" class="btn btn-sm" style="background:#25d366;color:#fff;border-radius:8px;font-weight:600;"><i class="bi bi-whatsapp me-1"></i>WhatsApp</a>
+                        <a href="https://wa.me/3432548848" target="_blank" rel="noopener" class="btn btn-sm" style="background:#25d366;color:#fff;border-radius:8px;font-weight:600;"><i class="bi bi-whatsapp me-1"></i>WhatsApp</a>
                     </div>
                 </div>
 
@@ -7661,9 +8057,9 @@ function openOtherServicesModal() {
                         <li>We'll confirm your appointment within 24 hours</li>
                     </ol>
                     <div style="display:flex;gap:8px;flex-wrap:wrap;">
-                        <a href="tel:+13432548848" class="btn btn-sm" style="background:#030f68;color:#fff;border-radius:8px;font-weight:600;"><i class="bi bi-telephone-fill me-1"></i>(343) 254-8848</a>
+                        <a href="tel:+3432548848" class="btn btn-sm" style="background:#030f68;color:#fff;border-radius:8px;font-weight:600;"><i class="bi bi-telephone-fill me-1"></i>(343) 254-8848</a>
                         <a href="mailto:info@dabsbeautytouch.com" class="btn btn-sm" style="background:#030f68;color:#fff;border-radius:8px;font-weight:600;"><i class="bi bi-envelope-fill me-1"></i>Email Us</a>
-                        <a href="https://wa.me/13432548848" target="_blank" rel="noopener" class="btn btn-sm" style="background:#25d366;color:#fff;border-radius:8px;font-weight:600;"><i class="bi bi-whatsapp me-1"></i>WhatsApp</a>
+                        <a href="https://wa.me/3432548848" target="_blank" rel="noopener" class="btn btn-sm" style="background:#25d366;color:#fff;border-radius:8px;font-weight:600;"><i class="bi bi-whatsapp me-1"></i>WhatsApp</a>
                     </div>
                 </div>
 
@@ -7790,8 +8186,8 @@ function backToKidsSelector(){
         try{ localStorage.setItem('kb_selector', JSON.stringify(sel)); }catch(e){ console.warn('Failed to persist kb_selector', e); }
 
         // navigate to selector route
-        window.location.href = "{{ route('kids.selector') }}";
-    }catch(e){ console.warn('backToKidsSelector failed', e); window.location.href = "{{ route('kids.selector') }}"; }
+        window.location.href = "{{ route('kids.selector') }}?resume=1";
+    }catch(e){ console.warn('backToKidsSelector failed', e); window.location.href = "{{ route('kids.selector') }}?resume=1"; }
 }
 // Also attach a safe click handler in case inline onclicks are blocked by overlays
 document.addEventListener('DOMContentLoaded', function(){
@@ -7803,6 +8199,9 @@ document.addEventListener('DOMContentLoaded', function(){
         }
     }catch(e){ console.warn('Failed to attach Back to selector listener', e); }
 });
+</script>
+
+<style>
 
 @keyframes pulse {
     0% {
@@ -7822,9 +8221,7 @@ document.addEventListener('DOMContentLoaded', function(){
     top: 0 !important;
     z-index: 9999 !important;
 }
-</style>
 
-<script>
 /* Accessible kids modal styles (moved out of JS) */
 .accessible-kids-modal .form-label { font-size: 1.02rem; color: #03253f; }
 .accessible-kids-modal .form-control { font-size: 1.03rem; padding: .65rem .8rem; border-radius: 8px; }
@@ -7841,6 +8238,9 @@ document.addEventListener('DOMContentLoaded', function(){
 .visually-hidden { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
 .accessible-kids-modal #kidsPricePreview { box-shadow: 0 6px 18px rgba(3,15,104,0.06); }
 .accessible-kids-modal [role="status"]:focus { outline: 3px solid #ffb703; }
+</style>
+
+<script>
 // Handle booking success modal
 document.addEventListener('DOMContentLoaded', function() {
     const successModal = document.getElementById('successModal');
@@ -8067,51 +8467,58 @@ document.addEventListener('keydown', function(e) {
 
 // Function to toggle address field based on appointment type
 function toggleAddressField() {
-    console.log('toggleAddressField called');
     const mobileRadio = document.getElementById('appointment_type_mobile');
-    const inStudioRadio = document.getElementById('appointment_type_in_studio');
     const addressContainer = document.getElementById('addressFieldContainer');
     const addressInput = document.getElementById('address');
+    const parkingContainer = document.getElementById('parkingFieldContainer');
+    const parkingInputs = document.querySelectorAll('#bookingForm input[name="parking_type"]');
 
     // Determine which is checked
     const isMobileSelected = mobileRadio && mobileRadio.checked;
 
-    console.log('Elements found:', {
-        mobileRadio: !!mobileRadio,
-        inStudioRadio: !!inStudioRadio,
-        addressContainer: !!addressContainer,
-        addressInput: !!addressInput,
-        mobileChecked: isMobileSelected
-    });
-
     if (isMobileSelected) {
-        console.log('Mobile selected - showing address field');
         if (addressContainer) {
             addressContainer.classList.remove('d-none');
             addressContainer.classList.add('d-block');
-            addressContainer.style.setProperty('display', 'block', 'important');
-            addressContainer.style.setProperty('visibility', 'visible', 'important');
-            addressContainer.style.setProperty('opacity', '1', 'important');
-            console.log('Address container shown with !important');
+            addressContainer.style.display = 'block';
+            addressContainer.hidden = false;
         }
         if (addressInput) {
             addressInput.required = true;
             addressInput.disabled = false;
         }
+        if (parkingContainer) {
+            parkingContainer.classList.remove('d-none');
+            parkingContainer.classList.add('d-block');
+            parkingContainer.style.display = 'block';
+            parkingContainer.hidden = false;
+        }
+        parkingInputs.forEach(function(input){ input.required = true; });
     } else {
-        console.log('In-studio selected - hiding address field');
         if (addressContainer) {
             addressContainer.classList.remove('d-block');
             addressContainer.classList.add('d-none');
-            addressContainer.style.setProperty('display', 'none', 'important');
-            console.log('Address container hidden');
+            addressContainer.style.display = 'none';
+            addressContainer.hidden = true;
         }
         if (addressInput) {
             addressInput.required = false;
             addressInput.value = '';
             addressInput.disabled = false;
         }
+        if (parkingContainer) {
+            parkingContainer.classList.remove('d-block');
+            parkingContainer.classList.add('d-none');
+            parkingContainer.style.display = 'none';
+            parkingContainer.hidden = true;
+        }
+        parkingInputs.forEach(function(input){
+            input.required = false;
+            input.checked = false;
+        });
     }
+
+    try { window.__dbtSyncTermsButtons?.(); } catch (e) {}
 }
 
 // Function to toggle address field for kids form
@@ -8121,6 +8528,8 @@ function toggleAddressFieldKids() {
     const inStudioRadio = document.getElementById('appointment_type_in_studio_kids');
     const addressContainer = document.getElementById('addressFieldContainerKids');
     const addressInput = document.getElementById('kids_address');
+    const parkingContainer = document.getElementById('parkingFieldContainerKids');
+    const parkingInputs = document.querySelectorAll('#kidsBookingForm input[name="parking_type"]');
 
     // Determine which is checked
     const isMobileSelected = mobileRadio && mobileRadio.checked;
@@ -8147,6 +8556,14 @@ function toggleAddressFieldKids() {
             addressInput.required = true;
             addressInput.disabled = false;
         }
+        if (parkingContainer) {
+            parkingContainer.classList.remove('d-none');
+            parkingContainer.classList.add('d-block');
+            parkingContainer.style.setProperty('display', 'block', 'important');
+            parkingContainer.style.setProperty('visibility', 'visible', 'important');
+            parkingContainer.style.setProperty('opacity', '1', 'important');
+        }
+        parkingInputs.forEach(function(input){ input.required = true; });
     } else {
         console.log('Kids In-studio selected - hiding address field');
         if (addressContainer) {
@@ -8160,7 +8577,18 @@ function toggleAddressFieldKids() {
             addressInput.value = '';
             addressInput.disabled = false;
         }
+        if (parkingContainer) {
+            parkingContainer.classList.remove('d-block');
+            parkingContainer.classList.add('d-none');
+            parkingContainer.style.setProperty('display', 'none', 'important');
+        }
+        parkingInputs.forEach(function(input){
+            input.required = false;
+            input.checked = false;
+        });
     }
+
+    try { window.__dbtSyncTermsButtons?.(); } catch (e) {}
 }
 
 // Function to clear image preview
@@ -8217,6 +8645,14 @@ document.addEventListener('DOMContentLoaded', function() {
             setTimeout(toggleAddressField, 50);
         });
     }
+    const mainAddress = document.getElementById('address');
+    if (mainAddress) {
+        mainAddress.addEventListener('input', function() { try { window.__dbtSyncTermsButtons?.(); } catch(e) {} });
+        mainAddress.addEventListener('blur', function() { try { window.__dbtSyncTermsButtons?.(); } catch(e) {} });
+    }
+    document.querySelectorAll('#bookingForm input[name="parking_type"]').forEach(function(input) {
+        input.addEventListener('change', function() { try { window.__dbtSyncTermsButtons?.(); } catch(e) {} });
+    });
 
     // Kids booking form
     const kidsInStudio = document.getElementById('appointment_type_in_studio_kids');
@@ -8241,6 +8677,14 @@ document.addEventListener('DOMContentLoaded', function() {
             setTimeout(toggleAddressFieldKids, 50);
         });
     }
+    const kidsAddress = document.getElementById('kids_address');
+    if (kidsAddress) {
+        kidsAddress.addEventListener('input', function() { try { window.__dbtSyncTermsButtons?.(); } catch(e) {} });
+        kidsAddress.addEventListener('blur', function() { try { window.__dbtSyncTermsButtons?.(); } catch(e) {} });
+    }
+    document.querySelectorAll('#kidsBookingForm input[name="parking_type"]').forEach(function(input) {
+        input.addEventListener('change', function() { try { window.__dbtSyncTermsButtons?.(); } catch(e) {} });
+    });
 
     // Initial call on page load
     setTimeout(function() {
@@ -8341,9 +8785,27 @@ document.addEventListener('DOMContentLoaded', function() {
                                 <!-- Mobile Service Address (conditional) -->
                                 <div class="mb-3 d-none" id="addressFieldContainerKids">
                                     <label for="kids_address" class="form-label">Mobile Service Address (Ottawa) *</label>
-                                    <input type="text" class="form-control" id="kids_address" name="address" placeholder="Enter your complete address" autocomplete="off">
+                                    <input type="text" class="form-control" id="kids_address" name="address" placeholder="Enter your complete address" autocomplete="off" minlength="10">
+                                    <div class="invalid-feedback">Please enter a complete mobile address (at least 10 characters).</div>
                                     <small class="form-text text-muted mt-2">
                                         <i class="bi bi-geo-alt me-1"></i>Required for mobile appointments so we can confirm travel availability and any travel fee.
+                                    </small>
+                                </div>
+
+                                <div class="mb-3 d-none" id="parkingFieldContainerKids">
+                                    <label class="form-label">Parking at Address *</label>
+                                    <div class="d-flex gap-3">
+                                        <div class="form-check">
+                                            <input class="form-check-input parking-option-kids" type="radio" name="parking_type" id="parking_type_free_kids" value="free">
+                                            <label class="form-check-label" for="parking_type_free_kids">Free parking</label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input parking-option-kids" type="radio" name="parking_type" id="parking_type_paid_kids" value="paid">
+                                            <label class="form-check-label" for="parking_type_paid_kids">Paid parking</label>
+                                        </div>
+                                    </div>
+                                    <small class="form-text text-muted mt-2">
+                                        <i class="bi bi-p-circle me-1"></i>Required for mobile appointments.
                                     </small>
                                 </div>
 
@@ -8944,6 +9406,19 @@ document.addEventListener('DOMContentLoaded', function(){
         const run = () => {
             console.log('Opening booking modal for:', serviceName, serviceType);
 
+            // Guard rail: force Kids Braids through selector so braid type is always captured.
+            const nameLower = String(serviceName || '').toLowerCase();
+            const typeLower = String(serviceType || '').toLowerCase();
+            const isKidsFlow = typeLower === 'kids-braids' || nameLower.includes('kids braids');
+            if (isKidsFlow) {
+                const sel = (typeof window !== 'undefined') ? (window.__kidsSelectorData || {}) : {};
+                const hasBraid = !!(sel.kb_braid_type || sel.braid_type);
+                if (!hasBraid) {
+                    try { window.location.href = '/kids-selector'; } catch (navErr) { console.warn('Failed to redirect to kids selector', navErr); }
+                    return;
+                }
+            }
+
             // Track where the booking came from:
             // - service cards/carousel pass a non-null serviceType slug
             // - calendar page redirects are marked earlier via window.__bookingOrigin = 'calendar'
@@ -9112,10 +9587,7 @@ document.addEventListener('DOMContentLoaded', function(){
             }
         };
 
-        // Gate on first-time visitors: show Terms modal before opening booking flow.
-        if (typeof window.__dbtEnsureTermsAccepted === 'function') {
-            return window.__dbtEnsureTermsAccepted(run);
-        }
+        // Keep booking flow direct; terms acceptance is enforced by form checkbox on submit.
         return run();
     };
 
@@ -9125,7 +9597,18 @@ document.addEventListener('DOMContentLoaded', function(){
             const cb = document.getElementById(checkboxId);
             const btn = document.getElementById(buttonId);
             if (!cb || !btn) return;
-            const sync = () => { btn.disabled = !cb.checked; };
+            const sync = () => {
+                const isKidsForm = checkboxId === 'termsAcceptedKids';
+                const mobileRadio = document.getElementById(isKidsForm ? 'appointment_type_mobile_kids' : 'appointment_type_mobile');
+                const addressInput = document.getElementById(isKidsForm ? 'kids_address' : 'address');
+                const needsAddress = !!(mobileRadio && mobileRadio.checked);
+                const addressOk = !needsAddress || !!(addressInput && addressInput.value && addressInput.value.trim().length >= 10);
+                const parkingSelector = isKidsForm
+                    ? '#kidsBookingForm input[name="parking_type"]:checked'
+                    : '#bookingForm input[name="parking_type"]:checked';
+                const parkingOk = !needsAddress || !!document.querySelector(parkingSelector);
+                btn.disabled = !cb.checked || !addressOk || !parkingOk;
+            };
             cb.checked = false;
             sync();
             cb.addEventListener('change', sync);
@@ -9147,12 +9630,20 @@ document.addEventListener('DOMContentLoaded', function(){
             try {
                 const cb1 = document.getElementById('termsAcceptedMain');
                 const b1 = document.getElementById('bookAppointmentBtn');
-                if (cb1 && b1) b1.disabled = !cb1.checked;
+                const m1 = document.getElementById('appointment_type_mobile');
+                const a1 = document.getElementById('address');
+                const addressOk1 = !(m1 && m1.checked) || !!(a1 && a1.value && a1.value.trim().length >= 10);
+                const parkingOk1 = !(m1 && m1.checked) || !!document.querySelector('#bookingForm input[name="parking_type"]:checked');
+                if (cb1 && b1) b1.disabled = !cb1.checked || !addressOk1 || !parkingOk1;
             } catch(e) {}
             try {
                 const cb2 = document.getElementById('termsAcceptedKids');
                 const b2 = document.getElementById('kidsBookAppointmentBtn');
-                if (cb2 && b2) b2.disabled = !cb2.checked;
+                const m2 = document.getElementById('appointment_type_mobile_kids');
+                const a2 = document.getElementById('kids_address');
+                const addressOk2 = !(m2 && m2.checked) || !!(a2 && a2.value && a2.value.trim().length >= 10);
+                const parkingOk2 = !(m2 && m2.checked) || !!document.querySelector('#kidsBookingForm input[name="parking_type"]:checked');
+                if (cb2 && b2) b2.disabled = !cb2.checked || !addressOk2 || !parkingOk2;
             } catch(e) {}
         };
     });
@@ -9538,6 +10029,18 @@ document.addEventListener('DOMContentLoaded', function(){
 // If user was redirected from a selector page, pick up params and open booking modal
 (function(){
     try{
+        const ensureHiddenField = function(form, name, value){
+            if(!form) return null;
+            let el = form.querySelector('input[name="' + name + '"]');
+            if(!el){
+                el = document.createElement('input');
+                el.type = 'hidden';
+                el.name = name;
+                form.appendChild(el);
+            }
+            el.value = (value == null) ? '' : String(value);
+            return el;
+        };
         const params = new URLSearchParams(window.location.search);
         const serviceType = params.get('service_type');
         if(!serviceType) return;
@@ -9578,6 +10081,24 @@ document.addEventListener('DOMContentLoaded', function(){
                 };
                 try{ window.__kidsSelectorData = sel; }catch(e){}
 
+                // CRITICAL: write kids selector values directly into booking form hidden fields now.
+                // This avoids relying on submit listeners that can be bypassed by alternate UI paths.
+                try{
+                    const form = document.getElementById('bookingForm');
+                    if(form){
+                        ensureHiddenField(form, 'kb_braid_type', sel.braid_type || '');
+                        ensureHiddenField(form, 'kb_finish', sel.finish || 'plain');
+                        ensureHiddenField(form, 'kb_length', (sel.hair_length || '').replace(/-/g, '_'));
+                        ensureHiddenField(form, 'kb_extras', sel.extras || '');
+
+                        // Keep legacy aliases in sync for fallback readers.
+                        ensureHiddenField(form, 'braid_type', sel.braid_type || '');
+                        ensureHiddenField(form, 'finish', sel.finish || 'plain');
+                        ensureHiddenField(form, 'length', (sel.hair_length || '').replace(/-/g, '_'));
+                        ensureHiddenField(form, 'extras', sel.extras || '');
+                    }
+                }catch(e){ console.warn('Failed to persist kids selector hidden fields from URL params', e); }
+
                 if(typeof openKidsBookingModal === 'function'){
                     setTimeout(function(){ try{ openKidsBookingModal(serviceName, serviceType); }catch(e){ console.warn('openKidsBookingModal failed', e); } }, 200);
                 } else if(typeof openBookingModal === 'function'){
@@ -9604,6 +10125,18 @@ document.addEventListener('DOMContentLoaded', function(){
     // Open booking modal from server-side flashed kids selector data
     (function(){
         try{
+            const ensureHiddenField = function(form, name, value){
+                if(!form) return null;
+                let el = form.querySelector('input[name="' + name + '"]');
+                if(!el){
+                    el = document.createElement('input');
+                    el.type = 'hidden';
+                    el.name = name;
+                    form.appendChild(el);
+                }
+                el.value = (value == null) ? '' : String(value);
+                return el;
+            };
             const sel = @json(session('kids_selector'));
             if(!sel || !sel.service_type) return;
             const serviceName = sel.service || '';
@@ -9632,6 +10165,24 @@ document.addEventListener('DOMContentLoaded', function(){
 
             // expose the selector payload for client-side summary rendering
             try{ window.__kidsSelectorData = sel || null; }catch(e){ window.__kidsSelectorData = null; }
+
+            // CRITICAL: ensure booking form already has canonical kids selector fields.
+            try{
+                const form = document.getElementById('bookingForm');
+                if(form){
+                    ensureHiddenField(form, 'kb_braid_type', sel.braid_type || sel.kb_braid_type || '');
+                    ensureHiddenField(form, 'kb_finish', sel.finish || sel.kb_finish || 'plain');
+                    ensureHiddenField(form, 'kb_length', (sel.hair_length || sel.kb_length || '').toString().replace(/-/g, '_'));
+                    ensureHiddenField(form, 'kb_extras', sel.extras || sel.kb_extras || '');
+
+                    // Keep legacy aliases in sync.
+                    ensureHiddenField(form, 'braid_type', sel.braid_type || sel.kb_braid_type || '');
+                    ensureHiddenField(form, 'finish', sel.finish || sel.kb_finish || 'plain');
+                    ensureHiddenField(form, 'length', (sel.hair_length || sel.kb_length || '').toString().replace(/-/g, '_'));
+                    ensureHiddenField(form, 'extras', sel.extras || sel.kb_extras || '');
+                }
+            }catch(e){ console.warn('Failed to persist kids selector hidden fields from flashed session', e); }
+
             // If this is the kids flow, open the dedicated kids booking modal instead of the main booking modal
             if(serviceType === 'kids-braids' && typeof openKidsBookingModal === 'function'){
                 setTimeout(function(){ try{ openKidsBookingModal(serviceName, serviceType); }catch(e){ console.warn('openKidsBookingModal failed', e); } }, 200);
@@ -9835,11 +10386,142 @@ document.addEventListener('DOMContentLoaded', function(){
                     clearFieldError('kidsBookingTime');
                 }
 
+                // Validate address when mobile appointment is selected
+                const kidsMobileRadio = document.getElementById('appointment_type_mobile_kids');
+                const kidsAddressField = document.getElementById('kids_address');
+                const kidsParkingSelection = document.querySelector('#kidsBookingForm input[name="parking_type"]:checked');
+                if (kidsMobileRadio && kidsMobileRadio.checked) {
+                    const kidsAddressValue = kidsAddressField ? kidsAddressField.value.trim() : '';
+                    if (!kidsAddressValue || kidsAddressValue.length < 10) {
+                        if (kidsAddressField) {
+                            kidsAddressField.required = true;
+                            kidsAddressField.classList.add('is-invalid');
+                            kidsAddressField.setCustomValidity('Please enter a complete mobile address (at least 10 characters).');
+                        }
+                        isValid = false;
+                        errors.push('Mobile address');
+                    } else if (kidsAddressField) {
+                        kidsAddressField.value = kidsAddressValue;
+                        kidsAddressField.setCustomValidity('');
+                        kidsAddressField.classList.remove('is-invalid');
+                    }
+
+                    if (!kidsParkingSelection) {
+                        isValid = false;
+                        errors.push('Parking type');
+                    }
+                } else if (kidsAddressField) {
+                    kidsAddressField.setCustomValidity('');
+                    kidsAddressField.classList.remove('is-invalid');
+                }
+
                 return { isValid, errors };
+            }
+
+            function syncKidsSelectorFieldsForSubmit() {
+                try {
+                    const sel = window.__kidsSelectorData || {};
+                    const mergedSel = {
+                        kb_braid_type: sel.kb_braid_type || sel.braid_type || '',
+                        kb_finish: sel.kb_finish || sel.finish || '',
+                        kb_length: sel.kb_length || sel.length || sel.hair_length || '',
+                        kb_extras: sel.kb_extras || sel.extras || ''
+                    };
+
+                    // Recover selector payload from storage if in-memory state was lost.
+                    if (!mergedSel.kb_braid_type || !mergedSel.kb_length) {
+                        try {
+                            const raw = localStorage.getItem('kb_selector');
+                            if (raw) {
+                                const parsed = JSON.parse(raw);
+                                if (parsed && typeof parsed === 'object') {
+                                    mergedSel.kb_braid_type = mergedSel.kb_braid_type || parsed.kb_braid_type || parsed.braid_type || '';
+                                    mergedSel.kb_finish = mergedSel.kb_finish || parsed.kb_finish || parsed.finish || '';
+                                    mergedSel.kb_length = mergedSel.kb_length || parsed.kb_length || parsed.length || parsed.hair_length || '';
+                                    mergedSel.kb_extras = mergedSel.kb_extras || parsed.kb_extras || parsed.extras || '';
+                                }
+                            }
+                        } catch (storageErr) {
+                            console.warn('Failed to recover kb_selector state', storageErr);
+                        }
+                    }
+
+                    // Final fallback from URL params in case user came from /kids-selector redirect.
+                    if (!mergedSel.kb_braid_type || !mergedSel.kb_length) {
+                        try {
+                            const params = new URLSearchParams(window.location.search || '');
+                            mergedSel.kb_braid_type = mergedSel.kb_braid_type || params.get('kb_braid_type') || params.get('braid_type') || '';
+                            mergedSel.kb_finish = mergedSel.kb_finish || params.get('kb_finish') || params.get('finish') || '';
+                            mergedSel.kb_length = mergedSel.kb_length || params.get('kb_length') || params.get('hair_length') || '';
+                            mergedSel.kb_extras = mergedSel.kb_extras || params.get('kb_extras') || params.get('extras') || '';
+                        } catch (paramErr) {
+                            console.warn('Failed to recover kids selector params from URL', paramErr);
+                        }
+                    }
+
+                    const btInput = document.getElementById('kids_braid_type_input');
+                    const finInput = document.getElementById('kids_finish_input');
+                    const lenInput = document.getElementById('kids_length_input');
+                    const exInput = document.getElementById('kids_extras_input');
+                    const priceInput = document.getElementById('kids_price_input');
+                    const finalInput = document.getElementById('kids_final_price_input');
+
+                    const selectedBraid = document.querySelector('input[name="kb_braid_type"]:checked');
+                    const selectedFinish = document.querySelector('input[name="kb_finish"]:checked');
+                    const selectedLength = document.querySelector('input[name="kb_length"]:checked');
+
+                    const selectedExtras = [];
+                    document.querySelectorAll('#kb-addons input[type="checkbox"]:checked').forEach(function (cb) {
+                        selectedExtras.push(cb.id || cb.value || '');
+                    });
+
+                    const braid = (btInput && btInput.value) || mergedSel.kb_braid_type || (selectedBraid ? selectedBraid.value : '');
+                    const finish = (finInput && finInput.value) || mergedSel.kb_finish || (selectedFinish ? selectedFinish.value : '');
+                    const length = (lenInput && lenInput.value) || mergedSel.kb_length || (selectedLength ? selectedLength.value : '');
+                    const extras = (exInput && exInput.value) || mergedSel.kb_extras || (selectedExtras.length ? selectedExtras.join(',') : '');
+
+                    if (btInput && braid) btInput.value = String(braid).trim();
+                    if (finInput && finish) finInput.value = String(finish).trim();
+                    if (lenInput && length) lenInput.value = String(length).trim().replace(/-/g, '_');
+                    if (exInput) exInput.value = extras ? String(extras).trim() : '';
+
+                    // Compute a final fallback total if not already set, using captured selector values.
+                    const typeAdj = { protective: -20, cornrows: -40, knotless_small: 20, knotless_med: 0, box_small: 10, box_med: 0, stitch: 20 };
+                    const lengthAdj = { shoulder: 0, armpit: 10, mid_back: 20, waist: 30 };
+                    const finishAdj = { plain: 0, curled: -10 };
+                    const addonMap = { kb_add_detangle: 15, kb_add_beads: 10, kb_add_beads_full: 15, kb_add_extension: 20, kb_add_rest: 5 };
+
+                    let addons = 0;
+                    if (extras) {
+                        const raw = String(extras);
+                        if (/^\d+(?:\.\d+)?(?:,\d+(?:\.\d+)?)*$/.test(raw)) {
+                            raw.split(',').forEach(function (n) { addons += Number(n) || 0; });
+                        } else {
+                            raw.split(',').forEach(function (id) {
+                                const key = String(id || '').trim();
+                                if (addonMap[key]) addons += addonMap[key];
+                            });
+                        }
+                    }
+
+                    const base = 80;
+                    const btVal = btInput && btInput.value ? btInput.value : '';
+                    const lnVal = lenInput && lenInput.value ? lenInput.value : '';
+                    const fiVal = finInput && finInput.value ? finInput.value : '';
+                    const adj = (typeAdj[btVal] || 0) + (lengthAdj[lnVal] || 0) + (finishAdj[fiVal] || 0);
+                    const computed = Math.max(0, base + adj + addons);
+
+                    if (priceInput && (!priceInput.value || Number(priceInput.value) <= 0)) priceInput.value = Number(computed).toFixed(2);
+                    if (finalInput && (!finalInput.value || Number(finalInput.value) <= 0)) finalInput.value = Number(computed).toFixed(2);
+                } catch (err) {
+                    console.warn('syncKidsSelectorFieldsForSubmit failed:', err);
+                }
             }
 
             kidsForm.addEventListener('submit', function(e){
                 try{
+                    syncKidsSelectorFieldsForSubmit();
+
                     // Normalize phone number
                     const el = document.getElementById('kids_phone');
                     if(el) el.value = normalizePhoneForSubmit(el.value);
@@ -9849,6 +10531,24 @@ document.addEventListener('DOMContentLoaded', function(){
                     if(!validation.isValid) {
                         e.preventDefault();
                         e.stopPropagation();
+
+                        // Special focus for missing mobile address
+                        const kidsMobileRadio = document.getElementById('appointment_type_mobile_kids');
+                        const kidsAddressField = document.getElementById('kids_address');
+                        const kidsAddressValue = kidsAddressField ? kidsAddressField.value.trim() : '';
+                        const kidsParkingSelection = document.querySelector('#kidsBookingForm input[name="parking_type"]:checked');
+                        const addressMissing = !!(kidsMobileRadio && kidsMobileRadio.checked && kidsAddressField && kidsAddressValue.length < 10);
+                        if (addressMissing) {
+                            alert('Please enter a complete mobile service address (at least 10 characters) before submitting.');
+                            try { kidsAddressField.focus(); } catch (focusErr) {}
+                            return false;
+                        }
+                        if (kidsMobileRadio && kidsMobileRadio.checked && !kidsParkingSelection) {
+                            alert('Please choose whether parking is free or paid for the mobile address.');
+                            const firstParking = document.getElementById('parking_type_free_kids') || document.getElementById('parking_type_paid_kids');
+                            try { firstParking && firstParking.focus(); } catch (focusErr) {}
+                            return false;
+                        }
 
                         // Scroll to first error field
                         const firstErrorField = document.querySelector('#kidsBookingForm .is-invalid');

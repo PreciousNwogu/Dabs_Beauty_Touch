@@ -24,6 +24,13 @@
 
 @section('content')
     <div class="container mt-4">
+        @if(session('booking_error') || $errors->any())
+            <div class="alert alert-danger alert-dismissible fade show" role="alert" style="border-radius: 12px;">
+                <strong>Booking Error:</strong>
+                {{ session('error_message') ?: $errors->first() }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        @endif
         @include('partials.kids-selector-form')
     </div>
 @endsection
@@ -140,9 +147,33 @@ document.addEventListener('DOMContentLoaded', function(){
 
                 // Build query string and redirect to home which will open the booking modal
                 try{
-                    const braidType = (document.querySelector('input[name="kb_braid_type"]:checked')||{}).value || '';
+                    let braidType = (document.querySelector('input[name="kb_braid_type"]:checked')||{}).value || '';
                     const finish = (document.querySelector('input[name="kb_finish"]:checked')||{}).value || '';
                     const length = (document.querySelector('input[name="kb_length"]:checked')||{}).value || '';
+
+                    // Defensive fallback: ensure one braid type is always selected before continuing.
+                    if(!braidType){
+                        const defaultBraid = document.getElementById('kb_type_protective');
+                        if(defaultBraid){
+                            defaultBraid.checked = true;
+                            braidType = defaultBraid.value || '';
+                        }
+                    }
+                    if(!braidType){
+                        alert('Please choose a braid type before continuing.');
+                        return;
+                    }
+
+                    const selectorSnapshot = {
+                        kb_braid_type: braidType,
+                        kb_finish: finish,
+                        kb_length: length,
+                        kb_extras: extras.join(','),
+                        price: String(res.total)
+                    };
+                    try { localStorage.setItem('kb_selector', JSON.stringify(selectorSnapshot)); } catch (storageErr) { console.warn('Failed to persist kb_selector snapshot', storageErr); }
+                    try { window.__kidsSelectorData = selectorSnapshot; } catch (stateErr) { console.warn('Failed to set in-memory selector snapshot', stateErr); }
+
                     const qs = new URLSearchParams();
                     qs.set('ks', '1');
                     qs.set('service', 'Kids Braids');

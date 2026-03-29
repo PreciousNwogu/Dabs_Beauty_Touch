@@ -593,9 +593,27 @@
                     <!-- Mobile Service Address (conditional) -->
                     <div class="mb-3" id="addressFieldContainerCal" style="display: none;">
                         <label for="address" class="form-label">Mobile Service Address (Ottawa) *</label>
-                        <input type="text" class="form-control" id="address" name="address" placeholder="Enter your complete address" autocomplete="off">
+                        <input type="text" class="form-control" id="address" name="address" placeholder="Enter your complete address" autocomplete="off" minlength="10">
+                        <div class="invalid-feedback">Please enter a complete mobile address (at least 10 characters).</div>
                         <small class="form-text text-muted mt-2">
                             <i class="bi bi-geo-alt me-1"></i>Required for mobile appointments so we can confirm travel availability and any travel fee.
+                        </small>
+                    </div>
+
+                    <div class="mb-3" id="parkingFieldContainerCal" style="display: none;">
+                        <label class="form-label">Parking at Address *</label>
+                        <div class="d-flex gap-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="parking_type" id="parking_type_free_cal" value="free">
+                                <label class="form-check-label" for="parking_type_free_cal">Free parking</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="parking_type" id="parking_type_paid_cal" value="paid">
+                                <label class="form-check-label" for="parking_type_paid_cal">Paid parking</label>
+                            </div>
+                        </div>
+                        <small class="form-text text-muted mt-2">
+                            <i class="bi bi-p-circle me-1"></i>Required for mobile appointments.
                         </small>
                     </div>
 
@@ -719,6 +737,15 @@
                         </label>
                     </div>
                     <div class="mt-3">
+                        <div class="alert" style="background: linear-gradient(135deg, #fff7e0 0%, #ffe8cc 100%); border-left: 5px solid #ff6600; border-radius: 10px; margin-bottom: 14px;">
+                            <div style="font-weight: 700; color: #030f68; margin-bottom: 6px;">
+                                <i class="bi bi-megaphone me-2"></i>Announcement: Braiding Extensions Available
+                            </div>
+                            <div style="font-size: 0.95rem; color: #444;">
+                                We now have braiding extensions in various colors for sale. Please tell your stylist your preferred color in the comment box below, or message admin on
+                                <a href="https://wa.me/3432548848" target="_blank" rel="noopener" style="font-weight: 700; color: #128c7e; text-decoration: none;">WhatsApp</a>.
+                            </div>
+                        </div>
                         <a href="{{ route('home') }}#terms" target="_blank" rel="noopener" style="color:#030f68; font-weight:600; text-decoration:none;">
                             View full Terms &amp; Conditions
                         </a>
@@ -1163,16 +1190,25 @@
             const mobileRadio = document.getElementById('appointment_type_mobile_cal');
             const addressContainer = document.getElementById('addressFieldContainerCal');
             const addressInput = document.getElementById('address');
+            const parkingContainer = document.getElementById('parkingFieldContainerCal');
+            const parkingInputs = document.querySelectorAll('#bookingForm input[name="parking_type"]');
 
             if (mobileRadio && mobileRadio.checked) {
                 if (addressContainer) addressContainer.style.display = 'block';
                 if (addressInput) addressInput.required = true;
+                if (parkingContainer) parkingContainer.style.display = 'block';
+                parkingInputs.forEach(function(input){ input.required = true; });
             } else {
                 if (addressContainer) addressContainer.style.display = 'none';
                 if (addressInput) {
                     addressInput.required = false;
                     addressInput.value = ''; // Clear address when switching to in-studio
                 }
+                if (parkingContainer) parkingContainer.style.display = 'none';
+                parkingInputs.forEach(function(input){
+                    input.required = false;
+                    input.checked = false;
+                });
             }
         }
 
@@ -1475,6 +1511,9 @@
             try {
                 const emailInput = this.querySelector('input[name="email"]') || document.getElementById('email');
                 const phoneInput = this.querySelector('input[name="phone"]') || document.getElementById('phone');
+                const mobileInput = document.getElementById('appointment_type_mobile_cal');
+                const addressInput = document.getElementById('address');
+                const parkingInput = document.querySelector('#bookingForm input[name="parking_type"]:checked');
                 const emailVal = emailInput && emailInput.value ? emailInput.value.trim() : '';
                 const phoneVal = phoneInput && phoneInput.value ? phoneInput.value.trim() : '';
 
@@ -1503,6 +1542,33 @@
                     }
                     if (phoneInput) phoneInput.focus();
                     return;
+                }
+
+                // Block submission until address is entered for mobile appointments.
+                if (mobileInput && mobileInput.checked) {
+                    const addressVal = addressInput && addressInput.value ? addressInput.value.trim() : '';
+                    if (!addressVal || addressVal.length < 10) {
+                        if (addressInput) {
+                            addressInput.required = true;
+                            addressInput.classList.add('is-invalid');
+                            addressInput.setCustomValidity('Please enter a complete mobile address (at least 10 characters).');
+                            try { addressInput.focus(); } catch (focusErr) {}
+                        }
+                        alert('Please enter a complete mobile service address (at least 10 characters) before submitting.');
+                        return;
+                    }
+                    if (addressInput) {
+                        addressInput.value = addressVal;
+                        addressInput.setCustomValidity('');
+                        addressInput.classList.remove('is-invalid');
+                    }
+
+                    if (!parkingInput) {
+                        alert('Please choose whether parking is free or paid for the mobile address.');
+                        const firstParking = document.getElementById('parking_type_free_cal') || document.getElementById('parking_type_paid_cal');
+                        try { firstParking && firstParking.focus(); } catch (focusErr) {}
+                        return;
+                    }
                 }
             } catch (e) {
                 console.warn('Contact validation failed', e);
@@ -1608,21 +1674,32 @@
                         <li>We'll confirm your appointment within 24 hours</li>
                     </ol>
                     <div style="display:flex;gap:10px;flex-wrap:wrap;">
-                        <a href="tel:+13432548848" class="btn btn-sm" style="background:#030f68;color:#fff;border-radius:8px;font-weight:600;">
+                        <a href="tel:+3432548848" class="btn btn-sm" style="background:#030f68;color:#fff;border-radius:8px;font-weight:600;">
                             <i class="bi bi-telephone-fill me-1"></i>(343) 254-8848
                         </a>
                         <a href="mailto:info@dabsbeautytouch.com" class="btn btn-sm" style="background:#030f68;color:#fff;border-radius:8px;font-weight:600;">
                             <i class="bi bi-envelope-fill me-1"></i>Email Us
                         </a>
-                        <a href="https://wa.me/13432548848" target="_blank" rel="noopener" class="btn btn-sm" style="background:#25d366;color:#fff;border-radius:8px;font-weight:600;">
+                        <a href="https://wa.me/3432548848" target="_blank" rel="noopener" class="btn btn-sm" style="background:#25d366;color:#fff;border-radius:8px;font-weight:600;">
                             <i class="bi bi-whatsapp me-1"></i>WhatsApp
                         </a>
                     </div>
                 </div>
             `;
 
-            const modal = new bootstrap.Modal(document.getElementById('confirmationModal'));
-            modal.show();
+            try {
+                const modalElement = document.getElementById('confirmationModal');
+                if (typeof bootstrap !== 'undefined' && bootstrap.Modal && modalElement) {
+                    const modal = new bootstrap.Modal(modalElement);
+                    modal.show();
+                    return;
+                }
+            } catch (e) {
+                console.warn('Unable to show confirmation modal via Bootstrap', e);
+            }
+
+            // Fallback success feedback if modal cannot be displayed
+            alert(`Booking submitted successfully!\nBooking ID: ${appointment.booking_id}\nConfirmation code: ${appointment.confirmation_code}`);
         }
 
         function previousMonth() {

@@ -23,8 +23,8 @@ class PriceCalculator
     {
         $serviceInput = Arr::get($data, 'service_input');
         if (is_string($serviceInput)) {
-            // Strip UI-added suffixes like "(With Weave)", "(10+ Rows)", "(Front + Back)"
-            $serviceInput = trim(preg_replace('/\s*\((?:with\s*weav(?:e|ing)|10\+\s*rows|front\s*\+\s*back)\)\s*/i', '', $serviceInput));
+            // Strip UI-added suffixes like "(With Weave)", "(10+ Rows)", "(Front + Back)", "(Finished Tip)"
+            $serviceInput = trim(preg_replace('/\s*\((?:with\s*weav(?:e|ing)|10\+\s*rows|front\s*\+\s*back|finished\s*tip|curled\s*tip)\)\s*/i', '', $serviceInput));
         }
         $serviceModel = Arr::get($data, 'service_model');
         $serviceTypeRaw = strtolower(trim((string) Arr::get($data, 'service_type', $serviceInput ?? '')));
@@ -38,6 +38,16 @@ class PriceCalculator
             $frontBackAddon = ((int)$frontBackAddonRaw) === 1;
         } elseif (is_string($frontBackAddonRaw)) {
             $frontBackAddon = in_array(strtolower(trim($frontBackAddonRaw)), ['1','true','yes','y','on'], true);
+        }
+
+        // Tip option (knotless/boho/french-curl): finished tip adds +$20 on mid_back to tailbone/classic lengths.
+        $tipOptionRaw = Arr::get($data, 'tip_option') ?? Arr::get($data, 'braid_tip_option');
+        $tipOptionNormalized = 'curled';
+        if (is_string($tipOptionRaw)) {
+            $tipRaw = strtolower(trim($tipOptionRaw));
+            if ($tipRaw === 'finished') {
+                $tipOptionNormalized = 'finished';
+            }
         }
 
         // Prefer model effective price (respects discount) when present
@@ -129,6 +139,17 @@ class PriceCalculator
         }
 
         $serviceInputLower = is_string($serviceInput) ? strtolower($serviceInput) : '';
+        $isTipEligibleService = (
+            str_contains($serviceType, 'knotless') ||
+            str_contains($serviceType, 'boho') ||
+            str_contains($serviceType, 'french_curl') ||
+            str_contains($serviceType, 'french-curl') ||
+            ($serviceInputLower !== '' && (
+                str_contains($serviceInputLower, 'knotless') ||
+                str_contains($serviceInputLower, 'boho') ||
+                str_contains($serviceInputLower, 'french curl')
+            ))
+        );
         $isHairMask = (
             $serviceType === 'hair-mask' ||
             str_contains($serviceType, 'hair-mask') ||
@@ -152,6 +173,7 @@ class PriceCalculator
         $addonsTotal = 0.0;
         $finalPrice = 0.0;
         $adjust = 0.0;
+        $tipAddonApplied = false;
 
         if ($isHairMask) {
             $useMask = $maskNormalized ?? 'mask-only';
@@ -205,7 +227,15 @@ class PriceCalculator
                     $frontBackCost = 20.00;
                 }
             }
-            $addonsTotal = $stitchAddon + $frontBackCost;
+
+            $tipCost = 0.00;
+            $tipEligibleLengths = ['mid_back', 'waist', 'hip', 'tailbone', 'classic'];
+            if ($isTipEligibleService && $tipOptionNormalized === 'finished' && in_array($length, $tipEligibleLengths, true)) {
+                $tipCost = 20.00;
+            }
+            $tipAddonApplied = $tipCost > 0;
+
+            $addonsTotal = $stitchAddon + $frontBackCost + $tipCost;
             $finalPrice = round($basePrice + $lengthAdjustment + $addonsTotal, 2);
         }
 
@@ -269,6 +299,8 @@ class PriceCalculator
             'length_adjustment' => $lengthAdjustment,
             'addons_total' => $addonsTotal,
             'final_price' => $finalPrice,
+            'tip_option_normalized' => $tipOptionNormalized,
+            'tip_addon_applied' => $tipAddonApplied,
             'hair_mask_option_normalized' => $maskNormalized,
             'stitch_rows_option_normalized' => $stitchRowsOptionNorm,
             'kb_base_price' => $kb_base_price,

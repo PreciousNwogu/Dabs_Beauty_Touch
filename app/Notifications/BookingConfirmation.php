@@ -178,7 +178,7 @@ class BookingConfirmation extends Notification
                 'waist' => 'Waist',
                 'long' => 'Long',
             ];
-            $addonMap = ['kb_add_detangle' => 'Detangle', 'kb_add_beads' => 'Beads', 'kb_add_beads_full' => 'Beads (full)', 'kb_add_extension' => 'Extension', 'kb_add_rest' => 'Restyle'];
+            $addonMap = ['kb_add_detangle' => 'Detangle', 'kb_add_beads' => 'Beads', 'kb_add_beads_full' => 'Beads (full)', 'kb_add_extension' => 'Extension', 'kb_add_rest' => 'Resting'];
 
             $sel = $selector ?: [];
             $bt = $sel['braid_type'] ?? $b->kb_braid_type ?? null;

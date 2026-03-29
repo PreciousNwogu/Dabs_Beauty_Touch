@@ -281,7 +281,24 @@
               $selector = json_decode($m[1], true);
             }
             $sf = $selector_friendly ?? null;
-            $braidType = $sf['braid_type'] ?? $selector['braid_type'] ?? ($booking->kb_braid_type ?? null);
+            $kidsBraidMap = [
+              'protective' => 'Natural Hair Twist',
+              'cornrows' => 'Cornrows (without extension)',
+              'cornrow_weave' => 'Cornrow Weave (with extension)',
+              'knotless_small' => 'Knotless Small',
+              'knotless_med' => 'Knotless Medium',
+              'box_small' => 'Box Braids Small',
+              'box_med' => 'Box Braids Medium',
+              'stitch' => 'Stitch Braids',
+            ];
+            $braidRaw = $selector['braid_type'] ?? $selector['kb_braid_type'] ?? ($booking->kb_braid_type ?? null);
+            $braidType = $sf['braid_type'] ?? ($braidRaw ? ($kidsBraidMap[$braidRaw] ?? ucwords(str_replace(['_','-'], ' ', (string)$braidRaw))) : null);
+            if (empty($braidType) && is_string($booking->service ?? null) && str_contains(strtolower((string)$booking->service), 'kids braids')) {
+              $serviceParts = explode('—', (string)$booking->service, 2);
+              if (count($serviceParts) === 2 && trim((string)$serviceParts[1]) !== '') {
+                $braidType = trim((string)$serviceParts[1]);
+              }
+            }
             $finishVal = $sf['finish'] ?? $selector['finish'] ?? ($booking->kb_finish ?? null);
             $lengthVal = $sf['length'] ?? $selector['length'] ?? ($booking->kb_length ?? ($booking->length ?? null));
             $hideLengthFinish = $hideLengthFinish ?? false;
@@ -309,10 +326,13 @@
             }
           @endphp
 
-          @if(isset($braidType) && $braidType)
+          @php
+            $isKidsBooking = str_contains(strtolower((string)($booking->service ?? '')), 'kids');
+          @endphp
+          @if($isKidsBooking || (isset($braidType) && $braidType))
           <tr>
             <td>Braid Type</td>
-            <td>{{ $braidType }}</td>
+            <td>{{ $braidType ?: '—' }}</td>
           </tr>
           @endif
           @if(!$hideLengthFinish && isset($finishVal) && $finishVal)
