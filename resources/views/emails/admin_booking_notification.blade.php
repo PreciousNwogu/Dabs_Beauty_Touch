@@ -17,7 +17,7 @@
         if(is_string($ex) && preg_match('/^\d+(?:\.\d+)?(?:,\d+(?:\.\d+)?)*$/', $ex)){
           foreach(explode(',', $ex) as $n) $sum += floatval($n);
         } else {
-          $addonMap = ['kb_add_detangle'=>15,'kb_add_beads'=>10,'kb_add_beads_full'=>15,'kb_add_extension'=>20,'kb_add_rest'=>5];
+          $addonMap = ['kb_add_detangle'=>15,'kb_add_beads'=>15,'kb_add_beads_full'=>10,'kb_add_extension'=>20,'kb_add_rest'=>5];
           foreach(explode(',', $ex) as $it){ $it = trim($it); if(isset($addonMap[$it])) $sum += $addonMap[$it]; }
         }
         $displayAddons = $sum;
@@ -155,8 +155,8 @@
         $extrasVal = null;
         $addonNameMap = [
           'kb_add_detangle' => 'Detangle',
-          'kb_add_beads' => 'Beads',
-          'kb_add_beads_full' => 'Beads (full)',
+          'kb_add_beads' => 'Tiny beading',
+          'kb_add_beads_full' => 'Big eye beading',
           'kb_add_extension' => 'Extension',
           'kb_add_rest' => 'Resting',
         ];
@@ -200,7 +200,7 @@
             if(is_string($booking->kb_extras) && preg_match('/^\d+(?:\.\d+)?(?:,\d+(?:\.\d+)?)*$/', $booking->kb_extras)){
               $addons = array_sum(array_map('floatval', explode(',', $booking->kb_extras)));
             } else {
-              $addonMap = ['kb_add_detangle'=>15,'kb_add_beads'=>10,'kb_add_beads_full'=>15,'kb_add_extension'=>20,'kb_add_rest'=>5];
+              $addonMap = ['kb_add_detangle'=>15,'kb_add_beads'=>15,'kb_add_beads_full'=>10,'kb_add_extension'=>20,'kb_add_rest'=>5];
               $sum = 0;
               foreach(explode(',', $booking->kb_extras) as $it){ $it = trim($it); if(isset($addonMap[$it])) $sum += $addonMap[$it]; }
               $addons = $sum;
@@ -269,9 +269,14 @@
             </td>
           </tr>
         @endif
+        @if(!($hideLengthFinish ?? false))
         <tr><td style="font-weight:700;">Finish</td><td>{{ $finishDisplay ?? '—' }}</td></tr>
         <tr style="background:#f8fafc;"><td style="font-weight:700;">Kids Length</td><td>{{ $lengthVal ? ucwords(str_replace(['_', '-'], ' ', (string)$lengthVal)) : '—' }}</td></tr>
+        @endif
         <tr><td style="font-weight:700;">Add-ons</td><td>{{ $extrasVal ?: 'None' }}</td></tr>
+        @if(!empty($comments))
+        <tr style="background:#f8fafc;"><td style="font-weight:700;vertical-align:top;">Special Requests</td><td style="white-space:pre-wrap;word-break:break-word;">{{ $comments }}</td></tr>
+        @endif
       </table>
 
       <h4 style="margin-top:12px;margin-bottom:8px;color:#0b3a66;">Price Summary</h4>

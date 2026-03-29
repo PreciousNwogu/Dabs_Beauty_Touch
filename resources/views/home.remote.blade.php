@@ -2474,14 +2474,14 @@
                 selectedServiceDisplay.style.display = 'block';
                 selectedServiceName.textContent = name;
                 selectedServicePrice.textContent = '$' + price;
-                
+
                 // Set the description
                 const sizeName = getSizeName(name);
                 const sizeDesc = getSizeDescription(sizeName);
                 if (selectedServiceDescription) {
                     selectedServiceDescription.textContent = sizeDesc;
                 }
-                
+
                 // Scroll to top of size selection section on mobile (viewport < 768px)
                 if (window.innerWidth < 768) {
                     setTimeout(() => {
@@ -6119,12 +6119,12 @@ console.log('=== LOADING BOOKING FUNCTIONS ===');
     // Other Services Modal function
     window.openOtherServicesModal = function() {
         console.log('=== openOtherServicesModal CALLED ===');
-        
+
         try {
             // Open the custom service request modal directly (skip the guided flow)
             var modalEl = document.getElementById('customServiceRequestModal');
             console.log('Modal element found:', !!modalEl);
-            
+
             if (!modalEl) {
                 console.warn('customServiceRequestModal not found on page');
                 alert('Custom service request form not found. Please try again.');
@@ -6147,12 +6147,12 @@ console.log('=== LOADING BOOKING FUNCTIONS ===');
                 modalEl.classList.add('show');
                 modalEl.setAttribute('aria-hidden', 'false');
                 document.body.classList.add('modal-open');
-                
+
                 // Create backdrop
                 const backdrop = document.createElement('div');
                 backdrop.className = 'modal-backdrop fade show';
                 document.body.appendChild(backdrop);
-                
+
                 console.log('✓ Custom service request modal shown with fallback method');
             }
 
@@ -9851,7 +9851,7 @@ document.addEventListener('DOMContentLoaded', function(){
     // Debug: Test opening the other services modal directly
     window.testModalOpen = function() {
         console.log('🧪 Testing modal open...');
-        
+
         // Check if function exists
         if (typeof window.openOtherServicesModal === 'function') {
             console.log('✓ openOtherServicesModal function exists');
@@ -9859,7 +9859,7 @@ document.addEventListener('DOMContentLoaded', function(){
         } else {
             console.log('✗ openOtherServicesModal function NOT found');
         }
-        
+
         // Check modal element
         const modalEl = document.getElementById('customServiceRequestModal');
         console.log('✓ Modal element exists:', !!modalEl);

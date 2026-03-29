@@ -72,7 +72,7 @@ class AdminBookingNotification extends Notification
                 if($fi && isset($finishAdj[$fi])) $adjustments += $finishAdj[$fi];
 
                 if($ex){
-                    $addonMap = ['kb_add_detangle'=>15,'kb_add_beads'=>10,'kb_add_beads_full'=>15,'kb_add_extension'=>20,'kb_add_rest'=>5];
+                    $addonMap = ['kb_add_detangle'=>15,'kb_add_beads'=>15,'kb_add_beads_full'=>10,'kb_add_extension'=>20,'kb_add_rest'=>5];
                     if(is_string($ex) && strpos($ex,'kb_add_')!==false){
                         foreach(explode(',', $ex) as $it){ $it = trim($it); if(isset($addonMap[$it])) $addons += $addonMap[$it]; }
                     } else if(is_string($ex) && preg_match('/^\d+(?:\.\d+)?(,\d+(?:\.\d+)?)*$/', $ex)){
@@ -98,7 +98,7 @@ class AdminBookingNotification extends Notification
             ];
             $friendlyFinish = ['none' => '—','sleek' => 'Sleek finish','natural' => 'Natural finish','curled' => 'With curl','plain' => 'Without curl'];
             $friendlyLength = ['short' => 'Short','neck' => 'Neck','mid_back' => 'Mid Back','waist' => 'Waist','long' => 'Long'];
-            $addonMap = ['kb_add_detangle' => 'Detangle', 'kb_add_beads' => 'Beads', 'kb_add_beads_full' => 'Beads (full)', 'kb_add_extension' => 'Extension', 'kb_add_rest' => 'Resting'];
+            $addonMap = ['kb_add_detangle' => 'Detangle', 'kb_add_beads' => 'Tiny beading', 'kb_add_beads_full' => 'Big eye beading', 'kb_add_extension' => 'Extension', 'kb_add_rest' => 'Resting'];
 
             $sel = $selector ?: [];
             $bt = $sel['braid_type'] ?? $b->kb_braid_type ?? null;
@@ -123,9 +123,35 @@ class AdminBookingNotification extends Notification
             ];
         }catch(\Exception $e){ $selector_friendly = null; }
 
+        // Extract comments from kids selector if present
+        $comments = null;
+        try{
+            // Try to get from booking->comments field if it exists
+            if(isset($b->comments) && !empty($b->comments)) {
+                $comments = $b->comments;
+            } elseif (!empty($b->notes)) {
+                // Try to extract from notes if marked with "Comments:" or "Special Requests:"
+                if(preg_match('/(?:Comments|Special\s+Requests):\s*(.+?)(?:\n|$)/i', $b->notes, $m)) {
+                    $comments = trim($m[1]);
+                }
+            }
+        }catch(\Exception $e){ $comments = null; }
+
         // Use centralized pricing breakdown when available
         $break = [];
         try { $break = $b->getPricingBreakdown(); } catch (\Throwable $e) { $break = []; }
+
+        // Determine if this booking should hide finish/length (services with data-disable-steps="1")
+        $shouldHideLengthFinish = false;
+        try{
+            $serviceType = strtolower((string) ($b->service_type ?? $b->service ?? ''));
+            $braidType = strtolower((string) ($selector['braid_type'] ?? $b->kb_braid_type ?? ''));
+            // Services that don't use finish/length customization
+            $noFinishLengthServices = ['protective', 'cornrows'];
+            if(in_array($braidType, $noFinishLengthServices) || in_array($serviceType, $noFinishLengthServices)){
+                $shouldHideLengthFinish = true;
+            }
+        }catch(\Exception $e){ /* noop */ }
 
         // Expose server/client/persisted price values for admin visibility
         $break['server_calculated_final'] = $break['final_price'] ?? null;
@@ -149,7 +175,8 @@ class AdminBookingNotification extends Notification
                 'breakdown' => $break,
                 'selector' => $break['selector'] ?? $selector,
                 'selector_friendly' => $break['selector_friendly'] ?? $selector_friendly,
-                'hideLengthFinish' => $break['hide_length_finish'] ?? false,
+                'hideLengthFinish' => $shouldHideLengthFinish || ($break['hide_length_finish'] ?? false),
+                'comments' => $comments,
             ]);
     }
 

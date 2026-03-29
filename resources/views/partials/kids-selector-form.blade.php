@@ -367,6 +367,96 @@
         color: #495057;
     }
 
+    .kb-comment-section {
+        background: #f8f9fa;
+        border: 1px solid #e9ecef;
+        border-radius: 12px;
+        padding: 20px;
+        margin-top: 30px;
+    }
+
+    .kb-comment-label {
+        font-size: 1rem;
+        font-weight: 700;
+        color: #030f68;
+        margin-bottom: 8px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .kb-comment-textarea {
+        width: 100%;
+        min-height: 120px;
+        padding: 12px 16px;
+        border: 2px solid #e9ecef;
+        border-radius: 10px;
+        font-family: inherit;
+        font-size: 0.95rem;
+        color: #030f68;
+        resize: vertical;
+        transition: all 0.3s ease;
+    }
+
+    .kb-comment-textarea:focus {
+        outline: none;
+        border-color: #ff6600;
+        box-shadow: 0 0 0 3px rgba(255, 102, 0, 0.1);
+    }
+
+    .kb-comment-hint {
+        font-size: 0.85rem;
+        color: #6c757d;
+        margin-top: 8px;
+    }
+
+    .kb-announcement {
+        background-color: #F5E6D3;
+        border-left: 5px solid #ff6600;
+        padding: 16px 20px;
+        margin: 20px 20px 0 20px;
+        border-radius: 0 8px 8px 0;
+    }
+
+    .kb-announcement-content {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+    }
+
+    .kb-announcement-icon {
+        font-size: 1.4rem;
+        flex-shrink: 0;
+    }
+
+    .kb-announcement-text {
+        flex: 1;
+    }
+
+    .kb-announcement-label {
+        font-weight: 700;
+        color: #030f68;
+        margin-bottom: 6px;
+        font-size: 1rem;
+    }
+
+    .kb-announcement-message {
+        color: #333;
+        font-size: 0.95rem;
+        line-height: 1.5;
+        margin: 0;
+    }
+
+    .kb-announcement-message a {
+        color: #0066cc;
+        text-decoration: none;
+        font-weight: 600;
+    }
+
+    .kb-announcement-message a:hover {
+        text-decoration: underline;
+    }
+
     @media (max-width: 768px) {
         .kb-header h1 { font-size: 1.5rem; }
         .kb-progress { padding: 15px 10px; }
@@ -383,6 +473,19 @@
         <div class="kb-header">
             <h1>👧🏾 Kids Braids Selector</h1>
             <p>Professional braiding for ages 3–8 • Customize your child's perfect style</p>
+        </div>
+
+        <!-- Announcement -->
+        <div class="kb-announcement">
+            <div class="kb-announcement-content">
+                <span class="kb-announcement-icon">📣</span>
+                <div class="kb-announcement-text">
+                    <div class="kb-announcement-label">Announcement: Braiding Extensions Available</div>
+                    <p class="kb-announcement-message">
+                        We now have braiding extensions in various colors for sale. Please tell your stylist your preferred color in the comment box below, or message admin on <span style="font-weight: 600;">WhatsApp</span>.
+                    </p>
+                </div>
+            </div>
         </div>
 
         <!-- Progress Indicator -->
@@ -620,6 +723,21 @@
                                 <span class="kb-addon-label">Resting Break</span>
                                 <span class="kb-addon-price">+$5</span>
                             </label>
+                        </div>
+                    </div>
+
+                    <!-- Comments Section -->
+                    <div class="kb-comment-section">
+                        <label for="kb_comments" class="kb-comment-label">
+                            <span>💬</span> Special Requests or Comments
+                        </label>
+                        <textarea 
+                            id="kb_comments" 
+                            name="comments" 
+                            class="kb-comment-textarea" 
+                            placeholder="Tell us about preferred color choices for extensions, styling preferences, or any special requests..."></textarea>
+                        <div class="kb-comment-hint">
+                            Optional • This will help your stylist provide the best service
                         </div>
                     </div>
 
@@ -1428,7 +1546,7 @@ if(typeof window.showKidsBookingPanel !== 'function'){
                             if(typeof exRaw === 'string' && exRaw.match(/^\d+(?:\.\d+)?(?:,\d+(?:\.\d+)?)*$/)){
                                 extrasSum = exRaw.split(',').map(x=>Number(x)||0).reduce((a,b)=>a+b,0);
                             } else {
-                                const addonMap = {'kb_add_detangle':15,'kb_add_beads':10,'kb_add_beads_full':15,'kb_add_extension':20,'kb_add_rest':5};
+                                const addonMap = {'kb_add_detangle':15,'kb_add_beads':15,'kb_add_beads_full':10,'kb_add_extension':20,'kb_add_rest':5};
                                 exRaw.toString().split(',').forEach(function(it){ it = it.trim(); if(addonMap[it]) extrasSum += addonMap[it]; });
                             }
                         }catch(e){ extrasSum = 0; }
