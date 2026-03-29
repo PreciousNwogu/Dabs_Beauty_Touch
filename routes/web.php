@@ -335,6 +335,7 @@ Route::post('/kids-selector/submit', function (Request $request) {
         'kb_finish' => 'nullable|string',
         'kb_length' => 'required|string',
         'extras' => 'nullable|string',
+        'kb_extras' => 'nullable|string',
         'price' => 'required|numeric'
     ]);
 
@@ -346,7 +347,7 @@ Route::post('/kids-selector/submit', function (Request $request) {
         'hair_length' => $data['kb_length'],
         'braid_type' => $data['kb_braid_type'],
         'finish' => $data['kb_finish'] ?? null,
-        'extras' => $data['extras'] ?? null,
+        'extras' => $data['kb_extras'] ?? ($data['extras'] ?? null),
     ];
 
     // Flash to session for one-time consumption on home page
@@ -639,6 +640,34 @@ Route::prefix('admin')->name('admin.')->group(function () {
                 'success' => false,
                 'message' => 'Booking not found'
             ]);
+        }
+
+        // Fallback: recover kids selector values from notes if kb_* columns are empty.
+        try {
+            $notes = (string) ($booking->notes ?? '');
+            if (preg_match('/Selector:\s*(\{.*\})/s', $notes, $m)) {
+                $selector = json_decode($m[1], true);
+                if (is_array($selector)) {
+                    if (empty($booking->kb_braid_type) && !empty($selector['braid_type'])) {
+                        $booking->kb_braid_type = $selector['braid_type'];
+                    }
+                    if (empty($booking->kb_finish) && !empty($selector['finish'])) {
+                        $booking->kb_finish = $selector['finish'];
+                    }
+                    if (empty($booking->kb_length) && !empty($selector['length'])) {
+                        $booking->kb_length = $selector['length'];
+                    }
+                    if (empty($booking->kb_extras) && !empty($selector['extras'])) {
+                        $booking->kb_extras = is_array($selector['extras']) ? implode(',', $selector['extras']) : (string) $selector['extras'];
+                    }
+                }
+            }
+
+            if (empty($booking->kb_length) && !empty($booking->length) && str_contains(strtolower((string) ($booking->service ?? '')), 'kids')) {
+                $booking->kb_length = $booking->length;
+            }
+        } catch (\Throwable $e) {
+            // Non-fatal: continue with persisted values.
         }
 
         $breakdown = [];
@@ -1126,6 +1155,9 @@ Route::post('/bookings', function(Request $request) {
         'email' => 'nullable|email|max:255',
         'phone' => ['required','string','regex:/^[0-9+\-\s()]+$/','min:7','max:20'],
         'service' => 'nullable|string|max:255',
+        'appointment_type' => 'required|string|in:in-studio,mobile',
+        'address' => 'nullable|string|max:500|required_if:appointment_type,mobile',
+        'parking_type' => 'nullable|string|in:free,paid|required_if:appointment_type,mobile',
         'appointment_date' => 'required|date|after_or_equal:today',
         'appointment_time' => 'required|string',
         'message' => 'nullable|string|max:1000',
@@ -1147,6 +1179,52 @@ Route::post('/bookings', function(Request $request) {
 
     // Validate the booking form
     $request->validate($validationRules);
+
+    // Extra guard for mobile appointments: require a meaningful trimmed address.
+    if ($request->input('appointment_type') === 'mobile') {
+        $trimmedAddress = trim((string) $request->input('address', ''));
+        $parkingType = trim((string) $request->input('parking_type', ''));
+        if (mb_strlen($trimmedAddress) < 10) {
+            $addressMessage = 'Please enter a complete mobile service address (at least 10 characters).';
+            if ($request->wantsJson() || $request->header('X-Requested-With') === 'XMLHttpRequest') {
+                return response()->json([
+                    'success' => false,
+                    'message' => $addressMessage,
+                    'errors' => ['address' => [$addressMessage]],
+                ], 422);
+            }
+
+            return redirect()->route('home')
+                ->withErrors(['address' => $addressMessage])
+                ->withInput()
+                ->with([
+                    'booking_error' => true,
+                    'error_message' => $addressMessage,
+                ]);
+        }
+
+        if (!in_array($parkingType, ['free', 'paid'], true)) {
+            $parkingMessage = 'Please choose whether parking is free or paid for the mobile appointment address.';
+            if ($request->wantsJson() || $request->header('X-Requested-With') === 'XMLHttpRequest') {
+                return response()->json([
+                    'success' => false,
+                    'message' => $parkingMessage,
+                    'errors' => ['parking_type' => [$parkingMessage]],
+                ], 422);
+            }
+
+            return redirect()->route('home')
+                ->withErrors(['parking_type' => $parkingMessage])
+                ->withInput()
+                ->with([
+                    'booking_error' => true,
+                    'error_message' => $parkingMessage,
+                ]);
+        }
+
+        $request->merge(['address' => $trimmedAddress]);
+        $request->merge(['parking_type' => $parkingType]);
+    }
 
     // Create the booking
     try {
@@ -1215,6 +1293,7 @@ Route::post('/bookings', function(Request $request) {
             'phone' => $normalizedPhone,
             'address' => $request->address,
             'appointment_type' => $request->appointment_type,
+            'parking_type' => $request->parking_type,
             'service' => $request->service ?: 'General Service',
             'appointment_date' => $request->appointment_date,
             'appointment_time' => $request->appointment_time,
@@ -1225,13 +1304,57 @@ Route::post('/bookings', function(Request $request) {
             'status' => 'pending',
         ];
 
-        // Capture kids selector fields if present and append to notes for email fidelity
+        // Capture kids selector fields if present (supports both kb_* and plain selector keys)
+        // and append to notes for email fidelity.
         try{
             $selectorFields = [];
             if($request->filled('kb_braid_type')) $selectorFields['braid_type'] = $request->input('kb_braid_type');
+            if($request->filled('braid_type') && empty($selectorFields['braid_type'])) $selectorFields['braid_type'] = $request->input('braid_type');
+
             if($request->filled('kb_finish')) $selectorFields['finish'] = $request->input('kb_finish');
+            if($request->filled('finish') && empty($selectorFields['finish'])) $selectorFields['finish'] = $request->input('finish');
+
             if($request->filled('kb_length')) $selectorFields['length'] = $request->input('kb_length');
+
             if($request->filled('kb_extras')) $selectorFields['extras'] = $request->input('kb_extras');
+            if($request->filled('extras') && empty($selectorFields['extras'])) $selectorFields['extras'] = $request->input('extras');
+
+            $serviceTypeInput = strtolower((string) ($request->input('service_type') ?? ''));
+            $serviceNameInput = strtolower((string) ($request->input('service') ?? ''));
+            $explicitKidsService = (
+                $serviceTypeInput === 'kids-braids' ||
+                str_contains($serviceTypeInput, 'kids') ||
+                str_contains($serviceNameInput, 'kids braids')
+            );
+
+            // Only kids-specific selector signals should route to kids flow.
+            // Generic length/hair_length fields are used by normal services too.
+            $hasKidsSelectorSignals = (
+                $request->filled('kb_braid_type') ||
+                $request->filled('braid_type') ||
+                $request->filled('kb_finish') ||
+                $request->filled('finish') ||
+                $request->filled('kb_extras') ||
+                $request->filled('extras') ||
+                $request->filled('kb_length')
+            );
+
+            // If this is explicitly a kids service and kb_length was not posted, allow
+            // length/hair_length fallback to preserve older kids client payloads.
+            if($explicitKidsService && empty($selectorFields['length'])) {
+                if($request->filled('hair_length')) $selectorFields['length'] = $request->input('hair_length');
+                if($request->filled('length') && empty($selectorFields['length'])) $selectorFields['length'] = $request->input('length');
+            }
+
+            $isKidsServiceSubmission = (
+                $explicitKidsService ||
+                $hasKidsSelectorSignals
+            );
+
+            if ($isKidsServiceSubmission) {
+                $bookingData['service_type'] = 'kids-braids';
+            }
+
             if(!empty($selectorFields)){
                 $json = json_encode($selectorFields);
                 $bookingData['notes'] = trim(($bookingData['notes'] ?? '') . "\nSelector: " . $json);
@@ -1300,6 +1423,47 @@ Route::post('/bookings', function(Request $request) {
                 // Also persist selector-specific breakdown so we don't overwrite other services
                 $bookingData['kb_base_price'] = $baseConfigured;
                 $bookingData['kb_length_adjustment'] = $adjustments;
+                $bookingData['kb_addons_total'] = round($addons, 2);
+                $bookingData['kb_final_price'] = $finalKidsPrice;
+            } elseif ($isKidsServiceSubmission) {
+                // Kids service without complete selector payload: still persist what we have
+                // and compute an authoritative server-side total.
+                $bookingData['kb_braid_type'] = $selectorFields['braid_type'] ?? null;
+                $bookingData['kb_finish'] = $selectorFields['finish'] ?? null;
+                $bookingData['kb_length'] = $selectorFields['length'] ?? null;
+                $bookingData['kb_extras'] = $selectorFields['extras'] ?? null;
+
+                $baseConfigured = (float) (config('service_prices.kids_braids', 80));
+                $typeAdj = ['protective'=>-20,'cornrows'=>-40,'knotless_small'=>20,'knotless_med'=>0,'box_small'=>10,'box_med'=>0,'stitch'=>20];
+                $lengthAdj = ['shoulder'=>0,'armpit'=>10,'mid_back'=>20,'waist'=>30];
+                $finishAdj = ['curled'=>-10,'plain'=>0];
+                $addonMap = ['kb_add_detangle'=>15,'kb_add_beads'=>10,'kb_add_beads_full'=>15,'kb_add_extension'=>20,'kb_add_rest'=>5];
+
+                $adjustments = 0; $addons = 0;
+                $bt = $bookingData['kb_braid_type'] ?? null;
+                $ln = $bookingData['kb_length'] ?? null;
+                $fi = $bookingData['kb_finish'] ?? null;
+                $ex = $bookingData['kb_extras'] ?? null;
+
+                if ($bt && isset($typeAdj[$bt])) $adjustments += $typeAdj[$bt];
+                if ($ln && isset($lengthAdj[$ln])) $adjustments += $lengthAdj[$ln];
+                if ($fi && isset($finishAdj[$fi])) $adjustments += $finishAdj[$fi];
+
+                if($ex){
+                    if(is_string($ex) && strpos($ex,'kb_add_')!==false){
+                        foreach(explode(',', $ex) as $it){ $it = trim($it); if(isset($addonMap[$it])) $addons += $addonMap[$it]; }
+                    } else if(is_string($ex) && preg_match('/^\d+(?:\.\d+)?(,\d+(?:\.\d+)?)*$/', $ex)){
+                        foreach(explode(',', $ex) as $n){ $addons += floatval($n); }
+                    }
+                }
+
+                $finalKidsPrice = round($baseConfigured + $adjustments + $addons, 2);
+                $bookingData['base_price'] = $baseConfigured;
+                $bookingData['length_adjustment'] = $adjustments;
+                $bookingData['final_price'] = $finalKidsPrice;
+                $bookingData['kb_base_price'] = $baseConfigured;
+                $bookingData['kb_length_adjustment'] = $adjustments;
+                $bookingData['kb_addons_total'] = round($addons, 2);
                 $bookingData['kb_final_price'] = $finalKidsPrice;
             }
         }catch(
@@ -1307,13 +1471,28 @@ Route::post('/bookings', function(Request $request) {
 
         // If this is a kids-braids submission, ensure a length was provided (kb_length or length/hair_length)
         if (!empty($bookingData['service_type']) && $bookingData['service_type'] === 'kids-braids') {
+            $providedBraid = $bookingData['kb_braid_type'] ?? $request->input('braid_type') ?? $request->input('kb_braid_type') ?? null;
+            if (empty($providedBraid)) {
+                if ($request->wantsJson() || $request->header('X-Requested-With') === 'XMLHttpRequest') {
+                    return response()->json(['success' => false, 'message' => 'Please choose a braid type for kids braids.'], 422);
+                }
+                return redirect()->route('kids.selector')->withErrors(['kb_braid_type' => 'Please choose a braid type for kids braids'])->withInput()->with([
+                    'booking_error' => true,
+                    'error_message' => 'Please choose a braid type for kids braids.',
+                ]);
+            }
+            $bookingData['kb_braid_type'] = strtolower(trim((string) $providedBraid));
+
             $providedLength = $bookingData['kb_length'] ?? $request->input('length') ?? $request->input('hair_length') ?? null;
             if (empty($providedLength)) {
                 // Return early with a validation-like error so the user can correct the form
                 if ($request->wantsJson() || $request->header('X-Requested-With') === 'XMLHttpRequest') {
                     return response()->json(['success' => false, 'message' => 'Please select a hair length for kids braids.'], 422);
                 }
-                return redirect()->route('home')->withErrors(['length' => 'Please select a hair length for kids braids'])->withInput();
+                return redirect()->route('kids.selector')->withErrors(['length' => 'Please select a hair length for kids braids'])->withInput()->with([
+                    'booking_error' => true,
+                    'error_message' => 'Please select a hair length for kids braids.',
+                ]);
             }
 
             // Normalize kb_length to canonical format server-side
@@ -1322,6 +1501,14 @@ Route::post('/bookings', function(Request $request) {
             $norm = str_replace(['tail_bone','tail bone','tail-bone','tailbone','tail_bone'], 'tailbone', $norm);
             $norm = str_replace(['bra strap','bra-strap','bra_strap'], 'bra_strap', $norm);
             $bookingData['kb_length'] = $norm;
+
+            // Normalize kids finish; default to plain when not provided.
+            $providedFinish = $bookingData['kb_finish'] ?? $request->input('finish') ?? $request->input('kb_finish') ?? null;
+            if (empty($providedFinish)) {
+                $bookingData['kb_finish'] = 'plain';
+            } else {
+                $bookingData['kb_finish'] = strtolower(trim((string) $providedFinish));
+            }
         }
 
         // Normalize incoming length (accept hair_length or length or kb_length)
@@ -1607,6 +1794,10 @@ Route::post('/bookings', function(Request $request) {
                 'email' => $booking->email,
                 'phone' => $booking->phone,
                 'message' => $booking->message,
+                'appointment_type' => $booking->appointment_type,
+                'address' => $booking->address,
+                'appointment_type' => $booking->appointment_type,
+                'address' => $booking->address,
             ]
         ]);
 
@@ -1941,6 +2132,8 @@ Route::get('/bookings/confirm/{id}/{code}', function($id, $code) {
         'email' => $booking->email,
         'phone' => $booking->phone,
         'message' => $booking->message,
+        'appointment_type' => $booking->appointment_type,
+        'address' => $booking->address,
         'sample_picture' => $booking->sample_picture,
         // Kids selector fields (if applicable)
         'kb_braid_type' => $booking->kb_braid_type,

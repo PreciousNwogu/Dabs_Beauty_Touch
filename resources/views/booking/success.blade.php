@@ -363,9 +363,9 @@
                         <li>We'll confirm your appointment within 24 hours</li>
                     </ol>
                     <div style="display:flex;gap:10px;flex-wrap:wrap;">
-                        <a href="tel:+13432548848" class="btn btn-sm" style="background:#030f68;color:#fff;border-radius:8px;font-weight:600;"><i class="fas fa-phone me-1"></i>(343) 254-8848</a>
+                        <a href="tel:+3432548848" class="btn btn-sm" style="background:#030f68;color:#fff;border-radius:8px;font-weight:600;"><i class="fas fa-phone me-1"></i>(343) 254-8848</a>
                         <a href="mailto:info@dabsbeautytouch.com" class="btn btn-sm" style="background:#030f68;color:#fff;border-radius:8px;font-weight:600;"><i class="fas fa-envelope me-1"></i>Email Us</a>
-                        <a href="https://wa.me/13432548848" target="_blank" rel="noopener" class="btn btn-sm" style="background:#25d366;color:#fff;border-radius:8px;font-weight:600;"><i class="fab fa-whatsapp me-1"></i>WhatsApp</a>
+                        <a href="https://wa.me/3432548848" target="_blank" rel="noopener" class="btn btn-sm" style="background:#25d366;color:#fff;border-radius:8px;font-weight:600;"><i class="fab fa-whatsapp me-1"></i>WhatsApp</a>
                     </div>
                 </div>
                 <div class="alert alert-info">

@@ -17,7 +17,7 @@ class SocialLinks
 
         $instaLink = '<a href="https://www.instagram.com/dabs_beauty_touch" target="_blank" rel="noopener noreferrer" style="margin-right:12px;text-decoration:none;">' . $instagramSvg . ' <span style="font-size:13px;color:#0b3a66;vertical-align:middle;margin-left:6px;">Instagram</span></a>';
 
-        $waLink = '<a href="https://wa.me/13432548848" target="_blank" rel="noopener noreferrer" style="text-decoration:none;">' . $whatsappSvg . ' <span style="font-size:13px;color:#0b3a66;vertical-align:middle;margin-left:6px;">WhatsApp</span></a>';
+        $waLink = '<a href="https://wa.me/3432548848" target="_blank" rel="noopener noreferrer" style="text-decoration:none;">' . $whatsappSvg . ' <span style="font-size:13px;color:#0b3a66;vertical-align:middle;margin-left:6px;">WhatsApp</span></a>';
 
         $html = '<p style="margin:8px 0 0 0;color:#6c757d;">' . $instaLink . $waLink . '</p>';
 

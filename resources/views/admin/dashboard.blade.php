@@ -2096,6 +2096,18 @@
                 return s.length ? s : fallback;
             };
 
+            const parseSelectorFromNotes = (notes) => {
+                try {
+                    const raw = String(notes || '');
+                    const match = raw.match(/Selector:\s*(\{.*\})/s);
+                    if (!match || !match[1]) return null;
+                    const parsed = JSON.parse(match[1]);
+                    return (parsed && typeof parsed === 'object') ? parsed : null;
+                } catch (err) {
+                    return null;
+                }
+            };
+
             const bookingId = booking.booking_id || booking.id;
             const confirmationCode = booking.confirmation_code ? String(booking.confirmation_code).trim() : '';
             const editUrl = (booking.id && confirmationCode)
@@ -2111,13 +2123,59 @@
                 ? (String(booking.sample_picture).startsWith('http') ? booking.sample_picture : '/storage/' + booking.sample_picture)
                 : null;
 
-            const isKids = !!(booking.kb_braid_type || booking.kb_length || (String(booking.service || '').toLowerCase().includes('kids')));
+            const selectorFallback = parseSelectorFromNotes(booking.notes);
+            const kidsBraidType = booking.kb_braid_type || (selectorFallback ? (selectorFallback.braid_type || selectorFallback.kb_braid_type) : null);
+            const kidsFinish = booking.kb_finish || (selectorFallback ? (selectorFallback.finish || selectorFallback.kb_finish) : null);
+            const kidsLength = booking.kb_length || (selectorFallback ? (selectorFallback.length || selectorFallback.kb_length) : null) || booking.length;
+            const kidsExtras = booking.kb_extras || (selectorFallback ? (selectorFallback.extras || selectorFallback.kb_extras) : null);
+
+            const isKids = !!(kidsBraidType || kidsLength || (String(booking.service || '').toLowerCase().includes('kids')));
             const stitchRows = booking.stitch_rows_option ? String(booking.stitch_rows_option) : '';
             const hairMaskOpt = booking.hair_mask_option ? String(booking.hair_mask_option) : (booking.selectedHairMaskOption ? String(booking.selectedHairMaskOption) : '');
 
             const pretty = (raw) => {
                 const s = (raw || '').toString();
                 return s.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+            };
+
+            const prettyKidsFinish = (raw) => {
+                const v = String(raw || '').trim().toLowerCase();
+                if (!v) return '—';
+                if (v === 'plain') return 'Without curl';
+                if (v === 'curled') return 'With curl';
+                if (v === 'sleek') return 'Sleek finish';
+                if (v === 'natural') return 'Natural finish';
+                return pretty(v);
+            };
+
+            const prettyKidsExtras = (raw) => {
+                const addonMap = {
+                    kb_add_detangle: 'Detangle',
+                    kb_add_beads: 'Beads',
+                    kb_add_beads_full: 'Beads (full)',
+                    kb_add_extension: 'Extension',
+                    kb_add_rest: 'Resting'
+                };
+
+                if (raw === null || typeof raw === 'undefined') return '—';
+
+                if (Array.isArray(raw)) {
+                    const labels = raw.map((it) => addonMap[it] || pretty(it)).filter(Boolean);
+                    return labels.length ? labels.join(', ') : '—';
+                }
+
+                const s = String(raw).trim();
+                if (!s) return '—';
+
+                if (/^\d+(?:\.\d+)?(?:,\d+(?:\.\d+)?)*$/.test(s)) {
+                    const total = s.split(',').reduce((sum, n) => sum + (parseFloat(n) || 0), 0);
+                    return total > 0 ? ('$' + total.toFixed(2)) : '—';
+                }
+
+                const parts = s.split(',').map((p) => p.trim()).filter(Boolean);
+                if (!parts.length) return '—';
+
+                return parts.map((p) => addonMap[p] || pretty(p)).join(', ');
             };
 
             const breakdownHtml = (breakdown && typeof breakdown === 'object' && Object.keys(breakdown).length)
@@ -2282,19 +2340,19 @@
                                 <div class="bd-panel">
                                     <div class="bd-row">
                                         <div class="bd-label">Braid Type:</div>
-                                        <div class="bd-value">${safe(pretty(booking.kb_braid_type), '—')}</div>
+                                        <div class="bd-value">${safe(pretty(kidsBraidType), '—')}</div>
                                     </div>
                                     <div class="bd-row">
                                         <div class="bd-label">Finish:</div>
-                                        <div class="bd-value">${safe(pretty(booking.kb_finish), '—')}</div>
+                                        <div class="bd-value">${safe(prettyKidsFinish(kidsFinish), '—')}</div>
                                     </div>
                                     <div class="bd-row">
                                         <div class="bd-label">Kids Length:</div>
-                                        <div class="bd-value">${safe(pretty(booking.kb_length), '—')}</div>
+                                        <div class="bd-value">${safe(pretty(kidsLength), '—')}</div>
                                     </div>
                                     <div class="bd-row">
-                                        <div class="bd-label">Extras:</div>
-                                        <div class="bd-value">${safe(pretty(booking.kb_extras), '—')}</div>
+                                        <div class="bd-label">Add-ons:</div>
+                                        <div class="bd-value">${safe(prettyKidsExtras(kidsExtras), '—')}</div>
                                     </div>
                                 </div>
                             </div>

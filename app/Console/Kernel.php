@@ -11,6 +11,7 @@ class Kernel extends ConsoleKernel
         \App\Console\Commands\SendTestMail::class,
         \App\Console\Commands\PreviewEmail::class,
         \App\Console\Commands\CancelBookingsRange::class,
+        \App\Console\Commands\BackfillKidsSelectorFromNotes::class,
     ];
 
     protected function schedule(Schedule $schedule)

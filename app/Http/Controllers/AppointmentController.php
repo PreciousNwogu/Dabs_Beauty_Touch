@@ -162,11 +162,14 @@ class AppointmentController extends Controller
             'kids_email' => 'nullable|email|max:255',
             'booking_email' => 'nullable|email|max:255',
             'phone' => 'required|string|max:20',
+            'appointment_type' => 'required|string|in:in-studio,mobile',
+            'address' => 'nullable|string|max:500|required_if:appointment_type,mobile',
             // 'length' will be required for most services but not for Hair Mask/Relaxing
             'service' => 'nullable|string|max:255',
             'appointment_date' => 'required|date|after_or_equal:today',
             'appointment_time' => 'required|date_format:H:i',
-            'message' => 'nullable|string|max:1000'
+            'message' => 'nullable|string|max:1000',
+            'tip_option' => 'nullable|string|in:curled,finished'
         ];
 
         // Tailor length rules based on service type
@@ -494,6 +497,7 @@ class AppointmentController extends Controller
                 'kb_extras' => $request->input('kb_extras'),
                 'hair_mask_option' => $request->input('hair_mask_option') ?? $request->input('selectedHairMaskOption'),
                 'stitch_rows_option' => $request->input('stitch_rows_option'),
+                'tip_option' => $request->input('tip_option'),
             ];
 
             $breakdown = $calculator->calculate($calcInput);
@@ -506,6 +510,21 @@ class AppointmentController extends Controller
             // Merge normalized hair_mask_option back to request for persistence if provided by calculator
             if (!empty($breakdown['hair_mask_option_normalized'])) {
                 $request->merge(['hair_mask_option' => $breakdown['hair_mask_option_normalized']]);
+            }
+            if (!empty($breakdown['tip_option_normalized'])) {
+                $request->merge(['tip_option' => $breakdown['tip_option_normalized']]);
+            }
+
+            // Keep a readable service label when finished tip pricing was selected.
+            $tipOptionForSave = $breakdown['tip_option_normalized'] ?? null;
+            $tipAddonApplied = (bool) ($breakdown['tip_addon_applied'] ?? false);
+            $tipEligibleService = (
+                str_contains($serviceTypeNormalized, 'knotless') ||
+                str_contains($serviceTypeNormalized, 'boho') ||
+                str_contains($serviceTypeNormalized, 'french')
+            );
+            if ($tipEligibleService && $tipOptionForSave === 'finished' && $tipAddonApplied && !str_contains(strtolower((string) $serviceNameForSave), 'finished tip')) {
+                $serviceNameForSave = trim((string) $serviceNameForSave) . ' (Finished Tip)';
             }
 
             // Attach kids breakdown values for later persistence
@@ -662,6 +681,8 @@ class AppointmentController extends Controller
                 'name' => $request->name,
                 'email' => $resolvedEmail ?: ($request->email ?: 'no-email@example.com'),
                 'phone' => $request->phone,
+                'address' => $request->input('address'),
+                'appointment_type' => $request->input('appointment_type'),
                     // Save canonical service name if we resolved a Service model, otherwise store user-provided label
                     'service' => $serviceNameForSave ?: ($request->service ?: 'General Service'),
                 'length' => $length,

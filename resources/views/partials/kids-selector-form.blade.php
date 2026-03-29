@@ -714,7 +714,8 @@ document.addEventListener('DOMContentLoaded', function(){
             const input = this.querySelector('input[type="radio"]');
             if(input){
                 document.querySelectorAll(`input[name="${input.name}"]`).forEach(function(radio){
-                    radio.closest('.kb-option-btn').classList.remove('selected');
+                    const parentBtn = radio.closest('.kb-option-btn');
+                    if (parentBtn) parentBtn.classList.remove('selected');
                 });
                 this.classList.add('selected');
             }
@@ -869,6 +870,7 @@ document.addEventListener('DOMContentLoaded', function(){
 
     function updatePricingDisplay(braidTypeValue){
         try{
+            const braidType = document.querySelector('input[name="kb_braid_type"]:checked');
             const basePrice = {{ (int) config('service_prices.kids_braids', 80) }}; // Kids Braids base price (from CMS/config)
             const kidsOriginalBase = {{ (int) config('service_prices_original.kids_braids', config('service_prices.kids_braids', 80)) }}; // Original before discount
             // Braid types that have the CMS discount applied
@@ -1234,7 +1236,38 @@ document.addEventListener('DOMContentLoaded', function(){
 
     // If user came from kids modal Back button, restore selector state from localStorage
     try{
-        const stored = localStorage.getItem('kb_selector');
+        const params = new URLSearchParams(window.location.search || '');
+        const shouldRestore = params.get('resume') === '1';
+
+        if(!shouldRestore){
+            try{ localStorage.removeItem('kb_selector'); }catch(e){}
+
+            const selectorForm = document.getElementById('kidsSelectorForm');
+            if(selectorForm) selectorForm.reset();
+
+            // Reset visual state classes after browser autofill/cache restoration.
+            document.querySelectorAll('.kb-braid-card').forEach(function(card){ card.classList.remove('selected'); });
+            document.querySelectorAll('.kb-option-btn').forEach(function(btn){ btn.classList.remove('selected'); });
+            document.querySelectorAll('.kb-addon-card').forEach(function(card){ card.classList.remove('checked'); });
+
+            // Re-apply default state from markup.
+            const defaultBraid = document.getElementById('kb_type_protective'); if(defaultBraid) defaultBraid.checked = true;
+            const defaultFinish = document.getElementById('kb_finish_plain'); if(defaultFinish) defaultFinish.checked = true;
+            const defaultLength = document.getElementById('kb_len_shoulder'); if(defaultLength) defaultLength.checked = true;
+
+            document.querySelectorAll('input[type="radio"]:checked').forEach(function(radio){
+                const braidCard = radio.closest('.kb-braid-card');
+                const optionBtn = radio.closest('.kb-option-btn');
+                if(braidCard) braidCard.classList.add('selected');
+                if(optionBtn) optionBtn.classList.add('selected');
+            });
+
+            try{ syncHiddenMirrors(); }catch(e){}
+            try{ if(typeof evaluateBraidType === 'function') evaluateBraidType(); }catch(e){}
+            try{ if(typeof recomputeGlobal === 'function') recomputeGlobal(); }catch(e){}
+        }
+
+        const stored = shouldRestore ? localStorage.getItem('kb_selector') : null;
         if(stored){
             const parsed = JSON.parse(stored);
             if(parsed){
@@ -1279,6 +1312,12 @@ document.addEventListener('DOMContentLoaded', function(){
 
                 // clear stored value after restore so it doesn't stale next time
                 try{ localStorage.removeItem('kb_selector'); }catch(e){}
+
+                // Remove resume flag from URL after one-time restore.
+                try {
+                    const cleanUrl = window.location.origin + window.location.pathname;
+                    window.history.replaceState({}, '', cleanUrl);
+                } catch (historyErr) {}
             }
         }
     }catch(e){ console.warn('Failed to restore kb_selector from localStorage', e); }
@@ -1469,7 +1508,6 @@ if(typeof window.showKidsBookingPanel !== 'function'){
                     }catch(e){ console.warn('showing kids modal failed', e); }
                 }
             }catch(e){ console.warn('fallback showKidsBookingPanel error', e); }
-        }catch(e){ console.warn('fallback showKidsBookingPanel error', e); }
     };
 }
 
@@ -1619,8 +1657,9 @@ document.addEventListener('DOMContentLoaded', function(){
 
         // Centralized validation function so other handlers can call it too
         function validateKidsSubmission(evt){
-            try{ populateKidsHiddenFields(); }catch(exc){ console.warn('populateKidsHiddenFields failed', exc); }
-            var errors = [];
+            try{
+                try{ populateKidsHiddenFields(); }catch(exc){ console.warn('populateKidsHiddenFields failed', exc); }
+                var errors = [];
             var nameEl = document.getElementById('kids_name');
                 var nameVal = nameEl ? (nameEl.value||'').trim() : '';
                 if(!nameVal) errors.push({el: nameEl, msg: "Please enter the child's name."});
@@ -1713,8 +1752,11 @@ document.addEventListener('DOMContentLoaded', function(){
                     try{ var mb = document.getElementById('kidsBookingModal') ? document.getElementById('kidsBookingModal').querySelector('.modal-body') : null; if(mb) mb.scrollTop = 0; else window.scrollTo(0,0); }catch(e){}
                     return errors;
                 }
-            }catch(err){ console.warn('kidsBookingForm validation error', err); }
-            return errors;
+                return errors;
+            }catch(err){
+                console.warn('kidsBookingForm validation error', err);
+                return errors;
+            }
         }
 
         // Ensure the form submit event also runs validation (covers Enter key submits)
@@ -1793,15 +1835,85 @@ document.addEventListener('DOMContentLoaded', function(){
                         var errs = validateKidsSubmission(evt);
                         if(errs && errs.length){ updateConfirmState(); return false; }
 
+                        // CRITICAL: Sync current checkbox selections to kb_extras_input before reading form values
+                        try{ if(typeof recomputeGlobal === 'function') recomputeGlobal(); }catch(e){ console.warn('recomputeGlobal() failed:', e); }
+
                         // Build preview payload to get server canonical breakdown before final submit
                         var kidsFormEl = document.getElementById('kidsBookingForm');
                         var payload = {
                             service: 'Kids Braids',
                             service_type: 'kids-braids',
-                            kb_length: (document.getElementById('kids_length_input') && document.getElementById('kids_length_input').value) ? document.getElementById('kids_length_input').value : (document.querySelector('input[name="kb_length"]:checked') ? document.querySelector('input[name="kb_length"]:checked').value : ''),
-                            kb_braid_type: (document.getElementById('kids_braid_type_input') && document.getElementById('kids_braid_type_input').value) ? document.getElementById('kids_braid_type_input').value : (document.querySelector('input[name="kb_braid_type"]:checked') ? document.querySelector('input[name="kb_braid_type"]:checked').value : ''),
-                            kb_extras: (document.getElementById('kids_extras_input') && document.getElementById('kids_extras_input').value) ? document.getElementById('kids_extras_input').value : (document.getElementById('kb_extras_input') ? document.getElementById('kb_extras_input').value : '')
+                            kb_length: (document.getElementById('kids_length_input') && document.getElementById('kids_length_input').value)
+                                ? document.getElementById('kids_length_input').value
+                                : ((document.querySelector('input[name="kb_length"]:checked') ? document.querySelector('input[name="kb_length"]:checked').value : '')),
+                            kb_braid_type: (document.getElementById('kids_braid_type_input') && document.getElementById('kids_braid_type_input').value)
+                                ? document.getElementById('kids_braid_type_input').value
+                                : ((document.querySelector('input[name="kb_braid_type"]:checked') ? document.querySelector('input[name="kb_braid_type"]:checked').value : '')),
+                            kb_finish: (document.getElementById('kids_finish_input') && document.getElementById('kids_finish_input').value)
+                                ? document.getElementById('kids_finish_input').value
+                                : ((document.querySelector('input[name="kb_finish"]:checked') ? document.querySelector('input[name="kb_finish"]:checked').value : '')),
+                            kb_extras: (document.getElementById('kids_extras_input') && document.getElementById('kids_extras_input').value)
+                                ? document.getElementById('kids_extras_input').value
+                                : ((document.getElementById('kb_extras_input') && document.getElementById('kb_extras_input').value) ? document.getElementById('kb_extras_input').value : '')
                         };
+
+                        // Recover selector state when hidden inputs are empty (page refresh, modal reopen, or stale DOM state).
+                        try {
+                            if (!payload.kb_braid_type || !payload.kb_length) {
+                                var state = window.__kidsSelectorData || {};
+                                if (!payload.kb_braid_type) payload.kb_braid_type = state.kb_braid_type || state.braid_type || '';
+                                if (!payload.kb_finish) payload.kb_finish = state.kb_finish || state.finish || 'plain';
+                                if (!payload.kb_length) payload.kb_length = state.kb_length || state.length || state.hair_length || '';
+                                if (!payload.kb_extras) payload.kb_extras = state.kb_extras || state.extras || '';
+                            }
+                        } catch (e) { /* noop */ }
+
+                        try {
+                            if (!payload.kb_braid_type || !payload.kb_length) {
+                                var rawSel = localStorage.getItem('kb_selector');
+                                if (rawSel) {
+                                    var parsedSel = JSON.parse(rawSel);
+                                    if (parsedSel && typeof parsedSel === 'object') {
+                                        if (!payload.kb_braid_type) payload.kb_braid_type = parsedSel.kb_braid_type || parsedSel.braid_type || '';
+                                        if (!payload.kb_finish) payload.kb_finish = parsedSel.kb_finish || parsedSel.finish || 'plain';
+                                        if (!payload.kb_length) payload.kb_length = parsedSel.kb_length || parsedSel.length || parsedSel.hair_length || '';
+                                        if (!payload.kb_extras) payload.kb_extras = parsedSel.kb_extras || parsedSel.extras || '';
+                                    }
+                                }
+                            }
+                        } catch (e) { /* noop */ }
+
+                        // CRITICAL: programmatic form.submit() bypasses submit listeners,
+                        // so mirror selector values directly into the kids booking form now.
+                        try {
+                            var ensureHidden = function(formEl, fieldName){
+                                var el = formEl.querySelector('input[name="' + fieldName + '"]');
+                                if (!el) {
+                                    el = document.createElement('input');
+                                    el.type = 'hidden';
+                                    el.name = fieldName;
+                                    formEl.appendChild(el);
+                                }
+                                return el;
+                            };
+
+                            if (kidsFormEl) {
+                                ensureHidden(kidsFormEl, 'service').value = payload.service || 'Kids Braids';
+                                ensureHidden(kidsFormEl, 'service_type').value = payload.service_type || 'kids-braids';
+                                ensureHidden(kidsFormEl, 'kb_braid_type').value = (payload.kb_braid_type || '').toString().trim();
+                                ensureHidden(kidsFormEl, 'kb_finish').value = ((payload.kb_finish || 'plain')).toString().trim();
+                                ensureHidden(kidsFormEl, 'kb_length').value = (payload.kb_length || '').toString().trim().replace(/-/g, '_');
+                                ensureHidden(kidsFormEl, 'kb_extras').value = (payload.kb_extras || '').toString().trim();
+
+                                // Keep legacy aliases in sync for any fallback readers.
+                                ensureHidden(kidsFormEl, 'braid_type').value = (payload.kb_braid_type || '').toString().trim();
+                                ensureHidden(kidsFormEl, 'finish').value = ((payload.kb_finish || 'plain')).toString().trim();
+                                ensureHidden(kidsFormEl, 'length').value = (payload.kb_length || '').toString().trim().replace(/-/g, '_');
+                                ensureHidden(kidsFormEl, 'extras').value = (payload.kb_extras || '').toString().trim();
+                            }
+                        } catch (syncErr) {
+                            console.warn('Failed to mirror kids selector payload before submit', syncErr);
+                        }
                         var csrf = (document.querySelector('meta[name="csrf-token"]') || {}).content || '';
                         fetch('/api/price/preview', {
                             method: 'POST',
@@ -1815,13 +1927,37 @@ document.addEventListener('DOMContentLoaded', function(){
                         }).then(function(res){ return res.json(); }).then(function(json){
                             if(json && json.success && json.breakdown){
                                 var b = json.breakdown;
-                                try{ var kidsPriceInput = document.getElementById('kids_price_input'); if(kidsPriceInput) kidsPriceInput.value = Number(b.kb_final_price || b.final_price || 0).toFixed(2); }catch(e){}
-                                try{ var kidsFinalInput = document.getElementById('kids_final_price_input'); if(kidsFinalInput) kidsFinalInput.value = Number(b.kb_final_price || b.final_price || 0).toFixed(2); }catch(e){}
-                                try{ var kidsExtras = document.getElementById('kids_extras_input'); if(kidsExtras && (!kidsExtras.value || kidsExtras.value.trim()==='')){ var selparts = []; document.querySelectorAll('#kb-addons input[type="checkbox"]').forEach(function(cb){ if(cb.checked) selparts.push(cb.id || cb.value); }); if(selparts.length) kidsExtras.value = selparts.join(','); } }catch(e){}
+                                try{
+                                    var finalVal = Number(b.kb_final_price || b.final_price || 0).toFixed(2);
+                                    var kidsPriceInput = document.getElementById('kids_price_input'); if(kidsPriceInput) kidsPriceInput.value = finalVal;
+                                    var kidsFinalInput = document.getElementById('kids_final_price_input'); if(kidsFinalInput) kidsFinalInput.value = finalVal;
+                                    var kbPriceMirror = document.getElementById('kb_price_input'); if(kbPriceMirror) kbPriceMirror.value = finalVal;
+                                }catch(e){}
+                                try{
+                                    var kidsExtras = document.getElementById('kids_extras_input');
+                                    if(kidsExtras && (!kidsExtras.value || kidsExtras.value.trim()==='')){
+                                        var selparts = [];
+                                        document.querySelectorAll('#kb-addons input[type="checkbox"]').forEach(function(cb){ if(cb.checked) selparts.push(cb.id || cb.value); });
+                                        if(selparts.length) kidsExtras.value = selparts.join(',');
+                                    }
+                                    var kbExtrasMirror = document.getElementById('kb_extras_input');
+                                    if(kbExtrasMirror && kidsExtras && kidsExtras.value) kbExtrasMirror.value = kidsExtras.value;
+                                }catch(e){}
                             }
                         }).catch(function(err){ console.warn('Price preview failed before submit', err); }).finally(function(){
-                            // submit form after preview attempt (best-effort)
-                            try{ if(kidsFormEl) kidsFormEl.submit(); }catch(e){ console.warn('Failed to submit kidsBookingForm programmatically', e); }
+                            // Submit through requestSubmit so submit listeners still run.
+                            try {
+                                if (kidsFormEl && typeof kidsFormEl.requestSubmit === 'function') {
+                                    kidsFormEl.requestSubmit();
+                                } else if (kidsFormEl) {
+                                    var submitted = false;
+                                    try {
+                                        var submitEvt = new Event('submit', { bubbles: true, cancelable: true });
+                                        submitted = kidsFormEl.dispatchEvent(submitEvt);
+                                    } catch (evtErr) { submitted = false; }
+                                    if (submitted) kidsFormEl.submit();
+                                }
+                            } catch(e) { console.warn('Failed to submit kidsBookingForm programmatically', e); }
                         });
                         return false;
                     }catch(e){ console.warn('confirmBtn validation failed', e); }
