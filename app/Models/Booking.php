@@ -256,11 +256,7 @@ class Booking extends Model
         $hours = floor($this->service_duration_minutes / 60);
         $minutes = $this->service_duration_minutes % 60;
 
-        if ($hours > 0) {
-            return $hours . 'h ' . ($minutes > 0 ? $minutes . 'm' : '');
-        }
-
-        return $minutes . 'm';
+        return $hours . 'hrs:' . $minutes . 'mins';
     }
 
     /**

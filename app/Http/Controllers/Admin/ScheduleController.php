@@ -430,6 +430,162 @@ class ScheduleController extends Controller
         return response()->json(['success' => true, 'booking' => $booking]);
     }
 
+    // Reuse previous month's blocked dates/times for a target month
+    public function reusePreviousMonthBlockedDates(Request $request)
+    {
+        $validated = $request->validate([
+            'target_month' => ['required', 'regex:/^\d{4}-(0[1-9]|1[0-2])$/'],
+        ]);
+
+        $targetMonth = Carbon::createFromFormat('Y-m', $validated['target_month'], 'UTC')->startOfMonth();
+        $sourceMonthStart = $targetMonth->copy()->subMonth();
+        $sourceMonthEnd = $targetMonth->copy();
+
+        $sourceSlots = Schedule::where('type', 'blocked')
+            ->where('start', '>=', $sourceMonthStart)
+            ->where('start', '<', $sourceMonthEnd)
+            ->orderBy('start', 'asc')
+            ->get();
+
+        if ($sourceSlots->isEmpty()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'No blocked dates found in previous month to reuse.',
+                'copied' => 0,
+                'skipped' => 0,
+            ]);
+        }
+
+        $copied = 0;
+        $skipped = 0;
+        $skipReasons = [];
+
+        // Build a target date by matching weekday occurrence (e.g. 2nd Tuesday)
+        // from source month to target month.
+        $resolveTargetStartDate = function (Carbon $sourceDate, Carbon $targetMonthStart): Carbon {
+            $weekday = $sourceDate->dayOfWeek;
+            $occurrence = intdiv($sourceDate->day - 1, 7) + 1;
+
+            $firstTargetWeekday = $targetMonthStart->copy()->startOfMonth();
+            while ($firstTargetWeekday->dayOfWeek !== $weekday) {
+                $firstTargetWeekday->addDay();
+            }
+
+            $candidate = $firstTargetWeekday->copy()->addWeeks($occurrence - 1);
+            if ($candidate->month !== $targetMonthStart->month) {
+                // If target month has fewer occurrences (e.g., 5th weekday missing),
+                // fallback to the last same weekday in target month.
+                $lastTargetWeekday = $targetMonthStart->copy()->endOfMonth();
+                while ($lastTargetWeekday->dayOfWeek !== $weekday) {
+                    $lastTargetWeekday->subDay();
+                }
+                return $lastTargetWeekday->startOfDay();
+            }
+
+            return $candidate->startOfDay();
+        };
+
+        foreach ($sourceSlots as $slot) {
+            try {
+                $origStart = Carbon::parse($slot->start)->utc();
+                $origEnd = Carbon::parse($slot->end)->utc();
+
+                if ($origEnd->lte($origStart)) {
+                    $skipped++;
+                    $skipReasons[] = 'Skipped invalid duration block: ' . ($slot->title ?? 'Blocked');
+                    continue;
+                }
+
+                $targetDate = $resolveTargetStartDate($origStart, $targetMonth);
+
+                // Keep same day/time pattern:
+                // - same weekday occurrence for start date
+                // - same start time and end time clock values
+                // - same number of day boundaries crossed between start/end
+                $daySpan = $origStart->copy()->startOfDay()->diffInDays($origEnd->copy()->startOfDay());
+
+                $newStart = $targetDate->copy()->setTime(
+                    (int) $origStart->format('H'),
+                    (int) $origStart->format('i'),
+                    (int) $origStart->format('s')
+                );
+
+                $newEnd = $targetDate->copy()->addDays($daySpan)->setTime(
+                    (int) $origEnd->format('H'),
+                    (int) $origEnd->format('i'),
+                    (int) $origEnd->format('s')
+                );
+
+                if ($newEnd->lte($newStart)) {
+                    $newEnd->addDay();
+                }
+
+                // Keep copied entries constrained to target month by checking new start month.
+                if ($newStart->format('Y-m') !== $targetMonth->format('Y-m')) {
+                    $skipped++;
+                    $skipReasons[] = 'Skipped block outside target month: ' . ($slot->title ?? 'Blocked');
+                    continue;
+                }
+
+                $exists = Schedule::where('type', 'blocked')
+                    ->where('start', $newStart->toIso8601String())
+                    ->where('end', $newEnd->toIso8601String())
+                    ->exists();
+
+                if ($exists) {
+                    $skipped++;
+                    $skipReasons[] = 'Skipped duplicate block: ' . ($slot->title ?? 'Blocked');
+                    continue;
+                }
+
+                $isAllDay = $newStart->format('H:i:s') === '00:00:00' && $newEnd->format('H:i:s') === '00:00:00';
+                if ($isAllDay) {
+                    $conflicts = Booking::whereIn('status', ['pending', 'confirmed'])
+                        ->whereDate('appointment_date', '>=', $newStart->toDateString())
+                        ->whereDate('appointment_date', '<', $newEnd->toDateString())
+                        ->exists();
+                } else {
+                    $conflicts = Booking::whereIn('status', ['pending', 'confirmed'])
+                        ->whereRaw('CONCAT(appointment_date, " ", appointment_time) >= ?', [$newStart->format('Y-m-d H:i:s')])
+                        ->whereRaw('CONCAT(appointment_date, " ", appointment_time) < ?', [$newEnd->format('Y-m-d H:i:s')])
+                        ->exists();
+                }
+
+                if ($conflicts) {
+                    $skipped++;
+                    $skipReasons[] = 'Skipped due to booking conflict: ' . ($slot->title ?? 'Blocked');
+                    continue;
+                }
+
+                Schedule::create([
+                    'title' => $slot->title ?? 'Blocked',
+                    'staff_id' => $slot->staff_id,
+                    'start' => $newStart->toIso8601String(),
+                    'end' => $newEnd->toIso8601String(),
+                    'type' => 'blocked',
+                    'meta' => $slot->meta,
+                ]);
+
+                $copied++;
+            } catch (\Exception $e) {
+                $skipped++;
+                $skipReasons[] = 'Skipped due to error: ' . ($slot->title ?? 'Blocked');
+                Log::warning('Failed to copy blocked schedule during month reuse', [
+                    'slot_id' => $slot->id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Previous month block reuse completed using same weekday/time pattern.',
+            'copied' => $copied,
+            'skipped' => $skipped,
+            'details' => array_slice($skipReasons, 0, 10),
+        ]);
+    }
+
     // Public helper endpoint: return per-day blocked dates for a given month
     public function blockedDates(Request $request)
     {

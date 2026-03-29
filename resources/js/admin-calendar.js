@@ -11,6 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const eventsUrl = calendarEl.dataset.eventsUrl || '/schedules/events';
     const rescheduleUrl = calendarEl.dataset.rescheduleUrl || '/schedules/reschedule';
     const storeUrl = calendarEl.dataset.storeUrl || '/schedules';
+    const reusePreviousMonthUrl = calendarEl.dataset.reusePreviousMonthUrl || '/admin/schedules/reuse-previous-month';
     
     // Helper function to get CSRF token
     const getCsrfToken = () => {
@@ -180,6 +181,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (blockStart) blockStart.value = '';
                 if (blockEnd) blockEnd.value = '';
                 if (blockAllDay) blockAllDay.checked = true;
+                const reuseMonthInput = document.getElementById('reuseTargetMonth');
+                if (reuseMonthInput) {
+                    const now = new Date();
+                    reuseMonthInput.value = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+                }
                 if (blockPreview) blockPreview.style.display = 'none';
                 if (editingNotice) editingNotice.style.display = 'none';
                 if (submitBtn) submitBtn.innerHTML = '<i class="bi bi-slash-circle me-2"></i>Create Block';
@@ -520,6 +526,116 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Initialize block mode on page load
     updateBlockMode();
+
+    const normalizeTargetMonth = (rawValue) => {
+        const raw = (rawValue || '').toString().trim();
+        if (!raw) return '';
+
+        if (/^\d{4}-(0[1-9]|1[0-2])$/.test(raw)) return raw;
+
+        const monthMap = {
+            january: '01', jan: '01',
+            february: '02', feb: '02',
+            march: '03', mar: '03',
+            april: '04', apr: '04',
+            may: '05',
+            june: '06', jun: '06',
+            july: '07', jul: '07',
+            august: '08', aug: '08',
+            september: '09', sep: '09', sept: '09',
+            october: '10', oct: '10',
+            november: '11', nov: '11',
+            december: '12', dec: '12'
+        };
+
+        const mmYyyy = raw.match(/^(0?[1-9]|1[0-2])[\/\-](\d{4})$/);
+        if (mmYyyy) return `${mmYyyy[2]}-${String(mmYyyy[1]).padStart(2, '0')}`;
+
+        const yyyyMm = raw.match(/^(\d{4})[\/](0?[1-9]|1[0-2])$/);
+        if (yyyyMm) return `${yyyyMm[1]}-${String(yyyyMm[2]).padStart(2, '0')}`;
+
+        const monthYear = raw.match(/^([A-Za-z]+)\s+(\d{4})$/);
+        if (monthYear) {
+            const key = monthYear[1].toLowerCase();
+            const mm = monthMap[key];
+            if (mm) return `${monthYear[2]}-${mm}`;
+        }
+
+        const monthOnly = raw.match(/^([A-Za-z]+)$/);
+        if (monthOnly) {
+            const key = monthOnly[1].toLowerCase();
+            const mm = monthMap[key];
+            if (mm) {
+                const yyyy = String(new Date().getFullYear());
+                return `${yyyy}-${mm}`;
+            }
+        }
+
+        return '';
+    };
+
+    const reusePreviousMonthBtn = document.getElementById('reusePreviousMonthBlocks');
+    if (reusePreviousMonthBtn) {
+        reusePreviousMonthBtn.addEventListener('click', async () => {
+            const monthInput = document.getElementById('reuseTargetMonth');
+            const targetMonth = normalizeTargetMonth(monthInput?.value);
+
+            if (!targetMonth || !/^\d{4}-(0[1-9]|1[0-2])$/.test(targetMonth)) {
+                alert('⚠️ Please choose a valid target month before reusing blocks.');
+                return;
+            }
+
+            if (monthInput) monthInput.value = targetMonth;
+
+            const shouldContinue = confirm(`Reuse previous month's blocks into ${targetMonth} using the same weekday and time pattern?`);
+            if (!shouldContinue) return;
+
+            const originalText = reusePreviousMonthBtn.innerHTML;
+            reusePreviousMonthBtn.disabled = true;
+            reusePreviousMonthBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Reusing...';
+
+            try {
+                csrf = getCsrfToken();
+                if (!csrf) {
+                    const refreshed = await refreshCsrfToken();
+                    csrf = refreshed || getCsrfToken();
+                }
+
+                if (!csrf) {
+                    alert('❌ CSRF token not found. Please refresh the page and try again.');
+                    return;
+                }
+
+                const response = await fetch(reusePreviousMonthUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': csrf,
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({ target_month: targetMonth })
+                });
+
+                const data = await response.json();
+                if (!response.ok || !data.success) {
+                    alert('❌ Failed to reuse previous month blocks: ' + (data.message || `HTTP ${response.status}`));
+                    return;
+                }
+
+                calendar.refetchEvents();
+                const detailText = Array.isArray(data.details) && data.details.length
+                    ? `\n\nDetails:\n- ${data.details.join('\n- ')}`
+                    : '';
+                alert(`✅ Reuse completed by weekday/time pattern. Copied: ${data.copied || 0}, Skipped: ${data.skipped || 0}.${detailText}`);
+            } catch (error) {
+                console.error('Reuse previous month blocks failed:', error);
+                alert('❌ Failed to reuse previous month blocks. Please try again.');
+            } finally {
+                reusePreviousMonthBtn.disabled = false;
+                reusePreviousMonthBtn.innerHTML = originalText;
+            }
+        });
+    }
 
     const submitBlockBtn = document.getElementById('submitBlock');
     if (submitBlockBtn) {

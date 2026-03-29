@@ -623,11 +623,11 @@
         }
 
         /* Prevent pointer interactions (admins already have separate manage UI) */
-        .fc-event.blocked-range { 
-            pointer-events: auto; 
+        .fc-event.blocked-range {
+            pointer-events: auto;
             box-shadow: 0 2px 4px rgba(220, 53, 69, 0.3);
         }
-        
+
         /* Hover effect for blocked events */
         .fc-event.blocked-range:hover {
             background: linear-gradient(135deg, #c82333 0%, #a71e2a 100%) !important;
@@ -786,7 +786,7 @@
 
             <!-- Quick Actions -->
             <div class="row mb-4 px-4 px-md-4 px-3">
-                <div class="col-12">
+                <div class="col-12 col-md-4 mb-3 mb-md-0">
                     <a href="{{ route('admin.services.index') }}" class="d-flex align-items-center gap-3 text-decoration-none p-4" style="background:linear-gradient(135deg,#030f68,#1a2fa8);border-radius:16px;box-shadow:0 4px 20px rgba(3,15,104,.2);transition:transform .15s" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform=''">
                         <div style="width:52px;height:52px;background:rgba(255,255,255,.15);border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
                             <i class="bi bi-grid-3x3-gap-fill" style="font-size:1.6rem;color:#fff"></i>
@@ -796,6 +796,30 @@
                             <div style="font-size:.85rem;color:rgba(255,255,255,.75)">Edit prices, add or remove services, manage discounts</div>
                         </div>
                         <i class="bi bi-arrow-right-circle-fill ms-auto" style="font-size:1.6rem;color:rgba(255,102,0,.9)"></i>
+                    </a>
+                </div>
+                <div class="col-12 col-md-4 mb-3 mb-md-0">
+                    <a href="{{ route('admin.completed-services') }}" class="d-flex align-items-center gap-3 text-decoration-none p-4" style="background:linear-gradient(135deg,#0f5132,#1f7a4d);border-radius:16px;box-shadow:0 4px 20px rgba(15,81,50,.25);transition:transform .15s" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform=''">
+                        <div style="width:52px;height:52px;background:rgba(255,255,255,.15);border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                            <i class="bi bi-check2-square" style="font-size:1.6rem;color:#fff"></i>
+                        </div>
+                        <div>
+                            <div style="font-weight:800;font-size:1.05rem;color:#fff">Completed Services</div>
+                            <div style="font-size:.85rem;color:rgba(255,255,255,.8)">View all completed appointments on a dedicated page</div>
+                        </div>
+                        <i class="bi bi-arrow-right-circle-fill ms-auto" style="font-size:1.6rem;color:rgba(255,255,255,.9)"></i>
+                    </a>
+                </div>
+                <div class="col-12 col-md-4">
+                    <a href="{{ route('admin.revenue-history') }}" class="d-flex align-items-center gap-3 text-decoration-none p-4" style="background:linear-gradient(135deg,#0f3460,#16518f);border-radius:16px;box-shadow:0 4px 20px rgba(15,52,96,.25);transition:transform .15s" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform=''">
+                        <div style="width:52px;height:52px;background:rgba(255,255,255,.15);border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                            <i class="bi bi-graph-up-arrow" style="font-size:1.6rem;color:#fff"></i>
+                        </div>
+                        <div>
+                            <div style="font-weight:800;font-size:1.05rem;color:#fff">Revenue Growth</div>
+                            <div style="font-size:.85rem;color:rgba(255,255,255,.8)">Track past months and growth trends</div>
+                        </div>
+                        <i class="bi bi-arrow-right-circle-fill ms-auto" style="font-size:1.6rem;color:rgba(255,255,255,.9)"></i>
                     </a>
                 </div>
             </div>
@@ -908,6 +932,25 @@
                                         </div>
                                     </div>
 
+                                    <div class="mt-3 p-3 rounded" style="background:#f8f9fa; border:1px dashed #adb5bd;">
+                                        <div class="d-flex align-items-center mb-2">
+                                            <i class="bi bi-arrow-repeat me-2 text-primary"></i>
+                                            <strong class="small text-dark">Optional: Reuse Previous Month Blocks</strong>
+                                        </div>
+                                        <div class="row g-2 align-items-end">
+                                            <div class="col-12 col-md-7">
+                                                <label for="reuseTargetMonth" class="form-label mb-1 small text-muted">Target Month</label>
+                                                <input id="reuseTargetMonth" type="month" class="form-control" value="{{ now()->format('Y-m') }}">
+                                            </div>
+                                            <div class="col-12 col-md-5">
+                                                <button type="button" id="reusePreviousMonthBlocks" class="btn btn-outline-primary w-100">
+                                                    <i class="bi bi-calendar2-week me-1"></i>Reuse Previous Month
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <small class="text-muted d-block mt-2">Copies last month's blocking pattern by same weekday and time into the selected month, skipping duplicates/conflicts.</small>
+                                    </div>
+
                                     <div id="blockPreview" class="mt-4 p-4 rounded" style="background: #f8f9fa; border: 2px solid #ff6600; border-left: 6px solid #ff6600; display: none;">
                                         <div class="d-flex align-items-center mb-3">
                                             <i class="bi bi-eye-fill me-2" style="color: #ff6600; font-size: 1.3rem;"></i>
@@ -1012,7 +1055,7 @@
                             </div>
                         </div>
                         <div class="appointment-body">
-                            <div id="adminCalendar" data-events-url="{{ route('admin.schedules.events') }}" data-reschedule-url="{{ route('admin.schedules.reschedule') }}" data-store-url="{{ route('admin.schedules.store') }}" style="max-width: 100%; min-height: 650px;" class="calendar-responsive"></div>
+                            <div id="adminCalendar" data-events-url="{{ route('admin.schedules.events') }}" data-reschedule-url="{{ route('admin.schedules.reschedule') }}" data-store-url="{{ route('admin.schedules.store') }}" data-reuse-previous-month-url="{{ route('admin.schedules.reuse-previous-month') }}" style="max-width: 100%; min-height: 650px;" class="calendar-responsive"></div>
                         </div>
                     </div>
                 </div>
@@ -1260,62 +1303,62 @@
                                         </span>
                                     </div>
                                 </div>
-                                
+
                                 <div class="card-row">
                                     <span class="card-label">Customer:</span>
                                     <span class="card-value"><strong>{{ $booking->name }}</strong></span>
                                 </div>
-                                
+
                                 @if($booking->email)
                                 <div class="card-row">
                                     <span class="card-label">Email:</span>
                                     <span class="card-value">{{ $booking->email }}</span>
                                 </div>
                                 @endif
-                                
+
                                 <div class="card-row">
                                     <span class="card-label">Phone:</span>
                                     <span class="card-value">{{ $booking->phone }}</span>
                                 </div>
-                                
+
                                 @if($booking->address)
                                 <div class="card-row">
                                     <span class="card-label">Address:</span>
                                     <span class="card-value">{{ $booking->address }}</span>
                                 </div>
                                 @endif
-                                
+
                                 <div class="card-row">
                                     <span class="card-label">Service:</span>
                                     <span class="card-value">{{ $booking->service ?: 'General Service' }}</span>
                                 </div>
-                                
+
                                 @if($booking->length)
                                 <div class="card-row">
                                     <span class="card-label">Length:</span>
                                     <span class="card-value">{{ $booking->length }}</span>
                                 </div>
                                 @endif
-                                
+
                                 @if(isset($booking->final_price))
                                 <div class="card-row">
                                     <span class="card-label">Price:</span>
                                     <span class="card-value"><strong>${{ number_format($booking->final_price, 2) }}</strong></span>
                                 </div>
                                 @endif
-                                
+
                                 @if($booking->appointment_date)
                                 <div class="card-row">
                                     <span class="card-label">Date:</span>
                                     <span class="card-value">{{ $booking->appointment_date->format('M d, Y') }} ({{ $booking->appointment_date->format('l') }})</span>
                                 </div>
                                 @endif
-                                
+
                                 <div class="card-row">
                                     <span class="card-label">Time:</span>
                                     <span class="card-value">{{ $booking->appointment_time }}</span>
                                 </div>
-                                
+
                                 @if($booking->sample_picture)
                                 <div class="card-row">
                                     <span class="card-label">Sample:</span>
@@ -1329,7 +1372,7 @@
                                     </span>
                                 </div>
                                 @endif
-                                
+
                                 <div class="card-actions">
                                     <button class="btn btn-outline-info btn-sm" onclick="viewBookingDetails({{ $booking->id }})">
                                         <i class="bi bi-eye"></i> View
@@ -1532,8 +1575,15 @@
                             </div>
 
                             <div class="mb-3">
-                                <label for="serviceDuration" class="form-label">Service Duration (minutes)</label>
-                                <input type="number" class="form-control" id="serviceDuration" placeholder="e.g., 180" min="1">
+                                <label class="form-label">Service Duration (hrs/mins)</label>
+                                <div class="row g-2">
+                                    <div class="col-6">
+                                        <input type="number" class="form-control" id="serviceDurationHours" placeholder="Hours" min="0">
+                                    </div>
+                                    <div class="col-6">
+                                        <input type="number" class="form-control" id="serviceDurationMinutes" placeholder="Minutes" min="0" max="59">
+                                    </div>
+                                </div>
                             </div>
 
                             <div class="mb-3">
@@ -1657,7 +1707,7 @@
                 <div class="modal-body">
                     <form id="completeServiceForm">
                         <input type="hidden" id="completeBookingIdInput" name="booking_id">
-                        
+
                         <!-- Booking Info -->
                         <div class="card mb-3">
                             <div class="card-body">
@@ -1686,8 +1736,15 @@
                         </div>
 
                         <div class="mb-3">
-                            <label for="completeServiceDuration" class="form-label">Service Duration (minutes) *</label>
-                            <input type="number" class="form-control" id="completeServiceDuration" name="service_duration_minutes" min="1" required>
+                            <label class="form-label">Service Duration (hrs/mins) *</label>
+                            <div class="row g-2">
+                                <div class="col-6">
+                                    <input type="number" class="form-control" id="completeServiceDurationHours" min="0" placeholder="Hours" required>
+                                </div>
+                                <div class="col-6">
+                                    <input type="number" class="form-control" id="completeServiceDurationMinutes" min="0" max="59" placeholder="Minutes" required>
+                                </div>
+                            </div>
                         </div>
 
                         <div class="mb-3">
@@ -1749,6 +1806,17 @@
     <script>
         let currentAppointmentId = null;
 
+        function formatDurationHoursMinutes(totalMinutes) {
+            const minutesNum = parseInt(totalMinutes, 10);
+            if (!Number.isFinite(minutesNum) || minutesNum <= 0) {
+                return 'N/A';
+            }
+
+            const hours = Math.floor(minutesNum / 60);
+            const minutes = minutesNum % 60;
+            return `${hours}hrs:${minutes}mins`;
+        }
+
         // Load dashboard data on page load
         document.addEventListener('DOMContentLoaded', function() {
             // Dashboard data is already loaded server-side, no need to fetch
@@ -1769,11 +1837,11 @@
             // Show loading state for both desktop and mobile views
             const tableBody = document.getElementById('appointmentsTable');
             const mobileCards = document.getElementById('appointmentsMobileCards');
-            
+
             if (tableBody) {
                 tableBody.innerHTML = '<tr><td colspan="10" class="text-center"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div></td></tr>';
             }
-            
+
             if (mobileCards) {
                 mobileCards.innerHTML = '<div class="text-center py-5"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div></div>';
             }
@@ -1861,11 +1929,11 @@
             // Show loading state for both desktop and mobile views
             const tableBody = document.getElementById('appointmentsTable');
             const mobileCards = document.getElementById('appointmentsMobileCards');
-            
+
             if (tableBody) {
                 tableBody.innerHTML = '<tr><td colspan="10" class="text-center"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div></td></tr>';
             }
-            
+
             if (mobileCards) {
                 mobileCards.innerHTML = '<div class="text-center py-5"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div></div>';
             }
@@ -1940,11 +2008,11 @@
             // Show loading state for both desktop and mobile views
             const tableBody = document.getElementById('appointmentsTable');
             const mobileCards = document.getElementById('appointmentsMobileCards');
-            
+
             if (tableBody) {
                 tableBody.innerHTML = '<tr><td colspan="10" class="text-center"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div></td></tr>';
             }
-            
+
             if (mobileCards) {
                 mobileCards.innerHTML = '<div class="text-center py-5"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div></div>';
             }
@@ -2261,7 +2329,7 @@
                                     </div>
                                     <div class="bd-row">
                                         <div class="bd-label">Duration:</div>
-                                        <div class="bd-value">${booking.service_duration_minutes ? (booking.service_duration_minutes + ' minutes') : 'N/A'}</div>
+                                        <div class="bd-value">${formatDurationHoursMinutes(booking.service_duration_minutes)}</div>
                                     </div>
                                     ${booking.completion_notes ? `
                                         <div class="bd-row">
@@ -2462,7 +2530,8 @@
             const newStatus = document.getElementById('newStatus').value;
             const notes = document.getElementById('statusNotes').value;
             const completedBy = document.getElementById('completedBy').value;
-            const serviceDuration = document.getElementById('serviceDuration').value;
+            const serviceDurationHours = parseInt((document.getElementById('serviceDurationHours')?.value || '0'), 10);
+            const serviceDurationMinutes = parseInt((document.getElementById('serviceDurationMinutes')?.value || '0'), 10);
             const finalPrice = document.getElementById('finalPrice').value;
             const paymentStatus = document.getElementById('paymentStatus').value;
             const cancelledBy = document.getElementById('cancelledBy') ? document.getElementById('cancelledBy').value : null;
@@ -2470,6 +2539,14 @@
             if (!currentAppointmentId) {
                 alert('No appointment selected');
                 return;
+            }
+
+            if (newStatus === 'completed') {
+                if ((Number.isFinite(serviceDurationHours) && serviceDurationHours < 0) ||
+                    (Number.isFinite(serviceDurationMinutes) && (serviceDurationMinutes < 0 || serviceDurationMinutes > 59))) {
+                    alert('Please enter a valid service duration: hours >= 0 and minutes between 0 and 59.');
+                    return;
+                }
             }
 
             // Show loading state
@@ -2487,8 +2564,10 @@
 
             // Add completion data if status is 'completed'
             if (newStatus === 'completed') {
+                const totalServiceDuration = (Number.isFinite(serviceDurationHours) ? serviceDurationHours : 0) * 60
+                    + (Number.isFinite(serviceDurationMinutes) ? serviceDurationMinutes : 0);
                 if (completedBy) requestData.completed_by = completedBy;
-                if (serviceDuration) requestData.service_duration_minutes = parseInt(serviceDuration);
+                if (totalServiceDuration > 0) requestData.service_duration_minutes = totalServiceDuration;
                 if (finalPrice) requestData.final_price = parseFloat(finalPrice);
                 if (paymentStatus) requestData.payment_status = paymentStatus;
             }
@@ -2562,7 +2641,8 @@
                 completionFields.style.display = 'block';
                 // Make completion fields required when status is completed
                 document.getElementById('completedBy').required = true;
-                document.getElementById('serviceDuration').required = true;
+                document.getElementById('serviceDurationHours').required = true;
+                document.getElementById('serviceDurationMinutes').required = true;
                 document.getElementById('finalPrice').required = true;
                 // hide cancelled fields
                 if (cancelFields) cancelFields.style.display = 'none';
@@ -2571,7 +2651,8 @@
                 completionFields.style.display = 'none';
                 // Remove required attribute when not completing
                 document.getElementById('completedBy').required = false;
-                document.getElementById('serviceDuration').required = false;
+                document.getElementById('serviceDurationHours').required = false;
+                document.getElementById('serviceDurationMinutes').required = false;
                 document.getElementById('finalPrice').required = false;
             }
 
@@ -2596,7 +2677,7 @@
         // Make sure it's globally accessible
         window.updateStatusQuick = function(bookingId, newStatus) {
             console.log('updateStatusQuick called with:', bookingId, newStatus);
-            
+
             // Validate inputs
             if (!bookingId || !newStatus) {
                 console.error('Invalid parameters:', { bookingId, newStatus });
@@ -2635,7 +2716,7 @@
             if (!updateStatusUrl || updateStatusUrl.includes(bladeEchoToken) || updateStatusUrl.includes('route(' + "'")) {
                 updateStatusUrl = '/admin/bookings/update-status';
             }
-            
+
             let fullUpdateUrl = updateStatusUrl;
             if (updateStatusUrl.startsWith('/')) {
                 // Relative URL - make it absolute using current origin
@@ -2666,7 +2747,7 @@
                     originalText = button.innerHTML;
                     button.disabled = true;
                     button.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Updating...';
-                    
+
                     // Re-enable button after 10 seconds as fallback
                     setTimeout(() => {
                         if (button && button.disabled) {
@@ -2723,7 +2804,7 @@
                         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                     `;
                     document.body.appendChild(successMsg);
-                    
+
                     // Reload after short delay
                     setTimeout(() => {
                         window.location.reload();
@@ -2749,7 +2830,7 @@
                 });
 
                 let userMessage = 'Error updating booking status. ';
-                
+
                 if (error.message === 'Failed to fetch') {
                     userMessage += 'Unable to reach the server.\n\n';
                     userMessage += 'Please check:\n';
@@ -2768,9 +2849,9 @@
                 } else {
                     userMessage += (error.message || 'Please try again.');
                 }
-                
+
                 alert('❌ ' + userMessage);
-                
+
                 // Re-enable button on error
                 if (button) {
                     button.disabled = false;
@@ -2778,7 +2859,7 @@
                 }
             });
         };
-        
+
         // Complete Services Modal functionality
         const openCompleteServicesModalBtn = document.getElementById('openCompleteServicesModal');
         if (openCompleteServicesModalBtn) {
@@ -2852,7 +2933,7 @@
         function displayCompleteServicesResults(bookings) {
             const resultsList = document.getElementById('completeServicesResultsList');
             const resultsCount = document.getElementById('resultsCount');
-            
+
             resultsCount.textContent = bookings.length;
             document.getElementById('completeServicesResults').style.display = 'block';
             document.getElementById('completeServicesEmpty').style.display = 'none';
@@ -2904,7 +2985,8 @@
 
             // Clear form
             document.getElementById('completeStaffMember').value = '';
-            document.getElementById('completeServiceDuration').value = '';
+            document.getElementById('completeServiceDurationHours').value = '';
+            document.getElementById('completeServiceDurationMinutes').value = '';
             document.getElementById('completeFinalPrice').value = '';
             document.getElementById('completePaymentStatus').value = 'pending';
             document.getElementById('completeNotes').value = '';
@@ -2927,11 +3009,25 @@
                     return;
                 }
 
+                const durationHours = parseInt((document.getElementById('completeServiceDurationHours').value || '0'), 10);
+                const durationMinutes = parseInt((document.getElementById('completeServiceDurationMinutes').value || '0'), 10);
+
+                if (!Number.isFinite(durationHours) || !Number.isFinite(durationMinutes) || durationHours < 0 || durationMinutes < 0 || durationMinutes > 59) {
+                    alert('Please enter a valid service duration: hours >= 0 and minutes between 0 and 59.');
+                    return;
+                }
+
+                const totalServiceDuration = (durationHours * 60) + durationMinutes;
+                if (totalServiceDuration <= 0) {
+                    alert('Service duration must be greater than 0 minutes.');
+                    return;
+                }
+
                 const formData = {
                     booking_id: document.getElementById('completeBookingIdInput').value,
                     status: 'completed',
                     completed_by: document.getElementById('completeStaffMember').value,
-                    service_duration_minutes: parseInt(document.getElementById('completeServiceDuration').value),
+                    service_duration_minutes: totalServiceDuration,
                     final_price: parseFloat(document.getElementById('completeFinalPrice').value),
                     payment_status: document.getElementById('completePaymentStatus').value,
                     completion_notes: document.getElementById('completeNotes').value
@@ -2973,20 +3069,127 @@
         // FullCalendar is bundled via Vite (resources/js/admin-calendar.js). See Vite build for the asset.
     </script>
     <script>
-      // Fallback: ensure Manage Blocks "Search" button always works even if the Vite bundle is stale.
+            // Fallback handlers for block-management actions when the Vite bundle is stale.
       document.addEventListener('click', function(e){
         try{
           const btn = e.target && (e.target.closest ? e.target.closest('#manageBlocksApplyBtn') : null);
-          if (!btn) return;
-          e.preventDefault();
-          if (typeof window.__applyManageBlocksFilter === 'function') {
-            window.__applyManageBlocksFilter();
+                    if (btn) {
+                        e.preventDefault();
+                        if (typeof window.__applyManageBlocksFilter === 'function') {
+                            window.__applyManageBlocksFilter();
+                            return;
+                        }
+                        // fallback: trigger input event on search field (if live filter binding exists)
+                        const s = document.getElementById('manageBlocksSearch');
+                        if (s) {
+                            try { s.dispatchEvent(new Event('input', { bubbles: true })); } catch(err) {}
+                        }
             return;
           }
-          // fallback: trigger input event on search field (if live filter binding exists)
-          const s = document.getElementById('manageBlocksSearch');
-          if (s) {
-            try { s.dispatchEvent(new Event('input', { bubbles: true })); } catch(err) {}
+
+                    const normalizeTargetMonth = function(rawValue){
+                        const raw = (rawValue || '').toString().trim();
+                        if (!raw) return '';
+
+                        if (/^\d{4}-(0[1-9]|1[0-2])$/.test(raw)) return raw;
+
+                        const monthMap = {
+                            january: '01', jan: '01',
+                            february: '02', feb: '02',
+                            march: '03', mar: '03',
+                            april: '04', apr: '04',
+                            may: '05',
+                            june: '06', jun: '06',
+                            july: '07', jul: '07',
+                            august: '08', aug: '08',
+                            september: '09', sep: '09', sept: '09',
+                            october: '10', oct: '10',
+                            november: '11', nov: '11',
+                            december: '12', dec: '12'
+                        };
+
+                        const mmYyyy = raw.match(/^(0?[1-9]|1[0-2])[\/\-](\d{4})$/);
+                        if (mmYyyy) return `${mmYyyy[2]}-${String(mmYyyy[1]).padStart(2, '0')}`;
+
+                        const yyyyMm = raw.match(/^(\d{4})[\/](0?[1-9]|1[0-2])$/);
+                        if (yyyyMm) return `${yyyyMm[1]}-${String(yyyyMm[2]).padStart(2, '0')}`;
+
+                        const monthYear = raw.match(/^([A-Za-z]+)\s+(\d{4})$/);
+                        if (monthYear) {
+                            const key = monthYear[1].toLowerCase();
+                            const mm = monthMap[key];
+                            if (mm) return `${monthYear[2]}-${mm}`;
+                        }
+
+                        const monthOnly = raw.match(/^([A-Za-z]+)$/);
+                        if (monthOnly) {
+                            const key = monthOnly[1].toLowerCase();
+                            const mm = monthMap[key];
+                            if (mm) {
+                                const yyyy = String(new Date().getFullYear());
+                                return `${yyyy}-${mm}`;
+                            }
+                        }
+
+                        return '';
+                    };
+
+                    const reuseBtn = e.target && (e.target.closest ? e.target.closest('#reusePreviousMonthBlocks') : null);
+                    if (reuseBtn) {
+                        e.preventDefault();
+
+                        const monthInput = document.getElementById('reuseTargetMonth');
+                        const calendarEl = document.getElementById('adminCalendar');
+                        const targetMonth = normalizeTargetMonth(monthInput && monthInput.value ? monthInput.value : '');
+                        const reuseUrl = calendarEl ? calendarEl.getAttribute('data-reuse-previous-month-url') : '/admin/schedules/reuse-previous-month';
+                        const csrfMeta = document.querySelector('meta[name="csrf-token"]');
+                        const csrf = csrfMeta ? csrfMeta.getAttribute('content') : '';
+
+                        if (!targetMonth || !/^\d{4}-(0[1-9]|1[0-2])$/.test(targetMonth)) {
+                            alert('Please choose a valid target month first.');
+                            return;
+                        }
+
+                        if (monthInput) monthInput.value = targetMonth;
+
+                        if (!confirm('Reuse previous month blocks into ' + targetMonth + ' using the same weekday and time pattern?')) {
+                            return;
+                        }
+
+                        const originalText = reuseBtn.innerHTML;
+                        reuseBtn.disabled = true;
+                        reuseBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Reusing...';
+
+                        fetch(reuseUrl, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': csrf,
+                                'Accept': 'application/json'
+                            },
+                            body: JSON.stringify({ target_month: targetMonth })
+                        })
+                        .then(function(response){
+                            return response.json().then(function(data){ return { response: response, data: data }; });
+                        })
+                        .then(function(result){
+                            if (!result.response.ok || !result.data.success) {
+                                throw new Error((result.data && result.data.message) ? result.data.message : ('HTTP ' + result.response.status));
+                            }
+
+                            try { if (window.adminCalendar && typeof window.adminCalendar.refetchEvents === 'function') window.adminCalendar.refetchEvents(); } catch(err) {}
+
+                            const copied = Number(result.data.copied || 0);
+                            const skipped = Number(result.data.skipped || 0);
+                            alert('Reuse completed by weekday/time pattern. Copied: ' + copied + ', Skipped: ' + skipped + '.');
+                        })
+                        .catch(function(err){
+                            alert('Failed to reuse previous month blocks: ' + (err && err.message ? err.message : 'Unknown error'));
+                        })
+                        .finally(function(){
+                            reuseBtn.disabled = false;
+                            reuseBtn.innerHTML = originalText;
+                        });
           }
         }catch(err){}
       }, true);
