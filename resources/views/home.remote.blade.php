@@ -10570,63 +10570,81 @@ document.addEventListener('DOMContentLoaded', function(){
 </script>
 
 <script>
-// Service Filter Functionality
+// Services filter + mobile "view more" toggle
 function filterServices(category) {
     const serviceItems = document.querySelectorAll('.service-item');
     const filterChips = document.querySelectorAll('.filter-chip');
+    const isMobile = window.matchMedia('(max-width: 768px)').matches;
 
-    // Update active chip
     filterChips.forEach(chip => {
         chip.classList.toggle('active', chip.dataset.filter === category);
     });
 
-    // Filter service cards
     serviceItems.forEach(item => {
-        if (category === 'all') {
-            item.classList.remove('hidden');
-            item.style.display = ''; // restore mobile-hidden behaviour
-        } else {
-            const matches = item.dataset.category === category;
-            item.classList.toggle('hidden', !matches);
-            // Force-show matching items even if they carry mobile-hidden
-            item.style.display = matches ? 'block' : '';
-                  return false;
-                }
-            });
+        const matches = category === 'all' || item.dataset.category === category;
+        item.classList.toggle('hidden', !matches);
+
+        // On mobile, filtered categories should reveal matching hidden cards.
+        if (isMobile && matches && item.classList.contains('mobile-hidden') && category !== 'all') {
+            item.classList.add('show');
+        }
+
+        if (!matches) {
+            item.classList.remove('show');
         }
     });
-})();
-</script>
 
-<script>
-// Service Filter Functionality
-function filterServices(category) {
-    const serviceItems = document.querySelectorAll('.service-item');
-    const filterChips = document.querySelectorAll('.filter-chip');
+    const viewMoreContainer = document.getElementById('viewMoreServicesContainer');
+    if (viewMoreContainer && isMobile) {
+        viewMoreContainer.style.display = (category === 'all') ? '' : 'none';
+    }
 
-    // Update active chip
-    filterChips.forEach(chip => {
-        chip.classList.toggle('active', chip.dataset.filter === category);
-    });
+    if (category === 'all') {
+        updateViewMoreServicesButtonState();
+    }
+}
 
-    // Filter service cards
-    serviceItems.forEach(item => {
-        if (category === 'all') {
-            item.classList.remove('hidden');
-            item.style.display = ''; // restore mobile-hidden behaviour
-        } else {
-            const matches = item.dataset.category === category;
-            item.classList.toggle('hidden', !matches);
-            // Force-show matching items even if they carry mobile-hidden
-            item.style.display = matches ? 'block' : '';
-st.remove('bi-chevron-down');
-        btnIcon.classList.add('bi-chevron-up');
-    } else {
+function updateViewMoreServicesButtonState() {
+    const btnText = document.getElementById('viewMoreServicesText');
+    const btnIcon = document.getElementById('viewMoreServicesIcon');
+    const mobileHiddenItems = document.querySelectorAll('.service-item.mobile-hidden');
+    const hasCollapsedItems = Array.from(mobileHiddenItems).some(item => !item.classList.contains('show'));
+
+    if (!btnText || !btnIcon) return;
+
+    if (hasCollapsedItems) {
         btnText.textContent = 'View More Services';
         btnIcon.classList.remove('bi-chevron-up');
         btnIcon.classList.add('bi-chevron-down');
+    } else {
+        btnText.textContent = 'View Less Services';
+        btnIcon.classList.remove('bi-chevron-down');
+        btnIcon.classList.add('bi-chevron-up');
     }
 }
+
+function toggleMobileServices() {
+    const mobileHiddenItems = document.querySelectorAll('.service-item.mobile-hidden');
+    const shouldExpand = Array.from(mobileHiddenItems).some(item => !item.classList.contains('show'));
+
+    mobileHiddenItems.forEach(item => {
+        item.classList.toggle('show', shouldExpand);
+    });
+
+    updateViewMoreServicesButtonState();
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    const isMobile = window.matchMedia('(max-width: 768px)').matches;
+    const viewMoreContainer = document.getElementById('viewMoreServicesContainer');
+    const mobileHiddenItems = document.querySelectorAll('.service-item.mobile-hidden');
+
+    if (viewMoreContainer) {
+        viewMoreContainer.style.display = (isMobile && mobileHiddenItems.length > 0) ? '' : 'none';
+    }
+
+    updateViewMoreServicesButtonState();
+});
 </script>
 
 </body>
