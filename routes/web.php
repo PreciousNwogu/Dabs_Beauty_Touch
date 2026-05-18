@@ -1746,12 +1746,20 @@ Route::post('/bookings', function(Request $request) {
             Log::error('Failed to send booking confirmation email', ['booking_id' => $booking->id, 'error' => $e->getMessage()]);
         }
 
-        // Attempt to notify admin about new booking
+        // Send ONE admin notification about new booking (guard against duplicates)
         try {
-            $adminEmail = env('BOOKING_NOTIFICATION_EMAIL') ?: env('ADMIN_EMAIL') ?: config('mail.from.address');
-            \Illuminate\Support\Facades\Notification::route('mail', $adminEmail)
-                ->notify(new \App\Notifications\AdminBookingNotification($booking));
-            Log::info('Admin booking notification queued/sent', ['booking_id' => $booking->id, 'admin_email' => $adminEmail]);
+            // Only send admin notification if this is a fresh booking (not sent yet)
+            if ($booking->status === 'pending' && !$booking->admin_notified) {
+                $adminEmail = env('BOOKING_NOTIFICATION_EMAIL') ?: env('ADMIN_EMAIL') ?: config('mail.from.address');
+                \Illuminate\Support\Facades\Notification::route('mail', $adminEmail)
+                    ->notify(new \App\Notifications\AdminBookingNotification($booking));
+                
+                // Mark as notified to prevent duplicate sends
+                $booking->admin_notified = true;
+                $booking->save();
+                
+                Log::info('Admin booking notification queued/sent', ['booking_id' => $booking->id, 'admin_email' => $adminEmail]);
+            }
         } catch (\Exception $e) {
             Log::error('Failed to send admin booking notification', ['booking_id' => $booking->id, 'error' => $e->getMessage()]);
         }
@@ -2369,6 +2377,7 @@ Route::get('/_debug/mail', function() {
 });
 
 // Temporary debug route: force-send notifications for a booking id (admin + customer)
+// NOTE: Admin notification disabled here to consolidate notifications to one endpoint (bookings.store)
 Route::match(['get','post'], '/_debug/send-booking-notifs/{id}', function($id) {
     $booking = \App\Models\Booking::find($id);
     if (! $booking) {
@@ -2384,12 +2393,12 @@ Route::match(['get','post'], '/_debug/send-booking-notifs/{id}', function($id) {
             Log::info('[_debug] sent booking confirmation', ['booking_id' => $booking->id, 'email' => $booking->email]);
         }
 
-        $adminEmail = env('BOOKING_NOTIFICATION_EMAIL') ?: env('ADMIN_EMAIL') ?: config('mail.from.address');
-        \Illuminate\Support\Facades\Notification::route('mail', $adminEmail)
-            ->notify(new \App\Notifications\AdminBookingNotification($booking));
-        Log::info('[_debug] sent admin booking notification', ['booking_id' => $booking->id, 'admin_email' => $adminEmail]);
+        // Admin notification disabled - only send from bookings.store to prevent duplicates
+        // $adminEmail = env('BOOKING_NOTIFICATION_EMAIL') ?: env('ADMIN_EMAIL') ?: config('mail.from.address');
+        // \Illuminate\Support\Facades\Notification::route('mail', $adminEmail)
+        //     ->notify(new \App\Notifications\AdminBookingNotification($booking));
 
-        return response()->json(['success' => true, 'message' => 'Notifications sent (or attempted)']);
+        return response()->json(['success' => true, 'message' => 'Customer notification sent']);
     } catch (\Exception $e) {
         Log::error('[_debug] notification sending failed', ['booking_id' => $booking->id, 'error' => $e->getMessage()]);
         return response()->json(['success' => false, 'message' => 'Notification sending failed', 'error' => $e->getMessage()], 500);

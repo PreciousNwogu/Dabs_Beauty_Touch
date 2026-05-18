@@ -5,6 +5,7 @@ namespace App\Notifications;
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
+use Illuminate\Support\Facades\Log;
 use App\Models\Booking;
 
 class BookingCancelledNotification extends Notification
@@ -22,7 +23,23 @@ class BookingCancelledNotification extends Notification
 
     public function via(object $notifiable): array
     {
-        return ['mail'];
+        // Only send cancellation emails to the booking owner (customer).
+        try {
+            $recipientEmail = null;
+            if (is_object($notifiable) && method_exists($notifiable, 'routeNotificationFor')) {
+                $recipientEmail = $notifiable->routeNotificationFor('mail');
+            } elseif (is_object($notifiable) && property_exists($notifiable, 'email')) {
+                $recipientEmail = $notifiable->email;
+            }
+            if ($recipientEmail && !empty($this->booking->email) && strtolower(trim($recipientEmail)) === strtolower(trim($this->booking->email))) {
+                return ['mail'];
+            }
+            Log::info('BookingCancelledNotification: skipping non-owner recipient', ['booking_id' => $this->booking->id ?? null, 'recipient' => $recipientEmail]);
+        } catch (\Throwable $e) {
+            Log::warning('BookingCancelledNotification: failed to evaluate recipient in via()', ['error' => $e->getMessage()]);
+        }
+
+        return [];
     }
 
     public function toMail(object $notifiable): MailMessage

@@ -629,6 +629,11 @@
                             I agree to the <a href="{{ route('home') }}#terms" target="_blank" rel="noopener" style="font-weight:600; text-decoration:none;">Terms &amp; Conditions</a>.
                         </label>
                     </div>
+                    <div class="mb-3">
+                        <div class="alert alert-warning py-2 mb-0" style="font-size:0.95rem;">
+                            <strong>Note:</strong> We do not accept style changes on the day of the appointment. Please review your selection before confirming.
+                        </div>
+                    </div>
                     <div class="text-center">
                         <button type="submit" class="btn btn-primary btn-lg">
                             <i class="bi bi-calendar-check me-2"></i>

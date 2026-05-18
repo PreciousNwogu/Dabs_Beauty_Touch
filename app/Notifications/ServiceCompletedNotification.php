@@ -9,6 +9,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Carbon\Carbon;
 use Illuminate\Support\HtmlString;
+use Illuminate\Support\Facades\Log;
 
 class ServiceCompletedNotification extends Notification
 {
@@ -31,7 +32,23 @@ class ServiceCompletedNotification extends Notification
      */
     public function via(object $notifiable): array
     {
-        return ['mail'];
+        // Only send completion emails to the booking owner (customer).
+        try {
+            $recipientEmail = null;
+            if (is_object($notifiable) && method_exists($notifiable, 'routeNotificationFor')) {
+                $recipientEmail = $notifiable->routeNotificationFor('mail');
+            } elseif (is_object($notifiable) && property_exists($notifiable, 'email')) {
+                $recipientEmail = $notifiable->email;
+            }
+            if ($recipientEmail && !empty($this->booking->email) && strtolower(trim($recipientEmail)) === strtolower(trim($this->booking->email))) {
+                return ['mail'];
+            }
+            Log::info('ServiceCompletedNotification: skipping non-owner recipient', ['booking_id' => $this->booking->id ?? null, 'recipient' => $recipientEmail]);
+        } catch (\Throwable $e) {
+            Log::warning('ServiceCompletedNotification: failed to evaluate recipient in via()', ['error' => $e->getMessage()]);
+        }
+
+        return [];
     }
 
     /**

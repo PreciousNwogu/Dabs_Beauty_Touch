@@ -251,6 +251,10 @@
                                 <i class="fas fa-pen-to-square me-2"></i>
                                 Modify your booking (length / braid type)
                             </h6>
+                            <div class="alert alert-warning">
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                <strong>Note:</strong> We do not accept style changes on the day of the appointment. Please review your selection carefully before making changes.
+                            </div>
                             <div class="alert alert-info">
                                 <i class="fas fa-circle-info me-2"></i>
                                 Changes will automatically recalculate pricing and email an update to you and the admin.

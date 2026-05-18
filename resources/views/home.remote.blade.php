@@ -4836,6 +4836,11 @@ function openOtherServicesModal() {
                                     </label>
                                 </div>
                             </div>
+                            <div class="mb-3">
+                                <div class="alert alert-warning py-2 mb-0" style="font-size:0.95rem;">
+                                    <strong>Note:</strong> We do not accept style changes on the day of the appointment. Please review your selection before confirming.
+                                </div>
+                            </div>
                             <button type="submit" class="btn btn-warning" id="bookAppointmentBtn" style="font-size:1.1rem; padding:12px 40px; font-weight:600; transition: all 0.3s ease; box-shadow: 0 4px 12px rgba(255, 193, 7, 0.3);">
                                 <i class="bi bi-calendar-check me-2"></i>Book Appointment
                             </button>
@@ -8855,6 +8860,11 @@ document.addEventListener('DOMContentLoaded', function() {
                                                 <label for="termsAcceptedKids" style="font-size:0.95rem;">
                                                     I agree to the <a href="#terms" style="color:#030f68; font-weight:600; text-decoration:none;" onclick="closeModalAndGoToTerms(event)">Terms &amp; Conditions</a>.
                                                 </label>
+                                            </div>
+                                        </div>
+                                        <div class="mb-2">
+                                            <div class="alert alert-warning py-2 mb-0" style="font-size:0.9rem;">
+                                                <strong>Note:</strong> We do not accept style changes on the day of the appointment. Please review your selection before confirming.
                                             </div>
                                         </div>
                                     <div class="d-flex gap-2">
