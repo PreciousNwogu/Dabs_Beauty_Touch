@@ -1697,6 +1697,10 @@ Route::post('/bookings', function(Request $request) {
             }
         }
 
+        if (!array_key_exists('parking_type', $bookingData)) {
+            $bookingData['parking_type'] = $request->input('parking_type');
+        }
+
         // Create the booking
         Log::info('=== CREATING BOOKING ===', ['data' => $bookingData]);
         $booking = \App\Models\Booking::create($bookingData);

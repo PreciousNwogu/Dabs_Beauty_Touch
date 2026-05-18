@@ -127,6 +127,13 @@ class AdminBookingNotification extends Notification
         $break = [];
         try { $break = $b->getPricingBreakdown(); } catch (\Throwable $e) { $break = []; }
 
+        $parkingType = strtolower(trim((string) ($b->parking_type ?? '')));
+        $parkingStatusLabel = match ($parkingType) {
+            'free' => 'Free parking',
+            'paid' => 'Paid parking',
+            default => null,
+        };
+
         // Expose server/client/persisted price values for admin visibility
         $break['server_calculated_final'] = $break['final_price'] ?? null;
         // Try to detect any client-submitted final price embedded in notes (if recorded)
@@ -150,6 +157,7 @@ class AdminBookingNotification extends Notification
                 'selector' => $break['selector'] ?? $selector,
                 'selector_friendly' => $break['selector_friendly'] ?? $selector_friendly,
                 'hideLengthFinish' => $break['hide_length_finish'] ?? false,
+                'parkingStatusLabel' => $parkingStatusLabel,
             ]);
     }
 
