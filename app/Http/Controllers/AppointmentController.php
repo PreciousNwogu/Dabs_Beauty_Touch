@@ -683,6 +683,7 @@ class AppointmentController extends Controller
                 'phone' => $request->phone,
                 'address' => $request->input('address'),
                 'appointment_type' => $request->input('appointment_type'),
+                'parking_type' => $request->input('parking_type'),
                     // Save canonical service name if we resolved a Service model, otherwise store user-provided label
                     'service' => $serviceNameForSave ?: ($request->service ?: 'General Service'),
                 'length' => $length,

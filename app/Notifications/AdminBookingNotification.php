@@ -153,6 +153,13 @@ class AdminBookingNotification extends Notification
             }
         }catch(\Exception $e){ /* noop */ }
 
+        $parkingType = strtolower(trim((string) ($b->parking_type ?? '')));
+        $parkingStatusLabel = match ($parkingType) {
+            'free' => 'Free parking',
+            'paid' => 'Paid parking',
+            default => null,
+        };
+
         // Expose server/client/persisted price values for admin visibility
         $break['server_calculated_final'] = $break['final_price'] ?? null;
         // Try to detect any client-submitted final price embedded in notes (if recorded)
@@ -177,6 +184,7 @@ class AdminBookingNotification extends Notification
                 'selector_friendly' => $break['selector_friendly'] ?? $selector_friendly,
                 'hideLengthFinish' => $shouldHideLengthFinish || ($break['hide_length_finish'] ?? false),
                 'comments' => $comments,
+                'parkingStatusLabel' => $parkingStatusLabel,
             ]);
     }
 

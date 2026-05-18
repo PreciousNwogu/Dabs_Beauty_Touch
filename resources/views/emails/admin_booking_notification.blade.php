@@ -90,6 +90,15 @@
             Stylist Address
           @endif
         </td></tr>
+        <tr style="background:#f8fafc;"><td style="font-weight:700;">Parking Type</td><td>
+          @php
+            $parkingTypeLabel = $parkingStatusLabel ?? null;
+            if (!$parkingTypeLabel && !empty($booking->parking_type)) {
+              $parkingTypeLabel = strtolower(trim((string) $booking->parking_type)) === 'paid' ? 'Paid parking' : 'Free parking';
+            }
+          @endphp
+          {{ $parkingTypeLabel ?? 'Not provided' }}
+        </td></tr>
         @if($booking->appointment_type === 'mobile' && $booking->address)
         <tr style="background:#f8fafc;"><td style="font-weight:700;">Service Address</td><td><strong style="color:#0066ff;">{{ $booking->address }}</strong></td></tr>
         @endif

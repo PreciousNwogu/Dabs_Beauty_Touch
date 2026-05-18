@@ -33,7 +33,7 @@ class ServiceSeeder extends Seeder
             ['name'=>'Stitch Weave','slug'=>'stitch-weave','base_price'=>100,'discount_price'=>null,'description'=>null,'category'=>null,'is_active'=>1,'for_kids'=>0],
             ['name'=>'Cornrow Weave','slug'=>'cornrow-weave','base_price'=>100,'discount_price'=>null,'description'=>null,'category'=>null,'is_active'=>1,'for_kids'=>0],
             ['name'=>'Under-wig Weave','slug'=>'under-wig-weave','base_price'=>30,'discount_price'=>null,'description'=>null,'category'=>null,'is_active'=>1,'for_kids'=>0],
-            ['name'=>'Weave&Braid Mixed','slug'=>'weave-braid-mixed','base_price'=>144,'discount_price'=>null,'description'=>null,'category'=>null,'is_active'=>1,'for_kids'=>0],
+            ['name'=>'Weave&Braid Mixed','slug'=>'weave-braid-mixed','base_price'=>150,'discount_price'=>null,'description'=>null,'category'=>null,'is_active'=>1,'for_kids'=>0],
             ['name'=>'Small French Curl Braids','slug'=>'small-french-curl','base_price'=>200,'discount_price'=>null,'description'=>null,'category'=>null,'is_active'=>1,'for_kids'=>0],
             ['name'=>'Smedium French Curl Braids','slug'=>'smedium-french-curl','base_price'=>170,'discount_price'=>null,'description'=>null,'category'=>null,'is_active'=>1,'for_kids'=>0],
             ['name'=>'Medium French Curl Braids','slug'=>'medium-french-curl','base_price'=>150,'discount_price'=>null,'description'=>null,'category'=>null,'is_active'=>1,'for_kids'=>0],

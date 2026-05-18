@@ -18,6 +18,9 @@ $bookingData = [
     'email' => 'testuser+copilot@example.com',
     'phone' => '555-0000',
     'service' => 'Test Service',
+    'appointment_type' => 'mobile',
+    'address' => '123 Test Street',
+    'parking_type' => 'paid',
     'appointment_date' => date('Y-m-d', strtotime('+7 days')),
     'appointment_time' => '10:00',
     'message' => 'Test booking from script',
@@ -28,6 +31,7 @@ $booking = new App\Models\Booking($bookingData);
 $booking->save();
 
 echo "Created booking id={$booking->id} email={$booking->email}\n";
+echo "Saved parking_type={$booking->parking_type}\n";
 
 // Send customer confirmation
 try {
