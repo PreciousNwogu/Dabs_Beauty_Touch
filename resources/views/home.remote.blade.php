@@ -2474,14 +2474,14 @@
                 selectedServiceDisplay.style.display = 'block';
                 selectedServiceName.textContent = name;
                 selectedServicePrice.textContent = '$' + price;
-                
+
                 // Set the description
                 const sizeName = getSizeName(name);
                 const sizeDesc = getSizeDescription(sizeName);
                 if (selectedServiceDescription) {
                     selectedServiceDescription.textContent = sizeDesc;
                 }
-                
+
                 // Scroll to top of size selection section on mobile (viewport < 768px)
                 if (window.innerWidth < 768) {
                     setTimeout(() => {
@@ -4836,6 +4836,11 @@ function openOtherServicesModal() {
                                     </label>
                                 </div>
                             </div>
+                            <div class="mb-3">
+                                <div class="alert alert-warning py-2 mb-0" style="font-size:0.95rem;">
+                                    <strong>Note:</strong> We do not accept style changes on the day of the appointment. Please review your selection before confirming.
+                                </div>
+                            </div>
                             <button type="submit" class="btn btn-warning" id="bookAppointmentBtn" style="font-size:1.1rem; padding:12px 40px; font-weight:600; transition: all 0.3s ease; box-shadow: 0 4px 12px rgba(255, 193, 7, 0.3);">
                                 <i class="bi bi-calendar-check me-2"></i>Book Appointment
                             </button>
@@ -6119,12 +6124,12 @@ console.log('=== LOADING BOOKING FUNCTIONS ===');
     // Other Services Modal function
     window.openOtherServicesModal = function() {
         console.log('=== openOtherServicesModal CALLED ===');
-        
+
         try {
             // Open the custom service request modal directly (skip the guided flow)
             var modalEl = document.getElementById('customServiceRequestModal');
             console.log('Modal element found:', !!modalEl);
-            
+
             if (!modalEl) {
                 console.warn('customServiceRequestModal not found on page');
                 alert('Custom service request form not found. Please try again.');
@@ -6147,12 +6152,12 @@ console.log('=== LOADING BOOKING FUNCTIONS ===');
                 modalEl.classList.add('show');
                 modalEl.setAttribute('aria-hidden', 'false');
                 document.body.classList.add('modal-open');
-                
+
                 // Create backdrop
                 const backdrop = document.createElement('div');
                 backdrop.className = 'modal-backdrop fade show';
                 document.body.appendChild(backdrop);
-                
+
                 console.log('✓ Custom service request modal shown with fallback method');
             }
 
@@ -8857,6 +8862,11 @@ document.addEventListener('DOMContentLoaded', function() {
                                                 </label>
                                             </div>
                                         </div>
+                                        <div class="mb-2">
+                                            <div class="alert alert-warning py-2 mb-0" style="font-size:0.9rem;">
+                                                <strong>Note:</strong> We do not accept style changes on the day of the appointment. Please review your selection before confirming.
+                                            </div>
+                                        </div>
                                     <div class="d-flex gap-2">
                                         <button type="button" id="kidsBackToSelectorBtn" class="btn btn-secondary" style="font-weight:600;" onclick="backToKidsSelector()">Back to selector</button>
                                         <button type="submit" class="btn btn-warning" id="kidsBookAppointmentBtn" style="font-weight:600;">Confirm Booking</button>
@@ -9851,7 +9861,7 @@ document.addEventListener('DOMContentLoaded', function(){
     // Debug: Test opening the other services modal directly
     window.testModalOpen = function() {
         console.log('🧪 Testing modal open...');
-        
+
         // Check if function exists
         if (typeof window.openOtherServicesModal === 'function') {
             console.log('✓ openOtherServicesModal function exists');
@@ -9859,7 +9869,7 @@ document.addEventListener('DOMContentLoaded', function(){
         } else {
             console.log('✗ openOtherServicesModal function NOT found');
         }
-        
+
         // Check modal element
         const modalEl = document.getElementById('customServiceRequestModal');
         console.log('✓ Modal element exists:', !!modalEl);

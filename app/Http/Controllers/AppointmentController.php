@@ -723,48 +723,8 @@ class AppointmentController extends Controller
                 'length' => $booking->length
             ]);
 
-            // Send booking confirmation email if a real email was provided
-            try {
-                if (!empty($booking->email) && $booking->email !== 'no-email@example.com') {
-                    // Log mailer config so we can confirm which SMTP is used for web requests
-                    Log::info('Mail configuration for booking confirmation', [
-                        'mail_default' => config('mail.default'),
-                        'mail_mailer_env' => env('MAIL_MAILER'),
-                        'mail_host' => config('mail.mailers.smtp.host') ?? env('MAIL_HOST'),
-                        'mail_port' => config('mail.mailers.smtp.port') ?? env('MAIL_PORT'),
-                        'mail_username' => env('MAIL_USERNAME'),
-                    ]);
-
-                    // Attempt immediate delivery via Notification sendNow, with Mail fallback.
-                    try {
-                        Log::info('Attempting to send booking confirmation to customer', [
-                            'booking_id' => $booking->id,
-                            'email' => $booking->email,
-                            'mail_from' => config('mail.from.address'),
-                            'mailer' => config('mail.default')
-                        ]);
-
-                        Notification::route('mail', $booking->email)->sendNow(new BookingConfirmation($booking));
-                        Log::info('Booking confirmation notification sent (sendNow)', ['booking_id' => $booking->id, 'email' => $booking->email]);
-                    } catch (\Throwable $notifyErr) {
-                        Log::warning('Notification sendNow failed (post-save), attempting Mail fallback', ['booking_id' => $booking->id, 'email' => $booking->email, 'error' => $notifyErr->getMessage(), 'trace' => $notifyErr->getTraceAsString()]);
-                        try {
-                            \Illuminate\Support\Facades\Mail::to($booking->email)->send(new \App\Mail\BookingConfirmationMail($booking));
-                            Log::info('Booking confirmation sent via Mail::to()->send() fallback (post-save)', ['booking_id' => $booking->id, 'email' => $booking->email]);
-                        } catch (\Throwable $mailErr) {
-                            Log::error('Failed to send booking confirmation via Mail fallback (post-save)', ['booking_id' => $booking->id, 'email' => $booking->email, 'error' => $mailErr->getMessage(), 'trace' => $mailErr->getTraceAsString()]);
-                        }
-                    }
-                } else {
-                    Log::info('No valid email provided; skipping booking confirmation notification', ['booking_id' => $booking->id, 'email' => $booking->email]);
-                }
-            } catch (\Throwable $e) {
-                Log::warning('Failed to send booking confirmation notification', [
-                    'booking_id' => $booking->id,
-                    'email' => $booking->email,
-                    'error' => $e->getMessage()
-                ]);
-            }
+            // NOTE: Booking notification sending has been moved to web.php routes/bookings.store
+            // to prevent duplicate notifications. Do not send notifications from this controller.
 
             // Ensure clean JSON response
             if (ob_get_level()) {

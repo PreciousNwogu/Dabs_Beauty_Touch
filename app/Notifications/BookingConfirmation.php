@@ -30,7 +30,23 @@ class BookingConfirmation extends Notification
      */
     public function via(object $notifiable): array
     {
-        return ['mail'];
+        // Only send confirmation emails to the booking owner (customer).
+        try {
+            $recipientEmail = null;
+            if (is_object($notifiable) && method_exists($notifiable, 'routeNotificationFor')) {
+                $recipientEmail = $notifiable->routeNotificationFor('mail');
+            } elseif (is_object($notifiable) && property_exists($notifiable, 'email')) {
+                $recipientEmail = $notifiable->email;
+            }
+            if ($recipientEmail && !empty($this->booking->email) && strtolower(trim($recipientEmail)) === strtolower(trim($this->booking->email))) {
+                return ['mail'];
+            }
+            Log::info('BookingConfirmation: skipping non-owner recipient', ['booking_id' => $this->booking->id ?? null, 'recipient' => $recipientEmail]);
+        } catch (\Throwable $e) {
+            Log::warning('BookingConfirmation: failed to evaluate recipient in via()', ['error' => $e->getMessage()]);
+        }
+
+        return [];
     }
 
     /**
