@@ -6,7 +6,7 @@ return [
     'smedium_knotless' => 150,
     'medium_knotless' => 130,
     'jumbo_knotless' => 100,
-    'kids_braids' => 80,
+    'kids_braids' => 100,
     'half_weave_braid' => 100,
     'half-weave-braid' => 100,
     'half_weave_crotchet' => 80,
