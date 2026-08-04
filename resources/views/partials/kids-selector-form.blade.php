@@ -526,7 +526,7 @@
                                 <input type="radio" name="kb_braid_type" id="kb_type_protective" value="protective" checked data-disable-steps="1">
                                 <div class="kb-braid-content">
                                     <div class="kb-braid-name">Natural Hair Twist</div>
-                                    <div class="kb-braid-price">$60</div>
+                                    <div class="kb-braid-price">$80</div>
                                 </div>
                                 <span class="kb-checkmark">✓</span>
                             </label>
@@ -544,7 +544,7 @@
                                 <input type="radio" name="kb_braid_type" id="kb_type_cornrow_weave" value="cornrow_weave">
                                 <div class="kb-braid-content">
                                     <div class="kb-braid-name">Cornrow weave (with extension)</div>
-                                    <div class="kb-braid-price">From $80</div>
+                                    <div class="kb-braid-price">From $100</div>
                                 </div>
                                 <span class="kb-checkmark">✓</span>
                             </label>
@@ -553,7 +553,7 @@
                                 <input type="radio" name="kb_braid_type" id="kb_type_knotless_small" value="knotless_small">
                                 <div class="kb-braid-content">
                                     <div class="kb-braid-name">Knotless Small</div>
-                                    <div class="kb-braid-price">$100</div>
+                                    <div class="kb-braid-price">$120</div>
                                 </div>
                                 <span class="kb-checkmark">✓</span>
                             </label>
@@ -562,7 +562,7 @@
                                 <input type="radio" name="kb_braid_type" id="kb_type_knotless_med" value="knotless_med">
                                 <div class="kb-braid-content">
                                     <div class="kb-braid-name">Knotless Medium</div>
-                                    <div class="kb-braid-price">$80</div>
+                                    <div class="kb-braid-price">$100</div>
                                 </div>
                                 <span class="kb-checkmark">✓</span>
                             </label>
@@ -571,7 +571,7 @@
                                 <input type="radio" name="kb_braid_type" id="kb_type_box_small" value="box_small">
                                 <div class="kb-braid-content">
                                     <div class="kb-braid-name">Box Braids Small</div>
-                                    <div class="kb-braid-price">$90</div>
+                                    <div class="kb-braid-price">$110</div>
                                 </div>
                                 <span class="kb-checkmark">✓</span>
                             </label>
@@ -580,7 +580,7 @@
                                 <input type="radio" name="kb_braid_type" id="kb_type_box_med" value="box_med">
                                 <div class="kb-braid-content">
                                     <div class="kb-braid-name">Box Braids Medium</div>
-                                    <div class="kb-braid-price">$80</div>
+                                    <div class="kb-braid-price">$100</div>
                                 </div>
                                 <span class="kb-checkmark">✓</span>
                             </label>
@@ -589,7 +589,7 @@
                                 <input type="radio" name="kb_braid_type" id="kb_type_stitch" value="stitch">
                                 <div class="kb-braid-content">
                                     <div class="kb-braid-name">Stitch Braids</div>
-                                    <div class="kb-braid-price">$100</div>
+                                    <div class="kb-braid-price">$120</div>
                                 </div>
                                 <span class="kb-checkmark">✓</span>
                             </label>
@@ -598,7 +598,7 @@
                                 <input type="radio" name="kb_braid_type" id="kb_type_half_weave_braid" value="half_weave_braid">
                                 <div class="kb-braid-content">
                                     <div class="kb-braid-name">1/2 Weave &amp; 1/2 Braid</div>
-                                    <div class="kb-braid-price">$100</div>
+                                    <div class="kb-braid-price">$120</div>
                                 </div>
                                 <span class="kb-checkmark">✓</span>
                             </label>
@@ -607,7 +607,7 @@
                                 <input type="radio" name="kb_braid_type" id="kb_type_half_weave_crotchet" value="half_weave_crotchet" data-disable-steps="1">
                                 <div class="kb-braid-content">
                                     <div class="kb-braid-name">1/2 Weave &amp; 1/2 Crotchet</div>
-                                    <div class="kb-braid-price">$80</div>
+                                    <div class="kb-braid-price">$100</div>
                                 </div>
                                 <span class="kb-checkmark">✓</span>
                             </label>
@@ -616,7 +616,7 @@
                                 <input type="radio" name="kb_braid_type" id="kb_type_crotchet_style" value="crotchet_style" data-disable-steps="1">
                                 <div class="kb-braid-content">
                                     <div class="kb-braid-name">Crotchet Style</div>
-                                    <div class="kb-braid-price">$70</div>
+                                    <div class="kb-braid-price">$90</div>
                                 </div>
                                 <span class="kb-checkmark">✓</span>
                             </label>
