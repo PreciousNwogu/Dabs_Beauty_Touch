@@ -594,9 +594,41 @@
                                 <span class="kb-checkmark">✓</span>
                             </label>
 
+                            <label class="kb-braid-card" for="kb_type_half_weave_braid">
+                                <input type="radio" name="kb_braid_type" id="kb_type_half_weave_braid" value="half_weave_braid">
+                                <div class="kb-braid-content">
+                                    <div class="kb-braid-name">1/2 Weave &amp; 1/2 Braid</div>
+                                    <div class="kb-braid-price">$100</div>
+                                </div>
+                                <span class="kb-checkmark">✓</span>
+                            </label>
+
+                            <label class="kb-braid-card" for="kb_type_half_weave_crotchet">
+                                <input type="radio" name="kb_braid_type" id="kb_type_half_weave_crotchet" value="half_weave_crotchet" data-disable-steps="1">
+                                <div class="kb-braid-content">
+                                    <div class="kb-braid-name">1/2 Weave &amp; 1/2 Crotchet</div>
+                                    <div class="kb-braid-price">$80</div>
+                                </div>
+                                <span class="kb-checkmark">✓</span>
+                            </label>
+
+                            <label class="kb-braid-card" for="kb_type_crotchet_style">
+                                <input type="radio" name="kb_braid_type" id="kb_type_crotchet_style" value="crotchet_style" data-disable-steps="1">
+                                <div class="kb-braid-content">
+                                    <div class="kb-braid-name">Crotchet Style</div>
+                                    <div class="kb-braid-price">$70</div>
+                                </div>
+                                <span class="kb-checkmark">✓</span>
+                            </label>
+
                             {{-- CMS-managed kids braid types --}}
                             @foreach($cmsKidsServices ?? [] as $cksvc)
                                 @php
+                                    $cksName = strtolower((string) $cksvc->name);
+                                    $cksSlugRaw = strtolower((string) ($cksvc->slug ?? ''));
+                                    if (str_contains($cksName, 'kids') || str_contains($cksSlugRaw, 'kids')) {
+                                        continue;
+                                    }
                                     $cksSlug  = 'cms_' . $cksvc->id;
                                     $cksPrice = (int) $cksvc->effective_price;
                                     $cksEnds  = ($cksvc->has_discount && $cksvc->discount_ends_at)
@@ -910,14 +942,17 @@ document.addEventListener('DOMContentLoaded', function(){
 <script>
 document.addEventListener('DOMContentLoaded', function(){
     // Pricing map for explicit prices
-    const braidTypePrices = {
+            const braidTypePrices = {
         'protective': 60,
         'cornrows': 40,
         'knotless_small': 100,
         'knotless_med': 80,
         'box_small': 90,
         'box_med': 80,
-        'stitch': 100
+                'stitch': 100,
+                'half_weave_braid': 100,
+                'half_weave_crotchet': 80,
+                'crotchet_style': 70
     };
 
     function setFinishAndLengthDisabled(disabled, braidTypeValue){
@@ -991,6 +1026,11 @@ document.addEventListener('DOMContentLoaded', function(){
             const braidType = document.querySelector('input[name="kb_braid_type"]:checked');
             const basePrice = {{ (int) config('service_prices.kids_braids', 80) }}; // Kids Braids base price (from CMS/config)
             const kidsOriginalBase = {{ (int) config('service_prices_original.kids_braids', config('service_prices.kids_braids', 80)) }}; // Original before discount
+            const braidTypeBasePrices = {
+                'half_weave_braid': 100,
+                'half_weave_crotchet': 80,
+                'crotchet_style': 70
+            };
             // Braid types that have the CMS discount applied
             const discountedBraidTypes = ['cornrow_weave', 'knotless_small', 'knotless_med', 'box_small', 'box_med', 'stitch'];
 
@@ -1014,14 +1054,24 @@ document.addEventListener('DOMContentLoaded', function(){
                 'box_small': 10,
                 'box_med': 0,
                 'stitch': 20,
-                'cornrow_weave': 0
+                'cornrow_weave': 0,
+                'half_weave_braid': 0,
+                'half_weave_crotchet': 0,
+                'crotchet_style': 0
             };
 
             @php $kidsOriginalConfigBase = (int) config('service_prices_original.kids_braids', config('service_prices.kids_braids', 80)); @endphp
             const cmsKidsFixedPrices = {};
             const cmsKidsDiscountEnds = {};
             @foreach($cmsKidsServices ?? [] as $cksvc)
-                @php $cksSlug = 'cms_' . $cksvc->id; @endphp
+                @php
+                    $cksName = strtolower((string) $cksvc->name);
+                    $cksSlugRaw = strtolower((string) ($cksvc->slug ?? ''));
+                    if (str_contains($cksName, 'kids') || str_contains($cksSlugRaw, 'kids')) {
+                        continue;
+                    }
+                    $cksSlug = 'cms_' . $cksvc->id;
+                @endphp
                 braidTypeNames['{{ $cksSlug }}'] = '{{ addslashes($cksvc->name) }}';
                 braidTypeAdjustments['{{ $cksSlug }}'] = {{ (int) $cksvc->effective_price - $kidsOriginalConfigBase }};
                 cmsKidsFixedPrices['{{ $cksSlug }}'] = {{ (int) $cksvc->effective_price }};
@@ -1035,7 +1085,9 @@ document.addEventListener('DOMContentLoaded', function(){
 
             // protective and cornrows always use the original (non-discounted) base — their prices are fixed
             // CMS types also use original base (price set directly in cmsKidsFixedPrices)
-            const effectiveBase = (braidType && braidType.dataset.disableSteps === '1') ? kidsOriginalBase : basePrice;
+            const effectiveBase = braidTypeBasePrices[braidTypeValue] !== undefined
+                ? braidTypeBasePrices[braidTypeValue]
+                : ((braidType && braidType.dataset.disableSteps === '1') ? kidsOriginalBase : basePrice);
 
             // Show/hide and populate braid type line
             const braidTypeLine = document.getElementById('kb_braid_type_line');
@@ -1507,9 +1559,15 @@ if(typeof window.showKidsBookingPanel !== 'function'){
                     const priceMapLocal = window.priceMap || {
                         'kids-braids': 80
                     };
-                    const base = Number(priceMapLocal['kids-braids'] || 80);
+                    const basePrices = {
+                        'kids-braids': 80,
+                        'half_weave_braid': 100,
+                        'half_weave_crotchet': 80,
+                        'crotchet_style': 70
+                    };
+                    const base = Number(basePrices[bt] || priceMapLocal['kids-braids'] || 80);
                     // braid type adjustments
-                    const typeAdjMap = { 'protective': -20, 'cornrows': -40, 'knotless_small': 20, 'knotless_med': 0, 'box_small': 10, 'box_med': 0, 'stitch': 20 };
+                    const typeAdjMap = { 'protective': -20, 'cornrows': -40, 'knotless_small': 20, 'knotless_med': 0, 'box_small': 10, 'box_med': 0, 'stitch': 20, 'half_weave_braid': 0, 'half_weave_crotchet': 0, 'crotchet_style': 0 };
                     const lengthAdjMap = { 'shoulder': 0, 'armpit': 10, 'mid_back': 20, 'waist': 30 };
                     const finishAdjMap = { 'curled': -10, 'plain': 0 };
 
@@ -1678,9 +1736,48 @@ document.addEventListener('DOMContentLoaded', function(){
             const base = getBaseGlobal(); if(base===null) return;
             const len = getSelectedLengthGlobal();
             const st = (window.currentServiceInfo && window.currentServiceInfo.serviceType) ? window.currentServiceInfo.serviceType : (document.getElementById('selectedServiceType')?document.getElementById('selectedServiceType').value:null);
-            const adj = computeAdjGlobal(len, st);
             const addons = sumAddonsGlobal();
-            const final = Math.max(0, Number(base)+Number(adj)+Number(addons));
+
+            const selectedKidsBraid = document.querySelector('input[name="kb_braid_type"]:checked');
+            const selectedKidsFinish = document.querySelector('input[name="kb_finish"]:checked');
+            const kidsFlowActive = !!(selectedKidsBraid || (st && String(st).toLowerCase() === 'kids-braids'));
+
+            let final = 0;
+            if (kidsFlowActive) {
+                const kidsBraidBaseMap = {
+                    protective: 60,
+                    cornrows: 40,
+                    cornrow_weave: 80,
+                    knotless_small: 100,
+                    knotless_med: 80,
+                    box_small: 90,
+                    box_med: 80,
+                    stitch: 100,
+                    half_weave_braid: 100,
+                    half_weave_crotchet: 80,
+                    crotchet_style: 70
+                };
+                const kidsFinishAdjMap = { plain: 0, curled: -10 };
+                const kidsLengthAdjMap = { shoulder: 0, armpit: 10, mid_back: 20, waist: 30 };
+
+                const braidType = selectedKidsBraid ? String(selectedKidsBraid.value || '').trim() : '';
+                const finishValue = selectedKidsFinish ? String(selectedKidsFinish.value || '').trim() : '';
+                const lengthValue = (len || '').toString().trim().replace(/[-\s]+/g, '_');
+
+                let kidsBase = Number(base);
+                if (braidType && Object.prototype.hasOwnProperty.call(kidsBraidBaseMap, braidType)) {
+                    kidsBase = Number(kidsBraidBaseMap[braidType]);
+                }
+
+                const finishAdj = Object.prototype.hasOwnProperty.call(kidsFinishAdjMap, finishValue) ? Number(kidsFinishAdjMap[finishValue]) : 0;
+                const lengthAdj = Object.prototype.hasOwnProperty.call(kidsLengthAdjMap, lengthValue) ? Number(kidsLengthAdjMap[lengthValue]) : 0;
+
+                final = Math.max(0, kidsBase + finishAdj + lengthAdj + Number(addons));
+            } else {
+                const adj = computeAdjGlobal(len, st);
+                final = Math.max(0, Number(base)+Number(adj)+Number(addons));
+            }
+
             const disp = document.getElementById('priceDisplay'); if(disp) disp.textContent = '$'+Number(final).toFixed(0);
             const sel = document.getElementById('selectedPrice'); if(sel) sel.value = Number(final).toFixed(2);
             const finalInput = (document.querySelector('input[name="final_price"]') || (function(){ const f=document.getElementById('bookingForm')||document.querySelector('form'); if(!f) return null; const i=document.createElement('input'); i.type='hidden'; i.name='final_price'; f.appendChild(i); return i; })());

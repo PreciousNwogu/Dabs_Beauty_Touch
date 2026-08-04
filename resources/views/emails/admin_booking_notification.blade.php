@@ -121,6 +121,9 @@
           'box_small' => 'Box Braids Small',
           'box_med' => 'Box Braids Medium',
           'stitch' => 'Stitch Braids',
+          'half_weave_braid' => '1/2 Weave & 1/2 Braid',
+          'half_weave_crotchet' => '1/2 Weave & 1/2 Crotchet',
+          'crotchet_style' => 'Crotchet Style',
         ];
         $braidRaw = $selector['braid_type'] ?? $selector['kb_braid_type'] ?? ($booking->kb_braid_type ?? null);
         $braidType = $sf['braid_type'] ?? ($braidRaw ? ($kidsBraidMap[$braidRaw] ?? ucwords(str_replace(['_','-'], ' ', (string)$braidRaw))) : null);

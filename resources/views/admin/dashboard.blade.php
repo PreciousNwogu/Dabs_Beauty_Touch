@@ -2138,6 +2138,17 @@
                 return s.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
             };
 
+            const prettyKidsBraid = (raw) => {
+                const value = String(raw || '').trim();
+                const braidMap = {
+                    half_weave_braid: '1/2 Weave & 1/2 Braid',
+                    half_weave_crotchet: '1/2 Weave & 1/2 Crotchet',
+                    crotchet_style: 'Crotchet Style'
+                };
+
+                return braidMap[value] || pretty(value);
+            };
+
             const prettyKidsFinish = (raw) => {
                 const v = String(raw || '').trim().toLowerCase();
                 if (!v) return '—';
@@ -2340,7 +2351,7 @@
                                 <div class="bd-panel">
                                     <div class="bd-row">
                                         <div class="bd-label">Braid Type:</div>
-                                        <div class="bd-value">${safe(pretty(kidsBraidType), '—')}</div>
+                                        <div class="bd-value">${safe(prettyKidsBraid(kidsBraidType), '—')}</div>
                                     </div>
                                     <div class="bd-row">
                                         <div class="bd-label">Finish:</div>

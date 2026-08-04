@@ -56,7 +56,7 @@ class AdminBookingNotification extends Notification
             $serviceType = strtolower((string) ($b->service_type ?? $b->service ?? ''));
             if($serviceType === 'kids-braids' || stripos($b->service ?? '', 'kids') !== false || $selector){
                 $baseConfigured = (float) (config('service_prices.kids_braids', 80));
-                $typeAdj = ['protective'=>-20,'cornrows'=>-40,'knotless_small'=>20,'knotless_med'=>0,'box_small'=>10,'box_med'=>0,'stitch'=>20];
+                $typeAdj = ['protective'=>-20,'cornrows'=>-40,'knotless_small'=>20,'knotless_med'=>0,'box_small'=>10,'box_med'=>0,'stitch'=>20,'half_weave_braid'=>20,'half_weave_crotchet'=>0,'crotchet_style'=>-10];
                 $lengthAdj = ['shoulder'=>0,'armpit'=>10,'mid_back'=>20,'waist'=>30];
                 $finishAdj = ['curled'=>-10,'plain'=>0];
 
@@ -148,7 +148,7 @@ class AdminBookingNotification extends Notification
             $braidType = strtolower((string) ($selector['braid_type'] ?? $b->kb_braid_type ?? ''));
             // Services that don't use finish/length customization
             $noFinishLengthServices = ['protective', 'cornrows'];
-            if(in_array($braidType, $noFinishLengthServices) || in_array($serviceType, $noFinishLengthServices)){
+            if(in_array($braidType, $noFinishLengthServices) || in_array($serviceType, $noFinishLengthServices) || preg_match('/half[_ -]?weave|crotchet[_ -]?style/i', $braidType)){
                 $shouldHideLengthFinish = true;
             }
         }catch(\Exception $e){ /* noop */ }

@@ -246,17 +246,26 @@ class PriceCalculator
         $kb_extras_total = 0.0;
         $isKids = (bool) (Arr::get($data, 'kb_length') || str_contains($serviceType, 'kids'));
         if ($isKids) {
+            $kb_service_base_prices = [
+                'half_weave_braid' => (float) config('service_prices.half_weave_braid', 100),
+                'half_weave_crotchet' => (float) config('service_prices.half_weave_crotchet', 80),
+                'crotchet_style' => (float) config('service_prices.crotchet_style', 70),
+            ];
             $kb_base_price = $serviceModel && isset($serviceModel->base_price) ? (float) $serviceModel->base_price : (float) config('service_prices.kids_braids', 80);
             $kb_length = Arr::get($data, 'kb_length') ?? Arr::get($data, 'length');
             if (is_string($kb_length)) $kb_length = str_replace(['-', ' '], '_', strtolower($kb_length));
 
             // Kids selector adjustments: type + length + finish (matching UI calculation)
-            $typeAdj = ['protective'=>-20,'cornrows'=>-40,'knotless_small'=>20,'knotless_med'=>0,'box_small'=>10,'box_med'=>0,'stitch'=>20];
+            $typeAdj = ['protective'=>-20,'cornrows'=>-40,'knotless_small'=>20,'knotless_med'=>0,'box_small'=>10,'box_med'=>0,'stitch'=>20,'half_weave_braid'=>0,'half_weave_crotchet'=>0,'crotchet_style'=>0];
             $lengthAdj = ['shoulder'=>0,'armpit'=>10,'mid_back'=>20,'waist'=>30];
             $finishAdj = ['curled'=>-10,'plain'=>0];
 
             $kb_braid_type = Arr::get($data, 'kb_braid_type');
             $kb_finish = Arr::get($data, 'kb_finish');
+
+            if ($kb_braid_type && isset($kb_service_base_prices[$kb_braid_type])) {
+                $kb_base_price = $kb_service_base_prices[$kb_braid_type];
+            }
 
             // Calculate type adjustment
             $typeAdjustment = 0.00;

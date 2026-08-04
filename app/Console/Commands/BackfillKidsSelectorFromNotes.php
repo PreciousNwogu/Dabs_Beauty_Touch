@@ -145,6 +145,9 @@ class BackfillKidsSelectorFromNotes extends Command
             'box_small' => 10,
             'box_med' => 0,
             'stitch' => 20,
+            'half_weave_braid' => 20,
+            'half_weave_crotchet' => 0,
+            'crotchet_style' => -10,
         ];
         $lengthAdj = ['shoulder' => 0, 'armpit' => 10, 'mid_back' => 20, 'waist' => 30];
         $finishAdj = ['curled' => -10, 'plain' => 0];

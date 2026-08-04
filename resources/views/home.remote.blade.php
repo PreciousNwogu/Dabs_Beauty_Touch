@@ -6619,7 +6619,7 @@ function openOtherServicesModal() {
                 window.__kidsOriginalBase = originalBaseConfigured;
 
                 // Helper maps
-                const typeAdj = { protective: -20, cornrows: -40, knotless_small: 20, knotless_med: 0, box_small: 10, box_med: 0, stitch: 20 };
+                const typeAdj = { protective: -20, cornrows: -40, knotless_small: 20, knotless_med: 0, box_small: 10, box_med: 0, stitch: 20, half_weave_braid: 20, half_weave_crotchet: 0, crotchet_style: -10 };
                 const lengthAdj = { shoulder: 0, armpit: 10, mid_back: 20, waist: 30 };
                 const finishAdj = { curled: -10, plain: 0 };
 
@@ -10496,7 +10496,7 @@ document.addEventListener('DOMContentLoaded', function(){
                     if (exInput) exInput.value = extras ? String(extras).trim() : '';
 
                     // Compute a final fallback total if not already set, using captured selector values.
-                    const typeAdj = { protective: -20, cornrows: -40, knotless_small: 20, knotless_med: 0, box_small: 10, box_med: 0, stitch: 20 };
+                    const typeAdj = { protective: -20, cornrows: -40, knotless_small: 20, knotless_med: 0, box_small: 10, box_med: 0, stitch: 20, half_weave_braid: 20, half_weave_crotchet: 0, crotchet_style: -10 };
                     const lengthAdj = { shoulder: 0, armpit: 10, mid_back: 20, waist: 30 };
                     const finishAdj = { plain: 0, curled: -10 };
                     const addonMap = { kb_add_detangle: 15, kb_add_beads: 10, kb_add_beads_full: 15, kb_add_extension: 20, kb_add_rest: 5 };

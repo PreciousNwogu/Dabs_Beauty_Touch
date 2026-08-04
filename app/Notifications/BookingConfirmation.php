@@ -133,7 +133,7 @@ class BookingConfirmation extends Notification
             if($serviceType === 'kids-braids' || stripos($b->service ?? '', 'kids') !== false || $selector){
                 $baseConfigured = (float) (config('service_prices.kids_braids', 80));
                 // adjustments maps
-                $typeAdj = ['protective'=>-20,'cornrows'=>-40,'knotless_small'=>20,'knotless_med'=>0,'box_small'=>10,'box_med'=>0,'stitch'=>20];
+                $typeAdj = ['protective'=>-20,'cornrows'=>-40,'knotless_small'=>20,'knotless_med'=>0,'box_small'=>10,'box_med'=>0,'stitch'=>20,'half_weave_braid'=>20,'half_weave_crotchet'=>0,'crotchet_style'=>-10];
                 $lengthAdj = ['shoulder'=>0,'armpit'=>10,'mid_back'=>20,'waist'=>30];
                 $finishAdj = ['curled'=>-10,'plain'=>0];
 
@@ -179,6 +179,9 @@ class BookingConfirmation extends Notification
                 'box_small' => 'Box (small)',
                 'box_med' => 'Box (medium)',
                 'stitch' => 'Stitch',
+                'half_weave_braid' => '1/2 Weave & 1/2 Braid',
+                'half_weave_crotchet' => '1/2 Weave & 1/2 Crotchet',
+                'crotchet_style' => 'Crotchet Style',
             ];
             $friendlyFinish = [
                 'none' => '—',
@@ -365,7 +368,7 @@ class BookingConfirmation extends Notification
         $hideLengthFinish = (
             stripos($rawBraid, 'protect') !== false ||
             stripos($rawBraid, 'cornrow') !== false ||
-            preg_match('/protective|cornrows|cornrow/i', $rawBraid) ||
+            preg_match('/protective|cornrows|cornrow|half[_ -]?weave|crotchet[_ -]?style/i', $rawBraid) ||
             in_array($serviceName, $noLengthServices, true) ||
             in_array(str_replace([' ', '-'], ['_', '_'], $serviceName), $noLengthServices, true) ||
             $isHairMaskService

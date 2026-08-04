@@ -378,7 +378,7 @@ class Booking extends Model
 
         // friendly selector labels
         try {
-            $friendlyBraid = ['protective' => 'Protective style','cornrows' => 'Cornrows','knotless_small' => 'Knotless (small)','knotless_med' => 'Knotless (medium)','box_small' => 'Box (small)','box_med' => 'Box (medium)','stitch' => 'Stitch'];
+            $friendlyBraid = ['protective' => 'Protective style','cornrows' => 'Cornrows','knotless_small' => 'Knotless (small)','knotless_med' => 'Knotless (medium)','box_small' => 'Box (small)','box_med' => 'Box (medium)','stitch' => 'Stitch','half_weave_braid' => '1/2 Weave & 1/2 Braid','half_weave_crotchet' => '1/2 Weave & 1/2 Crotchet','crotchet_style' => 'Crotchet Style'];
             $friendlyFinish = ['none' => '—','sleek' => 'Sleek finish','natural' => 'Natural finish','curled' => 'With curl','plain' => 'Without curl'];
             $friendlyLength = [
                 'short' => 'Short',
@@ -505,7 +505,7 @@ class Booking extends Model
         $hideLengthFinish = (
             stripos($rawBraid, 'protect') !== false ||
             stripos($rawBraid, 'cornrow') !== false ||
-            preg_match('/protective|cornrows|cornrow/i', $rawBraid) ||
+            preg_match('/protective|cornrows|cornrow|half[_ -]?weave|crotchet[_ -]?style/i', $rawBraid) ||
             in_array($serviceName, $noLengthServices, true) ||
             in_array(str_replace([' ', '-'], ['_', '_'], $serviceName), $noLengthServices, true) ||
             $isHairMaskService

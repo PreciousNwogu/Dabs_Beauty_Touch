@@ -605,10 +605,18 @@ class AppointmentController extends Controller
             $isKidsFlow = ($request->filled('kb_length') || ($serviceTypeNormalized && str_contains($serviceTypeNormalized, 'kids')));
             if ($isKidsFlow) {
                 // Determine kids base price from service model or config fallback
+                $kbServiceBasePrices = [
+                    'half_weave_braid' => (float) config('service_prices.half_weave_braid', 100),
+                    'half_weave_crotchet' => (float) config('service_prices.half_weave_crotchet', 80),
+                    'crotchet_style' => (float) config('service_prices.crotchet_style', 70),
+                ];
                 $kb_base_price = $serviceModel ? (float) $serviceModel->base_price : (float) config('service_prices.kids_braids', 80);
+                if ($kb_braid_type && isset($kbServiceBasePrices[$kb_braid_type])) {
+                    $kb_base_price = $kbServiceBasePrices[$kb_braid_type];
+                }
 
                 // Calculate all adjustments: type + length + finish (matching UI calculation)
-                $typeAdj = ['protective'=>-20,'cornrows'=>-40,'knotless_small'=>20,'knotless_med'=>0,'box_small'=>10,'box_med'=>0,'stitch'=>20];
+                $typeAdj = ['protective'=>-20,'cornrows'=>-40,'knotless_small'=>20,'knotless_med'=>0,'box_small'=>10,'box_med'=>0,'stitch'=>20,'half_weave_braid'=>0,'half_weave_crotchet'=>0,'crotchet_style'=>0];
                 $lengthAdj = ['shoulder'=>0,'armpit'=>10,'mid_back'=>20,'waist'=>30];
                 $finishAdj = ['curled'=>-10,'plain'=>0];
 
