@@ -941,7 +941,7 @@ document.addEventListener('DOMContentLoaded', function(){
 <!-- Inline helper: hide finish and length when braid types do not require them -->
 <script>
 document.addEventListener('DOMContentLoaded', function(){
-    // Pricing map for explicit prices
+        // Pricing map for explicit prices
             const braidTypePrices = {
         'protective': 60,
         'cornrows': 40,
@@ -949,11 +949,11 @@ document.addEventListener('DOMContentLoaded', function(){
         'knotless_med': 80,
         'box_small': 90,
         'box_med': 80,
-                'stitch': 100,
-                'half_weave_braid': 100,
-                'half_weave_crotchet': 80,
-                'crotchet_style': 70
-    };
+            'stitch': 100,
+            'half_weave_braid': 120,
+            'half_weave_crotchet': 100,
+            'crotchet_style': 90
+        };
 
     function setFinishAndLengthDisabled(disabled, braidTypeValue){
         console.log('setFinishAndLengthDisabled called with disabled:', disabled, 'braidType:', braidTypeValue);
@@ -1027,9 +1027,9 @@ document.addEventListener('DOMContentLoaded', function(){
             const basePrice = {{ (int) config('service_prices.kids_braids', 80) }}; // Kids Braids base price (from CMS/config)
             const kidsOriginalBase = {{ (int) config('service_prices_original.kids_braids', config('service_prices.kids_braids', 80)) }}; // Original before discount
             const braidTypeBasePrices = {
-                'half_weave_braid': 100,
-                'half_weave_crotchet': 80,
-                'crotchet_style': 70
+                'half_weave_braid': 120,
+                'half_weave_crotchet': 100,
+                'crotchet_style': 90
             };
             // Braid types that have the CMS discount applied
             const discountedBraidTypes = ['cornrow_weave', 'knotless_small', 'knotless_med', 'box_small', 'box_med', 'stitch'];
@@ -1561,9 +1561,9 @@ if(typeof window.showKidsBookingPanel !== 'function'){
                     };
                     const basePrices = {
                         'kids-braids': 80,
-                        'half_weave_braid': 100,
-                        'half_weave_crotchet': 80,
-                        'crotchet_style': 70
+                        'half_weave_braid': 120,
+                        'half_weave_crotchet': 100,
+                        'crotchet_style': 90
                     };
                     const base = Number(basePrices[bt] || priceMapLocal['kids-braids'] || 80);
                     // braid type adjustments
@@ -1753,9 +1753,9 @@ document.addEventListener('DOMContentLoaded', function(){
                     box_small: 90,
                     box_med: 80,
                     stitch: 100,
-                    half_weave_braid: 100,
-                    half_weave_crotchet: 80,
-                    crotchet_style: 70
+                    half_weave_braid: 120,
+                    half_weave_crotchet: 100,
+                    crotchet_style: 90
                 };
                 const kidsFinishAdjMap = { plain: 0, curled: -10 };
                 const kidsLengthAdjMap = { shoulder: 0, armpit: 10, mid_back: 20, waist: 30 };
