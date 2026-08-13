@@ -1691,6 +1691,14 @@
             box-shadow: none;
         }
 
+        .time-slot-btn.past {
+            background-color: #f1f3f5 !important;
+            border-color: #dee2e6 !important;
+            color: #adb5bd !important;
+            cursor: not-allowed;
+            text-decoration: line-through;
+        }
+
         /* Book Appointment button styles */
         #bookAppointmentBtn {
             transition: all 0.3s ease !important;
@@ -3632,6 +3640,25 @@
             loadTimeSlotsForDate(date);
         }
 
+        function isCalendarSlotInPast(date, timeHHmm) {
+            const parts = String(timeHHmm || '').split(':');
+            const hours = parseInt(parts[0], 10);
+            const minutes = parseInt(parts[1] || '0', 10);
+            if (Number.isNaN(hours)) return false;
+            const slot = new Date(date);
+            slot.setHours(hours, minutes, 0, 0);
+            return slot.getTime() <= Date.now();
+        }
+
+        function markPastCalendarSlots(date, slots) {
+            return (slots || []).map(function(slot) {
+                if (isCalendarSlotInPast(date, slot.time)) {
+                    return Object.assign({}, slot, { available: false, past: true });
+                }
+                return slot;
+            });
+        }
+
         function loadTimeSlotsForDate(date) {
             const loading = document.getElementById('calendarLoading');
             const timeSlotsContainer = document.getElementById('timeSlotsContainer');
@@ -3649,7 +3676,7 @@
             });
 
             // Generate default time slots (9 AM to 6 PM)
-            const defaultSlots = [
+            const defaultSlots = markPastCalendarSlots(date, [
                 { time: '09:00', available: true, formatted_time: '9:00 AM' },
                 { time: '10:00', available: true, formatted_time: '10:00 AM' },
                 { time: '11:00', available: true, formatted_time: '11:00 AM' },
@@ -3660,7 +3687,7 @@
                 { time: '16:00', available: true, formatted_time: '4:00 PM' },
                 { time: '17:00', available: true, formatted_time: '5:00 PM' },
                 { time: '18:00', available: true, formatted_time: '6:00 PM' }
-            ];
+            ]);
 
             // Try to fetch from API first, but fallback to default slots
             fetch(`/bookings/slots?date=${formatYMD(date)}`)
@@ -3675,7 +3702,7 @@
                             timeSlots.innerHTML = `<div class="alert alert-warning"><i class="bi bi-exclamation-triangle me-2"></i>${data.message}</div>`;
                             document.getElementById('confirmDateTimeBtn').disabled = true;
                         } else if (data.slots && data.slots.length > 0) {
-                            renderTimeSlotsInModal(data.slots);
+                            renderTimeSlotsInModal(markPastCalendarSlots(date, data.slots));
                         } else {
                             // Use default slots if no slots returned
                             renderTimeSlotsInModal(defaultSlots);
@@ -3708,16 +3735,27 @@
             // Show instruction message
             if (instructionDiv) instructionDiv.style.display = 'block';
 
+            const selectable = slots.filter(slot => slot.available);
+            if (!selectable.length) {
+                if (instructionDiv) instructionDiv.style.display = 'none';
+                timeSlots.innerHTML = '<div class="col-12"><div class="alert alert-warning"><i class="bi bi-exclamation-triangle me-2"></i>No remaining times for this date. Please select another date.</div></div>';
+                document.getElementById('confirmDateTimeBtn').disabled = true;
+                selectedCalendarTime = null;
+                return;
+            }
+
             slots.forEach(slot => {
                 const slotDiv = document.createElement('div');
                 slotDiv.className = `col-6 col-md-4 col-lg-3 mb-2`;
+                const status = slot.available ? 'Available' : (slot.past ? 'Past' : 'Booked');
+                const stateClass = slot.available ? 'available' : (slot.past ? 'past' : 'booked');
                 slotDiv.innerHTML = `
-                    <button class="btn btn-outline-primary w-100 time-slot-btn ${slot.available ? 'available' : 'booked'}"
+                    <button class="btn btn-outline-primary w-100 time-slot-btn ${stateClass}"
                             ${slot.available ? `onclick="selectCalendarTime('${slot.time}', '${slot.formatted_time}')"` : 'disabled'}
                             data-time="${slot.time}"
                             data-formatted="${slot.formatted_time}">
                         <span class="time-display" style="font-size: 1rem; font-weight: 600;">${slot.formatted_time}</span>
-                        <br><small class="status-text" style="font-size: 0.75rem; opacity: 0.8;">${slot.available ? 'Available' : 'Booked'}</small>
+                        <br><small class="status-text" style="font-size: 0.75rem; opacity: 0.8;">${status}</small>
                     </button>
                 `;
                 timeSlots.appendChild(slotDiv);
@@ -8193,7 +8231,7 @@ function openOtherServicesModal() {
                     </ol>
                     <div style="display:flex;gap:8px;flex-wrap:wrap;">
                         <a href="tel:+3432548848" class="btn btn-sm" style="background:#030f68;color:#fff;border-radius:8px;font-weight:600;"><i class="bi bi-telephone-fill me-1"></i>(343) 254-8848</a>
-                        <a href="mailto:dabereprecious01@gmail.com" class="btn btn-sm" style="background:#030f68;color:#fff;border-radius:8px;font-weight:600;"><i class="bi bi-envelope-fill me-1"></i>Interac Email</a>
+                        <a href="mailto:info@dabsbeautytouch.com" class="btn btn-sm" style="background:#030f68;color:#fff;border-radius:8px;font-weight:600;"><i class="bi bi-envelope-fill me-1"></i>Email Us</a>
                         <a href="https://wa.me/3432548848" target="_blank" rel="noopener" class="btn btn-sm" style="background:#25d366;color:#fff;border-radius:8px;font-weight:600;"><i class="bi bi-whatsapp me-1"></i>WhatsApp</a>
                     </div>
                 </div>
@@ -8271,7 +8309,7 @@ function openOtherServicesModal() {
                     </ol>
                     <div style="display:flex;gap:8px;flex-wrap:wrap;">
                         <a href="tel:+3432548848" class="btn btn-sm" style="background:#030f68;color:#fff;border-radius:8px;font-weight:600;"><i class="bi bi-telephone-fill me-1"></i>(343) 254-8848</a>
-                        <a href="mailto:dabereprecious01@gmail.com" class="btn btn-sm" style="background:#030f68;color:#fff;border-radius:8px;font-weight:600;"><i class="bi bi-envelope-fill me-1"></i>Interac Email</a>
+                        <a href="mailto:info@dabsbeautytouch.com" class="btn btn-sm" style="background:#030f68;color:#fff;border-radius:8px;font-weight:600;"><i class="bi bi-envelope-fill me-1"></i>Email Us</a>
                         <a href="https://wa.me/3432548848" target="_blank" rel="noopener" class="btn btn-sm" style="background:#25d366;color:#fff;border-radius:8px;font-weight:600;"><i class="bi bi-whatsapp me-1"></i>WhatsApp</a>
                     </div>
                 </div>

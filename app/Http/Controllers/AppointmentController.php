@@ -317,6 +317,15 @@ class AppointmentController extends Controller
             // Enforce 5-hour window overlap rule on the server
             try {
                 $reqStart = Carbon::createFromFormat('Y-m-d H:i', $request->appointment_date . ' ' . $request->appointment_time, $appTz);
+                $requestedLocal = Carbon::createFromFormat('Y-m-d H:i', $request->appointment_date . ' ' . $request->appointment_time, 'America/Toronto');
+                if ($requestedLocal->lte(Carbon::now('America/Toronto'))) {
+                    $isApiRequest = $request->expectsJson() || $request->is('api/*') || $request->header('X-Requested-With') === 'XMLHttpRequest';
+                    $msg = 'That time has already passed. Please choose a later time.';
+                    if ($isApiRequest) {
+                        return response()->json(['success' => false, 'message' => $msg], 422);
+                    }
+                    return redirect()->route('home')->with(['booking_error' => true, 'error_message' => $msg]);
+                }
                 $reqEnd = $reqStart->copy()->addMinutes($bookingBlockMinutes);
 
                 foreach ($existingBookingsForDay as $b) {
@@ -1779,9 +1788,15 @@ class AppointmentController extends Controller
             // Additionally, only show slots where the service can fit before end of business day
             // AND check backward availability to prevent conflicts with earlier bookings
             $availableSlots = [];
+            $bizTz = 'America/Toronto';
+            $nowBiz = Carbon::now($bizTz);
             foreach ($defaultSlots as $slotTime) {
                 $slotDateTime = Carbon::createFromFormat('Y-m-d H:i', $date . ' ' . $slotTime, $appTz);
-                
+                $slotBiz = Carbon::createFromFormat('Y-m-d H:i', $date . ' ' . $slotTime, $bizTz);
+                if ($slotBiz->lte($nowBiz)) {
+                    continue;
+                }
+
                 // Check if service duration fits before end of business day (FORWARD check)
                 $serviceEndTime = $slotDateTime->copy()->addMinutes($serviceDurationMinutes);
                 $hasEnoughTimeBeforeClose = $serviceEndTime->lte($businessDayEnd);
