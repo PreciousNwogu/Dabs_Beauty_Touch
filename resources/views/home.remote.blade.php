@@ -2169,6 +2169,9 @@
                         next.push(size);
                         return;
                     }
+                    if (ov.hidden || (ov.card && ov.card.hidden)) {
+                        return;
+                    }
                     if (ov.variants && ov.variants.length) {
                         ov.variants.forEach(function(v) {
                             next.push(Object.assign({}, size, v, {
@@ -2195,7 +2198,8 @@
                         fifteenPlusRowsPrice: Number(card.fifteenPlusRowsPrice ?? 30),
                         image: card.image || size.image,
                         description: card.description || size.description || '',
-                        cms: true
+                        cms: true,
+                        braidSizes: Array.isArray(card.braidSizes) ? card.braidSizes : (size.braidSizes || [])
                     }));
                 });
                 sizeMap[key].sizes = next;
@@ -2228,6 +2232,7 @@
             window.serviceSizeData.selectedSize = null;
             window.serviceSizeData.selectedLength = 'mid-back';
             window.serviceSizeData.selectedTipOption = 'curled';
+            window.serviceSizeData.braidSize = null;
 
             // Auto-select the first size so Continue flow is never blocked by null selected size.
             try {
@@ -2326,6 +2331,79 @@
 
             refreshTipOptionStyles();
         }
+
+        function findSelectedSizeMeta(sizeSlug) {
+            const maps = window.serviceSizesMap || {};
+            const cat = window.serviceSizeData ? maps[window.serviceSizeData.serviceCategory] : null;
+            const fromCat = cat && Array.isArray(cat.sizes)
+                ? cat.sizes.find(function(s) { return s.slug === sizeSlug; })
+                : null;
+            if (fromCat) return fromCat;
+            for (const key of Object.keys(maps)) {
+                const found = (maps[key].sizes || []).find(function(s) { return s.slug === sizeSlug; });
+                if (found) return found;
+            }
+            return null;
+        }
+
+        function refreshBraidSizePickerStyles() {
+            const selected = window.serviceSizeData.braidSize;
+            document.querySelectorAll('#braidSizePickerOptions .form-check').forEach(function(option) {
+                const radio = option.querySelector('input[type="radio"]');
+                const isOn = radio && radio.value === selected;
+                option.style.border = isOn ? '2px solid #ff6600' : '2px solid #e9ecef';
+                option.style.background = isOn ? '#fff7e0' : '#fff';
+            });
+        }
+
+        function renderBraidSizePicker(sizeMeta) {
+            const section = document.getElementById('braidSizePickerSection');
+            const container = document.getElementById('braidSizePickerOptions');
+            const sizes = sizeMeta && Array.isArray(sizeMeta.braidSizes) ? sizeMeta.braidSizes : [];
+            if (!section || !container) return;
+
+            if (!sizes.length) {
+                section.style.display = 'none';
+                window.serviceSizeData.braidSize = null;
+                container.innerHTML = '';
+                return;
+            }
+
+            section.style.display = 'block';
+            container.innerHTML = sizes.map(function(size) {
+                const desc = getSizeDescription(size.label);
+                const safeKey = String(size.key).replace(/'/g, "\\'");
+                return `
+                    <div class="form-check flex-fill" style="background:#fff;padding:15px;border-radius:10px;border:2px solid #e9ecef;cursor:pointer;min-width:140px;" onclick="selectBraidSize('${safeKey}')">
+                        <input class="form-check-input" type="radio" name="braid_size_picker" id="braid_size_${size.key}" value="${size.key}">
+                        <label class="form-check-label w-100" for="braid_size_${size.key}" style="cursor:pointer;font-weight:600;">
+                            ${size.label}
+                            <span class="float-end" style="color:#ff6600;">$${size.price}</span>
+                            ${desc ? `<div class="text-muted fw-normal" style="font-size:.78rem;margin-top:4px;">${desc}</div>` : ''}
+                        </label>
+                    </div>
+                `;
+            }).join('');
+
+            const defaultKey = sizes.some(function(s) { return s.key === 'medium'; }) ? 'medium' : sizes[0].key;
+            window.selectBraidSize(defaultKey);
+        }
+
+        window.selectBraidSize = function(sizeKey) {
+            const sizeMeta = findSelectedSizeMeta(window.serviceSizeData.selectedSize);
+            const option = ((sizeMeta && sizeMeta.braidSizes) || []).find(function(s) { return s.key === sizeKey; });
+            if (!option) return;
+
+            window.serviceSizeData.braidSize = sizeKey;
+            const baseSlug = String(window.serviceSizeData.selectedSize || '').replace(/--(small|smedium|medium|large)$/, '');
+            window.serviceSizeData.serviceType = baseSlug + '--' + sizeKey;
+            window.serviceSizeData.basePrice = Number(option.price || window.serviceSizeData.basePrice || 0);
+
+            const radio = document.getElementById('braid_size_' + sizeKey);
+            if (radio) radio.checked = true;
+            refreshBraidSizePickerStyles();
+            updateSizeLengthPrice();
+        };
 
         // Populate size options dynamically
         function populateSizeOptions(sizes) {
@@ -2450,6 +2528,7 @@
                 'Small': 'Very thin braids',
                 'Smedium': 'Small-Medium size',
                 'Medium': 'Standard medium size',
+                'Large': 'Extra large/thick braids',
                 'Large/Jumbo': 'Extra large/thick braids'
             };
             return descriptions[sizeName] || '';
@@ -2483,22 +2562,9 @@
             window.serviceSizeData.selectedTipOption = 'curled'; // Reset tip option
             window.serviceSizeData.noLength = noLength || false; // Track if length should be hidden
             window.serviceSizeData.hasTipFinish = !!hasTipFinish;
+            window.serviceSizeData.braidSize = null;
 
-            const sizeMeta = (function findSizeMeta(sizeSlug) {
-                const cat = window.serviceSizesMap && window.serviceSizeData
-                    ? window.serviceSizesMap[window.serviceSizeData.serviceCategory]
-                    : null;
-                const fromCat = cat && Array.isArray(cat.sizes)
-                    ? cat.sizes.find(function(s) { return s.slug === sizeSlug; })
-                    : null;
-                if (fromCat) return fromCat;
-                const maps = window.serviceSizesMap || {};
-                for (const key of Object.keys(maps)) {
-                    const found = (maps[key].sizes || []).find(function(s) { return s.slug === sizeSlug; });
-                    if (found) return found;
-                }
-                return null;
-            })(slug);
+            const sizeMeta = findSelectedSizeMeta(slug);
             const hasExplicitRowFlags = !!(sizeMeta && (
                 'hasEightToTenRows' in sizeMeta || 'hasTenPlusRows' in sizeMeta || 'hasFifteenPlusRows' in sizeMeta
             ));
@@ -2593,6 +2659,7 @@
 
             // Show/hide tip finish section for eligible services
             updateTipOptionSectionVisibility();
+            renderBraidSizePicker(sizeMeta);
 
             // Display selected service info
             const selectedServiceDisplay = document.getElementById('selectedServiceDisplay');
@@ -2603,7 +2670,6 @@
             if (selectedServiceDisplay && selectedServiceName && selectedServicePrice) {
                 selectedServiceDisplay.style.display = 'block';
                 selectedServiceName.textContent = name;
-                selectedServicePrice.textContent = '$' + price;
 
                 // Set the description
                 const sizeName = getSizeName(name);
@@ -2793,7 +2859,7 @@
             const rowOption = window.serviceSizeData.rowOption || '8-10';
             const frontBackAddon = window.serviceSizeData.frontBackAddon || false;
             const selectedTipOption = window.serviceSizeData.selectedTipOption || 'curled';
-            const tipEligible = isTipOptionEligible(window.serviceSizeData.serviceCategory);
+            const tipEligible = isTipOptionEligible(window.serviceSizeData.serviceCategory) || !!window.serviceSizeData.hasTipFinish;
 
             let adjustment = 0;
             let weaveAddonCost = 0;
@@ -2854,6 +2920,10 @@
             if (priceDisplay) {
                 priceDisplay.textContent = basePrice > 0 ? `$${totalPrice}` : '$--';
             }
+            const selectedServicePrice = document.getElementById('selectedServicePrice');
+            if (selectedServicePrice) {
+                selectedServicePrice.textContent = basePrice > 0 ? `$${totalPrice}` : '$--';
+            }
 
             // Enable/disable continue button
             const continueBtn = document.getElementById('continueToBookingBtn');
@@ -2866,6 +2936,11 @@
         window.continueToBooking = function() {
             if (!window.serviceSizeData.selectedSize) {
                 alert('Please select a braid size first');
+                return;
+            }
+            const braidSizeSection = document.getElementById('braidSizePickerSection');
+            if (braidSizeSection && braidSizeSection.style.display !== 'none' && !window.serviceSizeData.braidSize) {
+                alert('Please choose a braid size first');
                 return;
             }
 
@@ -2887,6 +2962,10 @@
 
             // Build service name with add-ons
             let serviceName = window.serviceSizeData.serviceName;
+            const sizeLabels = { small: 'Small', smedium: 'Smedium', medium: 'Medium', large: 'Large' };
+            if (window.serviceSizeData.braidSize && sizeLabels[window.serviceSizeData.braidSize]) {
+                serviceName += ' (' + sizeLabels[window.serviceSizeData.braidSize] + ')';
+            }
             if (window.serviceSizeData.weaveAddon)          serviceName += ' (With Weave)';
             if (window.serviceSizeData.rowOption === '10+')  serviceName += ' (10+ Rows)';
             if (window.serviceSizeData.rowOption === '15+')  serviceName += ' (15+ Rows)';
@@ -4650,7 +4729,7 @@ function openOtherServicesModal() {
                                     <div id="selectedServiceDescription" style="font-size: 0.9rem; color: #6c757d; margin-top: 8px; font-style: italic;"></div>
                                 </div>
                                 <div style="text-align: right;">
-                                    <div style="font-size: 0.85rem; color: #6c757d; margin-bottom: 3px;">Base Price</div>
+                                    <div id="selectedServicePriceLabel" style="font-size: 0.85rem; color: #6c757d; margin-bottom: 3px;">Price</div>
                                     <div id="selectedServicePrice" style="font-size: 1.3rem; font-weight: 800; color: #ff6600;"></div>
                                 </div>
                             </div>
@@ -4658,6 +4737,18 @@ function openOtherServicesModal() {
 
                         <div class="row g-3" id="sizeOptionsContainer">
                             <!-- Size options will be dynamically populated -->
+                        </div>
+                    </div>
+
+                    <div class="mb-4" id="braidSizePickerSection" style="display: none;">
+                        <div class="alert" style="background: linear-gradient(135deg, #fff7e0 0%, #ffe8cc 100%); border-left: 6px solid #ff6600; border-radius: 12px; padding: 20px;">
+                            <h6 style="font-weight: 700; color: #030f68; margin-bottom: 15px;">
+                                <i class="bi bi-grid-3x3-gap me-2"></i>Choose Size of Braid
+                            </h6>
+                            <p style="margin-bottom: 15px; color: #555; font-size: 0.95rem;">
+                                Select how thin or thick you want the braids.
+                            </p>
+                            <div class="d-flex flex-wrap gap-3" id="braidSizePickerOptions"></div>
                         </div>
                     </div>
 

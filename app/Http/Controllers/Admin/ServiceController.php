@@ -65,8 +65,10 @@ class ServiceController extends Controller
             'ten_plus_rows_price' => 'nullable|numeric|min:0',
             'fifteen_plus_rows_price' => 'nullable|numeric|min:0',
             'duration'       => 'nullable|string|max:50',
+            'offer_braid_sizes' => 'nullable|boolean',
             'size_enabled'   => 'nullable|array',
             'size_price'     => 'nullable|array',
+            'size_price.*'   => 'nullable|numeric|min:0',
         ], $this->imageUploadMessages());
 
         $data = $this->normalizeServicePayload($data);
@@ -118,8 +120,10 @@ class ServiceController extends Controller
             'ten_plus_rows_price' => 'nullable|numeric|min:0',
             'fifteen_plus_rows_price' => 'nullable|numeric|min:0',
             'duration'       => 'nullable|string|max:50',
+            'offer_braid_sizes' => 'nullable|boolean',
             'size_enabled'   => 'nullable|array',
             'size_price'     => 'nullable|array',
+            'size_price.*'   => 'nullable|numeric|min:0',
         ], $this->imageUploadMessages());
 
         $data = $this->normalizeServicePayload($data, $service);
@@ -148,6 +152,10 @@ class ServiceController extends Controller
 
     public function destroy(Service $service)
     {
+        if (AdultServiceCatalog::isHardcodedSlug($service->slug, $service->name)) {
+            $service->update(['is_active' => false]);
+            return redirect()->route('admin.services.index')->with('success', 'This on-site style is now hidden. Edit it and set Active to show it again.');
+        }
         $service->delete();
         return redirect()->route('admin.services.index')->with('success', 'Service deleted.');
     }
@@ -197,22 +205,24 @@ class ServiceController extends Controller
         }
 
         $sizeOptions = [];
-        if (empty($data['for_kids'])) {
+        $offerSizes = !empty($data['offer_braid_sizes']);
+        if (empty($data['for_kids']) && $offerSizes) {
             $enabled = $data['size_enabled'] ?? [];
             $prices = $data['size_price'] ?? [];
+            $base = isset($data['base_price']) ? (float) $data['base_price'] : 0;
             foreach (array_keys(AdultServiceCatalog::sizeLabels()) as $sizeKey) {
                 if (empty($enabled[$sizeKey])) {
                     continue;
                 }
                 $price = isset($prices[$sizeKey]) && $prices[$sizeKey] !== '' ? (float) $prices[$sizeKey] : null;
                 if ($price === null || $price < 0) {
-                    $price = isset($data['base_price']) ? (float) $data['base_price'] : 0;
+                    $price = AdultServiceCatalog::suggestedSizePrice($base, $sizeKey);
                 }
                 $sizeOptions[$sizeKey] = $price;
             }
         }
         $data['size_options'] = $sizeOptions ?: null;
-        unset($data['size_enabled'], $data['size_price'], $data['image'], $data['image_data'], $data['remove_image']);
+        unset($data['offer_braid_sizes'], $data['size_enabled'], $data['size_price'], $data['image'], $data['image_data'], $data['remove_image']);
 
         foreach (['has_length', 'has_tip_finish', 'has_row_options', 'has_eight_to_ten_rows', 'has_fifteen_plus_rows', 'eight_to_ten_rows_price', 'ten_plus_rows_price', 'fifteen_plus_rows_price', 'duration', 'size_options', 'use_as_category_card'] as $col) {
             if (!Schema::hasColumn('services', $col)) {

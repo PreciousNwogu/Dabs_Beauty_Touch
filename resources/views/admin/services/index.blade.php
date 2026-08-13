@@ -111,16 +111,18 @@
                 <tbody>
                     @foreach($services as $service)
                     @php
+                        $linkedSlug = \App\Support\AdultServiceCatalog::hardcodedSlugForCms($service->slug, $service->name);
                         $cmsCategory = $service->category
-                            ?: (\App\Support\AdultServiceCatalog::hardcodedCategoryBySlug()[$service->slug] ?? '');
-                        $shownOnSite = isset(\App\Support\AdultServiceCatalog::hardcodedCategoryBySlug()[$service->slug]);
+                            ?: (\App\Support\AdultServiceCatalog::hardcodedCategoryBySlug()[$linkedSlug ?? $service->slug] ?? '');
+                        $shownOnSite = $linkedSlug !== null;
+                        $searchAliases = $linkedSlug ? ' '.$linkedSlug.' '.str_replace('-', ' ', $linkedSlug) : '';
                     @endphp
                     <tr
                         data-category="{{ strtolower($cmsCategory) }}"
                         data-status="{{ $service->is_active ? 'active' : 'inactive' }}"
                         data-discount="{{ $service->discount_price !== null ? 'discounted' : '' }}"
                         data-kids="{{ !empty($service->for_kids) ? '1' : '0' }}"
-                        data-name="{{ strtolower($service->name.' '.$service->slug) }}"
+                        data-name="{{ strtolower($service->name.' '.$service->slug.' '.$cmsCategory.$searchAliases) }}"
                     >
                         <td>
                             <div class="d-flex align-items-start gap-2">
@@ -213,8 +215,11 @@
                                 <button class="btn btn-sm btn-outline-warning btn-action" onclick="toggleDiscountPanel({{ $service->id }})">
                                     <i class="bi bi-tag me-1"></i>Discount
                                 </button>
-                                <button class="btn btn-sm btn-outline-danger btn-action" onclick="confirmDelete({{ $service->id }}, '{{ addslashes($service->name) }}')">
-                                    <i class="bi bi-trash me-1"></i>Delete
+                                <button type="button" class="btn btn-sm btn-outline-danger btn-action js-delete-service"
+                                        data-id="{{ $service->id }}"
+                                        data-name="{{ $service->name }}"
+                                        data-onsite="{{ $shownOnSite ? '1' : '0' }}">
+                                    <i class="bi bi-trash me-1"></i>{{ $shownOnSite ? 'Hide' : 'Delete' }}
                                 </button>
                             </div>
 
@@ -272,13 +277,13 @@
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content" style="border-radius:16px;overflow:hidden">
             <div class="modal-header" style="background:linear-gradient(135deg,#dc3545,#ff6b6b);color:white">
-                <h5 class="modal-title fw-bold"><i class="bi bi-exclamation-triangle me-2"></i>Delete Service</h5>
+                <h5 class="modal-title fw-bold" id="deleteModalTitle"><i class="bi bi-exclamation-triangle me-2"></i>Delete Service</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body p-4">
-                <p class="mb-1">Are you sure you want to permanently delete:</p>
+                <p class="mb-1" id="deleteModalLead">Are you sure you want to permanently delete:</p>
                 <p class="fw-bold fs-5" id="deleteServiceName" style="color:#dc3545"></p>
-                <p class="text-muted small mb-0">This action cannot be undone.</p>
+                <p class="text-muted small mb-0" id="deleteModalNote">This action cannot be undone.</p>
             </div>
             <div class="modal-footer">
                 <button class="btn btn-secondary fw-bold" data-bs-dismiss="modal">Cancel</button>
@@ -296,6 +301,18 @@ function confirmDelete(id, name) {
     document.getElementById('deleteServiceName').textContent = name;
     new bootstrap.Modal(document.getElementById('deleteModal')).show();
 }
+document.querySelectorAll('.js-delete-service').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+        const onsite = btn.dataset.onsite === '1';
+        const title = document.getElementById('deleteModalTitle');
+        const lead = document.getElementById('deleteModalLead');
+        const note = document.getElementById('deleteModalNote');
+        if (title) title.lastChild && (title.innerHTML = '<i class="bi bi-exclamation-triangle me-2"></i>' + (onsite ? 'Hide On-site Style' : 'Delete Service'));
+        if (lead) lead.textContent = onsite ? 'Hide this style from the website?' : 'Are you sure you want to permanently delete:';
+        if (note) note.textContent = onsite ? 'It stays in CMS as Inactive. Edit it and set Active to show it again.' : 'This action cannot be undone.';
+        confirmDelete(btn.dataset.id, btn.dataset.name || '');
+    });
+});
 document.getElementById('confirmDeleteBtn').addEventListener('click', function() {
     if (pendingDeleteId) document.getElementById('delete-form-' + pendingDeleteId).submit();
 });

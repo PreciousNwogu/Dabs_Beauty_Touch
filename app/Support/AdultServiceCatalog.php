@@ -88,6 +88,7 @@ class AdultServiceCatalog
             'natural-hair-treatment' => ['natural-hair-treatment', 'hair-mask'],
             'kinky-twist' => ['kinky-twist', 'kinky_twist'],
             'passion-twist' => ['passion-twist', 'passion_twist'],
+            'weave-braid-mixed' => ['weave-braid-mixed', 'weave_braid_mixed', 'weave-and-braid-mixed', 'weave_and_braid_mixed'],
         ];
 
         $list = $aliases[$slug] ?? [$slug];
@@ -95,8 +96,92 @@ class AdultServiceCatalog
         if ($underscore !== $slug && !in_array($underscore, $list, true)) {
             $list[] = $underscore;
         }
+        $parts = array_values(array_filter(explode('-', $slug)));
+        if (count($parts) >= 2) {
+            $withAnd = $parts[0] . '-and-' . implode('-', array_slice($parts, 1));
+            if (!in_array($withAnd, $list, true)) {
+                $list[] = $withAnd;
+            }
+            $withAndUnderscore = str_replace('-', '_', $withAnd);
+            if (!in_array($withAndUnderscore, $list, true)) {
+                $list[] = $withAndUnderscore;
+            }
+        }
 
-        return $list;
+        return array_values(array_unique($list));
+    }
+
+    /** Collapse slug/name differences like &, and, underscores, and punctuation. */
+    public static function normalizeMatchKey(?string $value): string
+    {
+        $v = strtolower(trim((string) $value));
+        if ($v === '') {
+            return '';
+        }
+        $v = str_replace(['&', '+', '_', '/'], [' and ', ' and ', '-', ' '], $v);
+        $v = preg_replace('/[^a-z0-9]+/', ' ', $v) ?? $v;
+        $v = preg_replace('/\b(and|the|a|of|with|no|extension|extention)\b/', ' ', $v) ?? $v;
+
+        return (string) preg_replace('/\s+/', '', $v);
+    }
+
+    public static function isKidsCmsStyle(?string $slug, ?string $name = null): bool
+    {
+        $slug = (string) $slug;
+        $name = strtolower(trim((string) $name));
+        if ($slug === 'kids-braids') {
+            return false;
+        }
+        if ($name !== '' && preg_match('/^kids(\s|$)/', $name)) {
+            return true;
+        }
+        foreach (KidsStyleCatalog::definitions() as $def) {
+            $slugs = array_merge([$def['slug'] ?? ''], $def['alt_slugs'] ?? []);
+            if (in_array($slug, $slugs, true)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /** Hardcoded homepage slug controlled by this CMS row, if any. */
+    public static function hardcodedSlugForCms(?string $slug, ?string $name = null): ?string
+    {
+        $slug = (string) $slug;
+        if (self::isKidsCmsStyle($slug, $name)) {
+            return null;
+        }
+        if ($slug !== '' && isset(self::hardcodedCategoryBySlug()[$slug])) {
+            return $slug;
+        }
+        foreach (self::hardcodedSlugs() as $hard) {
+            if ($slug !== '' && in_array($slug, self::cmsSlugsForHardcoded($hard), true)) {
+                return $hard;
+            }
+        }
+
+        $keys = [];
+        if ($slug !== '') {
+            $keys[] = self::normalizeMatchKey($slug);
+        }
+        if (trim((string) $name) !== '') {
+            $keys[] = self::normalizeMatchKey($name);
+        }
+        $keys = array_values(array_filter(array_unique($keys)));
+        foreach (self::hardcodedSlugs() as $hard) {
+            $hardKey = self::normalizeMatchKey($hard);
+            if ($hardKey === '') {
+                continue;
+            }
+            foreach ($keys as $key) {
+                if ($key === $hardKey) {
+                    return $hard;
+                }
+            }
+        }
+
+        return null;
     }
 
     /**
@@ -169,6 +254,48 @@ class AdultServiceCatalog
             'medium' => 'Medium',
             'large' => 'Large',
         ];
+    }
+
+    public static function isHalfWeaveStyle($svc): bool
+    {
+        $slug = strtolower((string) (is_object($svc) ? ($svc->slug ?? '') : ($svc['slug'] ?? '')));
+        $name = strtolower((string) (is_object($svc) ? ($svc->name ?? '') : ($svc['name'] ?? '')));
+
+        return str_contains($slug, '1-2-weave')
+            || str_contains($slug, 'half-weave')
+            || str_contains($slug, 'half_weave')
+            || (bool) preg_match('/1\s*\/\s*2\s*weave|half\s*weave/', $name);
+    }
+
+    /** CMS styles that keep one picker card and show braid-size radios after selection. */
+    public static function wantsInlineBraidSizePicker($svc): bool
+    {
+        if (self::isHalfWeaveStyle($svc)) {
+            return true;
+        }
+
+        $options = is_object($svc) ? ($svc->size_options ?? null) : ($svc['size_options'] ?? null);
+        if (is_string($options)) {
+            $options = json_decode($options, true);
+        }
+
+        return is_array($options) && $options !== [];
+    }
+
+    /** Offsets from the Medium/base price for inline braid-size radios. */
+    public static function inlineBraidSizeAdjustments(): array
+    {
+        return [
+            'small' => 40,
+            'smedium' => 20,
+            'medium' => 0,
+            'large' => -20,
+        ];
+    }
+
+    public static function suggestedSizePrice(float $base, string $sizeKey): int
+    {
+        return max(0, (int) round($base + (self::inlineBraidSizeAdjustments()[$sizeKey] ?? 0)));
     }
 
     public static function displayCategoryName(?string $name): string
@@ -295,6 +422,15 @@ class AdultServiceCatalog
             $options = json_decode($options, true);
         }
         if (!is_array($options) || !isset($options[$sizeKey]) || !is_numeric($options[$sizeKey])) {
+            if (self::isHalfWeaveStyle($service) && isset(self::inlineBraidSizeAdjustments()[$sizeKey])) {
+                $base = is_object($service) ? (float) $service->base_price : (float) ($service['base_price'] ?? 0);
+                $effective = is_object($service) && isset($service->effective_price)
+                    ? (float) $service->effective_price
+                    : $base;
+
+                return max(0, round($effective + self::inlineBraidSizeAdjustments()[$sizeKey], 2));
+            }
+
             return null;
         }
 
@@ -353,7 +489,7 @@ class AdultServiceCatalog
             if (!empty($svc->for_kids)) {
                 continue;
             }
-            if (self::isHardcodedSlug($svc->slug)) {
+            if (self::isHardcodedSlug($svc->slug, $svc->name ?? null)) {
                 continue;
             }
             if (empty($svc->category)) {
@@ -386,21 +522,31 @@ class AdultServiceCatalog
                 'cms' => true,
             ];
 
-            if ($sizeOptions) {
+            if (self::wantsInlineBraidSizePicker($svc)) {
+                $braidSizes = [];
                 foreach (self::sizeLabels() as $sizeKey => $sizeLabel) {
-                    if (!isset($sizeOptions[$sizeKey]) || !is_numeric($sizeOptions[$sizeKey])) {
+                    $hasCmsPrice = isset($sizeOptions[$sizeKey]) && is_numeric($sizeOptions[$sizeKey]);
+                    if (!$hasCmsPrice && !self::isHalfWeaveStyle($svc)) {
                         continue;
                     }
-                    $sizePrice = (int) round((float) self::sizePrice($svc, $sizeKey));
-                    $sizeOriginal = (int) $sizeOptions[$sizeKey];
-                    $byKey[$key][] = array_merge($shared, [
-                        'name' => $svc->name . ' — ' . $sizeLabel,
-                        'slug' => $svc->slug . '--' . $sizeKey,
-                        'price' => $sizePrice,
-                        'original' => ($sizeOriginal > $sizePrice) ? $sizeOriginal : null,
-                        'braidSize' => $sizeKey,
-                    ]);
+                    $sizePrice = $hasCmsPrice
+                        ? (int) round((float) self::sizePrice($svc, $sizeKey))
+                        : self::suggestedSizePrice($effective, $sizeKey);
+                    $listed = $hasCmsPrice ? (int) $sizeOptions[$sizeKey] : $sizePrice;
+                    $braidSizes[] = [
+                        'key' => $sizeKey,
+                        'label' => $sizeLabel,
+                        'price' => max(0, $sizePrice),
+                        'original' => ($listed > $sizePrice) ? $listed : null,
+                    ];
                 }
+                $byKey[$key][] = array_merge($shared, [
+                    'name' => $svc->name,
+                    'slug' => $svc->slug,
+                    'price' => $effective,
+                    'original' => ($original > $effective) ? $original : null,
+                    'braidSizes' => $braidSizes,
+                ]);
             } else {
                 $byKey[$key][] = array_merge($shared, [
                     'name' => $svc->name,
@@ -463,13 +609,10 @@ class AdultServiceCatalog
         }
 
         try {
-            $aliasSlugs = [];
-            foreach (self::hardcodedSlugs() as $slug) {
-                foreach (self::cmsSlugsForHardcoded($slug) as $try) {
-                    $aliasSlugs[] = $try;
+            foreach (Service::query()->get() as $svc) {
+                if (empty($svc->slug)) {
+                    continue;
                 }
-            }
-            foreach (Service::whereIn('slug', array_values(array_unique($aliasSlugs)))->get() as $svc) {
                 $bySlug[$svc->slug] = $svc;
             }
         } catch (\Throwable $e) {
@@ -500,22 +643,9 @@ class AdultServiceCatalog
         return $overlays;
     }
 
-    public static function isHardcodedSlug(?string $slug): bool
+    public static function isHardcodedSlug(?string $slug, ?string $name = null): bool
     {
-        $slug = (string) $slug;
-        if ($slug === '') {
-            return false;
-        }
-        if (in_array($slug, self::hardcodedSlugs(), true)) {
-            return true;
-        }
-        foreach (self::hardcodedSlugs() as $hard) {
-            if (in_array($slug, self::cmsSlugsForHardcoded($hard), true)) {
-                return true;
-            }
-        }
-
-        return false;
+        return self::hardcodedSlugForCms($slug, $name) !== null;
     }
 
     private static function overlayServiceForSlug(array $bySlug, array $byName, string $slug)
@@ -526,9 +656,24 @@ class AdultServiceCatalog
             }
         }
 
+        foreach ($bySlug as $svc) {
+            if (self::hardcodedSlugForCms($svc->slug ?? '', $svc->name ?? null) === $slug) {
+                return $svc;
+            }
+        }
+
         $requiredName = strtolower(trim((string) (self::requiredCmsServices()[$slug]['name'] ?? '')));
         if ($requiredName !== '' && isset($byName[$requiredName])) {
             return $byName[$requiredName];
+        }
+
+        $hardKey = self::normalizeMatchKey($slug);
+        if ($hardKey !== '') {
+            foreach ($byName as $nameKey => $svc) {
+                if (self::normalizeMatchKey($nameKey) === $hardKey) {
+                    return $svc;
+                }
+            }
         }
 
         return null;
@@ -560,27 +705,53 @@ class AdultServiceCatalog
             'image' => self::publicImageUrl($svc->image_url ?? ''),
             'description' => trim((string) ($svc->description ?? '')),
             'cms' => true,
+            'hidden' => empty($svc->is_active),
         ];
 
-        $variants = [];
-        foreach (self::sizeLabels() as $sizeKey => $sizeLabel) {
-            if (!isset($sizeOptions[$sizeKey]) || !is_numeric($sizeOptions[$sizeKey])) {
-                continue;
+        $braidSizes = [];
+        if (self::wantsInlineBraidSizePicker($svc)) {
+            foreach (self::sizeLabels() as $sizeKey => $sizeLabel) {
+                $hasCmsPrice = isset($sizeOptions[$sizeKey]) && is_numeric($sizeOptions[$sizeKey]);
+                if (!$hasCmsPrice && !self::isHalfWeaveStyle($svc)) {
+                    continue;
+                }
+                $sizePrice = $hasCmsPrice
+                    ? (int) round((float) self::sizePrice($svc, $sizeKey))
+                    : self::suggestedSizePrice($effective, $sizeKey);
+                $braidSizes[] = [
+                    'key' => $sizeKey,
+                    'label' => $sizeLabel,
+                    'price' => max(0, $sizePrice),
+                    'original' => null,
+                ];
             }
-            $sizePrice = (int) round((float) self::sizePrice($svc, $sizeKey));
-            $sizeOriginal = (int) $sizeOptions[$sizeKey];
-            $variants[] = array_merge($card, [
-                'name' => $svc->name . ' — ' . $sizeLabel,
-                'slug' => $svc->slug . '--' . $sizeKey,
-                'price' => $sizePrice,
-                'original' => ($sizeOriginal > $sizePrice) ? $sizeOriginal : null,
-                'braidSize' => $sizeKey,
-            ]);
+        }
+        if ($braidSizes) {
+            $card['braidSizes'] = $braidSizes;
+        }
+
+        $variants = [];
+        if (!$braidSizes) {
+            foreach (self::sizeLabels() as $sizeKey => $sizeLabel) {
+                if (!isset($sizeOptions[$sizeKey]) || !is_numeric($sizeOptions[$sizeKey])) {
+                    continue;
+                }
+                $sizePrice = (int) round((float) self::sizePrice($svc, $sizeKey));
+                $sizeOriginal = (int) $sizeOptions[$sizeKey];
+                $variants[] = array_merge($card, [
+                    'name' => $svc->name . ' — ' . $sizeLabel,
+                    'slug' => $svc->slug . '--' . $sizeKey,
+                    'price' => $sizePrice,
+                    'original' => ($sizeOriginal > $sizePrice) ? $sizeOriginal : null,
+                    'braidSize' => $sizeKey,
+                ]);
+            }
         }
 
         return [
             'card' => $card,
             'variants' => $variants,
+            'hidden' => !empty($card['hidden']),
         ];
     }
 

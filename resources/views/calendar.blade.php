@@ -922,6 +922,9 @@
                         next.push(size);
                         return;
                     }
+                    if (ov.hidden || (ov.card && ov.card.hidden)) {
+                        return;
+                    }
                     if (ov.variants && ov.variants.length) {
                         ov.variants.forEach(function(v) {
                             next.push(Object.assign({}, size, v));
@@ -945,7 +948,8 @@
                         fifteenPlusRowsPrice: Number(card.fifteenPlusRowsPrice ?? 30),
                         image: card.image || size.image,
                         description: card.description || size.description || '',
-                        cms: true
+                        cms: true,
+                        braidSizes: Array.isArray(card.braidSizes) ? card.braidSizes : (size.braidSizes || [])
                     }));
                 });
                 window.serviceSizesMapCal[key].sizes = next;

@@ -216,7 +216,7 @@
                             <label class="form-label">Base Price ($) <span class="text-danger">*</span></label>
                             <div class="input-group">
                                 <span class="input-group-text">$</span>
-                                <input type="number" name="base_price" step="1" min="0"
+                                <input type="number" name="base_price" id="basePriceInput" step="1" min="0"
                                        class="form-control @error('base_price') is-invalid @enderror"
                                        value="{{ old('base_price', isset($service) ? (int)$service->base_price : '') }}"
                                        placeholder="e.g. 120" required>
@@ -292,8 +292,8 @@
                                    {{ old('is_active', $service->is_active ?? true) ? 'checked' : '' }}
                                    style="width:2.5em;height:1.3em">
                             <label class="form-check-label fw-bold" for="isActive">Active (visible to customers)</label>
-                            @if(isset($service) && \App\Support\AdultServiceCatalog::isHardcodedSlug($service->slug))
-                                <div class="slug-hint mt-1">This style is already on the homepage. Price, photo, time, and name edits update that card even if this switch is off.</div>
+                            @if(isset($service) && \App\Support\AdultServiceCatalog::isHardcodedSlug($service->slug, $service->name))
+                                <div class="slug-hint mt-1">This style is already on the homepage. Edit name, price, photo, or time to update that card. Turn Active off or use Hide to remove it from the site.</div>
                             @endif
                         </div>
                     </div>
@@ -351,34 +351,52 @@
                         @php
                             $sizeLabels = \App\Support\AdultServiceCatalog::sizeLabels();
                             $savedSizes = old('size_price', $service->size_options ?? []);
+                            $isHalfWeave = isset($service) && \App\Support\AdultServiceCatalog::isHalfWeaveStyle($service);
+                            $baseForSizes = (int) old('base_price', isset($service) ? (int) $service->base_price : 0);
+                            if (!$savedSizes && $isHalfWeave) {
+                                foreach ($sizeLabels as $sizeKey => $sizeLabel) {
+                                    $savedSizes[$sizeKey] = \App\Support\AdultServiceCatalog::suggestedSizePrice($baseForSizes, $sizeKey);
+                                }
+                            }
                             $savedEnabled = old('size_enabled', array_fill_keys(array_keys($savedSizes ?: []), '1'));
+                            $offerSizes = (string) old('offer_braid_sizes', !empty($savedSizes) ? '1' : '') === '1';
                         @endphp
                         <div class="mb-4">
-                            <label class="form-label">Braid sizes</label>
-                            <div class="slug-hint mb-2">Check the sizes customers can choose. Each size gets its own price on the homepage card.</div>
-                            <div class="row g-2">
-                                @foreach($sizeLabels as $sizeKey => $sizeLabel)
-                                    @php
-                                        $isOn = !empty($savedEnabled[$sizeKey]);
-                                        $sizeVal = $savedSizes[$sizeKey] ?? old('base_price', isset($service) ? (int) $service->base_price : '');
-                                    @endphp
-                                    <div class="col-md-6">
-                                        <div class="d-flex align-items-center gap-2 p-2" style="border:1.5px solid #e0e0e0;border-radius:10px">
-                                            <input class="form-check-input m-0" type="checkbox" name="size_enabled[{{ $sizeKey }}]" id="size_{{ $sizeKey }}" value="1"
-                                                   {{ $isOn ? 'checked' : '' }}
-                                                   onchange="document.getElementById('size_price_{{ $sizeKey }}').disabled = !this.checked">
-                                            <label class="form-check-label fw-bold flex-grow-1 mb-0" for="size_{{ $sizeKey }}">{{ $sizeLabel }}</label>
-                                            <div class="input-group input-group-sm" style="max-width:130px">
-                                                <span class="input-group-text">$</span>
-                                                <input type="number" name="size_price[{{ $sizeKey }}]" id="size_price_{{ $sizeKey }}"
-                                                       class="form-control" min="0" step="1"
-                                                       value="{{ $sizeVal }}"
-                                                       {{ $isOn ? '' : 'disabled' }}
-                                                       placeholder="Price">
+                            <div class="form-check form-switch mb-2">
+                                <input class="form-check-input" type="checkbox" name="offer_braid_sizes" id="offerBraidSizes" value="1"
+                                       {{ $offerSizes ? 'checked' : '' }}
+                                       style="width:2.5em;height:1.3em"
+                                       onchange="toggleBraidSizeEditor(this.checked)">
+                                <label class="form-check-label fw-bold" for="offerBraidSizes">Customers choose braid size</label>
+                                <div class="slug-hint">Shows Small / Smedium / Medium / Large radios after this style is selected. Edit each size price here.</div>
+                            </div>
+                            <div id="braidSizePriceRows" style="display: {{ $offerSizes ? '' : 'none' }}">
+                                <div class="row g-2">
+                                    @foreach($sizeLabels as $sizeKey => $sizeLabel)
+                                        @php
+                                            $isOn = $offerSizes && !empty($savedEnabled[$sizeKey]);
+                                            $sizeVal = $savedSizes[$sizeKey] ?? \App\Support\AdultServiceCatalog::suggestedSizePrice($baseForSizes, $sizeKey);
+                                        @endphp
+                                        <div class="col-md-6">
+                                            <div class="d-flex align-items-center gap-2 p-2" style="border:1.5px solid #e0e0e0;border-radius:10px">
+                                                <input class="form-check-input m-0 size-enabled-box" type="checkbox" name="size_enabled[{{ $sizeKey }}]" id="size_{{ $sizeKey }}" value="1"
+                                                       data-size-key="{{ $sizeKey }}"
+                                                       {{ $isOn ? 'checked' : '' }}
+                                                       onchange="syncSizePriceField('{{ $sizeKey }}')">
+                                                <label class="form-check-label fw-bold flex-grow-1 mb-0" for="size_{{ $sizeKey }}">{{ $sizeLabel }}</label>
+                                                <div class="input-group input-group-sm" style="max-width:130px">
+                                                    <span class="input-group-text">$</span>
+                                                    <input type="number" name="size_price[{{ $sizeKey }}]" id="size_price_{{ $sizeKey }}"
+                                                           class="form-control size-price-input" min="0" step="1"
+                                                           data-size-key="{{ $sizeKey }}"
+                                                           value="{{ $sizeVal }}"
+                                                           {{ $isOn ? '' : 'disabled' }}
+                                                           placeholder="Price">
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
-                                @endforeach
+                                    @endforeach
+                                </div>
                             </div>
                         </div>
 
@@ -628,6 +646,46 @@ function toggleDiscountExpiry(val) {
     };
     if (kids) kids.addEventListener('change', sync);
     sync();
+})();
+const sizePriceAdjustments = @json(\App\Support\AdultServiceCatalog::inlineBraidSizeAdjustments());
+function suggestedSizePriceFromBase(sizeKey) {
+    const base = parseFloat(document.getElementById('basePriceInput')?.value || '0') || 0;
+    const adj = Number(sizePriceAdjustments[sizeKey] || 0);
+    return Math.max(0, Math.round(base + adj));
+}
+function syncSizePriceField(sizeKey) {
+    const box = document.getElementById('size_' + sizeKey);
+    const input = document.getElementById('size_price_' + sizeKey);
+    if (!box || !input) return;
+    input.disabled = !box.checked;
+    if (box.checked && (input.value === '' || Number(input.value) === 0)) {
+        input.value = suggestedSizePriceFromBase(sizeKey);
+    }
+}
+function toggleBraidSizeEditor(on) {
+    const rows = document.getElementById('braidSizePriceRows');
+    if (rows) rows.style.display = on ? '' : 'none';
+    document.querySelectorAll('.size-enabled-box').forEach(function(box) {
+        if (on && !box.checked) box.checked = true;
+        if (!on) box.checked = false;
+        syncSizePriceField(box.dataset.sizeKey);
+    });
+}
+(function() {
+    const base = document.getElementById('basePriceInput');
+    if (!base) return;
+    let lastBase = parseFloat(base.value || '0') || 0;
+    base.addEventListener('input', function() {
+        const next = parseFloat(base.value || '0') || 0;
+        document.querySelectorAll('.size-price-input').forEach(function(input) {
+            const key = input.dataset.sizeKey;
+            const prevSuggested = Math.max(0, Math.round(lastBase + Number(sizePriceAdjustments[key] || 0)));
+            if (input.value === '' || Number(input.value) === prevSuggested) {
+                input.value = suggestedSizePriceFromBase(key);
+            }
+        });
+        lastBase = next;
+    });
 })();
 </script>
 </body>
