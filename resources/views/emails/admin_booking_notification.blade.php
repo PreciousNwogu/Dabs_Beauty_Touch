@@ -247,15 +247,17 @@
           }
         }
 
-        // Stitch braids tiny rows (>10) add-on (+$30)
         $stitchAddon = 0.00;
         $hasStitchAddon = false;
         $svcLower = strtolower((string)($booking->service ?? ''));
         $isStitchSvc = str_contains($svcLower, 'stitch');
         $stitchChoice = $booking->stitch_rows_option ?? null;
-        if ($isStitchSvc && $stitchChoice === 'more_than_ten') {
-          $stitchAddon = 30.00;
-          $hasStitchAddon = true;
+        if ($isStitchSvc && in_array($stitchChoice, ['more_than_ten', 'fifteen_or_more', 'ten_or_less'], true)) {
+          $rowSvc = \App\Models\Service::where('name', $booking->service ?? '')->orWhere('slug', \Illuminate\Support\Str::slug((string) ($booking->service ?? '')))->first();
+          $stitchAddon = $rowSvc
+            ? \App\Support\AdultServiceCatalog::rowAddonAmount($rowSvc, $stitchChoice)
+            : (($stitchChoice === 'ten_or_less') ? 0.00 : 30.00);
+          $hasStitchAddon = $stitchAddon > 0;
         }
 
         // Adjustments total = type + length + finish adjustments + addons + weaving addon + stitch addon (matches UI)
@@ -273,6 +275,8 @@
             <td>
               @if($stitchChoice === 'more_than_ten')
                 More than 10 rows (tiny) +$30
+              @elseif($stitchChoice === 'fifteen_or_more')
+                15+ rows +$30
               @elseif($stitchChoice === 'ten_or_less')
                 8–10 rows (base price)
               @else
@@ -298,7 +302,7 @@
         <tr><td style="font-weight:700;">Weaving Add-on</td><td>{{ sprintf('$%.2f', $weavingAddon) }}</td></tr>
         @endif
         @if($hasStitchAddon)
-        <tr><td style="font-weight:700;">Tiny stitch (&gt;10 rows)</td><td>{{ sprintf('$%.2f', $stitchAddon) }}</td></tr>
+        <tr><td style="font-weight:700;">{{ $stitchChoice === 'fifteen_or_more' ? '15+ rows' : 'Tiny stitch (>10 rows)' }}</td><td>{{ sprintf('$%.2f', $stitchAddon) }}</td></tr>
         @endif
         @if(($typeLengthFinishAdjust ?? 0) > 0 || ($addons ?? 0) > 0)
         <tr style="{{ $hasWeavingAddon ? 'background:#f8fafc;' : '' }}"><td style="font-weight:700;">Adjustments / Add-ons</td><td>{{ sprintf('$%.2f', ($typeLengthFinishAdjust ?? 0) + ($addons ?? 0)) }}</td></tr>

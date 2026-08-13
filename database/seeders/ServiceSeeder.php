@@ -60,7 +60,27 @@ class ServiceSeeder extends Seeder
         DB::table('services')->upsert(
             $rows,
             ['slug'],
-            ['name', 'base_price', 'discount_price', 'description', 'category', 'is_active', 'for_kids', 'updated_at']
+            ['name', 'base_price', 'discount_price', 'description', 'is_active', 'for_kids', 'updated_at']
         );
+
+        // Kids selector styles are independent CMS rows. Insert if missing; never overwrite CMS edits.
+        foreach (\App\Support\KidsStyleCatalog::definitions() as $def) {
+            $slugs = array_values(array_unique(array_merge([$def['slug']], $def['alt_slugs'] ?? [])));
+            if (DB::table('services')->whereIn('slug', $slugs)->orWhere('name', $def['name'])->exists()) {
+                continue;
+            }
+            DB::table('services')->insert([
+                'name' => $def['name'],
+                'slug' => $def['slug'],
+                'base_price' => $def['default_price'],
+                'discount_price' => null,
+                'description' => 'Kids Braids selector style. Edit this price independently of other services.',
+                'category' => 'Kids Braids',
+                'is_active' => 1,
+                'for_kids' => 1,
+                'created_at' => $now,
+                'updated_at' => $now,
+            ]);
+        }
     }
 }

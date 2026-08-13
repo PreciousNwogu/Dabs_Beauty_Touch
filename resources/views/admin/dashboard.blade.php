@@ -2130,13 +2130,20 @@
             const kidsExtras = booking.kb_extras || (selectorFallback ? (selectorFallback.extras || selectorFallback.kb_extras) : null);
 
             const isKids = !!(kidsBraidType || kidsLength || (String(booking.service || '').toLowerCase().includes('kids')));
-            const stitchRows = booking.stitch_rows_option ? String(booking.stitch_rows_option) : '';
             const hairMaskOpt = booking.hair_mask_option ? String(booking.hair_mask_option) : (booking.selectedHairMaskOption ? String(booking.selectedHairMaskOption) : '');
 
             const pretty = (raw) => {
                 const s = (raw || '').toString();
                 return s.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
             };
+
+            const stitchRowsRaw = booking.stitch_rows_option ? String(booking.stitch_rows_option) : '';
+            const stitchRowsLabels = {
+                ten_or_less: '8–10 rows',
+                more_than_ten: '10+ rows (tiny) +$30',
+                fifteen_or_more: '15+ rows +$30'
+            };
+            const stitchRows = stitchRowsRaw ? (stitchRowsLabels[stitchRowsRaw] || pretty(stitchRowsRaw)) : '';
 
             const prettyKidsBraid = (raw) => {
                 const value = String(raw || '').trim();

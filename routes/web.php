@@ -1162,7 +1162,7 @@ Route::post('/bookings', function(Request $request) {
         'appointment_time' => 'required|string',
         'message' => 'nullable|string|max:1000',
         'hair_mask_option' => 'nullable|string|max:50',
-        'stitch_rows_option' => 'nullable|string|in:ten_or_less,more_than_ten',
+        'stitch_rows_option' => 'nullable|string|in:ten_or_less,more_than_ten,fifteen_or_more',
         'frontback_addon' => 'nullable|string|in:yes,no',
         'final_price' => 'nullable|numeric|min:0|max:9999.99',
         // Must accept terms at submit time (server-side enforcement)
@@ -1403,7 +1403,12 @@ Route::post('/bookings', function(Request $request) {
                     }
                     // CMS kids services have no finish/length adjustment
                 } else {
-                    if ($bt && isset($typeAdj[$bt])) $adjustments += $typeAdj[$bt];
+                    $catalogPrice = \App\Support\KidsStyleCatalog::startingPrice($bt);
+                    if ($catalogPrice !== null) {
+                        $baseConfigured = $catalogPrice;
+                    } elseif ($bt && isset($typeAdj[$bt])) {
+                        $adjustments += $typeAdj[$bt];
+                    }
                     if ($ln && isset($lengthAdj[$ln])) $adjustments += $lengthAdj[$ln];
                     if ($fi && isset($finishAdj[$fi])) $adjustments += $finishAdj[$fi];
                 }
@@ -1445,7 +1450,12 @@ Route::post('/bookings', function(Request $request) {
                 $fi = $bookingData['kb_finish'] ?? null;
                 $ex = $bookingData['kb_extras'] ?? null;
 
-                if ($bt && isset($typeAdj[$bt])) $adjustments += $typeAdj[$bt];
+                $catalogPrice = \App\Support\KidsStyleCatalog::startingPrice($bt);
+                if ($catalogPrice !== null) {
+                    $baseConfigured = $catalogPrice;
+                } elseif ($bt && isset($typeAdj[$bt])) {
+                    $adjustments += $typeAdj[$bt];
+                }
                 if ($ln && isset($lengthAdj[$ln])) $adjustments += $lengthAdj[$ln];
                 if ($fi && isset($finishAdj[$fi])) $adjustments += $finishAdj[$fi];
 

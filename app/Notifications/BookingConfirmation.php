@@ -144,7 +144,12 @@ class BookingConfirmation extends Notification
                 $fi = $sel['finish'] ?? $b->kb_finish ?? null;
                 $ex = $sel['extras'] ?? $b->kb_extras ?? null;
 
-                if($bt && isset($typeAdj[$bt])) $adjustments += $typeAdj[$bt];
+                $catalogPrice = \App\Support\KidsStyleCatalog::startingPrice($bt);
+                if ($catalogPrice !== null) {
+                    $baseConfigured = $catalogPrice;
+                } elseif ($bt && isset($typeAdj[$bt])) {
+                    $adjustments += $typeAdj[$bt];
+                }
                 if($ln && isset($lengthAdj[$ln])) $adjustments += $lengthAdj[$ln];
                 if($fi && isset($finishAdj[$fi])) $adjustments += $finishAdj[$fi];
 

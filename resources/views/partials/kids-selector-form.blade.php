@@ -521,102 +521,111 @@
                         </h2>
                         <p class="kb-section-subtitle">Select the perfect style for your child</p>
 
+                        @php
+                            $kbCatalog = \App\Support\KidsStyleCatalog::cardPrices();
+                            $kbCardPrices = [];
+                            foreach ($kbCatalog as $kbType => $kbRow) {
+                                $kbCardPrices[$kbType] = (int) $kbRow['price'];
+                            }
+                            $kbCatalogSlugs = \App\Support\KidsStyleCatalog::slugs();
+                        @endphp
+
                         <div class="kb-braid-grid" id="kb-braid-types">
                             <label class="kb-braid-card" for="kb_type_protective">
-                                <input type="radio" name="kb_braid_type" id="kb_type_protective" value="protective" checked data-disable-steps="1">
+                                <input type="radio" name="kb_braid_type" id="kb_type_protective" value="protective" checked data-disable-steps="1" data-price="{{ $kbCardPrices['protective'] }}">
                                 <div class="kb-braid-content">
                                     <div class="kb-braid-name">Natural Hair Twist</div>
-                                    <div class="kb-braid-price">$80</div>
+                                    <div class="kb-braid-price">${{ $kbCardPrices['protective'] }}</div>
                                 </div>
                                 <span class="kb-checkmark">✓</span>
                             </label>
 
                             <label class="kb-braid-card" for="kb_type_cornrows">
-                                <input type="radio" name="kb_braid_type" id="kb_type_cornrows" value="cornrows" data-disable-steps="1">
+                                <input type="radio" name="kb_braid_type" id="kb_type_cornrows" value="cornrows" data-disable-steps="1" data-price="{{ $kbCardPrices['cornrows'] }}">
                                 <div class="kb-braid-content">
                                     <div class="kb-braid-name">Cornrow (without extension)</div>
-                                    <div class="kb-braid-price">$40</div>
+                                    <div class="kb-braid-price">${{ $kbCardPrices['cornrows'] }}</div>
                                 </div>
                                 <span class="kb-checkmark">✓</span>
                             </label>
 
                             <label class="kb-braid-card" for="kb_type_cornrow_weave">
-                                <input type="radio" name="kb_braid_type" id="kb_type_cornrow_weave" value="cornrow_weave">
+                                <input type="radio" name="kb_braid_type" id="kb_type_cornrow_weave" value="cornrow_weave" data-price="{{ $kbCardPrices['cornrow_weave'] }}">
                                 <div class="kb-braid-content">
                                     <div class="kb-braid-name">Cornrow weave (with extension)</div>
-                                    <div class="kb-braid-price">From $100</div>
+                                    <div class="kb-braid-price">From ${{ $kbCardPrices['cornrow_weave'] }}</div>
                                 </div>
                                 <span class="kb-checkmark">✓</span>
                             </label>
 
                             <label class="kb-braid-card" for="kb_type_knotless_small">
-                                <input type="radio" name="kb_braid_type" id="kb_type_knotless_small" value="knotless_small">
+                                <input type="radio" name="kb_braid_type" id="kb_type_knotless_small" value="knotless_small" data-price="{{ $kbCardPrices['knotless_small'] }}">
                                 <div class="kb-braid-content">
                                     <div class="kb-braid-name">Knotless Small</div>
-                                    <div class="kb-braid-price">$120</div>
+                                    <div class="kb-braid-price">From ${{ $kbCardPrices['knotless_small'] }}</div>
                                 </div>
                                 <span class="kb-checkmark">✓</span>
                             </label>
 
                             <label class="kb-braid-card" for="kb_type_knotless_med">
-                                <input type="radio" name="kb_braid_type" id="kb_type_knotless_med" value="knotless_med">
+                                <input type="radio" name="kb_braid_type" id="kb_type_knotless_med" value="knotless_med" data-price="{{ $kbCardPrices['knotless_med'] }}">
                                 <div class="kb-braid-content">
                                     <div class="kb-braid-name">Knotless Medium</div>
-                                    <div class="kb-braid-price">$100</div>
+                                    <div class="kb-braid-price">From ${{ $kbCardPrices['knotless_med'] }}</div>
                                 </div>
                                 <span class="kb-checkmark">✓</span>
                             </label>
 
                             <label class="kb-braid-card" for="kb_type_box_small">
-                                <input type="radio" name="kb_braid_type" id="kb_type_box_small" value="box_small">
+                                <input type="radio" name="kb_braid_type" id="kb_type_box_small" value="box_small" data-price="{{ $kbCardPrices['box_small'] }}">
                                 <div class="kb-braid-content">
                                     <div class="kb-braid-name">Box Braids Small</div>
-                                    <div class="kb-braid-price">$110</div>
+                                    <div class="kb-braid-price">From ${{ $kbCardPrices['box_small'] }}</div>
                                 </div>
                                 <span class="kb-checkmark">✓</span>
                             </label>
 
                             <label class="kb-braid-card" for="kb_type_box_med">
-                                <input type="radio" name="kb_braid_type" id="kb_type_box_med" value="box_med">
+                                <input type="radio" name="kb_braid_type" id="kb_type_box_med" value="box_med" data-price="{{ $kbCardPrices['box_med'] }}">
                                 <div class="kb-braid-content">
                                     <div class="kb-braid-name">Box Braids Medium</div>
-                                    <div class="kb-braid-price">$100</div>
+                                    <div class="kb-braid-price">From ${{ $kbCardPrices['box_med'] }}</div>
                                 </div>
                                 <span class="kb-checkmark">✓</span>
                             </label>
 
                             <label class="kb-braid-card" for="kb_type_stitch">
-                                <input type="radio" name="kb_braid_type" id="kb_type_stitch" value="stitch">
+                                <input type="radio" name="kb_braid_type" id="kb_type_stitch" value="stitch" data-price="{{ $kbCardPrices['stitch'] }}">
                                 <div class="kb-braid-content">
                                     <div class="kb-braid-name">Stitch Braids</div>
-                                    <div class="kb-braid-price">$120</div>
+                                    <div class="kb-braid-price">From ${{ $kbCardPrices['stitch'] }}</div>
                                 </div>
                                 <span class="kb-checkmark">✓</span>
                             </label>
 
                             <label class="kb-braid-card" for="kb_type_half_weave_braid">
-                                <input type="radio" name="kb_braid_type" id="kb_type_half_weave_braid" value="half_weave_braid">
+                                <input type="radio" name="kb_braid_type" id="kb_type_half_weave_braid" value="half_weave_braid" data-price="{{ $kbCardPrices['half_weave_braid'] }}">
                                 <div class="kb-braid-content">
                                     <div class="kb-braid-name">1/2 Weave &amp; 1/2 Braid</div>
-                                    <div class="kb-braid-price">$120</div>
+                                    <div class="kb-braid-price">From ${{ $kbCardPrices['half_weave_braid'] }}</div>
                                 </div>
                                 <span class="kb-checkmark">✓</span>
                             </label>
 
                             <label class="kb-braid-card" for="kb_type_half_weave_crotchet">
-                                <input type="radio" name="kb_braid_type" id="kb_type_half_weave_crotchet" value="half_weave_crotchet" data-disable-steps="1">
+                                <input type="radio" name="kb_braid_type" id="kb_type_half_weave_crotchet" value="half_weave_crotchet" data-disable-steps="1" data-price="{{ $kbCardPrices['half_weave_crotchet'] }}">
                                 <div class="kb-braid-content">
                                     <div class="kb-braid-name">1/2 Weave &amp; 1/2 Crotchet</div>
-                                    <div class="kb-braid-price">$100</div>
+                                    <div class="kb-braid-price">${{ $kbCardPrices['half_weave_crotchet'] }}</div>
                                 </div>
                                 <span class="kb-checkmark">✓</span>
                             </label>
 
                             <label class="kb-braid-card" for="kb_type_crotchet_style">
-                                <input type="radio" name="kb_braid_type" id="kb_type_crotchet_style" value="crotchet_style" data-disable-steps="1">
+                                <input type="radio" name="kb_braid_type" id="kb_type_crotchet_style" value="crotchet_style" data-disable-steps="1" data-price="{{ $kbCardPrices['crotchet_style'] }}">
                                 <div class="kb-braid-content">
                                     <div class="kb-braid-name">Crotchet Style</div>
-                                    <div class="kb-braid-price">$90</div>
+                                    <div class="kb-braid-price">${{ $kbCardPrices['crotchet_style'] }}</div>
                                 </div>
                                 <span class="kb-checkmark">✓</span>
                             </label>
@@ -626,7 +635,7 @@
                                 @php
                                     $cksName = strtolower((string) $cksvc->name);
                                     $cksSlugRaw = strtolower((string) ($cksvc->slug ?? ''));
-                                    if (str_contains($cksName, 'kids') || str_contains($cksSlugRaw, 'kids')) {
+                                    if (str_contains($cksName, 'kids') || str_contains($cksSlugRaw, 'kids') || in_array($cksvc->slug, $kbCatalogSlugs ?? [], true)) {
                                         continue;
                                     }
                                     $cksSlug  = 'cms_' . $cksvc->id;
@@ -763,10 +772,10 @@
                         <label for="kb_comments" class="kb-comment-label">
                             <span>💬</span> Special Requests or Comments
                         </label>
-                        <textarea 
-                            id="kb_comments" 
-                            name="comments" 
-                            class="kb-comment-textarea" 
+                        <textarea
+                            id="kb_comments"
+                            name="comments"
+                            class="kb-comment-textarea"
                             placeholder="Tell us about preferred color choices for extensions, styling preferences, or any special requests..."></textarea>
                         <div class="kb-comment-hint">
                             Optional • This will help your stylist provide the best service
@@ -789,6 +798,7 @@
                     @php
                         $kidsBaseServer = (int) config('service_prices.kids_braids', 80);
                         $kidsOrigServer = (int) config('service_prices_original.kids_braids', $kidsBaseServer);
+                        $kidsInitialTotal = $kbCardPrices['protective'] ?? $kidsBaseServer;
                     @endphp
 
                     <div id="kb_itemized_pricing">
@@ -823,7 +833,7 @@
                     <!-- Total -->
                     <div class="kb-price-total">
                         <span>Total <span id="kb_discount_badge" style="background:#ff6600;color:#fff;font-size:0.65rem;font-weight:700;padding:2px 6px;border-radius:4px;margin-left:4px;vertical-align:middle;display:none;">DISCOUNTED</span></span>
-                        <span class="kb-price-total-amount" id="kb_total_price">${{ $kidsBaseServer }}</span>
+                        <span class="kb-price-total-amount" id="kb_total_price">${{ $kidsInitialTotal }}</span>
                     </div>
 
                     <!-- Discount countdown (shown for discounted braid types with an end date) -->
@@ -943,16 +953,16 @@ document.addEventListener('DOMContentLoaded', function(){
 document.addEventListener('DOMContentLoaded', function(){
         // Pricing map for explicit prices
             const braidTypePrices = {
-        'protective': 60,
-        'cornrows': 40,
-        'knotless_small': 100,
-        'knotless_med': 80,
-        'box_small': 90,
-        'box_med': 80,
-            'stitch': 100,
-            'half_weave_braid': 120,
-            'half_weave_crotchet': 100,
-            'crotchet_style': 90
+        'protective': {{ (int) ($kbCardPrices['protective'] ?? 60) }},
+        'cornrows': {{ (int) ($kbCardPrices['cornrows'] ?? 40) }},
+        'knotless_small': {{ (int) ($kbCardPrices['knotless_small'] ?? 100) }},
+        'knotless_med': {{ (int) ($kbCardPrices['knotless_med'] ?? 80) }},
+        'box_small': {{ (int) ($kbCardPrices['box_small'] ?? 90) }},
+        'box_med': {{ (int) ($kbCardPrices['box_med'] ?? 80) }},
+            'stitch': {{ (int) ($kbCardPrices['stitch'] ?? 100) }},
+            'half_weave_braid': {{ (int) ($kbCardPrices['half_weave_braid'] ?? 120) }},
+            'half_weave_crotchet': {{ (int) ($kbCardPrices['half_weave_crotchet'] ?? 100) }},
+            'crotchet_style': {{ (int) ($kbCardPrices['crotchet_style'] ?? 90) }}
         };
 
     function setFinishAndLengthDisabled(disabled, braidTypeValue){
@@ -1027,9 +1037,9 @@ document.addEventListener('DOMContentLoaded', function(){
             const basePrice = {{ (int) config('service_prices.kids_braids', 80) }}; // Kids Braids base price (from CMS/config)
             const kidsOriginalBase = {{ (int) config('service_prices_original.kids_braids', config('service_prices.kids_braids', 80)) }}; // Original before discount
             const braidTypeBasePrices = {
-                'half_weave_braid': 120,
-                'half_weave_crotchet': 100,
-                'crotchet_style': 90
+                'half_weave_braid': {{ (int) config('service_prices.half_weave_braid', 120) }},
+                'half_weave_crotchet': {{ (int) config('service_prices.half_weave_crotchet', 100) }},
+                'crotchet_style': {{ (int) config('service_prices.crotchet_style', 90) }}
             };
             // Braid types that have the CMS discount applied
             const discountedBraidTypes = ['cornrow_weave', 'knotless_small', 'knotless_med', 'box_small', 'box_med', 'stitch'];
@@ -1067,7 +1077,7 @@ document.addEventListener('DOMContentLoaded', function(){
                 @php
                     $cksName = strtolower((string) $cksvc->name);
                     $cksSlugRaw = strtolower((string) ($cksvc->slug ?? ''));
-                    if (str_contains($cksName, 'kids') || str_contains($cksSlugRaw, 'kids')) {
+                    if (str_contains($cksName, 'kids') || str_contains($cksSlugRaw, 'kids') || in_array($cksvc->slug, $kbCatalogSlugs ?? [], true)) {
                         continue;
                     }
                     $cksSlug = 'cms_' . $cksvc->id;
@@ -1094,7 +1104,8 @@ document.addEventListener('DOMContentLoaded', function(){
             const braidTypeNameEl = document.getElementById('kb_braid_type_name');
             const braidTypePriceEl = document.getElementById('kb_braid_type_price');
 
-            if(braidTypeAdj !== 0) {
+            const hasOwnCmsPrice = braidType && braidType.dataset.price !== undefined && braidType.dataset.price !== '';
+            if(braidTypeAdj !== 0 && !hasOwnCmsPrice) {
                 if(braidTypeLine) braidTypeLine.style.display = '';
                 if(braidTypeNameEl) braidTypeNameEl.textContent = braidTypeName;
                 if(braidTypePriceEl) braidTypePriceEl.textContent = (braidTypeAdj >= 0 ? '+' : '') + '$' + Math.abs(braidTypeAdj);
@@ -1172,11 +1183,16 @@ document.addEventListener('DOMContentLoaded', function(){
 
             if(addonsContainer) addonsContainer.innerHTML = addonsHTML;
 
-            // Calculate total — CMS kids services use their exact DB price, not base+adj
+            // Calculate total — prefer the CMS-rendered data-price on the selected style
             const isCmsType = braidTypeValue.startsWith('cms_');
+            const radioStartPrice = (braidType && braidType.dataset.price !== undefined && braidType.dataset.price !== '')
+                ? Number(braidType.dataset.price)
+                : null;
             const totalPrice = (isCmsType && cmsKidsFixedPrices[braidTypeValue] !== undefined)
                 ? cmsKidsFixedPrices[braidTypeValue] + addonsTotal
-                : effectiveBase + braidTypeAdj + finishAdj + lengthAdj + addonsTotal;
+                : (radioStartPrice !== null && !isNaN(radioStartPrice)
+                    ? radioStartPrice + (shouldDisable ? 0 : (finishAdj + lengthAdj)) + addonsTotal
+                    : effectiveBase + braidTypeAdj + finishAdj + lengthAdj + addonsTotal);
 
             // Update total display
             const totalPriceEl = document.getElementById('kb_total_price');
@@ -1557,23 +1573,22 @@ if(typeof window.showKidsBookingPanel !== 'function'){
                 // Compute breakdown: base, braid-type adj, length adj, finish adj, extras
                 try{
                     const priceMapLocal = window.priceMap || {
-                        'kids-braids': 80
+                        'kids-braids': {{ (int) config('service_prices.kids_braids', 80) }}
                     };
+                    const bt = (sel.kb_braid_type || sel.braid_type || '').toString();
+                    const ln = (sel.kb_length || sel.length || '').toString();
+                    const fi = (sel.kb_finish || sel.finish || '').toString();
                     const basePrices = {
-                        'kids-braids': 80,
-                        'half_weave_braid': 120,
-                        'half_weave_crotchet': 100,
-                        'crotchet_style': 90
+                        'kids-braids': {{ (int) config('service_prices.kids_braids', 80) }},
+                        'half_weave_braid': {{ (int) config('service_prices.half_weave_braid', 120) }},
+                        'half_weave_crotchet': {{ (int) config('service_prices.half_weave_crotchet', 100) }},
+                        'crotchet_style': {{ (int) config('service_prices.crotchet_style', 90) }}
                     };
-                    const base = Number(basePrices[bt] || priceMapLocal['kids-braids'] || 80);
+                    const base = Number(basePrices[bt] || priceMapLocal['kids-braids'] || {{ (int) config('service_prices.kids_braids', 80) }});
                     // braid type adjustments
                     const typeAdjMap = { 'protective': -20, 'cornrows': -40, 'knotless_small': 20, 'knotless_med': 0, 'box_small': 10, 'box_med': 0, 'stitch': 20, 'half_weave_braid': 0, 'half_weave_crotchet': 0, 'crotchet_style': 0 };
                     const lengthAdjMap = { 'shoulder': 0, 'armpit': 10, 'mid_back': 20, 'waist': 30 };
                     const finishAdjMap = { 'curled': -10, 'plain': 0 };
-
-                    const bt = (sel.kb_braid_type || sel.braid_type || '').toString();
-                    const ln = (sel.kb_length || sel.length || '').toString();
-                    const fi = (sel.kb_finish || sel.finish || '').toString();
                     // Determine extras from selector payload, modal hidden input, or checked addon boxes
                     var exRaw = '';
                     try{

@@ -72,19 +72,14 @@ document.addEventListener('DOMContentLoaded', function(){
     function compute(){
         const typeEl = document.querySelector('input[name="kb_braid_type"]:checked');
         const type = typeEl ? typeEl.value : '';
-        // CMS types have a fixed price stored in data-price; no adjustments apply
-        const isCms = type.startsWith('cms_') && typeEl && typeEl.dataset.disableSteps === '1';
-        const cmsPrice = isCms ? Number(typeEl.dataset.price || base) : null;
+        const shouldHide = (type === 'protective' || type === 'cornrows') || (typeEl && typeEl.dataset.disableSteps === '1');
+        // data-price is the CMS-derived starting price for the selected style
+        const startPrice = (typeEl && typeEl.dataset.price !== undefined && typeEl.dataset.price !== '')
+            ? Number(typeEl.dataset.price)
+            : base;
 
-        let total = isCms ? cmsPrice : base;
         let adj = 0;
-        if(!isCms){
-            if(type==='protective') adj -= 20;
-            if(type==='cornrows') adj -= 40;
-            if(type==='knotless_small') adj += 20;
-            if(type==='box_small') adj += 10;
-            if(type==='stitch') adj += 20;
-
+        if(!shouldHide){
             const finishEl = document.querySelector('input[name="kb_finish"]:checked');
             if(finishEl && finishEl.value==='curled') adj -= 10;
 
@@ -93,20 +88,18 @@ document.addEventListener('DOMContentLoaded', function(){
             if(length==='armpit') adj += 10;
             if(length==='mid_back') adj += 20;
             if(length==='waist') adj += 30;
-
-            ['kb_add_detangle','kb_add_beads','kb_add_beads_full','kb_add_extension','kb_add_rest'].forEach(id=>{
-                const el = document.getElementById(id);
-                if(el && el.checked) adj += Number(el.value||0);
-            });
-
-            total = base + adj;
         }
 
-        const displayBase = isCms ? cmsPrice : base;
-        const baseEl = document.getElementById('kb_base_price'); if(baseEl) baseEl.textContent = '$' + Number(displayBase).toFixed(0);
+        ['kb_add_detangle','kb_add_beads','kb_add_beads_full','kb_add_extension','kb_add_rest'].forEach(id=>{
+            const el = document.getElementById(id);
+            if(el && el.checked) adj += Number(el.value||0);
+        });
+
+        const total = startPrice + adj;
+        const baseEl = document.getElementById('kb_base_price'); if(baseEl) baseEl.textContent = '$' + Number(startPrice).toFixed(0);
         const adjEl = document.getElementById('kb_adjustments'); if(adjEl) adjEl.textContent = '$' + Number(adj).toFixed(0);
         const totEl = document.getElementById('kb_total_price'); if(totEl) totEl.textContent = '$' + Number(total).toFixed(0);
-        return { total, base: displayBase, adj };
+        return { total, base: startPrice, adj };
     }
 
     document.querySelectorAll('#kidsSelectorForm input').forEach(i=> i.addEventListener('change', function(){

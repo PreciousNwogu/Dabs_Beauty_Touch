@@ -24,9 +24,17 @@
         .slug-hint { font-size:.78rem; color:#888; margin-top:4px; }
         .new-cat-toggle { font-size:.82rem; color:#ff6600; font-weight:700; cursor:pointer; text-decoration:underline; }
         .img-preview-box { width:100%; aspect-ratio:4/3; border-radius:14px; border:2px dashed #d0d8f0; background:#f4f6fb; display:flex; align-items:center; justify-content:center; overflow:hidden; transition:border-color .2s; }
+        .img-preview-box.has-image { border-style:solid; border-color:#c5d0f0; }
         .img-preview-box img { width:100%; height:100%; object-fit:cover; border-radius:12px; }
         .img-preview-placeholder { text-align:center; color:#aaa; padding:16px; }
         .img-preview-placeholder i { font-size:2.5rem; display:block; margin-bottom:8px; }
+        .image-source-btn { border:1.5px solid #d0d8f0; background:#fff; color:#030f68; font-weight:700; border-radius:10px; padding:8px 14px; }
+        .image-source-btn.active { background:#030f68; color:#fff; border-color:#030f68; }
+        .gallery-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(92px,1fr)); gap:8px; max-height:280px; overflow:auto; padding:4px; }
+        .gallery-tile { border:2px solid #e6eaf5; border-radius:10px; overflow:hidden; cursor:pointer; background:#f7f8fc; aspect-ratio:1; padding:0; }
+        .gallery-tile img { width:100%; height:100%; object-fit:cover; display:block; }
+        .gallery-tile.selected { border-color:#ff6600; box-shadow:0 0 0 2px rgba(255,102,0,.25); }
+        .gallery-tile .tile-label { display:none; }
     </style>
 </head>
 <body>
@@ -79,7 +87,8 @@
 
             <div class="form-card mb-5">
                 <form method="POST"
-                      action="{{ isset($service) ? route('admin.services.update', $service) : route('admin.services.store') }}">
+                      action="{{ isset($service) ? route('admin.services.update', $service) : route('admin.services.store') }}"
+                      enctype="multipart/form-data">
                     @csrf
                     @if(isset($service))
                         @method('PUT')
@@ -116,22 +125,67 @@
                         @error('description')<div class="invalid-feedback">{{ $message }}</div>@enderror
                     </div>
 
+                    @php
+                        $currentImage = old('image_url', $service->image_url ?? '');
+                        $currentImageSrc = '';
+                        if ($currentImage) {
+                            $currentImageSrc = preg_match('#^https?://#i', $currentImage)
+                                ? $currentImage
+                                : asset(ltrim($currentImage, '/'));
+                        }
+                    @endphp
                     <div class="mb-3">
-                        <label class="form-label">Service Image URL <span class="text-muted fw-normal">(optional)</span></label>
+                        <label class="form-label">Service Image <span class="text-muted fw-normal">(optional)</span></label>
                         <div class="row g-3 align-items-start">
                             <div class="col-md-8">
-                                <input type="text" name="image_url" id="imageUrlInput"
-                                       class="form-control @error('image_url') is-invalid @enderror"
-                                       value="{{ old('image_url', $service->image_url ?? '') }}"
-                                       placeholder="https://… or /images/my-service.jpg"
-                                       oninput="previewImage(this.value)">
-                                <div class="slug-hint">Paste a full URL or a relative path like <code>/images/webbraids2.jpg</code>.</div>
-                                @error('image_url')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                <input type="hidden" name="image_url" id="imageUrlInput" value="{{ $currentImage }}">
+                                <input type="hidden" name="remove_image" id="removeImageInput" value="0">
+
+                                <div class="d-flex flex-wrap gap-2 mb-3">
+                                    <button type="button" class="image-source-btn active" id="btnUploadSource" onclick="showImageSource('upload')">
+                                        <i class="bi bi-upload me-1"></i>Upload file
+                                    </button>
+                                    <button type="button" class="image-source-btn" id="btnGallerySource" onclick="showImageSource('gallery')">
+                                        <i class="bi bi-images me-1"></i>Choose from gallery
+                                    </button>
+                                </div>
+
+                                <div id="uploadPanel">
+                                    <input type="file" name="image" id="imageFileInput"
+                                           class="form-control @error('image') is-invalid @enderror"
+                                           accept="image/jpeg,image/png,image/gif,image/webp,image/avif"
+                                           onchange="onImageFileChosen(this)">
+                                    <div class="slug-hint">JPG, PNG, WEBP, AVIF, or GIF. Max 5 MB.</div>
+                                    @error('image')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                </div>
+
+                                <div id="galleryPanel" style="display:none">
+                                    <input type="search" id="gallerySearch" class="form-control mb-2" placeholder="Search gallery…" oninput="filterGallery(this.value)">
+                                    <div class="gallery-grid" id="galleryGrid">
+                                        @foreach(($galleryImages ?? []) as $img)
+                                            <button type="button" class="gallery-tile{{ $currentImage === $img['path'] ? ' selected' : '' }}"
+                                                    data-path="{{ $img['path'] }}"
+                                                    data-url="{{ $img['url'] }}"
+                                                    data-name="{{ strtolower($img['name']) }}"
+                                                    onclick="selectGalleryImage(this)">
+                                                <img src="{{ $img['url'] }}" alt="{{ $img['name'] }}">
+                                            </button>
+                                        @endforeach
+                                    </div>
+                                    @if(empty($galleryImages))
+                                        <div class="slug-hint">No gallery images found yet. Upload a file instead.</div>
+                                    @endif
+                                </div>
+
+                                <button type="button" class="btn btn-sm btn-outline-secondary mt-2" id="clearImageBtn" onclick="clearServiceImage()" {{ $currentImage ? '' : 'style=display:none' }}>
+                                    <i class="bi bi-x-circle me-1"></i>Remove image
+                                </button>
+                                @error('image_url')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
                             </div>
                             <div class="col-md-4">
-                                <div class="img-preview-box" id="imgPreviewBox">
-                                    @if(!empty($service->image_url ?? ''))
-                                        <img id="imgPreview" src="{{ $service->image_url }}" alt="Preview">
+                                <div class="img-preview-box{{ $currentImageSrc ? ' has-image' : '' }}" id="imgPreviewBox">
+                                    @if($currentImageSrc)
+                                        <img id="imgPreview" src="{{ $currentImageSrc }}" alt="Preview">
                                     @else
                                         <div class="img-preview-placeholder" id="imgPlaceholder">
                                             <i class="bi bi-image"></i>
@@ -157,6 +211,9 @@
                                        placeholder="e.g. 120" required>
                                 @error('base_price')<div class="invalid-feedback">{{ $message }}</div>@enderror
                             </div>
+                            @if(isset($service) && ($service->slug === 'kids-braids'))
+                                <div class="slug-hint mt-1">Homepage “Kids Braids” starting price only. Individual kids styles (Knotless, Cornrows, etc.) have their own CMS rows.</div>
+                            @endif
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">Discount Price ($) <span class="text-muted fw-normal">(optional)</span></label>
@@ -170,6 +227,9 @@
                                 @error('discount_price')<div class="invalid-feedback">{{ $message }}</div>@enderror
                             </div>
                             <div class="slug-hint">Must be less than base price. Leave blank to disable.</div>
+                            <div class="slug-hint mt-1" id="kidsPriceHint" style="{{ old('for_kids', $service->for_kids ?? false) ? '' : 'display:none' }}">
+                                This price is independent. Changing it updates only this kids style on the selector, not other services.
+                            </div>
                         </div>
                     </div>
 
@@ -189,7 +249,7 @@
 
                     <div class="row g-3 mb-3">
                         <div class="col-md-6">
-                            <label class="form-label">Category</label>
+                            <label class="form-label">Homepage Category</label>
                             <select name="category" id="categorySelect" class="form-select @error('category') is-invalid @enderror"
                                     onchange="toggleNewCategory(this.value)">
                                 <option value="">— None —</option>
@@ -201,6 +261,7 @@
                                 @endforeach
                                 <option value="__new__">+ Add new category…</option>
                             </select>
+                            <div class="slug-hint">Adult styles appear inside this category card on the homepage.</div>
                             @error('category')<div class="invalid-feedback">{{ $message }}</div>@enderror
                         </div>
                         <div class="col-md-6" id="newCatWrapper" style="display:none">
@@ -230,7 +291,112 @@
                                    {{ old('for_kids', $service->for_kids ?? false) ? 'checked' : '' }}
                                    style="width:2.5em;height:1.3em">
                             <label class="form-check-label fw-bold" for="forKids">For Kids (appears in Kids Braids selector)</label>
+                            <div class="slug-hint mt-1">Kids style prices are edited one service at a time. Adult services and other kids styles stay unchanged.</div>
                         </div>
+                    </div>
+
+                    <div id="adultStyleOptions">
+                        <p class="section-title mt-4"><i class="bi bi-sliders me-2"></i>Adult Booking Options</p>
+                        <p class="slug-hint mb-3">These options apply to this style on the homepage — including existing service cards. Turn length, tip, sizes, or row add-ons on or off here.</p>
+
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Time estimate</label>
+                                <input type="text" name="duration" class="form-control"
+                                       value="{{ old('duration', $service->duration ?? '') }}"
+                                       placeholder="e.g. 3–4 hrs">
+                                <div class="slug-hint">Shown on the style card in the size picker.</div>
+                            </div>
+                        </div>
+
+                        @php
+                            $sizeLabels = \App\Support\AdultServiceCatalog::sizeLabels();
+                            $savedSizes = old('size_price', $service->size_options ?? []);
+                            $savedEnabled = old('size_enabled', array_fill_keys(array_keys($savedSizes ?: []), '1'));
+                        @endphp
+                        <div class="mb-4">
+                            <label class="form-label">Braid sizes</label>
+                            <div class="slug-hint mb-2">Check the sizes customers can choose. Each size gets its own price on the homepage card.</div>
+                            <div class="row g-2">
+                                @foreach($sizeLabels as $sizeKey => $sizeLabel)
+                                    @php
+                                        $isOn = !empty($savedEnabled[$sizeKey]);
+                                        $sizeVal = $savedSizes[$sizeKey] ?? old('base_price', isset($service) ? (int) $service->base_price : '');
+                                    @endphp
+                                    <div class="col-md-6">
+                                        <div class="d-flex align-items-center gap-2 p-2" style="border:1.5px solid #e0e0e0;border-radius:10px">
+                                            <input class="form-check-input m-0" type="checkbox" name="size_enabled[{{ $sizeKey }}]" id="size_{{ $sizeKey }}" value="1"
+                                                   {{ $isOn ? 'checked' : '' }}
+                                                   onchange="document.getElementById('size_price_{{ $sizeKey }}').disabled = !this.checked">
+                                            <label class="form-check-label fw-bold flex-grow-1 mb-0" for="size_{{ $sizeKey }}">{{ $sizeLabel }}</label>
+                                            <div class="input-group input-group-sm" style="max-width:130px">
+                                                <span class="input-group-text">$</span>
+                                                <input type="number" name="size_price[{{ $sizeKey }}]" id="size_price_{{ $sizeKey }}"
+                                                       class="form-control" min="0" step="1"
+                                                       value="{{ $sizeVal }}"
+                                                       {{ $isOn ? '' : 'disabled' }}
+                                                       placeholder="Price">
+                                            </div>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" name="has_length" id="hasLength" value="1"
+                                       {{ old('has_length', $service->has_length ?? true) ? 'checked' : '' }}
+                                       style="width:2.5em;height:1.3em">
+                                <label class="form-check-label fw-bold" for="hasLength">Length adjustment (price changes with length)</label>
+                                <div class="slug-hint">Customers pick neck through classic length. Price updates from the length map.</div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" name="has_tip_finish" id="hasTipFinish" value="1"
+                                       {{ old('has_tip_finish', $service->has_tip_finish ?? false) ? 'checked' : '' }}
+                                       style="width:2.5em;height:1.3em">
+                                <label class="form-check-label fw-bold" for="hasTipFinish">Tip / finish option</label>
+                                <div class="slug-hint">Shows curled tip vs finished tip. Finished tip adds $20 on mid-back and longer.</div>
+                            </div>
+                        </div>
+
+                        <div class="mb-2">
+                            <label class="form-label">Number of rows</label>
+                            <div class="slug-hint mb-2">Only toggled choices appear on the booking page. Set the add-on price for each option.</div>
+                        </div>
+                        @php
+                            $rowToggles = [
+                                ['key' => 'eight_to_ten', 'flag' => 'has_eight_to_ten_rows', 'price' => 'eight_to_ten_rows_price', 'label' => '8–10 rows', 'default' => 0],
+                                ['key' => 'ten_plus', 'flag' => 'has_row_options', 'price' => 'ten_plus_rows_price', 'label' => '10+ rows / tiny', 'default' => 30],
+                                ['key' => 'fifteen_plus', 'flag' => 'has_fifteen_plus_rows', 'price' => 'fifteen_plus_rows_price', 'label' => '15+ rows', 'default' => 30],
+                            ];
+                        @endphp
+                        @foreach($rowToggles as $rowToggle)
+                            @php
+                                $flagOn = old($rowToggle['flag'], isset($service) ? ($service->{$rowToggle['flag']} ?? false) : false);
+                                $priceVal = old($rowToggle['price'], isset($service) && $service->{$rowToggle['price']} !== null ? (int) $service->{$rowToggle['price']} : $rowToggle['default']);
+                            @endphp
+                            <div class="mb-3">
+                                <div class="d-flex align-items-center gap-2 p-2" style="border:1.5px solid #e0e0e0;border-radius:10px">
+                                    <input class="form-check-input m-0" type="checkbox" name="{{ $rowToggle['flag'] }}" id="rowToggle_{{ $rowToggle['key'] }}" value="1"
+                                           {{ $flagOn ? 'checked' : '' }}
+                                           style="width:2.5em;height:1.3em"
+                                           onchange="document.getElementById('rowPrice_{{ $rowToggle['key'] }}').disabled = !this.checked">
+                                    <label class="form-check-label fw-bold flex-grow-1 mb-0" for="rowToggle_{{ $rowToggle['key'] }}">{{ $rowToggle['label'] }}</label>
+                                    <div class="input-group input-group-sm" style="max-width:130px">
+                                        <span class="input-group-text">+$</span>
+                                        <input type="number" name="{{ $rowToggle['price'] }}" id="rowPrice_{{ $rowToggle['key'] }}"
+                                               class="form-control" min="0" step="1"
+                                               value="{{ $priceVal }}"
+                                               {{ $flagOn ? '' : 'disabled' }}
+                                               placeholder="0">
+                                    </div>
+                                </div>
+                            </div>
+                        @endforeach
                     </div>
 
                     {{-- SUBMIT --}}
@@ -252,27 +418,85 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-function previewImage(url) {
-    const box  = document.getElementById('imgPreviewBox');
-    const ph   = document.getElementById('imgPlaceholder');
-    let   img  = document.getElementById('imgPreview');
-    if (!url.trim()) {
-        if (img) img.remove();
-        if (!ph) { box.innerHTML = '<div class="img-preview-placeholder" id="imgPlaceholder"><i class="bi bi-image"></i><span style="font-size:.8rem">Image preview</span></div>'; }
+function showImageSource(source) {
+    const uploadPanel = document.getElementById('uploadPanel');
+    const galleryPanel = document.getElementById('galleryPanel');
+    const btnUpload = document.getElementById('btnUploadSource');
+    const btnGallery = document.getElementById('btnGallerySource');
+    const isGallery = source === 'gallery';
+    if (uploadPanel) uploadPanel.style.display = isGallery ? 'none' : '';
+    if (galleryPanel) galleryPanel.style.display = isGallery ? '' : 'none';
+    if (btnUpload) btnUpload.classList.toggle('active', !isGallery);
+    if (btnGallery) btnGallery.classList.toggle('active', isGallery);
+}
+
+function setImagePreview(url) {
+    const box = document.getElementById('imgPreviewBox');
+    const clearBtn = document.getElementById('clearImageBtn');
+    if (!box) return;
+    if (!url) {
+        box.classList.remove('has-image');
+        box.innerHTML = '<div class="img-preview-placeholder" id="imgPlaceholder"><i class="bi bi-image"></i><span style="font-size:.8rem">Image preview</span></div>';
+        if (clearBtn) clearBtn.style.display = 'none';
         return;
     }
-    if (!img) {
-        if (ph) ph.remove();
-        img = document.createElement('img');
-        img.id = 'imgPreview';
-        img.style.cssText = 'width:100%;height:100%;object-fit:cover;border-radius:12px';
-        box.appendChild(img);
+    box.classList.add('has-image');
+    box.innerHTML = '<img id="imgPreview" src="' + url + '" alt="Preview">';
+    const img = document.getElementById('imgPreview');
+    if (img) {
+        img.onerror = function() {
+            box.classList.remove('has-image');
+            box.innerHTML = '<div class="img-preview-placeholder text-danger" id="imgPlaceholder"><i class="bi bi-exclamation-triangle" style="font-size:2rem;display:block;margin-bottom:6px"></i><span style="font-size:.78rem">Could not load image</span></div>';
+        };
     }
-    img.src = url;
-    img.onerror = () => {
-        img.remove();
-        box.innerHTML = '<div class="img-preview-placeholder text-danger" id="imgPlaceholder"><i class="bi bi-exclamation-triangle" style="font-size:2rem;display:block;margin-bottom:6px"></i><span style="font-size:.78rem">Could not load image</span></div>';
-    };
+    if (clearBtn) clearBtn.style.display = '';
+}
+
+function onImageFileChosen(input) {
+    const file = input && input.files && input.files[0];
+    const hidden = document.getElementById('imageUrlInput');
+    const remove = document.getElementById('removeImageInput');
+    if (hidden) hidden.value = '';
+    if (remove) remove.value = '0';
+    document.querySelectorAll('.gallery-tile.selected').forEach(function(el) { el.classList.remove('selected'); });
+    if (!file) {
+        setImagePreview('');
+        return;
+    }
+    const reader = new FileReader();
+    reader.onload = function(e) { setImagePreview(e.target.result); };
+    reader.readAsDataURL(file);
+}
+
+function selectGalleryImage(btn) {
+    const hidden = document.getElementById('imageUrlInput');
+    const remove = document.getElementById('removeImageInput');
+    const fileInput = document.getElementById('imageFileInput');
+    document.querySelectorAll('.gallery-tile.selected').forEach(function(el) { el.classList.remove('selected'); });
+    btn.classList.add('selected');
+    if (hidden) hidden.value = btn.dataset.path || '';
+    if (remove) remove.value = '0';
+    if (fileInput) fileInput.value = '';
+    setImagePreview(btn.dataset.url || '');
+}
+
+function clearServiceImage() {
+    const hidden = document.getElementById('imageUrlInput');
+    const remove = document.getElementById('removeImageInput');
+    const fileInput = document.getElementById('imageFileInput');
+    if (hidden) hidden.value = '';
+    if (remove) remove.value = '1';
+    if (fileInput) fileInput.value = '';
+    document.querySelectorAll('.gallery-tile.selected').forEach(function(el) { el.classList.remove('selected'); });
+    setImagePreview('');
+}
+
+function filterGallery(query) {
+    const q = (query || '').toLowerCase().trim();
+    document.querySelectorAll('#galleryGrid .gallery-tile').forEach(function(tile) {
+        const name = tile.dataset.name || '';
+        tile.style.display = (!q || name.indexOf(q) !== -1) ? '' : 'none';
+    });
 }
 function suggestSlug(name) {
     const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
@@ -306,6 +530,18 @@ function toggleDiscountExpiry(val) {
 (function() {
     const dp = document.getElementById('discountPriceInput');
     if (dp) toggleDiscountExpiry(dp.value);
+})();
+(function() {
+    const kids = document.getElementById('forKids');
+    const hint = document.getElementById('kidsPriceHint');
+    const adult = document.getElementById('adultStyleOptions');
+    const sync = () => {
+        const isKids = !!(kids && kids.checked);
+        if (hint) hint.style.display = isKids ? '' : 'none';
+        if (adult) adult.style.display = isKids ? 'none' : '';
+    };
+    if (kids) kids.addEventListener('change', sync);
+    sync();
 })();
 </script>
 </body>

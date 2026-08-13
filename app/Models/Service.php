@@ -20,6 +20,16 @@ class Service extends Model
         'category',
         'is_active',
         'for_kids',
+        'has_length',
+        'has_tip_finish',
+        'has_row_options',
+        'has_eight_to_ten_rows',
+        'has_fifteen_plus_rows',
+        'eight_to_ten_rows_price',
+        'ten_plus_rows_price',
+        'fifteen_plus_rows_price',
+        'duration',
+        'size_options',
     ];
 
     protected $casts = [
@@ -28,6 +38,15 @@ class Service extends Model
         'discount_ends_at' => 'datetime',
         'is_active'        => 'boolean',
         'for_kids'         => 'boolean',
+        'has_length'       => 'boolean',
+        'has_tip_finish'   => 'boolean',
+        'has_row_options'  => 'boolean',
+        'has_eight_to_ten_rows' => 'boolean',
+        'has_fifteen_plus_rows' => 'boolean',
+        'eight_to_ten_rows_price' => 'decimal:2',
+        'ten_plus_rows_price' => 'decimal:2',
+        'fifteen_plus_rows_price' => 'decimal:2',
+        'size_options'     => 'array',
     ];
 
     /** True when a discount price is set AND (has no expiry OR expiry is in the future). */

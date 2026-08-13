@@ -24,7 +24,7 @@ class PriceCalculator
         $serviceInput = Arr::get($data, 'service_input');
         if (is_string($serviceInput)) {
             // Strip UI-added suffixes like "(With Weave)", "(10+ Rows)", "(Front + Back)", "(Finished Tip)"
-            $serviceInput = trim(preg_replace('/\s*\((?:with\s*weav(?:e|ing)|10\+\s*rows|front\s*\+\s*back|finished\s*tip|curled\s*tip)\)\s*/i', '', $serviceInput));
+            $serviceInput = trim(preg_replace('/\s*\((?:with\s*weav(?:e|ing)|10\+\s*rows|15\+\s*rows|front\s*\+\s*back|finished\s*tip|curled\s*tip)\)\s*/i', '', $serviceInput));
         }
         $serviceModel = Arr::get($data, 'service_model');
         $serviceTypeRaw = strtolower(trim((string) Arr::get($data, 'service_type', $serviceInput ?? '')));
@@ -52,7 +52,11 @@ class PriceCalculator
 
         // Prefer model effective price (respects discount) when present
         $basePrice = null;
-        if ($serviceModel && isset($serviceModel->effective_price)) {
+        $parsedSize = \App\Support\AdultServiceCatalog::parseSizeSlug($serviceTypeRaw ?: (string) $serviceInput);
+        $sizePrice = \App\Support\AdultServiceCatalog::sizePrice($serviceModel, $parsedSize['size'] ?? null);
+        if ($sizePrice !== null) {
+            $basePrice = $sizePrice;
+        } elseif ($serviceModel && isset($serviceModel->effective_price)) {
             $basePrice = (float) $serviceModel->effective_price;
         } elseif ($serviceModel && isset($serviceModel->base_price)) {
             $basePrice = (float) $serviceModel->base_price;
@@ -112,13 +116,19 @@ class PriceCalculator
         ];
         $serviceInputNorm = is_string($serviceInput) ? str_replace([' ', '-'], ['_', '_'], strtolower(trim($serviceInput))) : '';
         $noLength = in_array($serviceType, $noLengthServices, true) || in_array($serviceInputNorm, $noLengthServices, true);
+        $modelHasLength = is_object($serviceModel)
+            ? ($serviceModel->has_length ?? true)
+            : (is_array($serviceModel) ? ($serviceModel['has_length'] ?? true) : true);
+        if ($modelHasLength === false) {
+            $noLength = true;
+        }
 
         // Stitch rows option (tiny stitch >10 rows => +$30)
         $stitchRowsOption = Arr::get($data, 'stitch_rows_option');
         $stitchRowsOptionNorm = null;
         if ($stitchRowsOption !== null) {
             $raw = strtolower(trim((string) $stitchRowsOption));
-            if (in_array($raw, ['ten_or_less', 'more_than_ten'], true)) {
+            if (in_array($raw, ['ten_or_less', 'more_than_ten', 'fifteen_or_more'], true)) {
                 $stitchRowsOptionNorm = $raw;
             }
         }
@@ -148,7 +158,9 @@ class PriceCalculator
                 str_contains($serviceInputLower, 'knotless') ||
                 str_contains($serviceInputLower, 'boho') ||
                 str_contains($serviceInputLower, 'french curl')
-            ))
+            )) ||
+            (is_object($serviceModel) && !empty($serviceModel->has_tip_finish)) ||
+            (is_array($serviceModel) && !empty($serviceModel['has_tip_finish']))
         );
         $isHairMask = (
             $serviceType === 'hair-mask' ||
@@ -164,10 +176,25 @@ class PriceCalculator
             ))
         );
 
-        $isStitch = (
+        $rowFlags = $serviceModel ? \App\Support\AdultServiceCatalog::rowFlags($serviceModel) : [
+            'hasEightToTenRows' => false,
+            'hasTenPlusRows' => false,
+            'hasFifteenPlusRows' => false,
+            'hasRowOptions' => false,
+        ];
+        $hasEightToTenRows = !empty($rowFlags['hasEightToTenRows']);
+        $hasTenPlusRows = !empty($rowFlags['hasTenPlusRows']);
+        $hasFifteenPlusRows = !empty($rowFlags['hasFifteenPlusRows']);
+        $isNamedStitch = (
             str_contains($serviceType, 'stitch') ||
             (is_string($serviceInput) && stripos($serviceInput, 'stitch') !== false)
         );
+        if (!$hasEightToTenRows && !$hasTenPlusRows && !$hasFifteenPlusRows && $isNamedStitch) {
+            $hasEightToTenRows = true;
+            $hasTenPlusRows = true;
+            $hasFifteenPlusRows = true;
+        }
+        $isStitch = $hasEightToTenRows || $hasTenPlusRows || $hasFifteenPlusRows || $isNamedStitch;
 
         $lengthAdjustment = 0.0;
         $addonsTotal = 0.0;
@@ -215,7 +242,18 @@ class PriceCalculator
             ];
 
             $lengthAdjustment = $noLength ? 0.00 : ($lengthAdjustmentMap[$length] ?? 0.00);
-            $stitchAddon = ($isStitch && $stitchRowsOptionNorm === 'more_than_ten') ? 30.00 : 0.00;
+            $stitchAddon = 0.00;
+            if ($stitchRowsOptionNorm === 'more_than_ten' && $hasTenPlusRows) {
+                $stitchAddon = $serviceModel
+                    ? \App\Support\AdultServiceCatalog::rowAddonAmount($serviceModel, 'more_than_ten')
+                    : 30.00;
+            } elseif ($stitchRowsOptionNorm === 'fifteen_or_more' && $hasFifteenPlusRows) {
+                $stitchAddon = $serviceModel
+                    ? \App\Support\AdultServiceCatalog::rowAddonAmount($serviceModel, 'fifteen_or_more')
+                    : 30.00;
+            } elseif ($stitchRowsOptionNorm === 'ten_or_less' && $hasEightToTenRows && $serviceModel) {
+                $stitchAddon = \App\Support\AdultServiceCatalog::rowAddonAmount($serviceModel, 'ten_or_less');
+            }
             $frontBackCost = 0.00;
             if ($frontBackAddon) {
                 // Applies to "2/3 Line Single Crochet" crotchet when user selects "Front + Back" (+$20)
@@ -246,11 +284,6 @@ class PriceCalculator
         $kb_extras_total = 0.0;
         $isKids = (bool) (Arr::get($data, 'kb_length') || str_contains($serviceType, 'kids'));
         if ($isKids) {
-            $kb_service_base_prices = [
-                'half_weave_braid' => (float) config('service_prices.half_weave_braid', 100),
-                'half_weave_crotchet' => (float) config('service_prices.half_weave_crotchet', 80),
-                'crotchet_style' => (float) config('service_prices.crotchet_style', 70),
-            ];
             $kb_base_price = $serviceModel && isset($serviceModel->base_price) ? (float) $serviceModel->base_price : (float) config('service_prices.kids_braids', 80);
             $kb_length = Arr::get($data, 'kb_length') ?? Arr::get($data, 'length');
             if (is_string($kb_length)) $kb_length = str_replace(['-', ' '], '_', strtolower($kb_length));
@@ -263,13 +296,11 @@ class PriceCalculator
             $kb_braid_type = Arr::get($data, 'kb_braid_type');
             $kb_finish = Arr::get($data, 'kb_finish');
 
-            if ($kb_braid_type && isset($kb_service_base_prices[$kb_braid_type])) {
-                $kb_base_price = $kb_service_base_prices[$kb_braid_type];
-            }
-
-            // Calculate type adjustment
+            $catalogPrice = \App\Support\KidsStyleCatalog::startingPrice($kb_braid_type);
             $typeAdjustment = 0.00;
-            if ($kb_braid_type && isset($typeAdj[$kb_braid_type])) {
+            if ($catalogPrice !== null) {
+                $kb_base_price = $catalogPrice;
+            } elseif ($kb_braid_type && isset($typeAdj[$kb_braid_type])) {
                 $typeAdjustment = (float) $typeAdj[$kb_braid_type];
             }
 

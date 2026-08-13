@@ -857,8 +857,8 @@
             'cornrow': {
                 category: 'Cornrow/Feed-in Braids',
                 sizes: [
-                    { name: 'Stitch Weave', slug: 'stitch-weave', price: 100, time: '4–5 hrs', hasRowOptions: true },
-                    { name: 'Cornrow Weave', slug: 'cornrow-weave', price: 100, time: '4–5 hrs', hasRowOptions: true },
+                    { name: 'Stitch Weave', slug: 'stitch-weave', price: 100, time: '4–5 hrs', hasRowOptions: true, hasEightToTenRows: true, hasTenPlusRows: true, hasFifteenPlusRows: true },
+                    { name: 'Cornrow Weave', slug: 'cornrow-weave', price: 100, time: '4–5 hrs', hasRowOptions: true, hasEightToTenRows: true, hasTenPlusRows: true, hasFifteenPlusRows: true },
                     { name: 'Under-wig Weave (no extension)', slug: 'under-wig-weave', price: 30, time: '30 min–1 hr', hasRowOptions: false, noLength: true },
                     { name: 'Weave&Braid Mixed', slug: 'weave-braid-mixed', price: 150, time: '4–5 hrs', hasRowOptions: false }
                 ]
@@ -890,6 +890,57 @@
                 ]
             }
         };
+        @php
+            $cmsAdultInjectCal = \App\Support\AdultServiceCatalog::injectables($extraServices ?? []);
+            $cmsAdultOverlaysCal = \App\Support\AdultServiceCatalog::overlays($extraServices ?? []);
+        @endphp
+        (function() {
+            const extras = @json($cmsAdultInjectCal['sizes']);
+            const customCards = @json($cmsAdultInjectCal['custom_cards']);
+            const overlays = @json($cmsAdultOverlaysCal);
+            Object.keys(extras || {}).forEach(function(key) {
+                if (!window.serviceSizesMapCal[key]) {
+                    const card = (customCards || []).find(function(c){ return c.key === key; });
+                    window.serviceSizesMapCal[key] = { category: (card && card.title) ? card.title : key, sizes: [] };
+                }
+                window.serviceSizesMapCal[key].sizes = (window.serviceSizesMapCal[key].sizes || []).concat(extras[key]);
+            });
+            Object.keys(window.serviceSizesMapCal || {}).forEach(function(key) {
+                const sizes = window.serviceSizesMapCal[key].sizes || [];
+                const next = [];
+                sizes.forEach(function(size) {
+                    const ov = overlays[size.slug];
+                    if (!ov) {
+                        next.push(size);
+                        return;
+                    }
+                    if (ov.variants && ov.variants.length) {
+                        ov.variants.forEach(function(v) {
+                            next.push(Object.assign({}, size, v));
+                        });
+                        return;
+                    }
+                    const card = ov.card || {};
+                    next.push(Object.assign({}, size, {
+                        name: card.name || size.name,
+                        price: (typeof card.price === 'number') ? card.price : size.price,
+                        original: card.original || size.original,
+                        time: card.time || size.time,
+                        noLength: !!card.noLength,
+                        hasTipFinish: !!card.hasTipFinish,
+                        hasEightToTenRows: !!card.hasEightToTenRows,
+                        hasTenPlusRows: !!card.hasTenPlusRows,
+                        hasFifteenPlusRows: !!card.hasFifteenPlusRows,
+                        hasRowOptions: !!card.hasRowOptions,
+                        eightToTenRowsPrice: Number(card.eightToTenRowsPrice ?? 0),
+                        tenPlusRowsPrice: Number(card.tenPlusRowsPrice ?? 30),
+                        fifteenPlusRowsPrice: Number(card.fifteenPlusRowsPrice ?? 30),
+                        image: card.image || size.image
+                    }));
+                });
+                window.serviceSizesMapCal[key].sizes = next;
+            });
+        })();
 
         // Service card metadata
         const serviceCardMetaCal = {

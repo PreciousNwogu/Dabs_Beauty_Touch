@@ -87,6 +87,7 @@
                 <option value="active">Active</option>
                 <option value="inactive">Inactive</option>
                 <option value="discounted">Has Discount</option>
+                <option value="kids">Kids styles</option>
             </select>
             <input id="filterSearch" type="text" placeholder="Search by name…" oninput="applyFilters()" style="width:200px">
             <button class="btn btn-sm btn-outline-secondary btn-action" onclick="clearFilters()">
@@ -113,10 +114,16 @@
                         data-category="{{ strtolower($service->category ?? '') }}"
                         data-status="{{ $service->is_active ? 'active' : 'inactive' }}"
                         data-discount="{{ $service->discount_price !== null ? 'discounted' : '' }}"
+                        data-kids="{{ !empty($service->for_kids) ? '1' : '0' }}"
                         data-name="{{ strtolower($service->name) }}"
                     >
                         <td>
-                            <div class="fw-bold" style="color:#030f68">{{ $service->name }}</div>
+                            <div class="fw-bold" style="color:#030f68">
+                                {{ $service->name }}
+                                @if(!empty($service->for_kids))
+                                    <span class="badge-category" style="background:#fff0e6;color:#ff6600;margin-left:6px">Kids</span>
+                                @endif
+                            </div>
                             <div class="text-muted" style="font-size:.75rem">slug: {{ $service->slug }}</div>
                             @if($service->description)
                                 <div class="text-muted mt-1" style="font-size:.8rem;max-width:240px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ $service->description }}</div>
@@ -284,7 +291,7 @@ function applyFilters() {
     const search = document.getElementById('filterSearch').value.toLowerCase();
     document.querySelectorAll('#servicesTable tbody tr').forEach(row => {
         const ok = (!cat    || row.dataset.category === cat)
-                && (!status || row.dataset.status === status || (status === 'discounted' && row.dataset.discount === 'discounted'))
+                && (!status || row.dataset.status === status || (status === 'discounted' && row.dataset.discount === 'discounted') || (status === 'kids' && row.dataset.kids === '1'))
                 && (!search || row.dataset.name.includes(search));
         row.style.display = ok ? '' : 'none';
     });

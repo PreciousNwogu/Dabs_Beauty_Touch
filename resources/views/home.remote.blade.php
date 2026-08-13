@@ -2102,8 +2102,8 @@
             'cornrow': {
                 category: 'Cornrow/Feed-in Braids',
                 sizes: [
-                    { name: 'Stitch Weave', slug: 'stitch-weave', price: {{ (int) config('service_prices.stitch_weave', 100) }}, time: '4–5 hrs', hasRowOptions: true },
-                    { name: 'Cornrow Weave', slug: 'cornrow-weave', price: {{ (int) config('service_prices.cornrow_weave', 100) }}, time: '4–5 hrs', hasRowOptions: true },
+                    { name: 'Stitch Weave', slug: 'stitch-weave', price: {{ (int) config('service_prices.stitch_weave', 100) }}, time: '4–5 hrs', hasRowOptions: true, hasEightToTenRows: true, hasTenPlusRows: true, hasFifteenPlusRows: true },
+                    { name: 'Cornrow Weave', slug: 'cornrow-weave', price: {{ (int) config('service_prices.cornrow_weave', 100) }}, time: '4–5 hrs', hasRowOptions: true, hasEightToTenRows: true, hasTenPlusRows: true, hasFifteenPlusRows: true },
                     { name: 'Under-wig Weave (no extension)', slug: 'under-wig-weave', price: {{ (int) config('service_prices.under_wig_weave', 30) }}, time: '30 min–1 hr', hasRowOptions: false, noLength: true },
                     { name: 'Weave&Braid Mixed', slug: 'weave-braid-mixed', price: {{ (int) config('service_prices.weave_braid_mixed', 150) }}, time: '4–5 hrs', hasRowOptions: false }
                 ]
@@ -2135,6 +2135,60 @@
                 ]
             }
         };
+        @php
+            $cmsAdultInject = \App\Support\AdultServiceCatalog::injectables($extraServices ?? []);
+            $cmsAdultOverlays = \App\Support\AdultServiceCatalog::overlays($extraServices ?? []);
+        @endphp
+        window.__cmsAdultStyles = @json($cmsAdultInject['sizes']);
+        window.__cmsAdultCustomCards = @json($cmsAdultInject['custom_cards']);
+        window.__cmsAdultOverlays = @json($cmsAdultOverlays);
+        Object.keys(window.__cmsAdultStyles || {}).forEach(function(key) {
+            if (!window.serviceSizesMap[key]) {
+                const card = (window.__cmsAdultCustomCards || []).find(function(c){ return c.key === key; });
+                window.serviceSizesMap[key] = { category: (card && card.title) ? card.title : key, sizes: [] };
+            }
+            window.serviceSizesMap[key].sizes = (window.serviceSizesMap[key].sizes || []).concat(window.__cmsAdultStyles[key]);
+        });
+        (function applyCmsCardOverlays(sizeMap, overlays) {
+            Object.keys(sizeMap || {}).forEach(function(key) {
+                const sizes = sizeMap[key].sizes || [];
+                const next = [];
+                sizes.forEach(function(size) {
+                    const ov = overlays[size.slug];
+                    if (!ov) {
+                        next.push(size);
+                        return;
+                    }
+                    if (ov.variants && ov.variants.length) {
+                        ov.variants.forEach(function(v) {
+                            next.push(Object.assign({}, size, v, {
+                                hasWeaveAddon: size.hasWeaveAddon,
+                                hasFrontBackAddon: size.hasFrontBackAddon
+                            }));
+                        });
+                        return;
+                    }
+                    const card = ov.card || {};
+                    next.push(Object.assign({}, size, {
+                        name: card.name || size.name,
+                        price: (typeof card.price === 'number') ? card.price : size.price,
+                        original: card.original || size.original,
+                        time: card.time || size.time,
+                        noLength: !!card.noLength,
+                        hasTipFinish: !!card.hasTipFinish,
+                        hasEightToTenRows: !!card.hasEightToTenRows,
+                        hasTenPlusRows: !!card.hasTenPlusRows,
+                        hasFifteenPlusRows: !!card.hasFifteenPlusRows,
+                        hasRowOptions: !!card.hasRowOptions,
+                        eightToTenRowsPrice: Number(card.eightToTenRowsPrice ?? 0),
+                        tenPlusRowsPrice: Number(card.tenPlusRowsPrice ?? 30),
+                        fifteenPlusRowsPrice: Number(card.fifteenPlusRowsPrice ?? 30),
+                        image: card.image || size.image
+                    }));
+                });
+                sizeMap[key].sizes = next;
+            });
+        })(window.serviceSizesMap, window.__cmsAdultOverlays || {});
 
         // Open size selection modal
         window.openServiceSizeModal = function(serviceCategory) {
@@ -2173,23 +2227,25 @@
                             first.name,
                             first.price,
                             !!first.hasWeaveAddon,
-                            !!first.hasRowOptions,
+                            !!(first.hasRowOptions || first.hasEightToTenRows || first.hasTenPlusRows || first.hasFifteenPlusRows),
                             !!first.hasFrontBackAddon,
-                            !!first.noLength
+                            !!first.noLength,
+                            !!first.hasTipFinish
                         );
                     }
                 }
             } catch (e) { console.warn('Default size auto-selection failed', e); }
 
-            // Show/hide length selection based on service type
+            // Show/hide length selection based on whether any style in this category uses length
             const lengthSection = document.getElementById('lengthSelectionSection');
             if (lengthSection) {
-                if (serviceCategory === 'crotchet' || serviceCategory === 'hair-treatment') {
+                const allNoLength = Array.isArray(categoryData.sizes) && categoryData.sizes.length > 0
+                    && categoryData.sizes.every(function(s){ return !!s.noLength; });
+                if (allNoLength) {
                     lengthSection.style.display = 'none';
-                    window.serviceSizeData.selectedLength = 'none'; // Crotchet and hair treatment don't need length
+                    window.serviceSizeData.selectedLength = 'none';
                 } else {
                     lengthSection.style.display = 'block';
-                    // Reset length selection to mid-back
                     const lengthRadios = document.querySelectorAll('input[name="size_length"]');
                     lengthRadios.forEach(radio => {
                         radio.checked = (radio.value === 'mid-back');
@@ -2238,7 +2294,8 @@
             if (!tipSection) return;
 
             const selectedLength = window.serviceSizeData.selectedLength || 'mid-back';
-            const showTipOption = isTipOptionEligible(window.serviceSizeData.serviceCategory) && isTipLengthEligible(selectedLength);
+            const showTipOption = (isTipOptionEligible(window.serviceSizeData.serviceCategory) || !!window.serviceSizeData.hasTipFinish)
+                && (window.serviceSizeData.noLength || isTipLengthEligible(selectedLength));
             tipSection.style.display = showTipOption ? 'block' : 'none';
 
             if (!showTipOption) {
@@ -2270,21 +2327,25 @@
                 sizeCard.className = 'col-6 col-md-3';
                 const sizeImage = getSizeImage(size.name);
                 const hasWeaveAddon = size.hasWeaveAddon || false;
-                const hasRowOptions = size.hasRowOptions || false;
+                const hasRowOptions = !!(size.hasRowOptions || size.hasEightToTenRows || size.hasTenPlusRows || size.hasFifteenPlusRows);
                 const hasFrontBackAddon = size.hasFrontBackAddon || false;
                 const noLength = size.noLength || false;
-                const sizeName = getSizeName(size.name);
-                const sizeDesc = getSizeDescription(sizeName);
+                const hasTipFinish = size.hasTipFinish || false;
+                const sizeLabels = { small: 'Small', smedium: 'Smedium', medium: 'Medium', large: 'Large' };
+                const sizeName = size.braidSize ? (sizeLabels[size.braidSize] || size.braidSize) : (size.cms ? size.name : getSizeName(size.name));
+                const sizeDesc = size.braidSize ? getSizeDescription(sizeName) : (size.cms ? '' : getSizeDescription(getSizeName(size.name)));
+                const safeName = String(size.name).replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+                const cardImage = size.image || sizeImage;
                 sizeCard.innerHTML = `
-                    <div class="size-option-card" onclick="selectSize('${size.slug}', '${size.name}', ${size.price}, ${hasWeaveAddon}, ${hasRowOptions}, ${hasFrontBackAddon}, ${noLength})" style="cursor: pointer; padding: 12px; border: 2px solid #e9ecef; border-radius: 12px; text-align: center; transition: all 0.3s; background: #fff;" data-size-slug="${size.slug}">
+                    <div class="size-option-card" onclick="selectSize('${size.slug}', '${safeName}', ${size.price}, ${hasWeaveAddon}, ${hasRowOptions}, ${hasFrontBackAddon}, ${noLength}, ${hasTipFinish})" style="cursor: pointer; padding: 12px; border: 2px solid #e9ecef; border-radius: 12px; text-align: center; transition: all 0.3s; background: #fff;" data-size-slug="${size.slug}">
                         <div style="margin-bottom: 8px; overflow: hidden; border-radius: 8px; height: 120px;">
-                            <img src="${sizeImage}" alt="${sizeName} size" style="width: 100%; height: 100%; object-fit: cover; object-position: top;">
+                            <img src="${cardImage}" alt="${sizeName} size" style="width: 100%; height: 100%; object-fit: cover; object-position: top;">
                         </div>
                         <div style="font-weight: 700; color: #030f68; font-size: 0.9rem; margin-bottom: 4px;">${sizeName}</div>
                         ${sizeDesc ? `<div style="font-size: 0.7rem; color: #6c757d; margin-bottom: 6px; line-height: 1.2;">${sizeDesc}</div>` : ''}
-                        ${originalPricesMap[size.slug]
+                        ${(size.original || originalPricesMap[size.slug])
                             ? `<div style="font-size:1.2rem;font-weight:800;color:#ff6600">$${size.price} <span class="badge bg-danger" style="font-size:.6rem;vertical-align:middle">DISCOUNTED</span></div>
-                               <div style="font-size:.82rem;color:#999;text-decoration:line-through">was $${originalPricesMap[size.slug]}</div>`
+                               <div style="font-size:.82rem;color:#999;text-decoration:line-through">was $${size.original || originalPricesMap[size.slug]}</div>`
                             : `<div style="font-size: 1.2rem; font-weight: 800; color: #ff6600;">$${size.price}</div>`
                         }
                         <div style="font-size: 0.75rem; color: #999; margin-top: 4px;">${size.time}</div>
@@ -2381,7 +2442,7 @@
         }
 
         // Select a size
-        window.selectSize = function(slug, name, price, hasWeaveAddon, hasRowOptions, hasFrontBackAddon, noLength) {
+        window.selectSize = function(slug, name, price, hasWeaveAddon, hasRowOptions, hasFrontBackAddon, noLength, hasTipFinish) {
             // Remove selection from all cards
             document.querySelectorAll('.size-option-card').forEach(card => {
                 card.style.border = '2px solid #e9ecef';
@@ -2407,6 +2468,38 @@
             window.serviceSizeData.frontBackAddon = false; // Reset front/back addon
             window.serviceSizeData.selectedTipOption = 'curled'; // Reset tip option
             window.serviceSizeData.noLength = noLength || false; // Track if length should be hidden
+            window.serviceSizeData.hasTipFinish = !!hasTipFinish;
+
+            const sizeMeta = (function findSizeMeta(sizeSlug) {
+                const cat = window.serviceSizesMap && window.serviceSizeData
+                    ? window.serviceSizesMap[window.serviceSizeData.serviceCategory]
+                    : null;
+                const fromCat = cat && Array.isArray(cat.sizes)
+                    ? cat.sizes.find(function(s) { return s.slug === sizeSlug; })
+                    : null;
+                if (fromCat) return fromCat;
+                const maps = window.serviceSizesMap || {};
+                for (const key of Object.keys(maps)) {
+                    const found = (maps[key].sizes || []).find(function(s) { return s.slug === sizeSlug; });
+                    if (found) return found;
+                }
+                return null;
+            })(slug);
+            const hasExplicitRowFlags = !!(sizeMeta && (
+                'hasEightToTenRows' in sizeMeta || 'hasTenPlusRows' in sizeMeta || 'hasFifteenPlusRows' in sizeMeta
+            ));
+            const hasEightToTenRows = hasExplicitRowFlags
+                ? !!sizeMeta.hasEightToTenRows
+                : !!hasRowOptions;
+            const hasTenPlusRows = hasExplicitRowFlags ? !!sizeMeta.hasTenPlusRows : !!hasRowOptions;
+            const hasFifteenPlusRows = hasExplicitRowFlags ? !!sizeMeta.hasFifteenPlusRows : !!hasRowOptions;
+            window.serviceSizeData.hasEightToTenRows = hasEightToTenRows;
+            window.serviceSizeData.hasTenPlusRows = hasTenPlusRows;
+            window.serviceSizeData.hasFifteenPlusRows = hasFifteenPlusRows;
+            window.serviceSizeData.eightToTenRowsPrice = Number(sizeMeta && sizeMeta.eightToTenRowsPrice != null ? sizeMeta.eightToTenRowsPrice : 0);
+            window.serviceSizeData.tenPlusRowsPrice = Number(sizeMeta && sizeMeta.tenPlusRowsPrice != null ? sizeMeta.tenPlusRowsPrice : 30);
+            window.serviceSizeData.fifteenPlusRowsPrice = Number(sizeMeta && sizeMeta.fifteenPlusRowsPrice != null ? sizeMeta.fifteenPlusRowsPrice : 30);
+            hasRowOptions = hasEightToTenRows || hasTenPlusRows || hasFifteenPlusRows;
 
             // Show/hide weave add-on section based on service
             const weaveSection = document.getElementById('weaveAddonSection');
@@ -2426,9 +2519,32 @@
             if (rowSection) {
                 if (hasRowOptions) {
                     rowSection.style.display = 'block';
-                    // Reset row selection to "8-10"
-                    const row810Radio = document.getElementById('row_8_10');
-                    if (row810Radio) row810Radio.checked = true;
+                    const eightChoice = document.getElementById('rowEightTenChoice');
+                    const tenChoice = document.getElementById('rowTenPlusChoice');
+                    const fifteenChoice = document.getElementById('rowFifteenPlusChoice');
+                    const rowNote = document.getElementById('rowOptionsNote');
+                    setRowChoiceEnabled(eightChoice, hasEightToTenRows);
+                    setRowChoiceEnabled(tenChoice, hasTenPlusRows);
+                    setRowChoiceEnabled(fifteenChoice, hasFifteenPlusRows);
+                    const eightPrice = Number(window.serviceSizeData.eightToTenRowsPrice || 0);
+                    const tenPrice = Number(window.serviceSizeData.tenPlusRowsPrice || 0);
+                    const fifteenPrice = Number(window.serviceSizeData.fifteenPlusRowsPrice || 0);
+                    const eightPriceEl = document.getElementById('rowEightTenPrice');
+                    const tenPriceEl = document.getElementById('rowTenPlusPrice');
+                    const fifteenPriceEl = document.getElementById('rowFifteenPlusPrice');
+                    if (eightPriceEl) eightPriceEl.textContent = '+$' + eightPrice;
+                    if (tenPriceEl) tenPriceEl.textContent = '+$' + tenPrice;
+                    if (fifteenPriceEl) fifteenPriceEl.textContent = '+$' + fifteenPrice;
+                    if (rowNote) {
+                        const extras = [];
+                        if (hasTenPlusRows) extras.push('10+ rows (tiny) +$' + tenPrice);
+                        if (hasFifteenPlusRows) extras.push('15+ rows +$' + fifteenPrice);
+                        rowNote.innerHTML = extras.length
+                            ? '<strong>Note:</strong> ' + extras.join(' or ') + '.'
+                            : '<strong>Note:</strong> 8–10 rows add-on is $' + eightPrice + '.';
+                    }
+                    const defaultRow = hasEightToTenRows ? '8-10' : (hasTenPlusRows ? '10+' : '15+');
+                    window.toggleRowOption(defaultRow);
                 } else {
                     rowSection.style.display = 'none';
                 }
@@ -2526,33 +2642,62 @@
             updateSizeLengthPrice();
         };
 
+        window.rowOptionToStitchValue = function(rowOption) {
+            if (rowOption === '15+') return 'fifteen_or_more';
+            if (rowOption === '10+') return 'more_than_ten';
+            return 'ten_or_less';
+        };
+
+        function isRowOptionEnabled(rowOption) {
+            if (rowOption === '15+') return !!window.serviceSizeData.hasFifteenPlusRows;
+            if (rowOption === '10+') return !!window.serviceSizeData.hasTenPlusRows;
+            return !!window.serviceSizeData.hasEightToTenRows;
+        }
+
+        function setRowChoiceEnabled(optionEl, enabled) {
+            if (!optionEl) return;
+            const radio = optionEl.querySelector('input[type="radio"]');
+            optionEl.dataset.rowEnabled = enabled ? '1' : '0';
+            optionEl.style.display = enabled ? '' : 'none';
+            optionEl.style.opacity = '1';
+            optionEl.style.pointerEvents = enabled ? 'auto' : 'none';
+            optionEl.style.cursor = enabled ? 'pointer' : 'default';
+            optionEl.style.filter = 'none';
+            if (radio) radio.disabled = !enabled;
+        }
+
         // Toggle row option
         window.toggleRowOption = function(rowOption) {
+            if (!isRowOptionEnabled(rowOption)) {
+                return;
+            }
             window.serviceSizeData.rowOption = rowOption;
 
-            // Update radio selection
-            const rowRadio = document.getElementById(rowOption === '8-10' ? 'row_8_10' : 'row_10_plus');
+            const radioIds = { '8-10': 'row_8_10', '10+': 'row_10_plus', '15+': 'row_15_plus' };
+            const rowRadio = document.getElementById(radioIds[rowOption] || 'row_8_10');
             if (rowRadio) rowRadio.checked = true;
 
-            // Update visual selection
-            const row810Option = document.getElementById('row_8_10')?.closest('.form-check');
-            const row10PlusOption = document.getElementById('row_10_plus')?.closest('.form-check');
-
-            if (row810Option && row10PlusOption) {
-                if (rowOption === '10+') {
-                    row810Option.style.border = '2px solid #e9ecef';
-                    row810Option.style.background = '#fff';
-                    row10PlusOption.style.border = '2px solid #17a2b8';
-                    row10PlusOption.style.background = '#e7f3ff';
-                } else {
-                    row810Option.style.border = '2px solid #ff6600';
-                    row810Option.style.background = '#fff7e0';
-                    row10PlusOption.style.border = '2px solid #e9ecef';
-                    row10PlusOption.style.background = '#fff';
+            Object.keys(radioIds).forEach(function(key) {
+                const optionEl = document.getElementById(radioIds[key])?.closest('.form-check');
+                if (!optionEl) return;
+                const enabled = isRowOptionEnabled(key);
+                const selected = key === rowOption;
+                if (!enabled) {
+                    optionEl.style.border = '2px solid #e9ecef';
+                    optionEl.style.background = '#f3f4f6';
+                    return;
                 }
-            }
+                optionEl.style.border = selected
+                    ? (key === '8-10' ? '2px solid #ff6600' : '2px solid #17a2b8')
+                    : '2px solid #e9ecef';
+                optionEl.style.background = selected
+                    ? (key === '8-10' ? '#fff7e0' : '#e7f3ff')
+                    : '#fff';
+            });
 
-            // Update price
+            const stitchHidden = document.getElementById('stitch_rows_option');
+            if (stitchHidden) stitchHidden.value = window.rowOptionToStitchValue(rowOption);
+
             updateSizeLengthPrice();
         };
 
@@ -2666,9 +2811,12 @@
                 weaveAddonCost = 30;
             }
 
-            // Add row add-on cost if 10+ rows selected
-            if (rowOption === '10+') {
-                rowAddonCost = 30;
+            if (rowOption === '10+' && window.serviceSizeData.hasTenPlusRows !== false) {
+                rowAddonCost = Number(window.serviceSizeData.tenPlusRowsPrice || 0);
+            } else if (rowOption === '15+' && window.serviceSizeData.hasFifteenPlusRows !== false) {
+                rowAddonCost = Number(window.serviceSizeData.fifteenPlusRowsPrice || 0);
+            } else if (rowOption === '8-10') {
+                rowAddonCost = Number(window.serviceSizeData.eightToTenRowsPrice || 0);
             }
 
             // Add front/back add-on cost if selected
@@ -2727,6 +2875,12 @@
             let serviceName = window.serviceSizeData.serviceName;
             if (window.serviceSizeData.weaveAddon)          serviceName += ' (With Weave)';
             if (window.serviceSizeData.rowOption === '10+')  serviceName += ' (10+ Rows)';
+            if (window.serviceSizeData.rowOption === '15+')  serviceName += ' (15+ Rows)';
+
+            const stitchHidden = document.getElementById('stitch_rows_option');
+            if (stitchHidden && window.serviceSizeData.rowOption) {
+                stitchHidden.value = window.rowOptionToStitchValue(window.serviceSizeData.rowOption);
+            }
             if (window.serviceSizeData.frontBackAddon)       serviceName += ' (Front + Back)';
             if (window.serviceSizeData.selectedTipOption === 'finished') serviceName += ' (Finished Tip)';
 
@@ -4273,9 +4427,19 @@
                         <button class="btn btn-warning mt-3">Select Size & Book</button>
                     </div>
                 </div>
+                @php $cmsAdultCustomCards = \App\Support\AdultServiceCatalog::injectables($extraServices ?? [])['custom_cards']; @endphp
+                @foreach($cmsAdultCustomCards as $cmsCard)
+                    <div class="col-lg-4 col-md-6 col-6 service-item" data-category="other">
+                        <div class="service-card h-100" onclick="openServiceSizeModal({{ json_encode($cmsCard['key']) }})">
+                            <img src="{{ $cmsCard['image'] ?: asset('images/braids.jpeg') }}" alt="{{ $cmsCard['title'] }}">
+                            <h4>{{ $cmsCard['title'] }}</h4>
+                            <p class="mb-2">Browse other services.</p>
+                            <p class="mb-3"><strong>Hair:</strong> Not included</p>
+                            <button class="btn btn-warning mt-3">Select Style & Book</button>
+                        </div>
+                    </div>
+                @endforeach
             </div>
-
-            {{-- CMS-created service cards are managed in the admin but not shown inline here --}}
 
             <!-- View More Services Button for Mobile -->
             <div class="text-center mt-4 d-md-none" id="viewMoreServicesContainer">
@@ -4476,22 +4640,29 @@ function openOtherServicesModal() {
                             <h6 style="font-weight: 700; color: #030f68; margin-bottom: 15px;">
                                 <i class="bi bi-sliders me-2"></i>Choose Number of Rows
                             </h6>
-                            <p style="margin-bottom: 15px; color: #555; font-size: 0.95rem;">
-                                <strong>Note:</strong> More than 10 rows (tiny braids) attracts an extra $30.
+                            <p id="rowOptionsNote" style="margin-bottom: 15px; color: #555; font-size: 0.95rem;">
+                                <strong>Note:</strong> 10+ rows (tiny) or 15+ rows attracts an extra $30.
                             </p>
-                            <div class="d-flex gap-3">
-                                <div class="form-check flex-fill" style="background: #fff; padding: 15px; border-radius: 10px; border: 2px solid #e9ecef; cursor: pointer;" onclick="toggleRowOption('8-10')">
+                            <div class="d-flex flex-wrap gap-3">
+                                <div class="form-check flex-fill" id="rowEightTenChoice" style="background: #fff; padding: 15px; border-radius: 10px; border: 2px solid #e9ecef; cursor: pointer; min-width: 160px;" onclick="toggleRowOption('8-10')">
                                     <input class="form-check-input" type="radio" name="row_option" id="row_8_10" value="8-10" checked>
                                     <label class="form-check-label w-100" for="row_8_10" style="cursor: pointer; font-weight: 600;">
                                         <i class="bi bi-grid-3x2 me-2"></i>8-10 Rows
-                                        <span class="float-end text-muted">+$0</span>
+                                        <span class="float-end text-muted" id="rowEightTenPrice">+$0</span>
                                     </label>
                                 </div>
-                                <div class="form-check flex-fill" style="background: #fff; padding: 15px; border-radius: 10px; border: 2px solid #e9ecef; cursor: pointer;" onclick="toggleRowOption('10+')">
+                                <div class="form-check flex-fill" id="rowTenPlusChoice" style="background: #fff; padding: 15px; border-radius: 10px; border: 2px solid #e9ecef; cursor: pointer; min-width: 160px;" onclick="toggleRowOption('10+')">
                                     <input class="form-check-input" type="radio" name="row_option" id="row_10_plus" value="10+">
                                     <label class="form-check-label w-100" for="row_10_plus" style="cursor: pointer; font-weight: 600;">
                                         <i class="bi bi-grid-fill me-2"></i>10+ Rows (Tiny)
-                                        <span class="float-end text-info">+$30</span>
+                                        <span class="float-end text-info" id="rowTenPlusPrice">+$30</span>
+                                    </label>
+                                </div>
+                                <div class="form-check flex-fill" id="rowFifteenPlusChoice" style="background: #fff; padding: 15px; border-radius: 10px; border: 2px solid #e9ecef; cursor: pointer; min-width: 160px;" onclick="toggleRowOption('15+')">
+                                    <input class="form-check-input" type="radio" name="row_option" id="row_15_plus" value="15+">
+                                    <label class="form-check-label w-100" for="row_15_plus" style="cursor: pointer; font-weight: 600;">
+                                        <i class="bi bi-grid-3x3-gap-fill me-2"></i>15+ Rows
+                                        <span class="float-end text-info" id="rowFifteenPlusPrice">+$30</span>
                                     </label>
                                 </div>
                             </div>
@@ -5326,7 +5497,7 @@ function openOtherServicesModal() {
         </div>
     </div>
 
-    <!-- Stitch Braids rows selector (8–10 vs >10 rows) -->
+    <!-- Stitch Braids rows selector (8–10 vs 10+ vs 15+) -->
     <div class="modal fade" id="stitchRowsModal" tabindex="-1" aria-labelledby="stitchRowsModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content" style="border-radius: 18px; border: none; overflow: hidden;">
@@ -5338,7 +5509,7 @@ function openOtherServicesModal() {
                 </div>
                 <div class="modal-body p-4">
                     <div class="alert alert-info" style="background:#e7f3ff; border-left: 4px solid #17a2b8; border-radius: 10px;">
-                        <strong>Note:</strong> Tiny Stitch Braids (more than 10 rows) attracts an extra <strong>$30</strong>.
+                        <strong>Note:</strong> 10+ rows (tiny) or 15+ rows attracts an extra <strong>$30</strong>.
                     </div>
                     <div class="d-grid gap-3">
                         <button type="button" class="btn btn-primary btn-lg"
@@ -5350,6 +5521,11 @@ function openOtherServicesModal() {
                                 onclick="window.selectStitchRowsOption('more_than_ten')"
                                 style="border-radius: 14px; font-weight: 800; padding: 14px 16px;">
                             More than 10 rows (tiny) +$30
+                        </button>
+                        <button type="button" class="btn btn-outline-primary btn-lg"
+                                onclick="window.selectStitchRowsOption('fifteen_or_more')"
+                                style="border-radius: 14px; font-weight: 800; padding: 14px 16px;">
+                            15+ rows +$30
                         </button>
                     </div>
                 </div>
@@ -7621,7 +7797,7 @@ function openOtherServicesModal() {
                             m.show();
                         }
                     } catch (e) {}
-                    alert('Please select Stitch Braids rows (8–10 rows or more than 10 rows) to continue.');
+                    alert('Please select Stitch Braids rows (8–10, 10+, or 15+) to continue.');
                     return;
                 }
             }
@@ -9276,8 +9452,13 @@ document.addEventListener('DOMContentLoaded', function(){
             const snLower = (''+serviceNameDisplay).toLowerCase();
             const isStitch = stLower.includes('stitch') || snLower.includes('stitch');
             const stitchOpt = (document.getElementById('stitch_rows_option') || {}).value || '';
-            if (isStitch && stitchOpt === 'more_than_ten') {
-                finalPrice = (typeof finalPrice === 'number' ? finalPrice : (parseFloat(finalPrice) || 0)) + 30;
+            if (isStitch && (stitchOpt === 'more_than_ten' || stitchOpt === 'fifteen_or_more' || stitchOpt === 'ten_or_less')) {
+                const rowAdd = stitchOpt === 'fifteen_or_more'
+                    ? Number((window.serviceSizeData && window.serviceSizeData.fifteenPlusRowsPrice) || 30)
+                    : (stitchOpt === 'more_than_ten'
+                        ? Number((window.serviceSizeData && window.serviceSizeData.tenPlusRowsPrice) || 30)
+                        : Number((window.serviceSizeData && window.serviceSizeData.eightToTenRowsPrice) || 0));
+                finalPrice = (typeof finalPrice === 'number' ? finalPrice : (parseFloat(finalPrice) || 0)) + rowAdd;
             }
         } catch (e) { /* noop */ }
 
@@ -9565,7 +9746,7 @@ document.addEventListener('DOMContentLoaded', function(){
                 if (stitchNote) stitchNote.style.display = isStitch ? 'block' : 'none';
             } catch (e) { /* noop */ }
 
-            // Stitch braids rows selector popup (required to choose 8–10 vs >10)
+            // Stitch braids rows selector popup (required to choose 8–10, 10+, or 15+)
             try {
                 const isStitch = serviceTypeLower.includes('stitch') || serviceNameLower.includes('stitch');
                 const stitchHidden = document.getElementById('stitch_rows_option');

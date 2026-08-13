@@ -361,6 +361,8 @@
             <td>
               @if($stitchChoice === 'more_than_ten')
                 More than 10 rows (tiny) +$30
+              @elseif($stitchChoice === 'fifteen_or_more')
+                15+ rows +$30
               @elseif($stitchChoice === 'ten_or_less')
                 8–10 rows (base price)
               @else
@@ -421,12 +423,14 @@
           }
         }
         
-        // Stitch braids tiny rows (>10) add-on (+$30)
         $stitchAddon = 0.00;
         $hasStitchAddon = false;
-        if ($isStitchSvc && ($stitchChoice === 'more_than_ten')) {
-          $stitchAddon = 30.00;
-          $hasStitchAddon = true;
+        if ($isStitchSvc && in_array($stitchChoice, ['more_than_ten', 'fifteen_or_more', 'ten_or_less'], true)) {
+          $rowSvc = \App\Models\Service::where('name', $booking->service ?? '')->orWhere('slug', \Illuminate\Support\Str::slug((string) ($booking->service ?? '')))->first();
+          $stitchAddon = $rowSvc
+            ? \App\Support\AdultServiceCatalog::rowAddonAmount($rowSvc, $stitchChoice)
+            : (($stitchChoice === 'ten_or_less') ? 0.00 : 30.00);
+          $hasStitchAddon = $stitchAddon > 0;
         }
 
         // Calculate adjustments total (excluding weaving + stitch add-ons which are shown separately)
@@ -449,7 +453,7 @@
         @endif
         @if($hasStitchAddon)
         <div class="price-row">
-          <span class="price-label">Tiny stitch (&gt;10 rows)</span>
+          <span class="price-label">{{ $stitchChoice === 'fifteen_or_more' ? '15+ rows' : 'Tiny stitch (>10 rows)' }}</span>
           <span class="price-value">{{ sprintf('$%.2f', $stitchAddon) }}</span>
         </div>
         @endif
