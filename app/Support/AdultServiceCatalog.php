@@ -2,7 +2,9 @@
 
 namespace App\Support;
 
+use App\Models\Service;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 
 class AdultServiceCatalog
@@ -84,9 +86,79 @@ class AdultServiceCatalog
             'individual-crotchet' => ['individual-crotchet', 'individual-loc'],
             'individual-loc' => ['individual-loc', 'individual-crotchet'],
             'natural-hair-treatment' => ['natural-hair-treatment', 'hair-mask'],
+            'kinky-twist' => ['kinky-twist', 'kinky_twist'],
+            'passion-twist' => ['passion-twist', 'passion_twist'],
         ];
 
-        return $aliases[$slug] ?? [$slug];
+        $list = $aliases[$slug] ?? [$slug];
+        $underscore = str_replace('-', '_', $slug);
+        if ($underscore !== $slug && !in_array($underscore, $list, true)) {
+            $list[] = $underscore;
+        }
+
+        return $list;
+    }
+
+    /**
+     * Homepage styles that must exist as CMS rows so they can be edited.
+     *
+     * @return array<string, array{name:string, base_price:int, duration:?string, category:string, has_length:bool}>
+     */
+    public static function requiredCmsServices(): array
+    {
+        return [
+            'kinky-twist' => [
+                'name' => 'Kinky Twist',
+                'base_price' => 120,
+                'duration' => '3–4 hrs',
+                'category' => 'Kinky & Passion Twists',
+                'has_length' => true,
+            ],
+            'passion-twist' => [
+                'name' => 'Passion Twist',
+                'base_price' => 130,
+                'duration' => '3–4 hrs',
+                'category' => 'Kinky & Passion Twists',
+                'has_length' => true,
+            ],
+        ];
+    }
+
+    public static function ensureRequiredCmsServices(): void
+    {
+        if (!Schema::hasTable('services')) {
+            return;
+        }
+
+        $now = now();
+        foreach (self::requiredCmsServices() as $slug => $def) {
+            if (Service::where('slug', $slug)->exists()) {
+                continue;
+            }
+
+            $row = [
+                'name' => $def['name'],
+                'slug' => $slug,
+                'base_price' => $def['base_price'],
+                'discount_price' => null,
+                'description' => null,
+                'is_active' => true,
+                'for_kids' => false,
+                'created_at' => $now,
+                'updated_at' => $now,
+            ];
+            if (Schema::hasColumn('services', 'category')) {
+                $row['category'] = $def['category'];
+            }
+            if (Schema::hasColumn('services', 'duration')) {
+                $row['duration'] = $def['duration'];
+            }
+            if (Schema::hasColumn('services', 'has_length')) {
+                $row['has_length'] = $def['has_length'];
+            }
+
+            Service::query()->create($row);
+        }
     }
 
     public static function sizeLabels(): array
@@ -129,7 +201,12 @@ class AdultServiceCatalog
             return $path;
         }
 
-        return asset(ltrim($path, '/'));
+        $path = ltrim($path, '/');
+        $parts = explode('/', $path);
+        $file = array_pop($parts);
+        $parts[] = rawurlencode($file);
+
+        return asset(implode('/', $parts));
     }
 
     /**
@@ -140,7 +217,16 @@ class AdultServiceCatalog
     public static function homepageCards($extraServices): array
     {
         $cards = [];
-        foreach ($extraServices ?? [] as $svc) {
+        $services = collect($extraServices ?? []);
+        try {
+            if (Schema::hasColumn('services', 'use_as_category_card')) {
+                $flagged = Service::where('use_as_category_card', true)->get();
+                $services = $services->concat($flagged)->unique('id');
+            }
+        } catch (\Throwable $e) {
+            // Keep using the request collection when the table is unavailable.
+        }
+        foreach ($services as $svc) {
             $category = $svc->category ?: (self::hardcodedCategoryBySlug()[$svc->slug] ?? null);
             $key = ($svc->slug === 'kids-braids' || strcasecmp((string) $category, 'Kids Braids') === 0)
                 ? 'kids'
@@ -259,7 +345,6 @@ class AdultServiceCatalog
      */
     public static function injectables($extraServices): array
     {
-        $hardcoded = self::hardcodedSlugs();
         $knownKeys = array_keys(self::categories());
         $byKey = [];
         $customCards = [];
@@ -268,7 +353,7 @@ class AdultServiceCatalog
             if (!empty($svc->for_kids)) {
                 continue;
             }
-            if (in_array($svc->slug, $hardcoded, true)) {
+            if (self::isHardcodedSlug($svc->slug)) {
                 continue;
             }
             if (empty($svc->category)) {
@@ -371,21 +456,41 @@ class AdultServiceCatalog
     {
         $bySlug = [];
         foreach ($extraServices ?? [] as $svc) {
-            if (!empty($svc->for_kids) || empty($svc->slug)) {
+            if (empty($svc->slug)) {
                 continue;
             }
             $bySlug[$svc->slug] = $svc;
         }
 
-        $overlays = [];
-        foreach (self::hardcodedSlugs() as $slug) {
-            $svc = null;
-            foreach (self::cmsSlugsForHardcoded($slug) as $try) {
-                if (isset($bySlug[$try])) {
-                    $svc = $bySlug[$try];
-                    break;
+        try {
+            $aliasSlugs = [];
+            foreach (self::hardcodedSlugs() as $slug) {
+                foreach (self::cmsSlugsForHardcoded($slug) as $try) {
+                    $aliasSlugs[] = $try;
                 }
             }
+            foreach (Service::whereIn('slug', array_values(array_unique($aliasSlugs)))->get() as $svc) {
+                $bySlug[$svc->slug] = $svc;
+            }
+        } catch (\Throwable $e) {
+            // Keep using the request collection when the table is unavailable.
+        }
+
+        $byName = [];
+        foreach ($bySlug as $svc) {
+            $nameKey = strtolower(trim((string) $svc->name));
+            if ($nameKey === '') {
+                continue;
+            }
+            $existing = $byName[$nameKey] ?? null;
+            if (!$existing || (!empty($svc->is_active) && empty($existing->is_active))) {
+                $byName[$nameKey] = $svc;
+            }
+        }
+
+        $overlays = [];
+        foreach (self::hardcodedSlugs() as $slug) {
+            $svc = self::overlayServiceForSlug($bySlug, $byName, $slug);
             if (!$svc) {
                 continue;
             }
@@ -393,6 +498,40 @@ class AdultServiceCatalog
         }
 
         return $overlays;
+    }
+
+    public static function isHardcodedSlug(?string $slug): bool
+    {
+        $slug = (string) $slug;
+        if ($slug === '') {
+            return false;
+        }
+        if (in_array($slug, self::hardcodedSlugs(), true)) {
+            return true;
+        }
+        foreach (self::hardcodedSlugs() as $hard) {
+            if (in_array($slug, self::cmsSlugsForHardcoded($hard), true)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static function overlayServiceForSlug(array $bySlug, array $byName, string $slug)
+    {
+        foreach (self::cmsSlugsForHardcoded($slug) as $try) {
+            if (isset($bySlug[$try])) {
+                return $bySlug[$try];
+            }
+        }
+
+        $requiredName = strtolower(trim((string) (self::requiredCmsServices()[$slug]['name'] ?? '')));
+        if ($requiredName !== '' && isset($byName[$requiredName])) {
+            return $byName[$requiredName];
+        }
+
+        return null;
     }
 
     private static function overlayPayload($svc, string $displaySlug): array

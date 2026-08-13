@@ -110,12 +110,17 @@
                 </thead>
                 <tbody>
                     @foreach($services as $service)
+                    @php
+                        $cmsCategory = $service->category
+                            ?: (\App\Support\AdultServiceCatalog::hardcodedCategoryBySlug()[$service->slug] ?? '');
+                        $shownOnSite = isset(\App\Support\AdultServiceCatalog::hardcodedCategoryBySlug()[$service->slug]);
+                    @endphp
                     <tr
-                        data-category="{{ strtolower($service->category ?? '') }}"
+                        data-category="{{ strtolower($cmsCategory) }}"
                         data-status="{{ $service->is_active ? 'active' : 'inactive' }}"
                         data-discount="{{ $service->discount_price !== null ? 'discounted' : '' }}"
                         data-kids="{{ !empty($service->for_kids) ? '1' : '0' }}"
-                        data-name="{{ strtolower($service->name) }}"
+                        data-name="{{ strtolower($service->name.' '.$service->slug) }}"
                     >
                         <td>
                             <div class="d-flex align-items-start gap-2">
@@ -136,6 +141,9 @@
                                         @if(!empty($service->use_as_category_card))
                                             <span class="badge-category" style="background:#e8fff0;color:#1a7f37;margin-left:6px">Homepage card</span>
                                         @endif
+                                        @if($shownOnSite)
+                                            <span class="badge-category" style="background:#fff4e5;color:#b45309;margin-left:6px">On site</span>
+                                        @endif
                                     </div>
                                     <div class="text-muted" style="font-size:.75rem">slug: {{ $service->slug }}</div>
                                     @if($service->description)
@@ -145,8 +153,8 @@
                             </div>
                         </td>
                         <td>
-                            @if($service->category)
-                                <span class="badge-category">{{ $service->category }}</span>
+                            @if($cmsCategory)
+                                <span class="badge-category">{{ $cmsCategory }}</span>
                             @else
                                 <span class="text-muted" style="font-size:.82rem">—</span>
                             @endif

@@ -360,15 +360,19 @@
                         </div>
                     </div>
                     <div style="font-size:0.9rem;color:#333;margin-bottom:8px;"><strong>How to pay:</strong></div>
+                    <div style="background:#fff;border:1.5px dashed #ff6600;border-radius:10px;padding:12px 14px;margin-bottom:12px;">
+                        <div style="font-size:0.78rem;color:#888;font-weight:700;letter-spacing:.03em;text-transform:uppercase;margin-bottom:4px;">Interac e-Transfer</div>
+                        <a href="mailto:dabereprecious01@gmail.com" style="font-size:1.05rem;font-weight:800;color:#030f68;word-break:break-all;">dabereprecious01@gmail.com</a>
+                    </div>
                     <ol style="font-size:0.88rem;color:#444;line-height:1.9;margin:0 0 12px 0;padding-left:20px;">
-                        <li>Contact us via phone, email, or WhatsApp</li>
-                        <li>Make a <strong>bank transfer</strong> of $20.00</li>
+                        <li>Send an <strong>Interac e-Transfer</strong> of $20.00 to <strong>dabereprecious01@gmail.com</strong></li>
+                        <li>Include your booking ID in the payment message</li>
                         <li>Send us your payment receipt</li>
                         <li>We'll confirm your appointment within 24 hours</li>
                     </ol>
                     <div style="display:flex;gap:10px;flex-wrap:wrap;">
                         <a href="tel:+3432548848" class="btn btn-sm" style="background:#030f68;color:#fff;border-radius:8px;font-weight:600;"><i class="fas fa-phone me-1"></i>(343) 254-8848</a>
-                        <a href="mailto:info@dabsbeautytouch.com" class="btn btn-sm" style="background:#030f68;color:#fff;border-radius:8px;font-weight:600;"><i class="fas fa-envelope me-1"></i>Email Us</a>
+                        <a href="mailto:dabereprecious01@gmail.com" class="btn btn-sm" style="background:#030f68;color:#fff;border-radius:8px;font-weight:600;"><i class="fas fa-envelope me-1"></i>Interac Email</a>
                         <a href="https://wa.me/3432548848" target="_blank" rel="noopener" class="btn btn-sm" style="background:#25d366;color:#fff;border-radius:8px;font-weight:600;"><i class="fab fa-whatsapp me-1"></i>WhatsApp</a>
                     </div>
                 </div>

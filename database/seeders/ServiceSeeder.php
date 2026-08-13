@@ -47,7 +47,8 @@ class ServiceSeeder extends Seeder
             ['name'=>'Single Crotchet','slug'=>'single-crotchet','base_price'=>150,'discount_price'=>null,'description'=>null,'category'=>null,'is_active'=>1,'for_kids'=>0],
             ['name'=>'Natural Hair Twist','slug'=>'natural-hair-twist','base_price'=>50,'discount_price'=>null,'description'=>null,'category'=>null,'is_active'=>1,'for_kids'=>0],
             ['name'=>'Weaving No-Extension','slug'=>'weaving-no-extension','base_price'=>30,'discount_price'=>null,'description'=>null,'category'=>null,'is_active'=>1,'for_kids'=>0],
-            ['name'=>'Kinky Twist','slug'=>'kinky-twist','base_price'=>120,'discount_price'=>null,'description'=>null,'category'=>null,'is_active'=>1,'for_kids'=>0],
+            ['name'=>'Kinky Twist','slug'=>'kinky-twist','base_price'=>120,'discount_price'=>null,'description'=>null,'category'=>'Kinky & Passion Twists','is_active'=>1,'for_kids'=>0],
+            ['name'=>'Passion Twist','slug'=>'passion-twist','base_price'=>130,'discount_price'=>null,'description'=>null,'category'=>'Kinky & Passion Twists','is_active'=>1,'for_kids'=>0],
             ['name'=>'Twist Braids','slug'=>'twist-braids','base_price'=>130,'discount_price'=>null,'description'=>null,'category'=>null,'is_active'=>1,'for_kids'=>0],
         ];
 

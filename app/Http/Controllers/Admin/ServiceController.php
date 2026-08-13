@@ -17,6 +17,7 @@ class ServiceController extends Controller
 {
     public function index()
     {
+        AdultServiceCatalog::ensureRequiredCmsServices();
         $hasCat = \Illuminate\Support\Facades\Schema::hasColumn('services', 'category');
         $q = Service::orderBy('name');
         if ($hasCat) {

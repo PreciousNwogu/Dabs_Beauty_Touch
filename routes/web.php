@@ -33,6 +33,7 @@ Route::get('/__clear', function (Request $request) {
 
 // Main route - show the home page
 Route::get('/', function () {
+    \App\Support\AdultServiceCatalog::ensureRequiredCmsServices();
     // AppServiceProvider already overrides config('service_prices.*') with live DB values.
     $servicePrices = Service::pluck('base_price', 'slug')->toArray();
 
@@ -285,6 +286,7 @@ Route::get('/booking/success', function () {
 
 // Calendar booking page
 Route::get('/calendar', function () {
+    \App\Support\AdultServiceCatalog::ensureRequiredCmsServices();
     // Same hardcoded slugs as home — anything NOT in this list is a CMS-added service
     $hardcodedSlugs = [
         'small-knotless','smedium-knotless','medium-knotless','jumbo-knotless',

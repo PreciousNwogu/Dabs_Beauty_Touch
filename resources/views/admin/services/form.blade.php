@@ -292,6 +292,9 @@
                                    {{ old('is_active', $service->is_active ?? true) ? 'checked' : '' }}
                                    style="width:2.5em;height:1.3em">
                             <label class="form-check-label fw-bold" for="isActive">Active (visible to customers)</label>
+                            @if(isset($service) && \App\Support\AdultServiceCatalog::isHardcodedSlug($service->slug))
+                                <div class="slug-hint mt-1">This style is already on the homepage. Price, photo, time, and name edits update that card even if this switch is off.</div>
+                            @endif
                         </div>
                     </div>
 

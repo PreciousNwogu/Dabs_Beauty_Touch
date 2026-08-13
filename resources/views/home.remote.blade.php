@@ -2175,7 +2175,7 @@
                         name: card.name || size.name,
                         price: (typeof card.price === 'number') ? card.price : size.price,
                         original: card.original || size.original,
-                        time: card.time || size.time,
+                        time: (card.time && String(card.time).trim()) ? card.time : size.time,
                         noLength: !!card.noLength,
                         hasTipFinish: !!card.hasTipFinish,
                         hasEightToTenRows: !!card.hasEightToTenRows,
@@ -2186,7 +2186,8 @@
                         tenPlusRowsPrice: Number(card.tenPlusRowsPrice ?? 30),
                         fifteenPlusRowsPrice: Number(card.fifteenPlusRowsPrice ?? 30),
                         image: card.image || size.image,
-                        description: card.description || size.description || ''
+                        description: card.description || size.description || '',
+                        cms: true
                     }));
                 });
                 sizeMap[key].sizes = next;
@@ -8180,15 +8181,19 @@ function openOtherServicesModal() {
                         </div>
                     </div>
                     <div style="font-size:0.9rem;color:#333;margin-bottom:8px;"><strong>How to pay:</strong></div>
+                    <div style="background:#fff;border:1.5px dashed #ff6600;border-radius:10px;padding:12px 14px;margin-bottom:12px;">
+                        <div style="font-size:0.78rem;color:#888;font-weight:700;letter-spacing:.03em;text-transform:uppercase;margin-bottom:4px;">Interac e-Transfer</div>
+                        <a href="mailto:dabereprecious01@gmail.com" style="font-size:1.05rem;font-weight:800;color:#030f68;word-break:break-all;">dabereprecious01@gmail.com</a>
+                    </div>
                     <ol style="font-size:0.85rem;color:#444;line-height:1.9;margin:0 0 12px 0;padding-left:18px;">
-                        <li>Contact us via phone, email, or WhatsApp</li>
-                        <li>Make a <strong>bank transfer</strong> of $20.00</li>
+                        <li>Send an <strong>Interac e-Transfer</strong> of $20.00 to <strong>dabereprecious01@gmail.com</strong></li>
+                        <li>Include your booking ID in the payment message</li>
                         <li>Send us your payment receipt</li>
                         <li>We'll confirm your appointment within 24 hours</li>
                     </ol>
                     <div style="display:flex;gap:8px;flex-wrap:wrap;">
                         <a href="tel:+3432548848" class="btn btn-sm" style="background:#030f68;color:#fff;border-radius:8px;font-weight:600;"><i class="bi bi-telephone-fill me-1"></i>(343) 254-8848</a>
-                        <a href="mailto:info@dabsbeautytouch.com" class="btn btn-sm" style="background:#030f68;color:#fff;border-radius:8px;font-weight:600;"><i class="bi bi-envelope-fill me-1"></i>Email Us</a>
+                        <a href="mailto:dabereprecious01@gmail.com" class="btn btn-sm" style="background:#030f68;color:#fff;border-radius:8px;font-weight:600;"><i class="bi bi-envelope-fill me-1"></i>Interac Email</a>
                         <a href="https://wa.me/3432548848" target="_blank" rel="noopener" class="btn btn-sm" style="background:#25d366;color:#fff;border-radius:8px;font-weight:600;"><i class="bi bi-whatsapp me-1"></i>WhatsApp</a>
                     </div>
                 </div>
@@ -8254,15 +8259,19 @@ function openOtherServicesModal() {
                         </div>
                     </div>
                     <div style="font-size:0.9rem;color:#333;margin-bottom:8px;"><strong>How to pay:</strong></div>
+                    <div style="background:#fff;border:1.5px dashed #ff6600;border-radius:10px;padding:12px 14px;margin-bottom:12px;">
+                        <div style="font-size:0.78rem;color:#888;font-weight:700;letter-spacing:.03em;text-transform:uppercase;margin-bottom:4px;">Interac e-Transfer</div>
+                        <a href="mailto:dabereprecious01@gmail.com" style="font-size:1.05rem;font-weight:800;color:#030f68;word-break:break-all;">dabereprecious01@gmail.com</a>
+                    </div>
                     <ol style="font-size:0.85rem;color:#444;line-height:1.9;margin:0 0 12px 0;padding-left:18px;">
-                        <li>Contact us via phone, email, or WhatsApp</li>
-                        <li>Make a <strong>bank transfer</strong> of $20.00</li>
+                        <li>Send an <strong>Interac e-Transfer</strong> of $20.00 to <strong>dabereprecious01@gmail.com</strong></li>
+                        <li>Include your booking ID in the payment message</li>
                         <li>Send us your payment receipt</li>
                         <li>We'll confirm your appointment within 24 hours</li>
                     </ol>
                     <div style="display:flex;gap:8px;flex-wrap:wrap;">
                         <a href="tel:+3432548848" class="btn btn-sm" style="background:#030f68;color:#fff;border-radius:8px;font-weight:600;"><i class="bi bi-telephone-fill me-1"></i>(343) 254-8848</a>
-                        <a href="mailto:info@dabsbeautytouch.com" class="btn btn-sm" style="background:#030f68;color:#fff;border-radius:8px;font-weight:600;"><i class="bi bi-envelope-fill me-1"></i>Email Us</a>
+                        <a href="mailto:dabereprecious01@gmail.com" class="btn btn-sm" style="background:#030f68;color:#fff;border-radius:8px;font-weight:600;"><i class="bi bi-envelope-fill me-1"></i>Interac Email</a>
                         <a href="https://wa.me/3432548848" target="_blank" rel="noopener" class="btn btn-sm" style="background:#25d366;color:#fff;border-radius:8px;font-weight:600;"><i class="bi bi-whatsapp me-1"></i>WhatsApp</a>
                     </div>
                 </div>
@@ -9236,8 +9245,8 @@ document.addEventListener('DOMContentLoaded', function(){
         'hair-mask': {{ (int) config('service_prices.hair_mask', 50) }},
         'retouching': {{ (int) config('service_prices.hair_mask', 50) }},
         'boho-braids': {{ (int) config('service_prices.boho_braids', 150) }},
-        'kinky-twist': 120,
-        'passion-twist': 130,
+        'kinky-twist': {{ (int) config('service_prices.kinky_twist', 120) }},
+        'passion-twist': {{ (int) config('service_prices.passion_twist', 130) }},
         'custom': 100,
         // CMS-added services
         @foreach($extraServices ?? [] as $__s)
@@ -9260,7 +9269,7 @@ document.addEventListener('DOMContentLoaded', function(){
         'Natural Hair Twist': {{ (int) config('service_prices.natural_hair_twist', 50) }},
         'Weaving No-Extension': {{ (int) config('service_prices.weaving_no_extension', 30) }},
         'Kinky Twist': {{ (int) config('service_prices.kinky_twist', 120) }},
-        'Passion Twist': 130,
+        'Passion Twist': {{ (int) config('service_prices.passion_twist', 130) }},
         // CMS-added services
         @foreach($extraServices ?? [] as $__s)
         '{{ $__s->name }}': {{ (int) $__s->effective_price }},
