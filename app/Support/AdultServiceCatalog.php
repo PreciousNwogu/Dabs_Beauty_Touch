@@ -99,6 +99,95 @@ class AdultServiceCatalog
         ];
     }
 
+    public static function displayCategoryName(?string $name): string
+    {
+        $n = trim((string) $name);
+        if ($n === '' || strcasecmp($n, 'other') === 0 || strcasecmp($n, 'others') === 0) {
+            return 'More Styles';
+        }
+
+        return $n;
+    }
+
+    public static function displayStyleName(string $slug, ?string $name): string
+    {
+        if ($slug === 'line-single') {
+            return '2-3 line single crotchet';
+        }
+
+        $n = trim((string) $name);
+        return $n !== '' ? $n : $slug;
+    }
+
+    public static function publicImageUrl(?string $path): string
+    {
+        $path = trim((string) $path);
+        if ($path === '') {
+            return '';
+        }
+        if (preg_match('#^https?://#i', $path) || str_starts_with($path, '//')) {
+            return $path;
+        }
+
+        return asset(ltrim($path, '/'));
+    }
+
+    /**
+     * Homepage category-card image/description overlays, keyed by card key.
+     *
+     * @return array<string, array{image: string, description: string}>
+     */
+    public static function homepageCards($extraServices): array
+    {
+        $cards = [];
+        foreach ($extraServices ?? [] as $svc) {
+            $category = $svc->category ?: (self::hardcodedCategoryBySlug()[$svc->slug] ?? null);
+            $key = ($svc->slug === 'kids-braids' || strcasecmp((string) $category, 'Kids Braids') === 0)
+                ? 'kids'
+                : self::keyFromName($category);
+            if (!$key) {
+                continue;
+            }
+
+            $image = self::publicImageUrl($svc->image_url ?? '');
+            $description = trim((string) ($svc->description ?? ''));
+            $flagged = !empty($svc->use_as_category_card);
+            $isKnownCard = isset(self::categories()[$key]) || $key === 'kids';
+            if ($isKnownCard && !$flagged) {
+                continue;
+            }
+            if ($image === '' && $description === '') {
+                continue;
+            }
+
+            $existing = $cards[$key] ?? ['image' => '', 'description' => '', 'flagged' => false];
+            if ($flagged) {
+                $existing['flagged'] = true;
+                if ($image !== '') {
+                    $existing['image'] = $image;
+                }
+                if ($description !== '') {
+                    $existing['description'] = $description;
+                }
+            } elseif (!$existing['flagged']) {
+                if ($existing['image'] === '' && $image !== '') {
+                    $existing['image'] = $image;
+                }
+                if ($existing['description'] === '' && $description !== '') {
+                    $existing['description'] = $description;
+                }
+            }
+            $cards[$key] = $existing;
+        }
+
+        foreach ($cards as $key => $card) {
+            unset($card['flagged']);
+            $cards[$key] = $card;
+        }
+
+        return $cards;
+    }
+
     public static function parseSizeSlug(?string $slug): array
     {
         $slug = (string) $slug;
@@ -207,7 +296,8 @@ class AdultServiceCatalog
                 'eightToTenRowsPrice' => $rowFlags['eightToTenRowsPrice'],
                 'tenPlusRowsPrice' => $rowFlags['tenPlusRowsPrice'],
                 'fifteenPlusRowsPrice' => $rowFlags['fifteenPlusRowsPrice'],
-                'image' => (string) ($svc->image_url ?? ''),
+                'image' => self::publicImageUrl($svc->image_url ?? ''),
+                'description' => trim((string) ($svc->description ?? '')),
                 'cms' => true,
             ];
 
@@ -235,14 +325,36 @@ class AdultServiceCatalog
                 ]);
             }
 
-            if (!in_array($key, $knownKeys, true) && !isset($customCards[$key])) {
-                $customCards[$key] = [
-                    'key' => $key,
-                    'title' => $svc->category,
-                    'image' => (string) ($svc->image_url ?? ''),
-                ];
+            if (!in_array($key, $knownKeys, true)) {
+                $image = self::publicImageUrl($svc->image_url ?? '');
+                $description = trim((string) ($svc->description ?? ''));
+                $flagged = !empty($svc->use_as_category_card);
+                if (!isset($customCards[$key])) {
+                    $customCards[$key] = [
+                        'key' => $key,
+                        'title' => self::displayCategoryName($svc->category),
+                        'image' => $image,
+                        'description' => $description,
+                        'flagged' => $flagged,
+                    ];
+                } elseif ($flagged || empty($customCards[$key]['flagged'])) {
+                    if ($flagged || $customCards[$key]['image'] === '') {
+                        $customCards[$key]['image'] = $image ?: $customCards[$key]['image'];
+                    }
+                    if ($flagged || $customCards[$key]['description'] === '') {
+                        $customCards[$key]['description'] = $description !== '' ? $description : $customCards[$key]['description'];
+                    }
+                    if ($flagged) {
+                        $customCards[$key]['flagged'] = true;
+                    }
+                }
             }
         }
+
+        $customCards = array_map(function (array $card) {
+            unset($card['flagged']);
+            return $card;
+        }, $customCards);
 
         return [
             'sizes' => $byKey,
@@ -292,7 +404,7 @@ class AdultServiceCatalog
         $sizeOptions = is_array($svc->size_options ?? null) ? $svc->size_options : [];
 
         $card = [
-            'name' => $svc->name,
+            'name' => self::displayStyleName($displaySlug, $svc->name),
             'slug' => $displaySlug,
             'price' => $effective,
             'original' => ($original > $effective) ? $original : null,
@@ -306,7 +418,8 @@ class AdultServiceCatalog
             'eightToTenRowsPrice' => $rowFlags['eightToTenRowsPrice'],
             'tenPlusRowsPrice' => $rowFlags['tenPlusRowsPrice'],
             'fifteenPlusRowsPrice' => $rowFlags['fifteenPlusRowsPrice'],
-            'image' => (string) ($svc->image_url ?? ''),
+            'image' => self::publicImageUrl($svc->image_url ?? ''),
+            'description' => trim((string) ($svc->description ?? '')),
             'cms' => true,
         ];
 

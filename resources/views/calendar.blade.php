@@ -875,7 +875,7 @@
             'crotchet': {
                 category: 'Crotchet Styles',
                 sizes: [
-                    { name: '2/3 Line Single Crochet', slug: 'line-single', price: 100, time: '2–3 hrs', hasFrontBackAddon: true, noLength: true },
+                    { name: '2-3 line single crotchet', slug: 'line-single', price: 100, time: '2–3 hrs', hasFrontBackAddon: true, noLength: true },
                     { name: 'Afro Crotchet', slug: 'afro-crotchet', price: 120, time: '3–4 hrs', hasFrontBackAddon: false, noLength: true },
                     { name: 'Individual Crotchet', slug: 'individual-crotchet', price: 150, time: '4–5 hrs', hasFrontBackAddon: false, noLength: true },
                     { name: 'Butterfly Locks', slug: 'butterfly-locks', price: 150, time: '3–4 hrs', hasFrontBackAddon: false, noLength: true },
@@ -893,6 +893,7 @@
         @php
             $cmsAdultInjectCal = \App\Support\AdultServiceCatalog::injectables($extraServices ?? []);
             $cmsAdultOverlaysCal = \App\Support\AdultServiceCatalog::overlays($extraServices ?? []);
+            $cmsHomepageCardsCal = \App\Support\AdultServiceCatalog::homepageCards($extraServices ?? []);
         @endphp
         (function() {
             const extras = @json($cmsAdultInjectCal['sizes']);
@@ -935,7 +936,8 @@
                         eightToTenRowsPrice: Number(card.eightToTenRowsPrice ?? 0),
                         tenPlusRowsPrice: Number(card.tenPlusRowsPrice ?? 30),
                         fifteenPlusRowsPrice: Number(card.fifteenPlusRowsPrice ?? 30),
-                        image: card.image || size.image
+                        image: card.image || size.image,
+                        description: card.description || size.description || ''
                     }));
                 });
                 window.serviceSizesMapCal[key].sizes = next;
@@ -990,6 +992,14 @@
                 desc: 'Knotless braids with curly ends for a boho look.'
             }
         };
+        const cmsHomepageCardsCal = @json($cmsHomepageCardsCal ?? []);
+        Object.keys(cmsHomepageCardsCal || {}).forEach(function(key) {
+            const cms = cmsHomepageCardsCal[key] || {};
+            serviceCardMetaCal[key] = Object.assign({}, serviceCardMetaCal[key] || {}, {
+                img: cms.image || (serviceCardMetaCal[key] && serviceCardMetaCal[key].img) || '{{ asset("images/braids.jpeg") }}',
+                desc: cms.description || (serviceCardMetaCal[key] && serviceCardMetaCal[key].desc) || ''
+            });
+        });
 
         // --- Booking draft (persist typed info across service flows / redirects) ---
         const DBT_BOOKING_DRAFT_KEY = 'dbt_booking_draft_v1';

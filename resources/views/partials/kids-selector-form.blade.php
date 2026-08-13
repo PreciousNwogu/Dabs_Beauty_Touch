@@ -152,6 +152,27 @@
         transition: all 0.3s ease;
     }
 
+    .kb-braid-card img {
+        width: 100%;
+        height: 140px;
+        object-fit: cover;
+        border-radius: 8px;
+        margin-bottom: 10px;
+    }
+
+    .kb-braid-desc {
+        font-size: 0.82rem;
+        color: #6c757d;
+        margin: 0 0 6px;
+        line-height: 1.35;
+    }
+
+    .kb-braid-time {
+        font-size: 0.78rem;
+        color: #888;
+        margin-bottom: 6px;
+    }
+
     .kb-braid-name {
         font-size: 1.05rem;
         font-weight: 600;
@@ -630,30 +651,38 @@
                                 <span class="kb-checkmark">✓</span>
                             </label>
 
-                            {{-- CMS-managed kids braid types --}}
+                            {{-- CMS-created kids styles --}}
                             @foreach($cmsKidsServices ?? [] as $cksvc)
                                 @php
-                                    $cksName = strtolower((string) $cksvc->name);
-                                    $cksSlugRaw = strtolower((string) ($cksvc->slug ?? ''));
-                                    if (str_contains($cksName, 'kids') || str_contains($cksSlugRaw, 'kids') || in_array($cksvc->slug, $kbCatalogSlugs ?? [], true)) {
-                                        continue;
-                                    }
                                     $cksSlug  = 'cms_' . $cksvc->id;
                                     $cksPrice = (int) $cksvc->effective_price;
                                     $cksEnds  = ($cksvc->has_discount && $cksvc->discount_ends_at)
                                                     ? $cksvc->discount_ends_at->toIso8601String()
                                                     : '';
+                                    $cksImage = \App\Support\AdultServiceCatalog::publicImageUrl($cksvc->image_url ?? '');
+                                    $cksDesc = trim((string) ($cksvc->description ?? ''));
+                                    $cksTime = trim((string) ($cksvc->duration ?? ''));
+                                    $cksHasLength = !isset($cksvc->has_length) || (bool) $cksvc->has_length;
                                 @endphp
                                 <label class="kb-braid-card" for="kb_type_{{ $cksSlug }}">
                                     <input type="radio" name="kb_braid_type"
                                            id="kb_type_{{ $cksSlug }}"
                                            value="{{ $cksSlug }}"
-                                           data-disable-steps="1"
-                                           data-price="{{ (int) $cksvc->effective_price }}"
+                                           {{ $cksHasLength ? '' : 'data-disable-steps=1' }}
+                                           data-price="{{ $cksPrice }}"
                                            {{ $cksEnds ? 'data-discount-ends="'.$cksEnds.'"' : '' }}>
                                     <div class="kb-braid-content">
+                                        @if($cksImage)
+                                            <img src="{{ $cksImage }}" alt="{{ $cksvc->name }}">
+                                        @endif
                                         <div class="kb-braid-name">{{ $cksvc->name }}</div>
-                                        <div class="kb-braid-price">${{ $cksPrice }}</div>
+                                        @if($cksDesc)
+                                            <p class="kb-braid-desc">{{ $cksDesc }}</p>
+                                        @endif
+                                        @if($cksTime)
+                                            <div class="kb-braid-time">{{ $cksTime }}</div>
+                                        @endif
+                                        <div class="kb-braid-price">{{ $cksHasLength ? 'From $' : '$' }}{{ $cksPrice }}</div>
                                     </div>
                                     <span class="kb-checkmark">✓</span>
                                 </label>
@@ -1074,15 +1103,8 @@ document.addEventListener('DOMContentLoaded', function(){
             const cmsKidsFixedPrices = {};
             const cmsKidsDiscountEnds = {};
             @foreach($cmsKidsServices ?? [] as $cksvc)
-                @php
-                    $cksName = strtolower((string) $cksvc->name);
-                    $cksSlugRaw = strtolower((string) ($cksvc->slug ?? ''));
-                    if (str_contains($cksName, 'kids') || str_contains($cksSlugRaw, 'kids') || in_array($cksvc->slug, $kbCatalogSlugs ?? [], true)) {
-                        continue;
-                    }
-                    $cksSlug = 'cms_' . $cksvc->id;
-                @endphp
-                braidTypeNames['{{ $cksSlug }}'] = '{{ addslashes($cksvc->name) }}';
+                @php $cksSlug = 'cms_' . $cksvc->id; @endphp
+                braidTypeNames['{{ $cksSlug }}'] = @json($cksvc->name);
                 braidTypeAdjustments['{{ $cksSlug }}'] = {{ (int) $cksvc->effective_price - $kidsOriginalConfigBase }};
                 cmsKidsFixedPrices['{{ $cksSlug }}'] = {{ (int) $cksvc->effective_price }};
                 @if($cksvc->discount_ends_at && $cksvc->has_discount)
@@ -1188,8 +1210,11 @@ document.addEventListener('DOMContentLoaded', function(){
             const radioStartPrice = (braidType && braidType.dataset.price !== undefined && braidType.dataset.price !== '')
                 ? Number(braidType.dataset.price)
                 : null;
-            const totalPrice = (isCmsType && cmsKidsFixedPrices[braidTypeValue] !== undefined)
-                ? cmsKidsFixedPrices[braidTypeValue] + addonsTotal
+            const cmsBase = (isCmsType && cmsKidsFixedPrices[braidTypeValue] !== undefined)
+                ? cmsKidsFixedPrices[braidTypeValue]
+                : null;
+            const totalPrice = cmsBase !== null
+                ? cmsBase + (shouldDisable ? 0 : (finishAdj + lengthAdj)) + addonsTotal
                 : (radioStartPrice !== null && !isNaN(radioStartPrice)
                     ? radioStartPrice + (shouldDisable ? 0 : (finishAdj + lengthAdj)) + addonsTotal
                     : effectiveBase + braidTypeAdj + finishAdj + lengthAdj + addonsTotal);

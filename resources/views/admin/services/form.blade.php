@@ -88,7 +88,8 @@
             <div class="form-card mb-5">
                 <form method="POST"
                       action="{{ isset($service) ? route('admin.services.update', $service) : route('admin.services.store') }}"
-                      enctype="multipart/form-data">
+                      enctype="multipart/form-data"
+                      onsubmit="return prepareServiceImageSubmit(this)">
                     @csrf
                     @if(isset($service))
                         @method('PUT')
@@ -119,9 +120,10 @@
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label">Description</label>
+                        <label class="form-label">Card Description</label>
                         <textarea name="description" class="form-control @error('description') is-invalid @enderror"
-                                  rows="3" placeholder="Brief description of the service…">{{ old('description', $service->description ?? '') }}</textarea>
+                                  rows="3" maxlength="1000" placeholder="Shown on the style card when customers pick this service…">{{ old('description', $service->description ?? '') }}</textarea>
+                        <div class="slug-hint">Customers see this under the style name. Leave blank to keep the default size text.</div>
                         @error('description')<div class="invalid-feedback">{{ $message }}</div>@enderror
                     </div>
 
@@ -135,11 +137,12 @@
                         }
                     @endphp
                     <div class="mb-3">
-                        <label class="form-label">Service Image <span class="text-muted fw-normal">(optional)</span></label>
+                        <label class="form-label">Service Card Image <span class="text-muted fw-normal">(optional)</span></label>
                         <div class="row g-3 align-items-start">
                             <div class="col-md-8">
                                 <input type="hidden" name="image_url" id="imageUrlInput" value="{{ $currentImage }}">
                                 <input type="hidden" name="remove_image" id="removeImageInput" value="0">
+                                <textarea name="image_data" id="imageDataInput" hidden></textarea>
 
                                 <div class="d-flex flex-wrap gap-2 mb-3">
                                     <button type="button" class="image-source-btn active" id="btnUploadSource" onclick="showImageSource('upload')">
@@ -155,7 +158,7 @@
                                            class="form-control @error('image') is-invalid @enderror"
                                            accept="image/jpeg,image/png,image/gif,image/webp,image/avif"
                                            onchange="onImageFileChosen(this)">
-                                    <div class="slug-hint">JPG, PNG, WEBP, AVIF, or GIF. Max 5 MB.</div>
+                                    <div class="slug-hint">JPG, PNG, WEBP, AVIF, or GIF. Max 10 MB. Replaces the photo on this style’s booking card.</div>
                                     @error('image')<div class="invalid-feedback">{{ $message }}</div>@enderror
                                 </div>
 
@@ -181,6 +184,14 @@
                                     <i class="bi bi-x-circle me-1"></i>Remove image
                                 </button>
                                 @error('image_url')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
+
+                                <div class="form-check form-switch mt-3">
+                                    <input class="form-check-input" type="checkbox" name="use_as_category_card" id="useAsCategoryCard" value="1"
+                                           {{ old('use_as_category_card', $service->use_as_category_card ?? false) ? 'checked' : '' }}
+                                           style="width:2.5em;height:1.3em">
+                                    <label class="form-check-label fw-bold" for="useAsCategoryCard">Use this image and description on the homepage category card</label>
+                                    <div class="slug-hint mt-1">Updates the Knotless, Crotchet, Kids Braids, or custom category card customers see first. Only one service per category should have this on.</div>
+                                </div>
                             </div>
                             <div class="col-md-4">
                                 <div class="img-preview-box{{ $currentImageSrc ? ' has-image' : '' }}" id="imgPreviewBox">
@@ -291,7 +302,32 @@
                                    {{ old('for_kids', $service->for_kids ?? false) ? 'checked' : '' }}
                                    style="width:2.5em;height:1.3em">
                             <label class="form-check-label fw-bold" for="forKids">For Kids (appears in Kids Braids selector)</label>
-                            <div class="slug-hint mt-1">Kids style prices are edited one service at a time. Adult services and other kids styles stay unchanged.</div>
+                            <div class="slug-hint mt-1">Turn this on to add a new kids style, the same way adult styles are added to the homepage. Price, photo, and description stay independent of other services.</div>
+                        </div>
+                    </div>
+
+                    <div id="kidsStyleOptions" style="display:none">
+                        <p class="section-title mt-4"><i class="bi bi-emoji-smile me-2"></i>Kids Booking Options</p>
+                        <p class="slug-hint mb-3">This service is added as a new card in the Kids Braids selector. Customers can book it like the built-in kids styles.</p>
+
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Time estimate</label>
+                                <input type="text" name="duration" class="form-control" id="kidsDuration"
+                                       value="{{ old('duration', $service->duration ?? '') }}"
+                                       placeholder="e.g. 1–2 hrs">
+                                <div class="slug-hint">Shown on the kids style card.</div>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" name="has_length" id="kidsHasLength" value="1"
+                                       {{ old('has_length', $service->has_length ?? true) ? 'checked' : '' }}
+                                       style="width:2.5em;height:1.3em">
+                                <label class="form-check-label fw-bold" for="kidsHasLength">Ask for finish and length</label>
+                                <div class="slug-hint mt-1">Off = fixed price, like Crotchet. On = customers also choose curl finish and length.</div>
+                            </div>
                         </div>
                     </div>
 
@@ -418,6 +454,15 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
+function prepareServiceImageSubmit(form) {
+    const dataInput = document.getElementById('imageDataInput');
+    const fileInput = document.getElementById('imageFileInput');
+    if (dataInput && dataInput.value && fileInput) {
+        fileInput.value = '';
+    }
+    return true;
+}
+
 function showImageSource(source) {
     const uploadPanel = document.getElementById('uploadPanel');
     const galleryPanel = document.getElementById('galleryPanel');
@@ -463,8 +508,28 @@ function onImageFileChosen(input) {
         setImagePreview('');
         return;
     }
+    const allowed = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/avif'];
+    const name = (file.name || '').toLowerCase();
+    const okType = allowed.indexOf(file.type) !== -1 || /\.(jpe?g|png|gif|webp|avif)$/.test(name);
+    if (!okType) {
+        input.value = '';
+        setImagePreview('');
+        alert('Use a JPG, PNG, WEBP, AVIF, or GIF image.');
+        return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+        input.value = '';
+        setImagePreview('');
+        alert('The image must be 10 MB or smaller.');
+        return;
+    }
     const reader = new FileReader();
-    reader.onload = function(e) { setImagePreview(e.target.result); };
+    reader.onload = function(e) {
+        const dataUrl = e.target && e.target.result ? String(e.target.result) : '';
+        const dataInput = document.getElementById('imageDataInput');
+        if (dataInput) dataInput.value = dataUrl;
+        setImagePreview(dataUrl);
+    };
     reader.readAsDataURL(file);
 }
 
@@ -477,6 +542,8 @@ function selectGalleryImage(btn) {
     if (hidden) hidden.value = btn.dataset.path || '';
     if (remove) remove.value = '0';
     if (fileInput) fileInput.value = '';
+    const dataInput = document.getElementById('imageDataInput');
+    if (dataInput) dataInput.value = '';
     setImagePreview(btn.dataset.url || '');
 }
 
@@ -487,6 +554,8 @@ function clearServiceImage() {
     if (hidden) hidden.value = '';
     if (remove) remove.value = '1';
     if (fileInput) fileInput.value = '';
+    const dataInput = document.getElementById('imageDataInput');
+    if (dataInput) dataInput.value = '';
     document.querySelectorAll('.gallery-tile.selected').forEach(function(el) { el.classList.remove('selected'); });
     setImagePreview('');
 }
@@ -535,10 +604,24 @@ function toggleDiscountExpiry(val) {
     const kids = document.getElementById('forKids');
     const hint = document.getElementById('kidsPriceHint');
     const adult = document.getElementById('adultStyleOptions');
+    const kidsOpts = document.getElementById('kidsStyleOptions');
+    const categorySelect = document.getElementById('categorySelect');
+    const setDisabled = (root, disabled) => {
+        if (!root) return;
+        root.querySelectorAll('input, select, textarea').forEach(function(el) {
+            el.disabled = disabled;
+        });
+    };
     const sync = () => {
         const isKids = !!(kids && kids.checked);
         if (hint) hint.style.display = isKids ? '' : 'none';
         if (adult) adult.style.display = isKids ? 'none' : '';
+        if (kidsOpts) kidsOpts.style.display = isKids ? '' : 'none';
+        setDisabled(adult, isKids);
+        setDisabled(kidsOpts, !isKids);
+        if (categorySelect) {
+            categorySelect.disabled = isKids;
+        }
     };
     if (kids) kids.addEventListener('change', sync);
     sync();

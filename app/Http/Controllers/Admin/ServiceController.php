@@ -5,11 +5,13 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Support\AdultServiceCatalog;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
 use App\Models\Service;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\ValidationException;
 
 class ServiceController extends Controller
 {
@@ -43,10 +45,12 @@ class ServiceController extends Controller
             'base_price'     => 'required|numeric|min:0',
             'discount_price' => 'nullable|numeric|min:0|lt:base_price',
             'discount_ends_at' => 'nullable|date|after:now',
-            'description'    => 'nullable|string',
-            'image'          => 'nullable|image|mimes:jpeg,jpg,png,gif,webp,avif|max:5120',
+            'description'    => 'nullable|string|max:1000',
+            'image'          => $this->imageUploadRules(),
+            'image_data'     => 'nullable|string',
             'image_url'      => 'nullable|string|max:500',
             'remove_image'   => 'nullable|boolean',
+            'use_as_category_card' => 'nullable|boolean',
             'category'       => 'nullable|string|max:100',
             'new_category'   => 'nullable|string|max:100',
             'is_active'      => 'nullable|boolean',
@@ -62,10 +66,11 @@ class ServiceController extends Controller
             'duration'       => 'nullable|string|max:50',
             'size_enabled'   => 'nullable|array',
             'size_price'     => 'nullable|array',
-        ]);
+        ], $this->imageUploadMessages());
 
         $data = $this->normalizeServicePayload($data);
         $data['image_url'] = $this->resolveServiceImage($request);
+        $this->clearSiblingCategoryCards($data);
 
         Service::create($data);
 
@@ -93,10 +98,12 @@ class ServiceController extends Controller
             'base_price'     => 'required|numeric|min:0',
             'discount_price' => 'nullable|numeric|min:0',
             'discount_ends_at' => 'nullable|date',
-            'description'    => 'nullable|string',
-            'image'          => 'nullable|image|mimes:jpeg,jpg,png,gif,webp,avif|max:5120',
+            'description'    => 'nullable|string|max:1000',
+            'image'          => $this->imageUploadRules(),
+            'image_data'     => 'nullable|string',
             'image_url'      => 'nullable|string|max:500',
             'remove_image'   => 'nullable|boolean',
+            'use_as_category_card' => 'nullable|boolean',
             'category'       => 'nullable|string|max:100',
             'new_category'   => 'nullable|string|max:100',
             'is_active'      => 'nullable|boolean',
@@ -112,10 +119,11 @@ class ServiceController extends Controller
             'duration'       => 'nullable|string|max:50',
             'size_enabled'   => 'nullable|array',
             'size_price'     => 'nullable|array',
-        ]);
+        ], $this->imageUploadMessages());
 
         $data = $this->normalizeServicePayload($data, $service);
         $data['image_url'] = $this->resolveServiceImage($request, $service);
+        $this->clearSiblingCategoryCards($data, $service);
 
         $service->update($data);
 
@@ -169,7 +177,8 @@ class ServiceController extends Controller
 
         $data['is_active'] = !empty($data['is_active']);
         $data['for_kids'] = !empty($data['for_kids']);
-        $data['has_length'] = $data['for_kids'] ? true : !empty($data['has_length']);
+        $data['use_as_category_card'] = !empty($data['use_as_category_card']);
+        $data['has_length'] = !empty($data['has_length']);
         $data['has_tip_finish'] = $data['for_kids'] ? false : !empty($data['has_tip_finish']);
         $data['has_row_options'] = $data['for_kids'] ? false : !empty($data['has_row_options']);
         $data['has_eight_to_ten_rows'] = $data['for_kids'] ? false : !empty($data['has_eight_to_ten_rows']);
@@ -177,7 +186,10 @@ class ServiceController extends Controller
         $data['eight_to_ten_rows_price'] = $data['for_kids'] ? 0 : self::normalizeRowPrice($data['eight_to_ten_rows_price'] ?? null, 0);
         $data['ten_plus_rows_price'] = $data['for_kids'] ? 30 : self::normalizeRowPrice($data['ten_plus_rows_price'] ?? null, 30);
         $data['fifteen_plus_rows_price'] = $data['for_kids'] ? 30 : self::normalizeRowPrice($data['fifteen_plus_rows_price'] ?? null, 30);
-        $data['duration'] = $data['for_kids'] ? null : (isset($data['duration']) && $data['duration'] !== '' ? $data['duration'] : null);
+        $data['duration'] = (isset($data['duration']) && $data['duration'] !== '') ? $data['duration'] : null;
+        if ($data['for_kids']) {
+            $data['category'] = 'Kids Braids';
+        }
         $data['discount_price'] = (isset($data['discount_price']) && $data['discount_price'] !== '') ? $data['discount_price'] : null;
         if (empty($data['discount_price'])) {
             $data['discount_ends_at'] = null;
@@ -199,15 +211,35 @@ class ServiceController extends Controller
             }
         }
         $data['size_options'] = $sizeOptions ?: null;
-        unset($data['size_enabled'], $data['size_price'], $data['image'], $data['remove_image']);
+        unset($data['size_enabled'], $data['size_price'], $data['image'], $data['image_data'], $data['remove_image']);
 
-        foreach (['has_length', 'has_tip_finish', 'has_row_options', 'has_eight_to_ten_rows', 'has_fifteen_plus_rows', 'eight_to_ten_rows_price', 'ten_plus_rows_price', 'fifteen_plus_rows_price', 'duration', 'size_options'] as $col) {
+        foreach (['has_length', 'has_tip_finish', 'has_row_options', 'has_eight_to_ten_rows', 'has_fifteen_plus_rows', 'eight_to_ten_rows_price', 'ten_plus_rows_price', 'fifteen_plus_rows_price', 'duration', 'size_options', 'use_as_category_card'] as $col) {
             if (!Schema::hasColumn('services', $col)) {
                 unset($data[$col]);
             }
         }
 
         return $data;
+    }
+
+    private function clearSiblingCategoryCards(array $data, ?Service $service = null): void
+    {
+        if (empty($data['use_as_category_card']) || !Schema::hasColumn('services', 'use_as_category_card')) {
+            return;
+        }
+
+        $category = $data['category'] ?? $service?->category;
+        $query = Service::query()->when($service, fn ($q) => $q->where('id', '!=', $service->id));
+        if (!empty($category)) {
+            $query->where('category', $category)->update(['use_as_category_card' => false]);
+            return;
+        }
+
+        if (($data['slug'] ?? $service?->slug) === 'kids-braids') {
+            Service::where('slug', 'kids-braids')
+                ->when($service, fn ($q) => $q->where('id', '!=', $service->id))
+                ->update(['use_as_category_card' => false]);
+        }
     }
 
     private static function normalizeRowPrice($value, float $default): float
@@ -240,16 +272,21 @@ class ServiceController extends Controller
             }
         }
 
-        $uploadDir = storage_path('app/public/service-images');
-        if (is_dir($uploadDir)) {
+        foreach ([
+            storage_path('app/public/service-images') => '/storage/service-images/',
+            public_path('images/services') => '/images/services/',
+        ] as $uploadDir => $urlPrefix) {
+            if (!is_dir($uploadDir)) {
+                continue;
+            }
             foreach (File::files($uploadDir) as $file) {
                 if (!in_array(strtolower($file->getExtension()), $ext, true)) {
                     continue;
                 }
                 $name = $file->getFilename();
                 $out[] = [
-                    'path' => '/storage/service-images/' . $name,
-                    'url' => asset('storage/service-images/' . $name),
+                    'path' => $urlPrefix . $name,
+                    'url' => asset(ltrim($urlPrefix . $name, '/')),
                     'name' => $name,
                     'source' => 'upload',
                 ];
@@ -261,11 +298,104 @@ class ServiceController extends Controller
         return $out;
     }
 
+    private function imageUploadRules(): array
+    {
+        return [
+            'nullable',
+            function (string $attribute, $value, $fail) {
+                if ($value === null || $value === '') {
+                    return;
+                }
+                if (!$value instanceof UploadedFile) {
+                    return;
+                }
+                if ($value->getError() === UPLOAD_ERR_NO_FILE) {
+                    return;
+                }
+                if (!$value->isValid()) {
+                    if (request()->filled('image_data')) {
+                        return;
+                    }
+                    $fail($this->describeUploadError($value));
+                    return;
+                }
+                $ext = strtolower((string) $value->getClientOriginalExtension());
+                $mime = strtolower((string) ($value->getMimeType() ?: ''));
+                $allowedExt = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'avif'];
+                $allowedMime = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/avif', 'image/jpg'];
+                if ($ext !== '' && !in_array($ext, $allowedExt, true) && !in_array($mime, $allowedMime, true)) {
+                    $fail('Use a JPG, PNG, WEBP, AVIF, or GIF image.');
+                    return;
+                }
+                if ($value->getSize() > 10 * 1024 * 1024) {
+                    $fail('The image must be 10 MB or smaller.');
+                }
+            },
+        ];
+    }
+
+    private function imageUploadMessages(): array
+    {
+        return [
+            'image.uploaded' => 'The image could not be received. Try a JPG or PNG under 10 MB.',
+            'image.image' => 'That file is not a supported image. Use JPG, PNG, WEBP, AVIF, or GIF.',
+            'image.mimes' => 'Use a JPG, PNG, WEBP, AVIF, or GIF image.',
+            'image.max' => 'The image must be 10 MB or smaller.',
+        ];
+    }
+
+    private function describeUploadError(UploadedFile $file): string
+    {
+        return match ($file->getError()) {
+            UPLOAD_ERR_INI_SIZE, UPLOAD_ERR_FORM_SIZE => 'The image is too large. Use a file under 10 MB.',
+            UPLOAD_ERR_PARTIAL => 'The image only uploaded partway. Please try again.',
+            UPLOAD_ERR_NO_TMP_DIR => 'The server is missing a temporary folder for uploads.',
+            UPLOAD_ERR_CANT_WRITE => 'The server could not save the uploaded image.',
+            UPLOAD_ERR_EXTENSION => 'A server extension blocked the image upload.',
+            default => 'The image could not be uploaded. Try a JPG or PNG under 10 MB.',
+        };
+    }
+
     private function resolveServiceImage(Request $request, ?Service $existing = null): ?string
     {
-        if ($request->hasFile('image')) {
+        $fromData = $this->storeImageDataUrl($request->input('image_data'));
+        if ($fromData) {
             $this->deleteStoredServiceImage($existing?->image_url);
-            $stored = $request->file('image')->store('service-images', 'public');
+            return $fromData;
+        }
+
+        if ($request->hasFile('image')) {
+            $file = $request->file('image');
+            if (!$file instanceof UploadedFile || !$file->isValid()) {
+                throw ValidationException::withMessages([
+                    'image' => $file instanceof UploadedFile
+                        ? $this->describeUploadError($file)
+                        : 'The image could not be uploaded.',
+                ]);
+            }
+
+            $this->deleteStoredServiceImage($existing?->image_url);
+            File::ensureDirectoryExists(storage_path('app/public/service-images'));
+
+            $ext = strtolower((string) ($file->getClientOriginalExtension() ?: $file->guessExtension() ?: 'jpg'));
+            if (!in_array($ext, ['jpg', 'jpeg', 'png', 'gif', 'webp', 'avif'], true)) {
+                $ext = 'jpg';
+            }
+            $base = Str::slug(pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME)) ?: 'service';
+            $name = $base . '-' . substr(uniqid('', true), -6) . '.' . $ext;
+
+            $stored = $file->storeAs('service-images', $name, 'public');
+            if (!$stored) {
+                $fallbackDir = public_path('images/services');
+                File::ensureDirectoryExists($fallbackDir);
+                if (!$file->move($fallbackDir, $name)) {
+                    throw ValidationException::withMessages([
+                        'image' => 'The image could not be saved. Check that storage is writable.',
+                    ]);
+                }
+                return '/images/services/' . $name;
+            }
+
             return '/storage/' . ltrim(str_replace('\\', '/', $stored), '/');
         }
 
@@ -288,6 +418,44 @@ class ServiceController extends Controller
         }
 
         return $picked;
+    }
+
+    private function storeImageDataUrl(?string $dataUrl): ?string
+    {
+        $dataUrl = trim((string) $dataUrl);
+        if ($dataUrl === '' || !preg_match('#^data:image/(jpeg|jpg|png|gif|webp|avif);base64,#i', $dataUrl, $m)) {
+            return null;
+        }
+
+        $ext = strtolower($m[1]) === 'jpeg' ? 'jpg' : strtolower($m[1]);
+        $binary = base64_decode(substr($dataUrl, strpos($dataUrl, ',') + 1), true);
+        if ($binary === false || $binary === '') {
+            throw ValidationException::withMessages([
+                'image' => 'The image data could not be read. Please choose the file again.',
+            ]);
+        }
+        if (strlen($binary) > 10 * 1024 * 1024) {
+            throw ValidationException::withMessages([
+                'image' => 'The image must be 10 MB or smaller.',
+            ]);
+        }
+
+        $name = 'service-' . substr(uniqid('', true), -8) . '.' . $ext;
+        File::ensureDirectoryExists(storage_path('app/public/service-images'));
+        $relative = 'service-images/' . $name;
+        if (Storage::disk('public')->put($relative, $binary)) {
+            return '/storage/' . $relative;
+        }
+
+        $fallbackDir = public_path('images/services');
+        File::ensureDirectoryExists($fallbackDir);
+        if (file_put_contents($fallbackDir . DIRECTORY_SEPARATOR . $name, $binary) === false) {
+            throw ValidationException::withMessages([
+                'image' => 'The image could not be saved. Check that storage is writable.',
+            ]);
+        }
+
+        return '/images/services/' . $name;
     }
 
     private function isAllowedImagePath(string $path): bool

@@ -2120,7 +2120,7 @@
             'crotchet': {
                 category: 'Crotchet Styles',
                 sizes: [
-                    { name: '2/3 Line Single Crochet', slug: 'line-single', price: {{ (int) config('service_prices.line_single', 100) }}, time: '2–3 hrs', hasFrontBackAddon: true, noLength: true },
+                    { name: '2-3 line single crotchet', slug: 'line-single', price: {{ (int) config('service_prices.line_single', 100) }}, time: '2–3 hrs', hasFrontBackAddon: true, noLength: true },
                     { name: 'Afro Crotchet', slug: 'afro-crotchet', price: {{ (int) config('service_prices.afro_crotchet', 120) }}, time: '3–4 hrs', hasFrontBackAddon: false, noLength: true },
                     { name: 'Individual Crotchet', slug: 'individual-crotchet', price: {{ (int) config('service_prices.individual_loc', 150) }}, time: '4–5 hrs', hasFrontBackAddon: false, noLength: true },
                     { name: 'Butterfly Locks', slug: 'butterfly-locks', price: {{ (int) config('service_prices.butterfly_locks', 150) }}, time: '3–4 hrs', hasFrontBackAddon: false, noLength: true },
@@ -2138,10 +2138,12 @@
         @php
             $cmsAdultInject = \App\Support\AdultServiceCatalog::injectables($extraServices ?? []);
             $cmsAdultOverlays = \App\Support\AdultServiceCatalog::overlays($extraServices ?? []);
+            $cmsHomepageCards = \App\Support\AdultServiceCatalog::homepageCards($extraServices ?? []);
         @endphp
         window.__cmsAdultStyles = @json($cmsAdultInject['sizes']);
         window.__cmsAdultCustomCards = @json($cmsAdultInject['custom_cards']);
         window.__cmsAdultOverlays = @json($cmsAdultOverlays);
+        window.__cmsHomepageCards = @json($cmsHomepageCards);
         Object.keys(window.__cmsAdultStyles || {}).forEach(function(key) {
             if (!window.serviceSizesMap[key]) {
                 const card = (window.__cmsAdultCustomCards || []).find(function(c){ return c.key === key; });
@@ -2183,7 +2185,8 @@
                         eightToTenRowsPrice: Number(card.eightToTenRowsPrice ?? 0),
                         tenPlusRowsPrice: Number(card.tenPlusRowsPrice ?? 30),
                         fifteenPlusRowsPrice: Number(card.fifteenPlusRowsPrice ?? 30),
-                        image: card.image || size.image
+                        image: card.image || size.image,
+                        description: card.description || size.description || ''
                     }));
                 });
                 sizeMap[key].sizes = next;
@@ -2333,16 +2336,18 @@
                 const hasTipFinish = size.hasTipFinish || false;
                 const sizeLabels = { small: 'Small', smedium: 'Smedium', medium: 'Medium', large: 'Large' };
                 const sizeName = size.braidSize ? (sizeLabels[size.braidSize] || size.braidSize) : (size.cms ? size.name : getSizeName(size.name));
-                const sizeDesc = size.braidSize ? getSizeDescription(sizeName) : (size.cms ? '' : getSizeDescription(getSizeName(size.name)));
+                const cmsDesc = (size.description || '').trim();
+                const sizeDesc = cmsDesc || (size.braidSize ? getSizeDescription(sizeName) : (size.cms ? '' : getSizeDescription(getSizeName(size.name))));
                 const safeName = String(size.name).replace(/\\/g, '\\\\').replace(/'/g, "\\'");
                 const cardImage = size.image || sizeImage;
+                const safeDesc = String(sizeDesc).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
                 sizeCard.innerHTML = `
                     <div class="size-option-card" onclick="selectSize('${size.slug}', '${safeName}', ${size.price}, ${hasWeaveAddon}, ${hasRowOptions}, ${hasFrontBackAddon}, ${noLength}, ${hasTipFinish})" style="cursor: pointer; padding: 12px; border: 2px solid #e9ecef; border-radius: 12px; text-align: center; transition: all 0.3s; background: #fff;" data-size-slug="${size.slug}">
                         <div style="margin-bottom: 8px; overflow: hidden; border-radius: 8px; height: 120px;">
                             <img src="${cardImage}" alt="${sizeName} size" style="width: 100%; height: 100%; object-fit: cover; object-position: top;">
                         </div>
                         <div style="font-weight: 700; color: #030f68; font-size: 0.9rem; margin-bottom: 4px;">${sizeName}</div>
-                        ${sizeDesc ? `<div style="font-size: 0.7rem; color: #6c757d; margin-bottom: 6px; line-height: 1.2;">${sizeDesc}</div>` : ''}
+                        ${safeDesc ? `<div style="font-size: 0.7rem; color: #6c757d; margin-bottom: 6px; line-height: 1.2;">${safeDesc}</div>` : ''}
                         ${(size.original || originalPricesMap[size.slug])
                             ? `<div style="font-size:1.2rem;font-weight:800;color:#ff6600">$${size.price} <span class="badge bg-danger" style="font-size:.6rem;vertical-align:middle">DISCOUNTED</span></div>
                                <div style="font-size:.82rem;color:#999;text-decoration:line-through">was $${size.original || originalPricesMap[size.slug]}</div>`
@@ -2405,8 +2410,8 @@
                 if (name.includes('Large')) return '{{ asset("images/large-french-curl.jpg") }}';
             }
             // Crotchet Styles
-            if (name.includes('Crotchet') || name.includes('Lock') || name.includes('Line Single') || name.includes('Loc')) {
-                if (name.includes('2/3 Line Single Crochet')) return '{{ asset("images/Screenshot 2026-02-05 132501.png") }}';
+            if (name.includes('Crotchet') || name.includes('crotchet') || name.includes('Lock') || name.includes('Line Single') || name.includes('line single') || name.includes('Loc')) {
+                if (name.includes('Line Single') || name.includes('line single') || name.includes('2/3') || name.includes('2-3')) return '{{ asset("images/Screenshot 2026-02-05 132501.png") }}';
                 if (name.includes('Weave Crotchet')) return '{{ asset("images/weave-crotchet.jpg") }}';
                 if (name.includes('Afro Crotchet')) return '{{ asset("images/kinky crotchet.png") }}';
                 if (name.includes('Individual Crotchet')) return '{{ asset("images/individual_crotchet.png") }}';
@@ -2427,7 +2432,7 @@
             if (fullName.includes('Smedium')) return 'Smedium';
             if (fullName.includes('Medium')) return 'Medium';
             if (fullName.includes('Jumbo') || fullName.includes('Large')) return 'Large/Jumbo';
-            return fullName.split(' ')[0];
+            return fullName;
         }
 
         // Helper to get full size description for tooltips
@@ -4308,18 +4313,29 @@
                         Kids Braid
                     </button>
                     <button class="btn btn-sm btn-outline-primary filter-chip" data-filter="other" onclick="filterServices('other')">
-                        Other
+                        More Styles
                     </button>
                 </div>
             </div>
                         <!-- length guide removed from services section (moved into booking form) -->
 
                         <div class="row g-4" id="servicesGrid">
+                @php
+                    $cmsHomepageCards = $cmsHomepageCards ?? \App\Support\AdultServiceCatalog::homepageCards($extraServices ?? []);
+                    $homeCardImage = function (string $key, string $fallback) use ($cmsHomepageCards) {
+                        $url = trim((string) ($cmsHomepageCards[$key]['image'] ?? ''));
+                        return $url !== '' ? $url : $fallback;
+                    };
+                    $homeCardDesc = function (string $key, string $fallback) use ($cmsHomepageCards) {
+                        $desc = trim((string) ($cmsHomepageCards[$key]['description'] ?? ''));
+                        return $desc !== '' ? $desc : $fallback;
+                    };
+                @endphp
                 <div class="col-lg-4 col-md-6 col-6 service-item" data-category="knotless">
                     <div class="service-card h-100" onclick="openServiceSizeModal('knotless')">
-                        <img src="{{ asset('images/webbraids2.jpg') }}" alt="Knotless Braids">
+                        <img src="{{ $homeCardImage('knotless', asset('images/webbraids2.jpg')) }}" alt="Knotless Braids">
                         <h4>Knotless Braids</h4>
-                        <p class="mb-2">Versatile protective style available in multiple sizes—from ultra-fine to jumbo.</p>
+                        <p class="mb-2">{{ $homeCardDesc('knotless', 'Versatile protective style available in multiple sizes—from ultra-fine to jumbo.') }}</p>
                         <p class="mb-1"><strong>Time:</strong> 2–7 hrs • <strong>Sizes:</strong> Small, Smedium, Medium, Jumbo</p>
                         <p class="mb-3"><strong>Hair:</strong> Not included</p>
                         @include('partials.service-price', ['priceKey' => 'jumbo_knotless', 'priceDefault' => 100, 'priceLabel' => '(varies by size & length)'])
@@ -4328,9 +4344,9 @@
                 </div>
                 <div class="col-lg-4 col-md-6 col-6 service-item" data-category="french">
                     <div class="service-card h-100" onclick="openServiceSizeModal('french-curl')">
-                        <img src="{{ asset('images/french curl braid.jpg') }}" alt="French Curl Braids">
+                        <img src="{{ $homeCardImage('french-curl', asset('images/french curl braid.jpg')) }}" alt="French Curl Braids">
                         <h4>French Curl Braids</h4>
-                        <p class="mb-2">Elegant braids with beautiful curly ends for a sophisticated, romantic look.</p>
+                        <p class="mb-2">{{ $homeCardDesc('french-curl', 'Elegant braids with beautiful curly ends for a sophisticated, romantic look.') }}</p>
                         <p class="mb-1"><strong>Time:</strong> 3–7 hrs • <strong>Sizes:</strong> Small, Smedium, Medium, Large</p>
                         <p class="mb-3"><strong>Hair:</strong> Not included</p>
                         @include('partials.service-price', ['priceKey' => 'large_french_curl', 'priceDefault' => 120, 'priceLabel' => '(varies by size & length)'])
@@ -4339,9 +4355,9 @@
                 </div>
                 <div class="col-lg-4 col-md-6 col-6 service-item" data-category="twist">
                     <div class="service-card h-100" onclick="openServiceSizeModal('twist')">
-                        <img src="{{ asset('images/twist-main.jpg') }}" alt="Twist Braid">
+                        <img src="{{ $homeCardImage('twist', asset('images/twist-main.jpg')) }}" alt="Twist Braid">
                         <h4>Twist Braid</h4>
-                        <p class="mb-2">Twist braid</p>
+                        <p class="mb-2">{{ $homeCardDesc('twist', 'Twist braid') }}</p>
                         <p class="mb-1"><strong>Time:</strong> 3–6 hrs • <strong>Sizes:</strong> Small, Medium, Jumbo/Large</p>
                         <p class="mb-3"><strong>Hair:</strong> Not included</p>
                         @include('partials.service-price', ['priceKey' => 'jumbo_twist', 'priceDefault' => 100, 'priceLabel' => '(varies by size & length)'])
@@ -4350,9 +4366,9 @@
                 </div>
                 <div class="col-lg-4 col-md-6 col-6 service-item" data-category="natural-hair-twist">
                     <div class="service-card h-100" onclick="openServiceSizeModal('natural-hair-twist')">
-                        <img src="{{ asset('images/twists-natural-hair.jpg') }}" alt="Natural Hair Twist">
+                        <img src="{{ $homeCardImage('natural-hair-twist', asset('images/twists-natural-hair.jpg')) }}" alt="Natural Hair Twist">
                         <h4>Natural Hair Twist</h4>
-                        <p class="mb-2">Two-strand twists using your natural hair—no extensions needed, perfect for low-manipulation styling.</p>
+                        <p class="mb-2">{{ $homeCardDesc('natural-hair-twist', 'Two-strand twists using your natural hair—no extensions needed, perfect for low-manipulation styling.') }}</p>
                         <p class="mb-1"><strong>Time:</strong> 2–3 hrs • <strong>Sizes:</strong> Small, Medium</p>
                         <p class="mb-3"><strong>Hair:</strong> Not needed • <strong>Note:</strong> No length adjustment</p>
                         @include('partials.service-price', ['priceKey' => 'medium_natural_hair_twist', 'priceDefault' => 60, 'priceLabel' => '(varies by size)'])
@@ -4361,9 +4377,9 @@
                 </div>
                 <div class="col-lg-4 col-md-6 col-6 service-item" data-category="kinky-passion-twist">
                     <div class="service-card h-100" onclick="openServiceSizeModal('kinky-passion-twist')">
-                        <img src="{{ asset('images/kinky braid.jpeg') }}" alt="Kinky & Passion Twists">
+                        <img src="{{ $homeCardImage('kinky-passion-twist', asset('images/kinky braid.jpeg')) }}" alt="Kinky & Passion Twists">
                         <h4>Kinky & Passion Twists</h4>
-                        <p class="mb-2">Stylish kinky and passion twists in various sizes—versatile protective styles with plenty of texture and dimension.</p>
+                        <p class="mb-2">{{ $homeCardDesc('kinky-passion-twist', 'Stylish kinky and passion twists in various sizes—versatile protective styles with plenty of texture and dimension.') }}</p>
                         <p class="mb-1"><strong>Time:</strong> 2.5–5 hrs • <strong>Types:</strong> Kinky & Passion Twists</p>
                         <p class="mb-3"><strong>Hair:</strong> Not included • <strong>Sizes:</strong> Small, Medium, Jumbo</p>
                         @include('partials.service-price', ['priceKey' => 'kinky_twist', 'priceDefault' => 90, 'priceLabel' => '(varies by type & size)'])
@@ -4372,10 +4388,10 @@
                 </div>
                 <div class="col-lg-4 col-md-6 col-6 service-item" data-category="crotchet">
                     <div class="service-card h-100" onclick="openServiceSizeModal('crotchet')">
-                        <img src="{{ asset('images/kinky crotchet.png') }}" alt="Crotchet Styles">
+                        <img src="{{ $homeCardImage('crotchet', asset('images/kinky crotchet.png')) }}" alt="Crotchet Styles">
                         <h4>Crotchet Styles</h4>
-                        <p class="mb-2">Quick protective styles with various crotchet options—versatile and low-maintenance.</p>
-                        <p class="mb-1"><strong>Time:</strong> 1.5–5 hrs • <strong>Types:</strong> 2/3 Line Single Crochet, Afro, Individual Crotchet, Butterfly, Weave Crotchet</p>
+                        <p class="mb-2">{{ $homeCardDesc('crotchet', 'Quick protective styles with various crotchet options—versatile and low-maintenance.') }}</p>
+                        <p class="mb-1"><strong>Time:</strong> 1.5–5 hrs • <strong>Types:</strong> 2-3 line single crotchet, Afro, Individual Crotchet, Butterfly, Weave Crotchet</p>
                         <p class="mb-3"><strong>Hair:</strong> Not included • <strong>Note:</strong> No length adjustment needed</p>
                         @include('partials.service-price', ['priceKey' => 'weave_crotchet', 'priceDefault' => 80, 'priceLabel' => '(varies by type)'])
                         <button class="btn btn-warning mt-3">Select Type & Book</button>
@@ -4384,9 +4400,9 @@
 
                 <div class="col-lg-4 col-md-6 col-6 service-item" data-category="kids">
                     <div class="service-card h-100" onclick="window.location.href='/kids-selector'">
-                        <img src="{{ asset('images/kids hair style.webp') }}" alt="Kids Braids">
+                        <img src="{{ $homeCardImage('kids', asset('images/kids hair style.webp')) }}" alt="Kids Braids">
                         <h4>Kids Braids</h4>
-                        <p class="mb-2">Fun, gentle braiding styles designed for children—knotless, cornrows, and more.</p>
+                        <p class="mb-2">{{ $homeCardDesc('kids', 'Fun, gentle braiding styles designed for children—knotless, cornrows, and more.') }}</p>
                         <p class="mb-1"><strong>Time:</strong> 1–3 hrs • <strong>Sizes:</strong> Small, Medium, Large</p>
                         <p class="mb-3"><strong>Hair:</strong> Not included</p>
                         @include('partials.service-price', ['priceKey' => 'kids_braids', 'priceDefault' => 80, 'priceLabel' => '(varies by style & length)'])
@@ -4395,9 +4411,9 @@
                 </div>
                 <div class="col-lg-4 col-md-6 col-6 service-item mobile-hidden" data-category="cornrow">
                     <div class="service-card h-100" onclick="openServiceSizeModal('cornrow')">
-                        <img src="{{ asset('images/stitch braid.jpg') }}" alt="Cornrow/Feed-in Braids">
+                        <img src="{{ $homeCardImage('cornrow', asset('images/stitch braid.jpg')) }}" alt="Cornrow/Feed-in Braids">
                         <h4>Cornrow/Feed-in Braids</h4>
-                        <p class="mb-2">Classic cornrows and feed-in styles with or without weave extensions.</p>
+                        <p class="mb-2">{{ $homeCardDesc('cornrow', 'Classic cornrows and feed-in styles with or without weave extensions.') }}</p>
                         <p class="mb-1"><strong>Time:</strong> 1–5 hrs • <strong>Types:</strong> Stitch Weave, Cornrow Weave, Under-wig Weave (no extension), Weave&Braid Mixed</p>
                         <p class="mb-2"><strong>Hair:</strong> Not included</p>
                         <p class="mb-3" style="font-size: 0.9rem;"><strong>Note:</strong> Stitch/Cornrow: 8-10 rows $100, 10+ rows $130. Under-wig: $30 (no length). Mixed: $150</p>
@@ -4407,9 +4423,9 @@
                 </div>
                 <div class="col-lg-4 col-md-6 col-6 service-item mobile-hidden" data-category="other">
                     <div class="service-card h-100" onclick="openServiceSizeModal('hair-treatment')">
-                        <img src="{{ asset('images/hair_mask.png') }}" alt="Hair Treatment Services">
+                        <img src="{{ $homeCardImage('hair-treatment', asset('images/hair_mask.png')) }}" alt="Hair Treatment Services">
                         <h4>Hair Treatment Services</h4>
-                        <p class="mb-2">Professional hair care treatments for natural and relaxed hair.</p>
+                        <p class="mb-2">{{ $homeCardDesc('hair-treatment', 'Professional hair care treatments for natural and relaxed hair.') }}</p>
                         <p class="mb-1"><strong>Time:</strong> 45 min–2 hrs • <strong>Options:</strong> Natural Hair Mask, Chemical Relaxer</p>
                         <p class="mb-3"><strong>Note:</strong> Optional weave treatment adds $30 to any service</p>
                         @include('partials.service-price', ['priceKey' => 'hair_mask', 'priceDefault' => 50, 'priceLabel' => '(all treatments $50-$80)'])
@@ -4418,9 +4434,9 @@
                 </div>
                 <div class="col-lg-4 col-md-6 col-6 service-item mobile-hidden" data-category="other">
                     <div class="service-card h-100" onclick="openServiceSizeModal('boho')">
-                        <img src="{{ asset('images/boho braid.jpg') }}" alt="Boho Braids">
+                        <img src="{{ $homeCardImage('boho', asset('images/boho braid.jpg')) }}" alt="Boho Braids">
                         <h4>Boho Braids</h4>
-                        <p class="mb-2">Knotless braids with curly ends left out for a free-spirited, bohemian look.</p>
+                        <p class="mb-2">{{ $homeCardDesc('boho', 'Knotless braids with curly ends left out for a free-spirited, bohemian look.') }}</p>
                         <p class="mb-1"><strong>Time:</strong> 3–7 hrs • <strong>Sizes:</strong> Small, Smedium, Medium, Jumbo/Large</p>
                         <p class="mb-3"><strong>Hair:</strong> Not included</p>
                         @include('partials.service-price', ['priceKey' => 'jumbo_boho', 'priceDefault' => 100, 'priceLabel' => '(varies by size & length)'])
@@ -4431,9 +4447,9 @@
                 @foreach($cmsAdultCustomCards as $cmsCard)
                     <div class="col-lg-4 col-md-6 col-6 service-item" data-category="other">
                         <div class="service-card h-100" onclick="openServiceSizeModal({{ json_encode($cmsCard['key']) }})">
-                            <img src="{{ $cmsCard['image'] ?: asset('images/braids.jpeg') }}" alt="{{ $cmsCard['title'] }}">
+                            <img src="{{ $cmsCard['image'] ?: $homeCardImage($cmsCard['key'], asset('images/braids.jpeg')) }}" alt="{{ $cmsCard['title'] }}">
                             <h4>{{ $cmsCard['title'] }}</h4>
-                            <p class="mb-2">Browse other services.</p>
+                            <p class="mb-2">{{ $cmsCard['description'] ?: $homeCardDesc($cmsCard['key'], 'Explore additional styles beyond our featured categories.') }}</p>
                             <p class="mb-3"><strong>Hair:</strong> Not included</p>
                             <button class="btn btn-warning mt-3">Select Style & Book</button>
                         </div>
@@ -6668,6 +6684,13 @@ function openOtherServicesModal() {
                 desc: 'Knotless braids with curly ends for a boho look.'
             }
         };
+        Object.keys(window.__cmsHomepageCards || {}).forEach(function(key) {
+            const cms = window.__cmsHomepageCards[key] || {};
+            serviceCardMeta[key] = Object.assign({}, serviceCardMeta[key] || {}, {
+                img: cms.image || (serviceCardMeta[key] && serviceCardMeta[key].img) || '{{ asset("images/braids.jpeg") }}',
+                desc: cms.description || (serviceCardMeta[key] && serviceCardMeta[key].desc) || ''
+            });
+        });
 
         categories.forEach(categoryKey => {
             const cat = sizeMap[categoryKey] || {};

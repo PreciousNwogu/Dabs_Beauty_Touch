@@ -41,7 +41,12 @@ Route::get('/', function () {
     $forKidsExists = \Illuminate\Support\Facades\Schema::hasColumn('services', 'for_kids');
     $extraServicesQuery = Service::where('is_active', true);
     if ($forKidsExists) {
-        $extraServicesQuery->where('for_kids', false);
+        $extraServicesQuery->where(function ($q) {
+            $q->where('for_kids', false);
+            if (\Illuminate\Support\Facades\Schema::hasColumn('services', 'use_as_category_card')) {
+                $q->orWhere('use_as_category_card', true);
+            }
+        });
     }
     $extraServices = $extraServicesQuery->orderBy('name')->get();
 
@@ -299,7 +304,12 @@ Route::get('/calendar', function () {
     $forKidsExists = \Illuminate\Support\Facades\Schema::hasColumn('services', 'for_kids');
     $calExtraQuery = \App\Models\Service::where('is_active', true);
     if ($forKidsExists) {
-        $calExtraQuery->where('for_kids', false);
+        $calExtraQuery->where(function ($q) {
+            $q->where('for_kids', false);
+            if (\Illuminate\Support\Facades\Schema::hasColumn('services', 'use_as_category_card')) {
+                $q->orWhere('use_as_category_card', true);
+            }
+        });
     }
     $extraServices = $calExtraQuery->orderBy('name')->get();
     return view('calendar', compact('extraServices'));
@@ -323,7 +333,7 @@ Route::get('/kids-selector', function () {
     $servicePrices = config('service_prices', []);
     $forKidsExists2 = \Illuminate\Support\Facades\Schema::hasColumn('services', 'for_kids');
     $cmsKidsServices = $forKidsExists2
-        ? Service::where('for_kids', true)->where('is_active', true)->orderBy('name')->get()
+        ? \App\Support\KidsStyleCatalog::customServices()
         : collect();
     return view('kids-selector', compact('servicePrices', 'cmsKidsServices'));
 })->name('kids.selector');
@@ -1394,21 +1404,13 @@ Route::post('/bookings', function(Request $request) {
                 $fi = $selectorFields['finish'] ?? null;
                 $ex = $selectorFields['extras'] ?? null;
 
-                // CMS kids service (cms_{id}) — use service's own price as the base, ignore typeAdj
-                if ($bt && str_starts_with($bt, 'cms_')) {
-                    $cmsId = (int) substr($bt, 4);
-                    $cmsSvc = Service::find($cmsId);
-                    if ($cmsSvc) {
-                        $baseConfigured = (float) $cmsSvc->effective_price;
-                    }
-                    // CMS kids services have no finish/length adjustment
-                } else {
-                    $catalogPrice = \App\Support\KidsStyleCatalog::startingPrice($bt);
-                    if ($catalogPrice !== null) {
-                        $baseConfigured = $catalogPrice;
-                    } elseif ($bt && isset($typeAdj[$bt])) {
-                        $adjustments += $typeAdj[$bt];
-                    }
+                $catalogPrice = \App\Support\KidsStyleCatalog::startingPrice($bt);
+                if ($catalogPrice !== null) {
+                    $baseConfigured = $catalogPrice;
+                } elseif ($bt && isset($typeAdj[$bt])) {
+                    $adjustments += $typeAdj[$bt];
+                }
+                if (\App\Support\KidsStyleCatalog::usesLengthSteps($bt)) {
                     if ($ln && isset($lengthAdj[$ln])) $adjustments += $lengthAdj[$ln];
                     if ($fi && isset($finishAdj[$fi])) $adjustments += $finishAdj[$fi];
                 }
@@ -1456,8 +1458,10 @@ Route::post('/bookings', function(Request $request) {
                 } elseif ($bt && isset($typeAdj[$bt])) {
                     $adjustments += $typeAdj[$bt];
                 }
-                if ($ln && isset($lengthAdj[$ln])) $adjustments += $lengthAdj[$ln];
-                if ($fi && isset($finishAdj[$fi])) $adjustments += $finishAdj[$fi];
+                if (\App\Support\KidsStyleCatalog::usesLengthSteps($bt)) {
+                    if ($ln && isset($lengthAdj[$ln])) $adjustments += $lengthAdj[$ln];
+                    if ($fi && isset($finishAdj[$fi])) $adjustments += $finishAdj[$fi];
+                }
 
                 if($ex){
                     if(is_string($ex) && strpos($ex,'kb_add_')!==false){
@@ -2202,7 +2206,7 @@ Route::post('/bookings/confirm/{id}/{code}/modify', function(\Illuminate\Http\Re
 
     $data = $request->validate([
         'length' => 'nullable|string|in:neck,shoulder,armpit,bra_strap,mid_back,waist,hip,tailbone,classic',
-        'kb_braid_type' => 'nullable|string|regex:/^(protective|cornrows|knotless_small|knotless_med|box_small|box_med|stitch|cms_\d+)$/',
+        'kb_braid_type' => 'nullable|string|regex:/^(protective|cornrows|cornrow_weave|knotless_small|knotless_med|box_small|box_med|stitch|half_weave_braid|half_weave_crotchet|crotchet_style|cms_\\d+)$/',
         // Allow kids length override (accept the same canonical set used elsewhere)
         'kb_length' => 'nullable|string|in:neck,shoulder,armpit,bra_strap,mid_back,waist,hip,tailbone,classic',
         // For non-kids braid bookings, allow changing the braid style (service)

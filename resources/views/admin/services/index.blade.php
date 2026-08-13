@@ -118,16 +118,31 @@
                         data-name="{{ strtolower($service->name) }}"
                     >
                         <td>
-                            <div class="fw-bold" style="color:#030f68">
-                                {{ $service->name }}
-                                @if(!empty($service->for_kids))
-                                    <span class="badge-category" style="background:#fff0e6;color:#ff6600;margin-left:6px">Kids</span>
+                            <div class="d-flex align-items-start gap-2">
+                                @php
+                                    $thumb = $service->image_url
+                                        ? (preg_match('#^https?://#i', $service->image_url) ? $service->image_url : asset(ltrim($service->image_url, '/')))
+                                        : '';
+                                @endphp
+                                @if($thumb)
+                                    <img src="{{ $thumb }}" alt="" style="width:42px;height:42px;object-fit:cover;border-radius:8px;flex-shrink:0">
                                 @endif
+                                <div>
+                                    <div class="fw-bold" style="color:#030f68">
+                                        {{ $service->name }}
+                                        @if(!empty($service->for_kids))
+                                            <span class="badge-category" style="background:#fff0e6;color:#ff6600;margin-left:6px">Kids</span>
+                                        @endif
+                                        @if(!empty($service->use_as_category_card))
+                                            <span class="badge-category" style="background:#e8fff0;color:#1a7f37;margin-left:6px">Homepage card</span>
+                                        @endif
+                                    </div>
+                                    <div class="text-muted" style="font-size:.75rem">slug: {{ $service->slug }}</div>
+                                    @if($service->description)
+                                        <div class="text-muted mt-1" style="font-size:.8rem;max-width:240px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ $service->description }}</div>
+                                    @endif
+                                </div>
                             </div>
-                            <div class="text-muted" style="font-size:.75rem">slug: {{ $service->slug }}</div>
-                            @if($service->description)
-                                <div class="text-muted mt-1" style="font-size:.8rem;max-width:240px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ $service->description }}</div>
-                            @endif
                         </td>
                         <td>
                             @if($service->category)

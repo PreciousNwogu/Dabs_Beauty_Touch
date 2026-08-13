@@ -648,6 +648,8 @@ class AppointmentController extends Controller
                     $kb_length = str_replace(['-', ' '], '_', strtolower($kb_length));
                 }
 
+                $usesLengthSteps = \App\Support\KidsStyleCatalog::usesLengthSteps($kb_braid_type);
+
                 // Calculate type adjustment (skipped when the style has its own CMS price)
                 $typeAdjustment = 0.00;
                 if ($catalogPrice === null && $kb_braid_type && isset($typeAdj[$kb_braid_type])) {
@@ -656,13 +658,13 @@ class AppointmentController extends Controller
 
                 // Calculate length adjustment (using the selector mapping, not mid_back rule)
                 $lengthAdjustment = 0.00;
-                if ($kb_length && isset($lengthAdj[$kb_length])) {
+                if ($usesLengthSteps && $kb_length && isset($lengthAdj[$kb_length])) {
                     $lengthAdjustment = (float) $lengthAdj[$kb_length];
                 }
 
                 // Calculate finish adjustment
                 $finishAdjustment = 0.00;
-                if ($kb_finish && isset($finishAdj[$kb_finish])) {
+                if ($usesLengthSteps && $kb_finish && isset($finishAdj[$kb_finish])) {
                     $finishAdjustment = (float) $finishAdj[$kb_finish];
                 }
 

@@ -181,11 +181,86 @@ class KidsStyleCatalog
 
     public static function startingPrice(?string $braidType): ?float
     {
-        if (!$braidType || str_starts_with($braidType, 'cms_')) {
+        if (!$braidType) {
             return null;
+        }
+
+        $custom = self::resolveCustom($braidType);
+        if ($custom) {
+            return (float) $custom->effective_price;
         }
 
         $row = self::cardPrices()[$braidType] ?? null;
         return $row ? (float) $row['price'] : null;
+    }
+
+    public static function resolveCustom(?string $braidType): ?Service
+    {
+        if (!$braidType || !preg_match('/^cms_(\d+)$/', $braidType, $m)) {
+            return null;
+        }
+
+        return Service::query()
+            ->where('id', (int) $m[1])
+            ->where('for_kids', true)
+            ->first();
+    }
+
+    public static function customServices()
+    {
+        $skip = array_values(array_unique(array_merge(self::slugs(), ['kids-braids'])));
+
+        return Service::query()
+            ->where('for_kids', true)
+            ->where('is_active', true)
+            ->whereNotIn('slug', $skip)
+            ->orderBy('name')
+            ->get();
+    }
+
+    public static function usesLengthSteps(?string $braidType): bool
+    {
+        $custom = self::resolveCustom($braidType);
+        if ($custom) {
+            return !isset($custom->has_length) || (bool) $custom->has_length;
+        }
+
+        $def = self::definitions()[$braidType] ?? null;
+        if ($def) {
+            return empty($def['disable_steps']);
+        }
+
+        return true;
+    }
+
+    public static function displayName(?string $braidType): ?string
+    {
+        if (!$braidType) {
+            return null;
+        }
+
+        $friendly = [
+            'protective' => 'Natural Hair Twist',
+            'cornrows' => 'Cornrow (without extension)',
+            'cornrow_weave' => 'Cornrow weave (with extension)',
+            'knotless_small' => 'Knotless Small',
+            'knotless_med' => 'Knotless Medium',
+            'box_small' => 'Box Braids Small',
+            'box_med' => 'Box Braids Medium',
+            'stitch' => 'Stitch Braids',
+            'half_weave_braid' => '1/2 Weave & 1/2 Braid',
+            'half_weave_crotchet' => '1/2 Weave & 1/2 Crotchet',
+            'crotchet_style' => 'Crotchet Style',
+        ];
+        if (isset($friendly[$braidType])) {
+            return $friendly[$braidType];
+        }
+
+        $custom = self::resolveCustom($braidType);
+        if ($custom) {
+            return $custom->name;
+        }
+
+        return ucwords(str_replace(['_', '-'], ' ', $braidType));
     }
 }

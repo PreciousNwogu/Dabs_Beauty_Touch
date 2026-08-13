@@ -221,7 +221,7 @@ class BookingConfirmation extends Notification
             }
 
             $selector_friendly = [
-                'braid_type' => $bt ? ($friendlyBraid[$bt] ?? ucwords(str_replace(['_','-'], ' ', $bt))) : null,
+                'braid_type' => $bt ? ($friendlyBraid[$bt] ?? \App\Support\KidsStyleCatalog::displayName($bt)) : null,
                 'finish' => $fi ? ($friendlyFinish[$fi] ?? ucwords(str_replace(['_','-'], ' ', $fi))) : null,
                 'length' => $ln ? ($friendlyLength[$ln] ?? ucwords(str_replace(['_','-'], ' ', $ln))) : null,
                 'extras' => $extrasList,

@@ -256,11 +256,16 @@ class PriceCalculator
             }
             $frontBackCost = 0.00;
             if ($frontBackAddon) {
-                // Applies to "2/3 Line Single Crochet" crotchet when user selects "Front + Back" (+$20)
+                // Applies to Line Single Crotchet when user selects "Front + Back" (+$20)
                 if (
                     str_contains($serviceType, 'line_single') ||
                     str_contains($serviceType, 'line-single') ||
-                    (is_string($serviceInput) && (stripos($serviceInput, '2/3 line single crochet') !== false || stripos($serviceInput, '2/3 line single') !== false))
+                    (is_string($serviceInput) && (
+                        stripos($serviceInput, '2-3 line single crotchet') !== false ||
+                        stripos($serviceInput, 'line single crotchet') !== false ||
+                        stripos($serviceInput, '2/3 line single crochet') !== false ||
+                        stripos($serviceInput, '2/3 line single') !== false
+                    ))
                 ) {
                     $frontBackCost = 20.00;
                 }
@@ -304,15 +309,17 @@ class PriceCalculator
                 $typeAdjustment = (float) $typeAdj[$kb_braid_type];
             }
 
+            $usesLengthSteps = \App\Support\KidsStyleCatalog::usesLengthSteps($kb_braid_type);
+
             // Calculate length adjustment (using the selector mapping, not regular booking map)
             $lengthAdjustment = 0.00;
-            if ($kb_length && isset($lengthAdj[$kb_length])) {
+            if ($usesLengthSteps && $kb_length && isset($lengthAdj[$kb_length])) {
                 $lengthAdjustment = (float) $lengthAdj[$kb_length];
             }
 
             // Calculate finish adjustment
             $finishAdjustment = 0.00;
-            if ($kb_finish && isset($finishAdj[$kb_finish])) {
+            if ($usesLengthSteps && $kb_finish && isset($finishAdj[$kb_finish])) {
                 $finishAdjustment = (float) $finishAdj[$kb_finish];
             }
 

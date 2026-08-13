@@ -38,7 +38,7 @@ class ServiceSeeder extends Seeder
             ['name'=>'Smedium French Curl Braids','slug'=>'smedium-french-curl','base_price'=>170,'discount_price'=>null,'description'=>null,'category'=>null,'is_active'=>1,'for_kids'=>0],
             ['name'=>'Medium French Curl Braids','slug'=>'medium-french-curl','base_price'=>150,'discount_price'=>null,'description'=>null,'category'=>null,'is_active'=>1,'for_kids'=>0],
             ['name'=>'Large French Curl Braids','slug'=>'large-french-curl','base_price'=>120,'discount_price'=>null,'description'=>null,'category'=>null,'is_active'=>1,'for_kids'=>0],
-            ['name'=>'2/3 Line Single','slug'=>'line-single','base_price'=>100,'discount_price'=>null,'description'=>null,'category'=>null,'is_active'=>1,'for_kids'=>0],
+            ['name'=>'2-3 line single crotchet','slug'=>'line-single','base_price'=>100,'discount_price'=>null,'description'=>null,'category'=>null,'is_active'=>1,'for_kids'=>0],
             ['name'=>'Afro Crotchet','slug'=>'afro-crotchet','base_price'=>120,'discount_price'=>100,'description'=>null,'category'=>null,'is_active'=>1,'for_kids'=>0],
             ['name'=>'Individual Loc','slug'=>'individual-loc','base_price'=>150,'discount_price'=>null,'description'=>null,'category'=>null,'is_active'=>1,'for_kids'=>0],
             ['name'=>'Butterfly Locks','slug'=>'butterfly-locks','base_price'=>140,'discount_price'=>null,'description'=>null,'category'=>null,'is_active'=>1,'for_kids'=>0],
