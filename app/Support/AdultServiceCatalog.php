@@ -270,16 +270,44 @@ class AdultServiceCatalog
     /** CMS styles that keep one picker card and show braid-size radios after selection. */
     public static function wantsInlineBraidSizePicker($svc): bool
     {
-        if (self::isHalfWeaveStyle($svc)) {
-            return true;
-        }
+        return self::cmsBraidSizes($svc) !== [];
+    }
 
+    /**
+     * Enabled braid-size radios from CMS. Empty means the size picker is off.
+     *
+     * @return array<int, array{key:string, label:string, price:int, original:?int}>
+     */
+    public static function cmsBraidSizes($svc): array
+    {
         $options = is_object($svc) ? ($svc->size_options ?? null) : ($svc['size_options'] ?? null);
         if (is_string($options)) {
             $options = json_decode($options, true);
         }
+        if (!is_array($options) || $options === []) {
+            return [];
+        }
 
-        return is_array($options) && $options !== [];
+        $effective = (int) (is_object($svc)
+            ? ($svc->effective_price ?? $svc->base_price ?? 0)
+            : ($svc['effective_price'] ?? $svc['base_price'] ?? 0));
+
+        $sizes = [];
+        foreach (self::sizeLabels() as $sizeKey => $sizeLabel) {
+            if (!isset($options[$sizeKey]) || !is_numeric($options[$sizeKey])) {
+                continue;
+            }
+            $sizePrice = (int) round((float) (self::sizePrice($svc, $sizeKey) ?? $options[$sizeKey]));
+            $listed = (int) $options[$sizeKey];
+            $sizes[] = [
+                'key' => $sizeKey,
+                'label' => $sizeLabel,
+                'price' => max(0, $sizePrice),
+                'original' => ($listed > $sizePrice) ? $listed : null,
+            ];
+        }
+
+        return $sizes;
     }
 
     /** Offsets from the Medium/base price for inline braid-size radios. */
@@ -523,29 +551,12 @@ class AdultServiceCatalog
             ];
 
             if (self::wantsInlineBraidSizePicker($svc)) {
-                $braidSizes = [];
-                foreach (self::sizeLabels() as $sizeKey => $sizeLabel) {
-                    $hasCmsPrice = isset($sizeOptions[$sizeKey]) && is_numeric($sizeOptions[$sizeKey]);
-                    if (!$hasCmsPrice && !self::isHalfWeaveStyle($svc)) {
-                        continue;
-                    }
-                    $sizePrice = $hasCmsPrice
-                        ? (int) round((float) self::sizePrice($svc, $sizeKey))
-                        : self::suggestedSizePrice($effective, $sizeKey);
-                    $listed = $hasCmsPrice ? (int) $sizeOptions[$sizeKey] : $sizePrice;
-                    $braidSizes[] = [
-                        'key' => $sizeKey,
-                        'label' => $sizeLabel,
-                        'price' => max(0, $sizePrice),
-                        'original' => ($listed > $sizePrice) ? $listed : null,
-                    ];
-                }
                 $byKey[$key][] = array_merge($shared, [
                     'name' => $svc->name,
                     'slug' => $svc->slug,
                     'price' => $effective,
                     'original' => ($original > $effective) ? $original : null,
-                    'braidSizes' => $braidSizes,
+                    'braidSizes' => self::cmsBraidSizes($svc),
                 ]);
             } else {
                 $byKey[$key][] = array_merge($shared, [
@@ -708,24 +719,7 @@ class AdultServiceCatalog
             'hidden' => empty($svc->is_active),
         ];
 
-        $braidSizes = [];
-        if (self::wantsInlineBraidSizePicker($svc)) {
-            foreach (self::sizeLabels() as $sizeKey => $sizeLabel) {
-                $hasCmsPrice = isset($sizeOptions[$sizeKey]) && is_numeric($sizeOptions[$sizeKey]);
-                if (!$hasCmsPrice && !self::isHalfWeaveStyle($svc)) {
-                    continue;
-                }
-                $sizePrice = $hasCmsPrice
-                    ? (int) round((float) self::sizePrice($svc, $sizeKey))
-                    : self::suggestedSizePrice($effective, $sizeKey);
-                $braidSizes[] = [
-                    'key' => $sizeKey,
-                    'label' => $sizeLabel,
-                    'price' => max(0, $sizePrice),
-                    'original' => null,
-                ];
-            }
-        }
+        $braidSizes = self::cmsBraidSizes($svc);
         if ($braidSizes) {
             $card['braidSizes'] = $braidSizes;
         }

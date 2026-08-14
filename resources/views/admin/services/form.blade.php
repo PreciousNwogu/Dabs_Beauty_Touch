@@ -351,22 +351,18 @@
                         @php
                             $sizeLabels = \App\Support\AdultServiceCatalog::sizeLabels();
                             $savedSizes = old('size_price', $service->size_options ?? []);
-                            $isHalfWeave = isset($service) && \App\Support\AdultServiceCatalog::isHalfWeaveStyle($service);
                             $baseForSizes = (int) old('base_price', isset($service) ? (int) $service->base_price : 0);
-                            if (!$savedSizes && $isHalfWeave) {
-                                foreach ($sizeLabels as $sizeKey => $sizeLabel) {
-                                    $savedSizes[$sizeKey] = \App\Support\AdultServiceCatalog::suggestedSizePrice($baseForSizes, $sizeKey);
-                                }
-                            }
                             $savedEnabled = old('size_enabled', array_fill_keys(array_keys($savedSizes ?: []), '1'));
-                            $offerSizes = (string) old('offer_braid_sizes', !empty($savedSizes) ? '1' : '') === '1';
+                            $offerSizes = old('offer_braid_sizes', !empty($savedSizes));
+                            $offerSizes = filter_var($offerSizes, FILTER_VALIDATE_BOOLEAN);
                         @endphp
                         <div class="mb-4">
                             <div class="form-check form-switch mb-2">
+                                <input type="hidden" name="offer_braid_sizes" value="0">
                                 <input class="form-check-input" type="checkbox" name="offer_braid_sizes" id="offerBraidSizes" value="1"
                                        {{ $offerSizes ? 'checked' : '' }}
                                        style="width:2.5em;height:1.3em"
-                                       onchange="toggleBraidSizeEditor(this.checked)">
+                                       onchange="toggleBraidSizeEditor(this.checked, true)">
                                 <label class="form-check-label fw-bold" for="offerBraidSizes">Customers choose braid size</label>
                                 <div class="slug-hint">Shows Small / Smedium / Medium / Large radios after this style is selected. Edit each size price here.</div>
                             </div>
@@ -630,6 +626,7 @@ function toggleDiscountExpiry(val) {
     const setDisabled = (root, disabled) => {
         if (!root) return;
         root.querySelectorAll('input, select, textarea').forEach(function(el) {
+            if (el.type === 'hidden') return;
             el.disabled = disabled;
         });
     };
@@ -642,6 +639,10 @@ function toggleDiscountExpiry(val) {
         setDisabled(kidsOpts, !isKids);
         if (categorySelect) {
             categorySelect.disabled = isKids;
+        }
+        if (!isKids) {
+            const offer = document.getElementById('offerBraidSizes');
+            toggleBraidSizeEditor(!!(offer && offer.checked));
         }
     };
     if (kids) kids.addEventListener('change', sync);
@@ -662,12 +663,16 @@ function syncSizePriceField(sizeKey) {
         input.value = suggestedSizePriceFromBase(sizeKey);
     }
 }
-function toggleBraidSizeEditor(on) {
+function toggleBraidSizeEditor(on, fromUser) {
     const rows = document.getElementById('braidSizePriceRows');
     if (rows) rows.style.display = on ? '' : 'none';
     document.querySelectorAll('.size-enabled-box').forEach(function(box) {
-        if (on && !box.checked) box.checked = true;
-        if (!on) box.checked = false;
+        if (!on) {
+            box.checked = false;
+        } else if (fromUser && !box.checked) {
+            box.checked = true;
+        }
+        box.disabled = !on;
         syncSizePriceField(box.dataset.sizeKey);
     });
 }
