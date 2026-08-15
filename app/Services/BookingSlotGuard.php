@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Exceptions\SlotUnavailableException;
 use App\Models\Booking;
 use App\Support\ServiceDuration;
+use App\Support\SiteSettings;
 use Carbon\Carbon;
 use Illuminate\Contracts\Cache\LockTimeoutException;
 use Illuminate\Support\Facades\Cache;
@@ -14,6 +15,11 @@ class BookingSlotGuard
     public const MAX_PER_DAY = 2;
 
     public const BLOCK_HOURS = 4;
+
+    public function maxPerDay(): int
+    {
+        return SiteSettings::maxBookingsPerDay();
+    }
 
     public function reserve(string $date, string $time, callable $create, ?int $ignoreBookingId = null, ?float $durationHours = null): mixed
     {
@@ -53,8 +59,9 @@ class BookingSlotGuard
             ->when($ignoreBookingId, fn ($q) => $q->where('id', '!=', $ignoreBookingId))
             ->get(['id', 'appointment_time', 'service_duration_minutes', 'service']);
 
-        if ($existing->count() >= self::MAX_PER_DAY) {
-            throw new SlotUnavailableException('This date is fully booked (maximum 2 appointments per day). Please choose another date.');
+        $maxPerDay = $this->maxPerDay();
+        if ($existing->count() >= $maxPerDay) {
+            throw new SlotUnavailableException('This date is fully booked (maximum '.$maxPerDay.' appointments per day). Please choose another date.');
         }
 
         foreach ($existing as $booking) {

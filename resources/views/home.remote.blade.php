@@ -215,7 +215,7 @@
             color: #ff6600 !important;
         }
         .hero-section {
-            background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('{{ asset('images/backgroundbraid.jpg') }}');
+            background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('{{ \App\Support\SiteSettings::heroImageUrl() }}');
             background-size: cover;
             background-position: center;
             min-height: 100vh;
@@ -4035,6 +4035,28 @@
         </div>
     </section>
 
+    @if(\App\Support\SiteSettings::get('promo_enabled') && (trim((string) \App\Support\SiteSettings::get('promo_title', '')) !== '' || trim((string) \App\Support\SiteSettings::get('promo_text', '')) !== '' || \App\Support\SiteSettings::promoImageUrl() !== ''))
+    <section class="py-4" style="background: linear-gradient(135deg, #fff7ef 0%, #f8f9fa 100%);">
+        <div class="container">
+            <div class="row align-items-center g-3">
+                @if(\App\Support\SiteSettings::promoImageUrl() !== '')
+                <div class="col-md-4">
+                    <img src="{{ \App\Support\SiteSettings::promoImageUrl() }}" alt="Promo" style="width:100%; border-radius:16px; object-fit:cover; max-height:220px;">
+                </div>
+                @endif
+                <div class="{{ \App\Support\SiteSettings::promoImageUrl() !== '' ? 'col-md-8' : 'col-12' }}">
+                    @if(trim((string) \App\Support\SiteSettings::get('promo_title', '')) !== '')
+                        <h3 style="color:#030f68; font-weight:800; margin-bottom:8px;">{{ \App\Support\SiteSettings::get('promo_title') }}</h3>
+                    @endif
+                    @if(trim((string) \App\Support\SiteSettings::get('promo_text', '')) !== '')
+                        <p class="mb-0" style="color:#555;">{{ \App\Support\SiteSettings::get('promo_text') }}</p>
+                    @endif
+                </div>
+            </div>
+        </div>
+    </section>
+    @endif
+
     <!-- Image Slider Section -->
     <section class="image-slider-section" style="padding: 50px 0; background: linear-gradient(135deg, #f8f9fa 0%, #e3eafc 100%);">
         <div class="container">
@@ -4420,11 +4442,15 @@
                         $desc = trim((string) ($cmsHomepageCards[$key]['description'] ?? ''));
                         return $desc !== '' ? $desc : $fallback;
                     };
+                    $catLabel = fn (string $key, string $fallback) => \App\Support\SiteSettings::categoryLabel($key, $fallback);
+                    $catVisible = fn (string $key) => \App\Support\SiteSettings::categoryVisible($key);
+                    $catOrder = fn (string $key) => \App\Support\SiteSettings::categorySort($key);
                 @endphp
-                <div class="col-lg-4 col-md-6 col-6 service-item" data-category="knotless">
+                @if($catVisible('knotless'))
+                <div class="col-lg-4 col-md-6 col-6 service-item" data-category="knotless" style="order: {{ $catOrder('knotless') }}">
                     <div class="service-card h-100" onclick="openServiceSizeModal('knotless')">
-                        <img src="{{ $homeCardImage('knotless', asset('images/webbraids2.jpg')) }}" alt="Knotless Braids">
-                        <h4>Knotless Braids</h4>
+                        <img src="{{ $homeCardImage('knotless', asset('images/webbraids2.jpg')) }}" alt="{{ $catLabel('knotless', 'Knotless Braids') }}">
+                        <h4>{{ $catLabel('knotless', 'Knotless Braids') }}</h4>
                         <p class="mb-2">{{ $homeCardDesc('knotless', 'Versatile protective style available in multiple sizes—from ultra-fine to jumbo.') }}</p>
                         <p class="mb-1"><strong>Time:</strong> 2–7 hrs • <strong>Sizes:</strong> Small, Smedium, Medium, Jumbo</p>
                         <p class="mb-3"><strong>Hair:</strong> Not included</p>
@@ -4432,10 +4458,12 @@
                         <button class="btn btn-warning mt-3">Select Size & Book</button>
                     </div>
                 </div>
-                <div class="col-lg-4 col-md-6 col-6 service-item" data-category="french">
+                @endif
+                @if($catVisible('french-curl'))
+                <div class="col-lg-4 col-md-6 col-6 service-item" data-category="french" style="order: {{ $catOrder('french-curl') }}">
                     <div class="service-card h-100" onclick="openServiceSizeModal('french-curl')">
-                        <img src="{{ $homeCardImage('french-curl', asset('images/french curl braid.jpg')) }}" alt="French Curl Braids">
-                        <h4>French Curl Braids</h4>
+                        <img src="{{ $homeCardImage('french-curl', asset('images/french curl braid.jpg')) }}" alt="{{ $catLabel('french-curl', 'French Curl Braids') }}">
+                        <h4>{{ $catLabel('french-curl', 'French Curl Braids') }}</h4>
                         <p class="mb-2">{{ $homeCardDesc('french-curl', 'Elegant braids with beautiful curly ends for a sophisticated, romantic look.') }}</p>
                         <p class="mb-1"><strong>Time:</strong> 3–7 hrs • <strong>Sizes:</strong> Small, Smedium, Medium, Large</p>
                         <p class="mb-3"><strong>Hair:</strong> Not included</p>
@@ -4443,10 +4471,12 @@
                         <button class="btn btn-warning mt-3">Select Size & Book</button>
                     </div>
                 </div>
-                <div class="col-lg-4 col-md-6 col-6 service-item" data-category="twist">
+                @endif
+                @if($catVisible('twist'))
+                <div class="col-lg-4 col-md-6 col-6 service-item" data-category="twist" style="order: {{ $catOrder('twist') }}">
                     <div class="service-card h-100" onclick="openServiceSizeModal('twist')">
-                        <img src="{{ $homeCardImage('twist', asset('images/twist-main.jpg')) }}" alt="Twist Braid">
-                        <h4>Twist Braid</h4>
+                        <img src="{{ $homeCardImage('twist', asset('images/twist-main.jpg')) }}" alt="{{ $catLabel('twist', 'Twist Braid') }}">
+                        <h4>{{ $catLabel('twist', 'Twist Braid') }}</h4>
                         <p class="mb-2">{{ $homeCardDesc('twist', 'Twist braid') }}</p>
                         <p class="mb-1"><strong>Time:</strong> 3–6 hrs • <strong>Sizes:</strong> Small, Medium, Jumbo/Large</p>
                         <p class="mb-3"><strong>Hair:</strong> Not included</p>
@@ -4454,10 +4484,12 @@
                         <button class="btn btn-warning mt-3">Select Size & Book</button>
                     </div>
                 </div>
-                <div class="col-lg-4 col-md-6 col-6 service-item" data-category="natural-hair-twist">
+                @endif
+                @if($catVisible('natural-hair-twist'))
+                <div class="col-lg-4 col-md-6 col-6 service-item" data-category="natural-hair-twist" style="order: {{ $catOrder('natural-hair-twist') }}">
                     <div class="service-card h-100" onclick="openServiceSizeModal('natural-hair-twist')">
-                        <img src="{{ $homeCardImage('natural-hair-twist', asset('images/twists-natural-hair.jpg')) }}" alt="Natural Hair Twist">
-                        <h4>Natural Hair Twist</h4>
+                        <img src="{{ $homeCardImage('natural-hair-twist', asset('images/twists-natural-hair.jpg')) }}" alt="{{ $catLabel('natural-hair-twist', 'Natural Hair Twist') }}">
+                        <h4>{{ $catLabel('natural-hair-twist', 'Natural Hair Twist') }}</h4>
                         <p class="mb-2">{{ $homeCardDesc('natural-hair-twist', 'Two-strand twists using your natural hair—no extensions needed, perfect for low-manipulation styling.') }}</p>
                         <p class="mb-1"><strong>Time:</strong> 2–3 hrs • <strong>Sizes:</strong> Small, Medium</p>
                         <p class="mb-3"><strong>Hair:</strong> Not needed • <strong>Note:</strong> No length adjustment</p>
@@ -4465,10 +4497,12 @@
                         <button class="btn btn-warning mt-3">Select Size & Book</button>
                     </div>
                 </div>
-                <div class="col-lg-4 col-md-6 col-6 service-item" data-category="kinky-passion-twist">
+                @endif
+                @if($catVisible('kinky-passion-twist'))
+                <div class="col-lg-4 col-md-6 col-6 service-item" data-category="kinky-passion-twist" style="order: {{ $catOrder('kinky-passion-twist') }}">
                     <div class="service-card h-100" onclick="openServiceSizeModal('kinky-passion-twist')">
-                        <img src="{{ $homeCardImage('kinky-passion-twist', asset('images/kinky braid.jpeg')) }}" alt="Kinky & Passion Twists">
-                        <h4>Kinky & Passion Twists</h4>
+                        <img src="{{ $homeCardImage('kinky-passion-twist', asset('images/kinky braid.jpeg')) }}" alt="{{ $catLabel('kinky-passion-twist', 'Kinky & Passion Twists') }}">
+                        <h4>{{ $catLabel('kinky-passion-twist', 'Kinky & Passion Twists') }}</h4>
                         <p class="mb-2">{{ $homeCardDesc('kinky-passion-twist', 'Stylish kinky and passion twists in various sizes—versatile protective styles with plenty of texture and dimension.') }}</p>
                         <p class="mb-1"><strong>Time:</strong> 2.5–5 hrs • <strong>Types:</strong> Kinky & Passion Twists</p>
                         <p class="mb-3"><strong>Hair:</strong> Not included • <strong>Sizes:</strong> Small, Medium, Jumbo</p>
@@ -4476,10 +4510,12 @@
                         <button class="btn btn-warning mt-3">Select Size & Book</button>
                     </div>
                 </div>
-                <div class="col-lg-4 col-md-6 col-6 service-item" data-category="crotchet">
+                @endif
+                @if($catVisible('crotchet'))
+                <div class="col-lg-4 col-md-6 col-6 service-item" data-category="crotchet" style="order: {{ $catOrder('crotchet') }}">
                     <div class="service-card h-100" onclick="openServiceSizeModal('crotchet')">
-                        <img src="{{ $homeCardImage('crotchet', asset('images/kinky crotchet.png')) }}" alt="Crotchet Styles">
-                        <h4>Crotchet Styles</h4>
+                        <img src="{{ $homeCardImage('crotchet', asset('images/kinky crotchet.png')) }}" alt="{{ $catLabel('crotchet', 'Crotchet Styles') }}">
+                        <h4>{{ $catLabel('crotchet', 'Crotchet Styles') }}</h4>
                         <p class="mb-2">{{ $homeCardDesc('crotchet', 'Quick protective styles with various crotchet options—versatile and low-maintenance.') }}</p>
                         <p class="mb-1"><strong>Time:</strong> 1.5–5 hrs • <strong>Types:</strong> 2-3 line single crotchet, Afro, Individual Crotchet, Butterfly, Weave Crotchet</p>
                         <p class="mb-3"><strong>Hair:</strong> Not included • <strong>Note:</strong> No length adjustment needed</p>
@@ -4487,11 +4523,13 @@
                         <button class="btn btn-warning mt-3">Select Type & Book</button>
                     </div>
                 </div>
+                @endif
 
-                <div class="col-lg-4 col-md-6 col-6 service-item" data-category="kids">
+                @if($catVisible('kids'))
+                <div class="col-lg-4 col-md-6 col-6 service-item" data-category="kids" style="order: {{ $catOrder('kids') }}">
                     <div class="service-card h-100" onclick="window.location.href='/kids-selector'">
-                        <img src="{{ $homeCardImage('kids', asset('images/kids hair style.webp')) }}" alt="Kids Braids">
-                        <h4>Kids Braids</h4>
+                        <img src="{{ $homeCardImage('kids', asset('images/kids hair style.webp')) }}" alt="{{ $catLabel('kids', 'Kids Braids') }}">
+                        <h4>{{ $catLabel('kids', 'Kids Braids') }}</h4>
                         <p class="mb-2">{{ $homeCardDesc('kids', 'Fun, gentle braiding styles designed for children—knotless, cornrows, and more.') }}</p>
                         <p class="mb-1"><strong>Time:</strong> 1–3 hrs • <strong>Sizes:</strong> Small, Medium, Large</p>
                         <p class="mb-3"><strong>Hair:</strong> Not included</p>
@@ -4499,10 +4537,12 @@
                         <button class="btn btn-warning mt-3">Select Style & Book</button>
                     </div>
                 </div>
-                <div class="col-lg-4 col-md-6 col-6 service-item mobile-hidden" data-category="cornrow">
+                @endif
+                @if($catVisible('cornrow'))
+                <div class="col-lg-4 col-md-6 col-6 service-item mobile-hidden" data-category="cornrow" style="order: {{ $catOrder('cornrow') }}">
                     <div class="service-card h-100" onclick="openServiceSizeModal('cornrow')">
-                        <img src="{{ $homeCardImage('cornrow', asset('images/stitch braid.jpg')) }}" alt="Cornrow/Feed-in Braids">
-                        <h4>Cornrow/Feed-in Braids</h4>
+                        <img src="{{ $homeCardImage('cornrow', asset('images/stitch braid.jpg')) }}" alt="{{ $catLabel('cornrow', 'Cornrow/Feed-in Braids') }}">
+                        <h4>{{ $catLabel('cornrow', 'Cornrow/Feed-in Braids') }}</h4>
                         <p class="mb-2">{{ $homeCardDesc('cornrow', 'Classic cornrows and feed-in styles with or without weave extensions.') }}</p>
                         <p class="mb-1"><strong>Time:</strong> 1–5 hrs • <strong>Types:</strong> Stitch Weave, Cornrow Weave, Under-wig Weave (no extension), Weave&Braid Mixed</p>
                         <p class="mb-2"><strong>Hair:</strong> Not included</p>
@@ -4511,10 +4551,12 @@
                         <button class="btn btn-warning mt-3">Select Type & Book</button>
                     </div>
                 </div>
-                <div class="col-lg-4 col-md-6 col-6 service-item mobile-hidden" data-category="other">
+                @endif
+                @if($catVisible('hair-treatment'))
+                <div class="col-lg-4 col-md-6 col-6 service-item mobile-hidden" data-category="other" style="order: {{ $catOrder('hair-treatment') }}">
                     <div class="service-card h-100" onclick="openServiceSizeModal('hair-treatment')">
-                        <img src="{{ $homeCardImage('hair-treatment', asset('images/hair_mask.png')) }}" alt="Hair Treatment Services">
-                        <h4>Hair Treatment Services</h4>
+                        <img src="{{ $homeCardImage('hair-treatment', asset('images/hair_mask.png')) }}" alt="{{ $catLabel('hair-treatment', 'Hair Treatment Services') }}">
+                        <h4>{{ $catLabel('hair-treatment', 'Hair Treatment Services') }}</h4>
                         <p class="mb-2">{{ $homeCardDesc('hair-treatment', 'Professional hair care treatments for natural and relaxed hair.') }}</p>
                         <p class="mb-1"><strong>Time:</strong> 45 min–2 hrs • <strong>Options:</strong> Natural Hair Mask, Chemical Relaxer</p>
                         <p class="mb-3"><strong>Note:</strong> Optional weave treatment adds $30 to any service</p>
@@ -4522,10 +4564,12 @@
                         <button class="btn btn-warning mt-3">Select Treatment & Book</button>
                     </div>
                 </div>
-                <div class="col-lg-4 col-md-6 col-6 service-item mobile-hidden" data-category="other">
+                @endif
+                @if($catVisible('boho'))
+                <div class="col-lg-4 col-md-6 col-6 service-item mobile-hidden" data-category="other" style="order: {{ $catOrder('boho') }}">
                     <div class="service-card h-100" onclick="openServiceSizeModal('boho')">
-                        <img src="{{ $homeCardImage('boho', asset('images/boho braid.jpg')) }}" alt="Boho Braids">
-                        <h4>Boho Braids</h4>
+                        <img src="{{ $homeCardImage('boho', asset('images/boho braid.jpg')) }}" alt="{{ $catLabel('boho', 'Boho Braids') }}">
+                        <h4>{{ $catLabel('boho', 'Boho Braids') }}</h4>
                         <p class="mb-2">{{ $homeCardDesc('boho', 'Knotless braids with curly ends left out for a free-spirited, bohemian look.') }}</p>
                         <p class="mb-1"><strong>Time:</strong> 3–7 hrs • <strong>Sizes:</strong> Small, Smedium, Medium, Jumbo/Large</p>
                         <p class="mb-3"><strong>Hair:</strong> Not included</p>
@@ -4533,6 +4577,7 @@
                         <button class="btn btn-warning mt-3">Select Size & Book</button>
                     </div>
                 </div>
+                @endif
                 @php $cmsAdultCustomCards = \App\Support\AdultServiceCatalog::injectables($extraServices ?? [])['custom_cards']; @endphp
                 @foreach($cmsAdultCustomCards as $cmsCard)
                     <div class="col-lg-4 col-md-6 col-6 service-item" data-category="other">

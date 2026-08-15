@@ -549,107 +549,28 @@
                                 $kbCardPrices[$kbType] = (int) $kbRow['price'];
                             }
                             $kbCatalogSlugs = \App\Support\KidsStyleCatalog::slugs();
+                            $kbSelectorCards = \App\Support\KidsStyleCatalog::selectorCards();
                         @endphp
 
                         <div class="kb-braid-grid" id="kb-braid-types">
-                            <label class="kb-braid-card" for="kb_type_protective">
-                                <input type="radio" name="kb_braid_type" id="kb_type_protective" value="protective" checked data-disable-steps="1" data-price="{{ $kbCardPrices['protective'] }}">
-                                <div class="kb-braid-content">
-                                    <div class="kb-braid-name">Natural Hair Twist</div>
-                                    <div class="kb-braid-price">${{ $kbCardPrices['protective'] }}</div>
-                                </div>
-                                <span class="kb-checkmark">✓</span>
-                            </label>
-
-                            <label class="kb-braid-card" for="kb_type_cornrows">
-                                <input type="radio" name="kb_braid_type" id="kb_type_cornrows" value="cornrows" data-disable-steps="1" data-price="{{ $kbCardPrices['cornrows'] }}">
-                                <div class="kb-braid-content">
-                                    <div class="kb-braid-name">Cornrow (without extension)</div>
-                                    <div class="kb-braid-price">${{ $kbCardPrices['cornrows'] }}</div>
-                                </div>
-                                <span class="kb-checkmark">✓</span>
-                            </label>
-
-                            <label class="kb-braid-card" for="kb_type_cornrow_weave">
-                                <input type="radio" name="kb_braid_type" id="kb_type_cornrow_weave" value="cornrow_weave" data-price="{{ $kbCardPrices['cornrow_weave'] }}">
-                                <div class="kb-braid-content">
-                                    <div class="kb-braid-name">Cornrow weave (with extension)</div>
-                                    <div class="kb-braid-price">From ${{ $kbCardPrices['cornrow_weave'] }}</div>
-                                </div>
-                                <span class="kb-checkmark">✓</span>
-                            </label>
-
-                            <label class="kb-braid-card" for="kb_type_knotless_small">
-                                <input type="radio" name="kb_braid_type" id="kb_type_knotless_small" value="knotless_small" data-price="{{ $kbCardPrices['knotless_small'] }}">
-                                <div class="kb-braid-content">
-                                    <div class="kb-braid-name">Knotless Small</div>
-                                    <div class="kb-braid-price">From ${{ $kbCardPrices['knotless_small'] }}</div>
-                                </div>
-                                <span class="kb-checkmark">✓</span>
-                            </label>
-
-                            <label class="kb-braid-card" for="kb_type_knotless_med">
-                                <input type="radio" name="kb_braid_type" id="kb_type_knotless_med" value="knotless_med" data-price="{{ $kbCardPrices['knotless_med'] }}">
-                                <div class="kb-braid-content">
-                                    <div class="kb-braid-name">Knotless Medium</div>
-                                    <div class="kb-braid-price">From ${{ $kbCardPrices['knotless_med'] }}</div>
-                                </div>
-                                <span class="kb-checkmark">✓</span>
-                            </label>
-
-                            <label class="kb-braid-card" for="kb_type_box_small">
-                                <input type="radio" name="kb_braid_type" id="kb_type_box_small" value="box_small" data-price="{{ $kbCardPrices['box_small'] }}">
-                                <div class="kb-braid-content">
-                                    <div class="kb-braid-name">Box Braids Small</div>
-                                    <div class="kb-braid-price">From ${{ $kbCardPrices['box_small'] }}</div>
-                                </div>
-                                <span class="kb-checkmark">✓</span>
-                            </label>
-
-                            <label class="kb-braid-card" for="kb_type_box_med">
-                                <input type="radio" name="kb_braid_type" id="kb_type_box_med" value="box_med" data-price="{{ $kbCardPrices['box_med'] }}">
-                                <div class="kb-braid-content">
-                                    <div class="kb-braid-name">Box Braids Medium</div>
-                                    <div class="kb-braid-price">From ${{ $kbCardPrices['box_med'] }}</div>
-                                </div>
-                                <span class="kb-checkmark">✓</span>
-                            </label>
-
-                            <label class="kb-braid-card" for="kb_type_stitch">
-                                <input type="radio" name="kb_braid_type" id="kb_type_stitch" value="stitch" data-price="{{ $kbCardPrices['stitch'] }}">
-                                <div class="kb-braid-content">
-                                    <div class="kb-braid-name">Stitch Braids</div>
-                                    <div class="kb-braid-price">From ${{ $kbCardPrices['stitch'] }}</div>
-                                </div>
-                                <span class="kb-checkmark">✓</span>
-                            </label>
-
-                            <label class="kb-braid-card" for="kb_type_half_weave_braid">
-                                <input type="radio" name="kb_braid_type" id="kb_type_half_weave_braid" value="half_weave_braid" data-price="{{ $kbCardPrices['half_weave_braid'] }}">
-                                <div class="kb-braid-content">
-                                    <div class="kb-braid-name">1/2 Weave &amp; 1/2 Braid</div>
-                                    <div class="kb-braid-price">From ${{ $kbCardPrices['half_weave_braid'] }}</div>
-                                </div>
-                                <span class="kb-checkmark">✓</span>
-                            </label>
-
-                            <label class="kb-braid-card" for="kb_type_half_weave_crotchet">
-                                <input type="radio" name="kb_braid_type" id="kb_type_half_weave_crotchet" value="half_weave_crotchet" data-disable-steps="1" data-price="{{ $kbCardPrices['half_weave_crotchet'] }}">
-                                <div class="kb-braid-content">
-                                    <div class="kb-braid-name">1/2 Weave &amp; 1/2 Crotchet</div>
-                                    <div class="kb-braid-price">${{ $kbCardPrices['half_weave_crotchet'] }}</div>
-                                </div>
-                                <span class="kb-checkmark">✓</span>
-                            </label>
-
-                            <label class="kb-braid-card" for="kb_type_crotchet_style">
-                                <input type="radio" name="kb_braid_type" id="kb_type_crotchet_style" value="crotchet_style" data-disable-steps="1" data-price="{{ $kbCardPrices['crotchet_style'] }}">
-                                <div class="kb-braid-content">
-                                    <div class="kb-braid-name">Crotchet Style</div>
-                                    <div class="kb-braid-price">${{ $kbCardPrices['crotchet_style'] }}</div>
-                                </div>
-                                <span class="kb-checkmark">✓</span>
-                            </label>
+                            @foreach($kbSelectorCards as $idx => $kbCard)
+                                <label class="kb-braid-card" for="kb_type_{{ $kbCard['key'] }}">
+                                    <input type="radio"
+                                           name="kb_braid_type"
+                                           id="kb_type_{{ $kbCard['key'] }}"
+                                           value="{{ $kbCard['key'] }}"
+                                           @checked($idx === 0)
+                                           @if(!empty($kbCard['disable_steps'])) data-disable-steps="1" @endif
+                                           data-price="{{ $kbCard['price'] }}">
+                                    <div class="kb-braid-content">
+                                        <div class="kb-braid-name">{{ $kbCard['label'] }}</div>
+                                        <div class="kb-braid-price">
+                                            @if(!empty($kbCard['from_price']))From @endif${{ $kbCard['price'] }}
+                                        </div>
+                                    </div>
+                                    <span class="kb-checkmark">✓</span>
+                                </label>
+                            @endforeach
 
                             {{-- CMS-created kids styles --}}
                             @foreach($cmsKidsServices ?? [] as $cksvc)

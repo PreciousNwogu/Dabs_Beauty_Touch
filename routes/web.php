@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\ServiceController as AdminServiceController;
+use App\Http\Controllers\Admin\SiteSettingsController;
 use App\Models\Service;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
@@ -70,6 +71,9 @@ Route::prefix('admin')->name('admin.')->middleware('admin')->group(function () {
     Route::put('services/{service}',             [AdminServiceController::class, 'update'])         ->name('services.update');
     Route::patch('services/{service}/discount',  [AdminServiceController::class, 'updateDiscount'])->name('services.discount');
     Route::delete('services/{service}',          [AdminServiceController::class, 'destroy'])       ->name('services.destroy');
+
+    Route::get('settings', [SiteSettingsController::class, 'edit'])->name('settings.edit');
+    Route::put('settings', [SiteSettingsController::class, 'update'])->name('settings.update');
 });
 
 // CSRF Token refresh route
@@ -94,10 +98,9 @@ Route::get('/clear-session', function (Request $request) {
 // Get booked dates for calendar
 Route::get('/api/booked-dates', function (Request $request) {
     try {
-        // Business rule: allow up to 2 bookings per day (each booking blocks a 5-hour window).
-        // So a date should only be "disabled" on the calendar once it has 2 pending/confirmed bookings,
-        // or if it is blocked via schedules (handled separately by /schedules/blocked-dates).
-        $maxBookingsPerDay = 2;
+        // Disable a date only when pending/confirmed bookings reach the CMS daily cap.
+        // Schedule blocks are handled separately by /schedules/blocked-dates.
+        $maxBookingsPerDay = \App\Support\SiteSettings::maxBookingsPerDay();
 
         // Only get dates with pending or confirmed bookings (exclude cancelled and completed)
         $bookedDates = \App\Models\Booking::whereIn('status', ['pending', 'confirmed'])

@@ -41,6 +41,7 @@
     <div class="nav-links">
         <a href="{{ url('/admin/dashboard') }}"><i class="bi bi-speedometer2 me-1"></i>Dashboard</a>
         <a href="{{ route('admin.services.index') }}" style="color:#ff6600"><i class="bi bi-grid me-1"></i>Services</a>
+        <a href="{{ route('admin.settings.edit') }}"><i class="bi bi-sliders me-1"></i>Settings</a>
         <a href="{{ route('home') }}" target="_blank"><i class="bi bi-box-arrow-up-right me-1"></i>View Site</a>
         <a href="#" onclick="event.preventDefault();document.getElementById('logout-form').submit();"><i class="bi bi-box-arrow-right me-1"></i>Logout</a>
         <form id="logout-form" action="{{ url('/logout') }}" method="POST" style="display:none">@csrf</form>

@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use Illuminate\Support\Arr;
+use App\Support\SiteSettings;
 
 class PriceCalculator
 {
@@ -229,19 +230,22 @@ class PriceCalculator
             // - waist: +$20
             // - hip: +$40 (waist + $20)
             // - tailbone, classic: same price (+$60)
-            $lengthAdjustmentMap = [
-                'neck' => -40.00,      // Same as shoulder and armpit
-                'shoulder' => -40.00,   // Same as neck and armpit
-                'armpit' => -40.00,     // Same as neck and shoulder
-                'bra_strap' => 0.00,    // Base/default price (same as mid_back)
-                'mid_back' => 0.00,     // Base/default price (same as bra_strap)
-                'waist' => 20.00,
-                'hip' => 40.00,        // Waist + $20
-                'tailbone' => 60.00,    // Same as classic
-                'classic' => 60.00,    // Same as tailbone
-            ];
+            $lengthAdjustmentMap = SiteSettings::lengthAdjustments();
+            if ($lengthAdjustmentMap === []) {
+                $lengthAdjustmentMap = [
+                    'neck' => -40.00,
+                    'shoulder' => -40.00,
+                    'armpit' => -40.00,
+                    'bra_strap' => 0.00,
+                    'mid_back' => 0.00,
+                    'waist' => 20.00,
+                    'hip' => 40.00,
+                    'tailbone' => 60.00,
+                    'classic' => 60.00,
+                ];
+            }
 
-            $lengthAdjustment = $noLength ? 0.00 : ($lengthAdjustmentMap[$length] ?? 0.00);
+            $lengthAdjustment = $noLength ? 0.00 : (float) ($lengthAdjustmentMap[$length] ?? 0.00);
             $stitchAddon = 0.00;
             if ($stitchRowsOptionNorm === 'more_than_ten' && $hasTenPlusRows) {
                 $stitchAddon = $serviceModel
@@ -256,7 +260,7 @@ class PriceCalculator
             }
             $frontBackCost = 0.00;
             if ($frontBackAddon) {
-                // Applies to Line Single Crotchet when user selects "Front + Back" (+$20)
+                // Applies to Line Single Crotchet when user selects "Front + Back"
                 if (
                     str_contains($serviceType, 'line_single') ||
                     str_contains($serviceType, 'line-single') ||
@@ -267,14 +271,14 @@ class PriceCalculator
                         stripos($serviceInput, '2/3 line single') !== false
                     ))
                 ) {
-                    $frontBackCost = 20.00;
+                    $frontBackCost = SiteSettings::frontBackAmount();
                 }
             }
 
             $tipCost = 0.00;
             $tipEligibleLengths = ['mid_back', 'waist', 'hip', 'tailbone', 'classic'];
             if ($isTipEligibleService && $tipOptionNormalized === 'finished' && in_array($length, $tipEligibleLengths, true)) {
-                $tipCost = 20.00;
+                $tipCost = SiteSettings::finishedTipAmount();
             }
             $tipAddonApplied = $tipCost > 0;
 

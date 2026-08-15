@@ -239,6 +239,11 @@ class KidsStyleCatalog
             return null;
         }
 
+        $overrides = (array) SiteSettings::get('kids_styles', []);
+        if (isset($overrides[$braidType]['label']) && trim((string) $overrides[$braidType]['label']) !== '') {
+            return (string) $overrides[$braidType]['label'];
+        }
+
         $friendly = [
             'protective' => 'Natural Hair Twist',
             'cornrows' => 'Cornrow (without extension)',
@@ -262,5 +267,37 @@ class KidsStyleCatalog
         }
 
         return ucwords(str_replace(['_', '-'], ' ', $braidType));
+    }
+
+    /**
+     * Ordered, visible kids selector cards for the booking UI.
+     *
+     * @return list<array{key:string,label:string,price:int,disable_steps:bool,from_price:bool}>
+     */
+    public static function selectorCards(): array
+    {
+        $prices = self::cardPrices();
+        $overrides = (array) SiteSettings::get('kids_styles', []);
+        $rows = [];
+        $index = 0;
+        foreach (self::definitions() as $key => $def) {
+            $row = $overrides[$key] ?? [];
+            if (array_key_exists('visible', $row) && ! $row['visible']) {
+                continue;
+            }
+            $price = (int) ($prices[$key]['price'] ?? $def['default_price']);
+            $rows[] = [
+                'key' => $key,
+                'label' => self::displayName($key) ?: $def['name'],
+                'price' => $price,
+                'disable_steps' => ! empty($def['disable_steps']),
+                'from_price' => empty($def['disable_steps']),
+                'sort' => (int) ($row['sort'] ?? (($index + 1) * 10)),
+            ];
+            $index++;
+        }
+        usort($rows, fn ($a, $b) => $a['sort'] <=> $b['sort']);
+
+        return $rows;
     }
 }

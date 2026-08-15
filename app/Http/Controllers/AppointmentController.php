@@ -306,7 +306,7 @@ class AppointmentController extends Controller
                 ->get(['appointment_time']);
 
             // If there are already 2 bookings, block the day
-            if ($existingBookingsForDay->count() >= 2) {
+            if ($existingBookingsForDay->count() >= \App\Support\SiteSettings::maxBookingsPerDay()) {
                 $isApiRequest = $request->expectsJson() || $request->is('api/*') || $request->header('X-Requested-With') === 'XMLHttpRequest';
                 $msg = 'This date is fully booked. Please select a different date.';
                 if ($isApiRequest) {
@@ -1553,8 +1553,9 @@ class AppointmentController extends Controller
                 ->whereNotNull('appointment_time')
                 ->get(['appointment_time', 'service_duration_minutes', 'service']);
 
-            // Enforce maximum 2 bookings per day
-            if ($bookingsForDay->count() >= 2) {
+            // Enforce maximum bookings per day
+            $maxPerDay = \App\Support\SiteSettings::maxBookingsPerDay();
+            if ($bookingsForDay->count() >= $maxPerDay) {
                 Log::info('Maximum bookings per day reached', [
                     'date' => $date,
                     'booking_count' => $bookingsForDay->count(),
@@ -1563,7 +1564,7 @@ class AppointmentController extends Controller
                 return response()->json([
                     'success' => true,
                     'slots' => [],
-                    'message' => 'No available slots - maximum bookings per day reached (2 bookings allowed)',
+                    'message' => 'No available slots - maximum bookings per day reached ('.$maxPerDay.' bookings allowed)',
                     'date' => $date
                 ]);
             }

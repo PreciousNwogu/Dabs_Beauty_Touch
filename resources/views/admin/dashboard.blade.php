@@ -718,6 +718,11 @@
                         </a>
                     </li>
                     <li class="nav-item">
+                        <a class="nav-link" href="{{ route('admin.settings.edit') }}">
+                            <i class="bi bi-sliders me-1"></i>Settings
+                        </a>
+                    </li>
+                    <li class="nav-item">
                         <a class="nav-link" href="{{ route('admin.profile') }}">
                             <i class="bi bi-person-circle me-1"></i>Profile
                         </a>
@@ -798,7 +803,7 @@
 
             <!-- Quick Actions -->
             <div class="row mb-4 px-4 px-md-4 px-3">
-                <div class="col-12 col-md-4 mb-3 mb-md-0">
+                <div class="col-12 col-md-6 col-xl-3 mb-3">
                     <a href="{{ route('admin.services.index') }}" class="d-flex align-items-center gap-3 text-decoration-none p-4" style="background:linear-gradient(135deg,#030f68,#1a2fa8);border-radius:16px;box-shadow:0 4px 20px rgba(3,15,104,.2);transition:transform .15s" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform=''">
                         <div style="width:52px;height:52px;background:rgba(255,255,255,.15);border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
                             <i class="bi bi-grid-3x3-gap-fill" style="font-size:1.6rem;color:#fff"></i>
@@ -810,7 +815,7 @@
                         <i class="bi bi-arrow-right-circle-fill ms-auto" style="font-size:1.6rem;color:rgba(255,102,0,.9)"></i>
                     </a>
                 </div>
-                <div class="col-12 col-md-4 mb-3 mb-md-0">
+                <div class="col-12 col-md-6 col-xl-3 mb-3">
                     <a href="{{ route('admin.completed-services') }}" class="d-flex align-items-center gap-3 text-decoration-none p-4" style="background:linear-gradient(135deg,#0f5132,#1f7a4d);border-radius:16px;box-shadow:0 4px 20px rgba(15,81,50,.25);transition:transform .15s" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform=''">
                         <div style="width:52px;height:52px;background:rgba(255,255,255,.15);border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
                             <i class="bi bi-check2-square" style="font-size:1.6rem;color:#fff"></i>
@@ -822,7 +827,7 @@
                         <i class="bi bi-arrow-right-circle-fill ms-auto" style="font-size:1.6rem;color:rgba(255,255,255,.9)"></i>
                     </a>
                 </div>
-                <div class="col-12 col-md-4">
+                <div class="col-12 col-md-6 col-xl-3 mb-3">
                     <a href="{{ route('admin.revenue-history') }}" class="d-flex align-items-center gap-3 text-decoration-none p-4" style="background:linear-gradient(135deg,#0f3460,#16518f);border-radius:16px;box-shadow:0 4px 20px rgba(15,52,96,.25);transition:transform .15s" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform=''">
                         <div style="width:52px;height:52px;background:rgba(255,255,255,.15);border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
                             <i class="bi bi-graph-up-arrow" style="font-size:1.6rem;color:#fff"></i>
@@ -830,6 +835,18 @@
                         <div>
                             <div style="font-weight:800;font-size:1.05rem;color:#fff">Revenue Growth</div>
                             <div style="font-size:.85rem;color:rgba(255,255,255,.8)">Track past months and growth trends</div>
+                        </div>
+                        <i class="bi bi-arrow-right-circle-fill ms-auto" style="font-size:1.6rem;color:rgba(255,255,255,.9)"></i>
+                    </a>
+                </div>
+                <div class="col-12 col-md-6 col-xl-3 mb-3">
+                    <a href="{{ route('admin.settings.edit') }}" class="d-flex align-items-center gap-3 text-decoration-none p-4" style="background:linear-gradient(135deg,#5b2c6f,#7d3c98);border-radius:16px;box-shadow:0 4px 20px rgba(91,44,111,.25);transition:transform .15s" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform=''">
+                        <div style="width:52px;height:52px;background:rgba(255,255,255,.15);border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                            <i class="bi bi-sliders" style="font-size:1.6rem;color:#fff"></i>
+                        </div>
+                        <div>
+                            <div style="font-weight:800;font-size:1.05rem;color:#fff">Business Settings</div>
+                            <div style="font-size:.85rem;color:rgba(255,255,255,.8)">Deposit, capacity, add-ons, categories, promo</div>
                         </div>
                         <i class="bi bi-arrow-right-circle-fill ms-auto" style="font-size:1.6rem;color:rgba(255,255,255,.9)"></i>
                     </a>
