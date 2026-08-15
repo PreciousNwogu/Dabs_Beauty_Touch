@@ -25,6 +25,18 @@
 <div class="container">
     <a href="{{ route('admin.dashboard') }}" class="btn btn-link mb-3">&larr; Back to dashboard</a>
 
+    @if(session('success'))
+        <div class="alert alert-success">{{ session('success') }}</div>
+    @endif
+    @if(session('error'))
+        <div class="alert alert-danger">{{ session('error') }}</div>
+    @endif
+    @if($errors->any())
+        <div class="alert alert-danger">
+            <ul class="mb-0">@foreach($errors->all() as $err)<li>{{ $err }}</li>@endforeach</ul>
+        </div>
+    @endif
+
     @if(isset($booking) && $booking)
         @php
             $timeValue = $booking->appointment_time;
@@ -34,15 +46,6 @@
             $lengths = ['neck'=>'Neck','shoulder'=>'Shoulder','armpit'=>'Armpit','bra_strap'=>'Bra strap','mid_back'=>'Mid back','waist'=>'Waist','hip'=>'Hip','tailbone'=>'Tailbone','classic'=>'Classic'];
             $kidsTypes = ['protective'=>'Natural Hair Twist','cornrows'=>'Cornrows','cornrow_weave'=>'Cornrow Weave','knotless_small'=>'Knotless Small','knotless_med'=>'Knotless Medium','box_small'=>'Box Small','box_med'=>'Box Medium','stitch'=>'Stitch','half_weave_braid'=>'1/2 Weave & 1/2 Braid','half_weave_crotchet'=>'1/2 Weave & 1/2 Crotchet','crotchet_style'=>'Crotchet Style'];
         @endphp
-        @if(session('success'))
-            <div class="alert alert-success">{{ session('success') }}</div>
-        @endif
-        @if($errors->any())
-            <div class="alert alert-danger">
-                <ul class="mb-0">@foreach($errors->all() as $err)<li>{{ $err }}</li>@endforeach</ul>
-            </div>
-        @endif
-
         <div class="card">
             <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
                 <h4 class="mb-0">Booking Details — #{{ sprintf('BK%06d', $booking->id) }}</h4>
@@ -268,10 +271,78 @@
                         Status: <span id="custom-status">{{ ucfirst($customRequest->status) }}</span><br>
                         Submitted: {{ $customRequest->created_at ? $customRequest->created_at->setTimezone('America/Toronto')->format('F j, Y g:i A') : 'N/A' }}</p>
 
-                        <div class="d-grid gap-2">
+                        <div class="d-grid gap-2 mb-4">
                             <button class="btn btn-sm btn-outline-warning" onclick="updateCustomStatus({{ $customRequest->id }}, 'in_progress')">Mark In Progress</button>
                             <button class="btn btn-sm btn-outline-success" onclick="updateCustomStatus({{ $customRequest->id }}, 'handled')">Mark Handled</button>
                         </div>
+
+                        @if($customRequest->converted_booking_id)
+                            <div class="alert alert-info mb-0">
+                                Already converted to
+                                <a href="{{ route('admin.bookings.show', ['id' => $customRequest->converted_booking_id]) }}">
+                                    booking #{{ sprintf('BK%06d', $customRequest->converted_booking_id) }}
+                                </a>.
+                            </div>
+                        @else
+                            <h5>Create booking</h5>
+                            <form method="POST" action="{{ route('admin.custom-requests.convert', $customRequest->id) }}">
+                                @csrf
+                                <div class="mb-2">
+                                    <label class="form-label">Name</label>
+                                    <input type="text" name="name" class="form-control" value="{{ old('name', $customRequest->name) }}" required>
+                                </div>
+                                <div class="mb-2">
+                                    <label class="form-label">Email</label>
+                                    <input type="email" name="email" class="form-control" value="{{ old('email', $customRequest->email) }}" required>
+                                </div>
+                                <div class="mb-2">
+                                    <label class="form-label">Phone</label>
+                                    <input type="text" name="phone" class="form-control" value="{{ old('phone', $customRequest->phone) }}">
+                                </div>
+                                <div class="mb-2">
+                                    <label class="form-label">Service</label>
+                                    <input type="text" name="service" class="form-control" value="{{ old('service', $customRequest->service ?: 'Custom') }}" required>
+                                </div>
+                                <div class="mb-2">
+                                    <label class="form-label">Date</label>
+                                    @php
+                                        $convertDate = old('appointment_date');
+                                        if (! $convertDate && $customRequest->appointment_date) {
+                                            try {
+                                                $convertDate = \Carbon\Carbon::parse($customRequest->appointment_date)->toDateString();
+                                            } catch (\Throwable $e) {
+                                                $convertDate = '';
+                                            }
+                                        }
+                                    @endphp
+                                    <input type="date" name="appointment_date" class="form-control" value="{{ $convertDate }}" required>
+                                </div>
+                                <div class="mb-2">
+                                    <label class="form-label">Time (24h)</label>
+                                    <input type="text" name="appointment_time" class="form-control" placeholder="14:00" value="{{ old('appointment_time', $customRequest->appointment_time) }}" required>
+                                </div>
+                                <div class="mb-2">
+                                    <label class="form-label">Type</label>
+                                    <select name="appointment_type" class="form-select" required>
+                                        <option value="in-studio" @selected(old('appointment_type', 'in-studio') === 'in-studio')>In studio</option>
+                                        <option value="mobile" @selected(old('appointment_type') === 'mobile')>Mobile</option>
+                                    </select>
+                                </div>
+                                <div class="mb-2">
+                                    <label class="form-label">Mobile address</label>
+                                    <input type="text" name="address" class="form-control" value="{{ old('address') }}" placeholder="Required for mobile">
+                                </div>
+                                <div class="mb-2">
+                                    <label class="form-label">Quoted price</label>
+                                    <input type="number" step="0.01" min="0" name="final_price" class="form-control" value="{{ old('final_price') }}">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Notes</label>
+                                    <textarea name="message" class="form-control" rows="3">{{ old('message', $customRequest->message) }}</textarea>
+                                </div>
+                                <button type="submit" class="btn btn-primary w-100">Convert to booking</button>
+                            </form>
+                        @endif
                     </div>
                 </div>
             </div>

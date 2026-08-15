@@ -13,6 +13,11 @@
             <a href="{{ route('account.bookings') }}" class="btn btn-outline-secondary" style="border-radius:12px;font-weight:700;">
                 Back
             </a>
+            @if(!empty($booking->confirmation_code) && in_array($booking->status, ['pending', 'confirmed'], true))
+                <a href="{{ route('bookings.confirm', ['id' => $booking->id, 'code' => $booking->confirmation_code]) }}" class="btn btn-outline-primary" style="border-radius:12px;font-weight:700;">
+                    Cancel / reschedule
+                </a>
+            @endif
             <button id="rebookBtn" type="button" class="btn btn-primary" style="border-radius:12px;font-weight:800;">
                 Book again
             </button>

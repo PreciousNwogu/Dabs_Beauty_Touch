@@ -12,6 +12,12 @@ use Illuminate\Http\Request as HttpRequest;
 use Illuminate\Support\Facades\Artisan;
 use App\Http\Controllers\PublicAuthController;
 use App\Http\Controllers\AccountController;
+use App\Exceptions\SlotUnavailableException;
+use App\Services\BookingSlotGuard;
+use App\Support\AdminBookingFilters;
+use App\Support\ServiceDuration;
+use App\Http\Controllers\Admin\ConvertCustomRequestController;
+use App\Http\Controllers\Admin\BookingExportController;
 
 // TEMPORARY: clear application caches.
 // This is protected by a secret key. Remove when done.
@@ -55,7 +61,7 @@ Route::get('/', function () {
 })->name('home');
 
 // Admin CMS routes for services
-Route::prefix('admin')->name('admin.')->middleware('auth')->group(function () {
+Route::prefix('admin')->name('admin.')->middleware('admin')->group(function () {
     // Service CMS
     Route::get('services',                       [AdminServiceController::class, 'index'])          ->name('services.index');
     Route::get('services/create',                [AdminServiceController::class, 'create'])         ->name('services.create');
@@ -133,106 +139,9 @@ Route::get('/api/booked-dates', function (Request $request) {
     }
 })->name('api.booked-dates');
 
-// Test upload route
-Route::get('/test-upload', function () {
-    return view('test-upload');
-});
-
 // Public endpoints for blocked dates (used by booking calendar)
 Route::get('/schedules/blocked-dates', [\App\Http\Controllers\Admin\ScheduleController::class, 'blockedDates'])->name('schedules.blocked-dates');
 Route::get('/schedules/blocked-list', [\App\Http\Controllers\Admin\ScheduleController::class, 'blockedList'])->name('schedules.blocked-list');
-
-// Test database route
-Route::get('/test-db', function () {
-    try {
-        $count = \App\Models\Booking::count();
-        $lastBooking = \App\Models\Booking::latest()->first();
-        return response()->json([
-            'database_status' => 'Connected',
-            'total_bookings' => $count,
-            'last_booking' => $lastBooking ? [
-                'id' => $lastBooking->id,
-                'name' => $lastBooking->name,
-                'created_at' => $lastBooking->created_at
-            ] : 'No bookings found',
-            'connection_test' => 'OK'
-        ]);
-    } catch (\Exception $e) {
-        return response()->json([
-            'database_status' => 'Error',
-            'error' => $e->getMessage(),
-            'connection_test' => 'FAILED'
-        ], 500);
-    }
-});
-
-Route::post('/test-upload', function (Request $request) {
-    $tempDir = storage_path('temp');
-    if (!file_exists($tempDir)) {
-        mkdir($tempDir, 0777, true);
-    }
-
-    if (function_exists('ini_set')) {
-        ini_set('upload_tmp_dir', $tempDir);
-    }
-
-    $result = [
-        'temp_dir' => $tempDir,
-        'temp_dir_exists' => file_exists($tempDir),
-        'temp_dir_writable' => is_writable($tempDir),
-        'has_file' => $request->hasFile('sample_picture'),
-        'php_upload_tmp_dir' => ini_get('upload_tmp_dir'),
-        'sys_temp_dir' => sys_get_temp_dir(),
-    ];
-
-    if ($request->hasFile('sample_picture')) {
-        $file = $request->file('sample_picture');
-        $result['file_valid'] = $file->isValid();
-        $result['file_error'] = $file->getError();
-        $result['file_size'] = $file->getSize();
-        $result['file_name'] = $file->getClientOriginalName();
-
-        if ($file->isValid()) {
-            try {
-                $filename = time() . '_' . $file->getClientOriginalName();
-                $path = $file->storeAs('public/uploads/test', $filename);
-                $result['upload_success'] = true;
-                $result['upload_path'] = $path;
-            } catch (\Exception $e) {
-                $result['upload_success'] = false;
-                $result['upload_error'] = $e->getMessage();
-            }
-        }
-    }
-
-    return response()->json($result);
-});
-
-// (test email route removed)
-
-// Debug route to test HTTPS and security
-Route::get('/debug/security', function (Request $request) {
-    return response()->json([
-        'timestamp' => now(),
-        'environment' => config('app.env'),
-        'app_url' => config('app.url'),
-        'request_url' => $request->url(),
-        'is_secure' => $request->secure(),
-        'scheme' => $request->getScheme(),
-        'host' => $request->getHost(),
-        'headers' => [
-            'x-forwarded-proto' => $request->header('X-Forwarded-Proto'),
-            'x-forwarded-for' => $request->header('X-Forwarded-For'),
-            'user-agent' => $request->userAgent(),
-        ],
-        'session' => [
-            'driver' => config('session.driver'),
-            'secure' => config('session.secure'),
-            'same_site' => config('session.same_site'),
-        ],
-        'csrf_token' => csrf_token(),
-    ]);
-})->name('debug.security');
 
 // Sitemap.xml generator
 Route::get('/sitemap.xml', function () {
@@ -257,6 +166,18 @@ Route::get('/sitemap.xml', function () {
             'lastmod' => $now,
             'changefreq' => 'monthly',
             'priority' => '0.8'
+        ],
+        [
+            'loc' => $baseUrl . '/login',
+            'lastmod' => $now,
+            'changefreq' => 'monthly',
+            'priority' => '0.4'
+        ],
+        [
+            'loc' => $baseUrl . '/register',
+            'lastmod' => $now,
+            'changefreq' => 'monthly',
+            'priority' => '0.4'
         ],
     ];
 
@@ -369,101 +290,36 @@ Route::post('/kids-selector/submit', function (Request $request) {
 // Price preview API (server-side canonical breakdown)
 Route::post('/api/price/preview', [\App\Http\Controllers\AppointmentController::class, 'previewPrice'])->name('api.price.preview');
 
-// Admin authentication routes (unprotected but rate limited) - TEMPORARY SIMPLE VERSION
 Route::get('/admin/login', function () {
-    return view('admin.login');
+    if (Auth::check() && Auth::user()->is_admin) {
+        return redirect()->route('admin.dashboard');
+    }
+
+    return view('admin.login-simple');
 })->name('admin.login');
 
-// TEMPORARY: Check database status
-Route::get('/check-db', function () {
-    $connection = config('database.default');
-    $dbName = config("database.connections.{$connection}.database");
-
-    try {
-        $userCount = \App\Models\User::count();
-        $adminCount = \App\Models\User::where('is_admin', true)->count();
-        $adminUsers = \App\Models\User::where('is_admin', true)->get(['id', 'name', 'email']);
-
-        return [
-            'database_connection' => $connection,
-            'database_name' => $dbName,
-            'total_users' => $userCount,
-            'admin_users' => $adminCount,
-            'admin_exists' => \App\Models\User::where('email', 'admin@dabsbeautytouch.com')->exists(),
-            'admin_users_list' => $adminUsers->map(function($user) {
-                return [
-                    'id' => $user->id,
-                    'name' => $user->name,
-                    'email' => $user->email
-                ];
-            })->toArray(),
-        ];
-    } catch (\Exception $e) {
-        return [
-            'database_connection' => $connection,
-            'database_name' => $dbName,
-            'error' => $e->getMessage()
-        ];
-    }
-});
-
-// TEMPORARY: Create admin user route (remove after use)
-Route::get('/create-admin', function () {
-    try {
-        $adminEmail = 'admin@dabsbeautytouch.com';
-        $adminPassword = 'admin123!@#';
-
-        $existingAdmin = \App\Models\User::where('email', $adminEmail)->first();
-
-        if ($existingAdmin) {
-            // Update existing user to be admin
-            $existingAdmin->update([
-                'is_admin' => true,
-                'password' => \Illuminate\Support\Facades\Hash::make($adminPassword)
-            ]);
-            return [
-                'success' => true,
-                'message' => 'Admin user updated',
-                'email' => $adminEmail,
-                'password' => $adminPassword
-            ];
-        } else {
-            // Create new admin user
-            \App\Models\User::create([
-                'name' => 'System Administrator',
-                'email' => $adminEmail,
-                'password' => \Illuminate\Support\Facades\Hash::make($adminPassword),
-                'is_admin' => true,
-            ]);
-
-            return [
-                'success' => true,
-                'message' => 'Admin user created successfully',
-                'email' => $adminEmail,
-                'password' => $adminPassword,
-                'note' => 'Please change the password after first login'
-            ];
-        }
-    } catch (\Exception $e) {
-        return [
-            'success' => false,
-            'error' => $e->getMessage(),
-            'trace' => $e->getTraceAsString()
-        ];
-    }
-});
-
 Route::post('/admin/login', function (Request $request) {
-    $credentials = $request->only('email', 'password');
+    $credentials = $request->validate([
+        'email' => 'required|email',
+        'password' => 'required|string',
+    ]);
 
-    if (Auth::attempt($credentials)) {
-        $user = Auth::user();
-        $request->session()->regenerate();
-        return redirect()->route('admin.dashboard')->with('success', 'Welcome back!');
+    if (! Auth::attempt($credentials)) {
+        return back()->withErrors(['email' => 'Invalid credentials.'])->withInput();
     }
 
-    return back()->withErrors(['email' => 'Invalid credentials.'])->withInput();
-})->name('admin.login.submit');
+    if (! Auth::user()->is_admin) {
+        Auth::logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        return back()->withErrors(['email' => 'You do not have admin privileges.'])->withInput();
+    }
+
+    $request->session()->regenerate();
+
+    return redirect()->route('admin.dashboard')->with('success', 'Welcome back!');
+})->middleware('throttle:5,1')->name('admin.login.submit');
 
 Route::post('/admin/logout', function (Request $request) {
     Auth::logout();
@@ -472,30 +328,15 @@ Route::post('/admin/logout', function (Request $request) {
     return redirect()->route('admin.login')->with('success', 'Logged out successfully.');
 })->name('admin.logout');
 
-// Protected admin routes - TEMPORARY SIMPLE VERSION (no middleware)
-Route::prefix('admin')->name('admin.')->group(function () {
-    // Redirect admin root to login
+Route::prefix('admin')->name('admin.')->middleware('admin')->group(function () {
     Route::get('/', function () {
-        return redirect()->route('admin.login');
+        return redirect()->route('admin.dashboard');
     });
 
     // Admin dashboard (accessible after login)
     Route::get('/dashboard', function () {
         try {
-            $query = \App\Models\Booking::with([]);
-
-            // Apply filters if provided
-            if (request('status') && request('status') !== 'all') {
-                $query->where('status', request('status'));
-            }
-
-            if (request('date')) {
-                $query->whereDate('appointment_date', request('date'));
-            }
-
-            if (request('service')) {
-                $query->where('service', 'LIKE', '%' . request('service') . '%');
-            }
+            $query = AdminBookingFilters::apply(\App\Models\Booking::query(), request());
 
 // Paginate bookings (10 per page)
             $bookings = $query->orderBy('appointment_date', 'desc')
@@ -518,6 +359,10 @@ Route::prefix('admin')->name('admin.')->group(function () {
             $stats = [
                 'total_bookings' => \App\Models\Booking::count(),
                 'pending_bookings' => \App\Models\Booking::where('status', 'pending')->count(),
+                'awaiting_deposit' => \App\Models\Booking::where('status', 'pending')
+                    ->where(function ($q) {
+                        $q->whereNull('payment_status')->orWhere('payment_status', 'pending');
+                    })->count(),
                 'confirmed_bookings' => \App\Models\Booking::where('status', 'confirmed')->count(),
                 'completed_bookings' => \App\Models\Booking::where('status', 'completed')->count(),
                 'today_bookings' => \App\Models\Booking::whereDate('appointment_date', today())
@@ -561,6 +406,9 @@ Route::prefix('admin')->name('admin.')->group(function () {
                 ->with('error', 'An error occurred while loading the dashboard. Please try again later.');
         }
     })->name('dashboard');
+
+    Route::get('/bookings/export.csv', [BookingExportController::class, 'bookings'])->name('bookings.export');
+    Route::get('/revenue/export.csv', [BookingExportController::class, 'revenue'])->name('revenue.export');
 
     // Completed services page
     Route::get('/completed-services', function () {
@@ -805,6 +653,18 @@ Route::prefix('admin')->name('admin.')->group(function () {
             }
 
             $booking = \App\Models\Booking::findOrFail($bookingId);
+            $previousStatus = $booking->status;
+
+            if ($request->status === 'deposit_paid') {
+                $booking->payment_status = 'deposit_paid';
+                $booking->save();
+
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Deposit marked as received',
+                ]);
+            }
+
             $booking->status = $request->status;
 
             // Add completion notes if provided
@@ -815,6 +675,9 @@ Route::prefix('admin')->name('admin.')->group(function () {
             // Update timestamps and completion data based on status
             if ($request->status === 'confirmed') {
                 $booking->confirmed_at = now();
+                if (($booking->payment_status ?? 'pending') === 'pending') {
+                    $booking->payment_status = 'deposit_paid';
+                }
             } elseif ($request->status === 'completed') {
                 $booking->completed_at = now();
 
@@ -842,11 +705,12 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
             $booking->save();
 
-            // Send notifications for completed or cancelled statuses.
-            // Do not re-send confirmation on admin "Confirm" — the client already
-            // received it when the booking was created.
+            // Notify on confirm, complete, or cancel.
             try {
-                if ($request->status === 'completed' && $booking->email) {
+                if ($request->status === 'confirmed' && $booking->hasUsableEmail() && $previousStatus !== 'confirmed') {
+                    \Illuminate\Support\Facades\Notification::route('mail', $booking->email)
+                        ->notify(new \App\Notifications\BookingConfirmedNotification($booking));
+                } elseif ($request->status === 'completed' && $booking->email) {
                     \Illuminate\Support\Facades\Notification::route('mail', $booking->email)
                         ->notify(new \App\Notifications\ServiceCompletedNotification($booking));
                 } elseif ($request->status === 'cancelled' && $booking->email) {
@@ -941,13 +805,29 @@ Route::prefix('admin')->name('admin.')->group(function () {
         }
 
         $booking->fill($data);
+        $becameConfirmed = $data['status'] === 'confirmed' && $booking->getOriginal('status') !== 'confirmed';
         if ($data['status'] === 'confirmed' && !$booking->confirmed_at) {
             $booking->confirmed_at = now();
+        }
+        if ($becameConfirmed && ($booking->payment_status ?? 'pending') === 'pending') {
+            $booking->payment_status = 'deposit_paid';
         }
         if ($data['status'] === 'cancelled' && !$booking->cancelled_at) {
             $booking->cancelled_at = now();
         }
         $booking->save();
+
+        if ($becameConfirmed && $booking->hasUsableEmail()) {
+            try {
+                \Illuminate\Support\Facades\Notification::route('mail', $booking->email)
+                    ->notify(new \App\Notifications\BookingConfirmedNotification($booking));
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::warning('Failed to send booking confirmed email', [
+                    'booking_id' => $booking->id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
 
         $after = [
             'service' => $booking->service,
@@ -988,6 +868,15 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
         return response()->json(['success' => true, 'message' => 'Status updated', 'status' => $model->status]);
     })->name('custom-requests.update-status');
+
+    Route::get('/custom-requests/{id}', function ($id) {
+        $customRequest = \App\Models\CustomServiceRequest::findOrFail($id);
+
+        return view('admin.booking', ['booking' => null, 'customRequest' => $customRequest]);
+    })->name('custom-requests.show');
+
+    Route::post('/custom-requests/{id}/convert', [ConvertCustomRequestController::class, 'store'])
+        ->name('custom-requests.convert');
 
     Route::post('/bookings/search', function(Request $request) {
         $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
@@ -1209,47 +1098,19 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
 });
 
-// Test route to verify routing is working
-Route::get('/test', function () {
-    return response()->json(['message' => 'Route is working']);
-});
-
-// Simple admin test route
-Route::get('/admin/test', function () {
-    return 'Admin route is working!';
-});
-
-// Admin authentication routes (unprotected but rate limited) - TEMPORARY SIMPLE VERSION
-Route::get('/admin/login', function () {
-    return view('admin.login-simple');
-})->name('admin.login');
-
-// Test database connection
-Route::get('/test-db', function () {
-    try {
-        DB::connection()->getPdo();
-        return response()->json(['message' => 'Database connection successful']);
-    } catch (\Exception $e) {
-        return response()->json(['error' => 'Database connection failed: ' . $e->getMessage()]);
-    }
-});
-
-// Test form submission
-Route::post('/test-form', function (Request $request) {
-    return response()->json([
-        'success' => true,
-        'message' => 'Form test successful',
-        'data' => $request->all()
-    ]);
-});
-
 // Booking routes - simplified closure implementation
 Route::post('/bookings', function(Request $request) {
+    if (\App\Support\FormGuard::isBot($request)) {
+        if ($request->wantsJson() || $request->header('X-Requested-With') === 'XMLHttpRequest') {
+            return response()->json(['success' => true]);
+        }
+        return redirect()->route('home');
+    }
 
     // Handle sample_picture validation separately to avoid empty file issues
     $validationRules = [
         'name' => 'required|string|max:255',
-        'email' => 'nullable|email|max:255',
+        'email' => 'required|email|max:255',
         'phone' => ['required','string','regex:/^[0-9+\-\s()]+$/','min:7','max:20'],
         'service' => 'nullable|string|max:255',
         'appointment_type' => 'required|string|in:in-studio,mobile',
@@ -1386,7 +1247,7 @@ Route::post('/bookings', function(Request $request) {
 
         $bookingData = [
             'name' => $request->name,
-            'email' => $request->email ?: 'no-email@example.com',
+            'email' => $request->email,
             'phone' => $normalizedPhone,
             'address' => $request->address,
             'appointment_type' => $request->appointment_type,
@@ -1399,6 +1260,7 @@ Route::post('/bookings', function(Request $request) {
             'sample_picture' => $samplePicturePath,
             'stitch_rows_option' => $request->input('stitch_rows_option') ?: null,
             'status' => 'pending',
+            'payment_status' => 'pending',
         ];
 
         // Capture kids selector fields if present (supports both kb_* and plain selector keys)
@@ -1802,9 +1664,33 @@ Route::post('/bookings', function(Request $request) {
             $bookingData['parking_type'] = $request->input('parking_type');
         }
 
-        // Create the booking
+        $durationHours = ServiceDuration::hoursForName($bookingData['service'] ?? null);
+        $bookingData['service_duration_minutes'] = ServiceDuration::toMinutes($durationHours);
+
+        // Create the booking (lock the date so two clients cannot take the same slot)
         Log::info('=== CREATING BOOKING ===', ['data' => $bookingData]);
-        $booking = \App\Models\Booking::create($bookingData);
+        try {
+            $booking = app(BookingSlotGuard::class)->reserve(
+                (string) $bookingData['appointment_date'],
+                (string) $bookingData['appointment_time'],
+                fn () => \App\Models\Booking::create($bookingData),
+                null,
+                $durationHours
+            );
+        } catch (SlotUnavailableException $e) {
+            $isApiRequest = $request->wantsJson() || $request->header('X-Requested-With') === 'XMLHttpRequest';
+            if ($isApiRequest) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $e->getMessage(),
+                ], 422);
+            }
+
+            return redirect()->route('home')->with([
+                'booking_error' => true,
+                'error_message' => $e->getMessage(),
+            ]);
+        }
         Log::info('=== BOOKING CREATED SUCCESSFULLY ===', ['booking_id' => $booking->id]);
 
         // Generate booking ID in BK format and confirmation code
@@ -1936,9 +1822,13 @@ Route::post('/bookings', function(Request $request) {
             'error_message' => 'There was an issue processing your booking. Please try again.'
         ]);
     }
-})->name('bookings.store');
+})->middleware('throttle:8,1')->name('bookings.store');
 
 Route::post('/contact', function(Request $request) {
+    if (\App\Support\FormGuard::isBot($request)) {
+        return redirect()->back()->with('success', 'Thank you for your message. We will get back to you soon.');
+    }
+
     try {
         // Validate the contact form
         $validated = $request->validate([
@@ -2047,10 +1937,17 @@ Route::post('/contact', function(Request $request) {
 
         return redirect()->back()->withErrors(['error' => 'An error occurred while submitting your message. Please try again.'])->withInput();
     }
-})->name('contact.store');
+})->middleware('throttle:5,1')->name('contact.store');
 
 // Custom service request form handler
 Route::post('/custom-service', function(Request $request) {
+    if (\App\Support\FormGuard::isBot($request)) {
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json(['success' => true]);
+        }
+        return redirect()->back()->with('success', 'Your custom service request has been submitted. We will contact you soon.');
+    }
+
     $rules = [
         'name' => 'required|string|max:255',
         'email' => 'nullable|email|max:255',
@@ -2199,7 +2096,7 @@ Route::post('/custom-service', function(Request $request) {
 
         return redirect()->back()->withErrors(['error' => 'Failed to submit request'])->withInput();
     }
-})->name('custom-service.store');
+})->middleware('throttle:5,1')->name('custom-service.store');
 
 // Booking routes (public)
 Route::get('/bookings/slots', [App\Http\Controllers\AppointmentController::class, 'getAvailableTimeSlots'])->name('bookings.slots');
@@ -2215,10 +2112,6 @@ Route::get('/bookings/booked-dates', function(Request $request) {
 Route::get('/bookings/booked-time-slots', function(Request $request) {
     return response()->json(['slots' => []]);
 })->name('bookings.booked-time-slots');
-
-Route::post('/bookings/cancel', function(Request $request) {
-    return response()->json(['message' => 'Booking cancellation received']);
-})->name('bookings.cancel');
 
 Route::get('/bookings/details', function(Request $request) {
     return response()->json(['details' => []]);
@@ -2279,47 +2172,83 @@ Route::post('/bookings/confirm/{id}/{code}/modify', function(\Illuminate\Http\Re
         ->with(['booking_error' => true, 'error_message' => 'Style and appointment time cannot be changed after booking. Please contact us at least 48 hours in advance to reschedule.']);
 })->name('bookings.modify');
 
-// Temporary debug route to inspect mail configuration from the running web process.
-// Use this to verify which MAIL_* values the server process is using (Mailtrap vs Zoho).
-Route::get('/_debug/mail', function() {
-    return response()->json([
-        'mail_default' => config('mail.default'),
-        'mail_host' => env('MAIL_HOST'),
-        'mail_port' => env('MAIL_PORT'),
-        'mail_username' => env('MAIL_USERNAME'),
-        'mail_from' => config('mail.from'),
-        'admin_email' => env('ADMIN_EMAIL'),
-    ]);
-});
-
-// Temporary debug route: force-send notifications for a booking id (admin + customer)
-// NOTE: Admin notification disabled here to consolidate notifications to one endpoint (bookings.store)
-Route::match(['get','post'], '/_debug/send-booking-notifs/{id}', function($id) {
+Route::post('/bookings/confirm/{id}/{code}/cancel', function (\Illuminate\Http\Request $request, $id, $code) {
     $booking = \App\Models\Booking::find($id);
-    if (! $booking) {
-        return response()->json(['success' => false, 'message' => 'Booking not found'], 404);
+    if (! $booking || ! hash_equals((string) ($booking->confirmation_code ?? ''), (string) $code)) {
+        return redirect()->route('home')->with(['booking_error' => true, 'error_message' => 'Invalid booking confirmation link.']);
     }
+
+    if (! $booking->canClientCancel()) {
+        return redirect()->route('bookings.confirm', ['id' => $id, 'code' => $code])
+            ->with(['booking_error' => true, 'error_message' => 'Cancellations need at least 48 hours’ notice, or contact us to cancel.']);
+    }
+
+    $booking->status = 'cancelled';
+    $booking->cancelled_at = now();
+    $booking->save();
 
     try {
-        Log::info('[_debug] forcing booking notifications', ['booking_id' => $booking->id]);
-
-        if ($booking->email && $booking->email !== 'no-email@example.com') {
+        if ($booking->hasUsableEmail()) {
             \Illuminate\Support\Facades\Notification::route('mail', $booking->email)
-                ->notify(new \App\Notifications\BookingConfirmation($booking));
-            Log::info('[_debug] sent booking confirmation', ['booking_id' => $booking->id, 'email' => $booking->email]);
+                ->notify(new \App\Notifications\BookingCancelledNotification($booking, 'You'));
         }
-
-        // Admin notification disabled - only send from bookings.store to prevent duplicates
-        // $adminEmail = env('BOOKING_NOTIFICATION_EMAIL') ?: env('ADMIN_EMAIL') ?: config('mail.from.address');
-        // \Illuminate\Support\Facades\Notification::route('mail', $adminEmail)
-        //     ->notify(new \App\Notifications\AdminBookingNotification($booking));
-
-        return response()->json(['success' => true, 'message' => 'Customer notification sent']);
-    } catch (\Exception $e) {
-        Log::error('[_debug] notification sending failed', ['booking_id' => $booking->id, 'error' => $e->getMessage()]);
-        return response()->json(['success' => false, 'message' => 'Notification sending failed', 'error' => $e->getMessage()], 500);
+        $adminEmail = env('BOOKING_NOTIFICATION_EMAIL') ?: env('ADMIN_EMAIL') ?: config('mail.from.address');
+        if ($adminEmail) {
+            \Illuminate\Support\Facades\Notification::route('mail', $adminEmail)
+                ->notify(new \App\Notifications\AdminCancellationNotice($booking, 'Client'));
+        }
+    } catch (\Throwable $e) {
+        \Illuminate\Support\Facades\Log::warning('Client cancel notification failed', [
+            'booking_id' => $booking->id,
+            'error' => $e->getMessage(),
+        ]);
     }
-});
+
+    return redirect()->route('bookings.confirm', ['id' => $id, 'code' => $code])
+        ->with('success', 'Your appointment has been cancelled.');
+})->middleware('throttle:6,1')->name('bookings.cancel');
+
+Route::post('/bookings/confirm/{id}/{code}/reschedule', function (\Illuminate\Http\Request $request, $id, $code) {
+    $booking = \App\Models\Booking::find($id);
+    if (! $booking || ! hash_equals((string) ($booking->confirmation_code ?? ''), (string) $code)) {
+        return redirect()->route('home')->with(['booking_error' => true, 'error_message' => 'Invalid booking confirmation link.']);
+    }
+
+    if (! $booking->canClientRequestReschedule()) {
+        return redirect()->route('bookings.confirm', ['id' => $id, 'code' => $code])
+            ->with(['booking_error' => true, 'error_message' => 'Reschedule requests need at least 48 hours’ notice. Please contact us.']);
+    }
+
+    $data = $request->validate([
+        'preferred_date' => 'required|date|after_or_equal:today',
+        'preferred_time' => 'required|string|max:20',
+        'note' => 'nullable|string|max:1000',
+    ]);
+
+    $booking->notes = trim(($booking->notes ?? '')."\nReschedule request: ".$data['preferred_date'].' '.$data['preferred_time'].($data['note'] ? ' — '.$data['note'] : ''));
+    $booking->save();
+
+    try {
+        $adminEmail = env('BOOKING_NOTIFICATION_EMAIL') ?: env('ADMIN_EMAIL') ?: config('mail.from.address');
+        if ($adminEmail) {
+            \Illuminate\Support\Facades\Notification::route('mail', $adminEmail)
+                ->notify(new \App\Notifications\RescheduleRequestNotification(
+                    $booking,
+                    $data['preferred_date'],
+                    $data['preferred_time'],
+                    $data['note'] ?? null
+                ));
+        }
+    } catch (\Throwable $e) {
+        \Illuminate\Support\Facades\Log::warning('Reschedule request email failed', [
+            'booking_id' => $booking->id,
+            'error' => $e->getMessage(),
+        ]);
+    }
+
+    return redirect()->route('bookings.confirm', ['id' => $id, 'code' => $code])
+        ->with('success', 'Your reschedule request was sent. We will confirm a new time by email.');
+})->middleware('throttle:6,1')->name('bookings.reschedule-request');
 
 // API routes for frontend - simplified closure implementation
 Route::prefix('api')->group(function () {
@@ -2348,9 +2277,14 @@ Route::prefix('api')->group(function () {
     });
 });
 
-// Serve an .ics calendar file for a booking so users can download/import to calendars
-Route::get('/bookings/{id}/calendar.ics', function ($id) {
-    $booking = \App\Models\Booking::withTrashed()->findOrFail($id);
+// Serve an .ics calendar file for a booking (requires confirmation code)
+Route::get('/bookings/{id}/{code}/calendar.ics', function ($id, $code) {
+    $booking = \App\Models\Booking::find($id);
+    $expected = (string) ($booking->confirmation_code ?? '');
+    if (! $booking || $expected === '' || ! hash_equals($expected, (string) $code)) {
+        abort(404);
+    }
+
     $tz = config('app.timezone') ?: 'UTC';
     try {
         $date = $booking->appointment_date ? $booking->appointment_date->format('Y-m-d') : null;
@@ -2368,14 +2302,14 @@ Route::get('/bookings/{id}/calendar.ics', function ($id) {
         $dtstart = $start->utc()->format('Ymd\THis\Z');
         $dtend = $end->utc()->format('Ymd\THis\Z');
         $summary = addslashes($booking->service ?? 'Appointment');
-        $description = addslashes('Booking ' . ($booking->confirmation_code ?? ('BK' . str_pad($booking->id ?? 0, 6, '0', STR_PAD_LEFT))) . "\nCustomer: " . ($booking->name ?? '') . "\nPhone: " . ($booking->phone ?? ''));
+        $description = addslashes("Dab's Beauty Touch appointment\\nBooking " . $expected);
 
         $ics = "BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//Dabs Beauty Touch//EN\r\nBEGIN:VEVENT\r\n";
         $ics .= "UID:{$uid}\r\nDTSTAMP:{$dtstamp}\r\nDTSTART:{$dtstart}\r\nDTEND:{$dtend}\r\n";
         $ics .= "SUMMARY:{$summary}\r\nDESCRIPTION:{$description}\r\n";
         $ics .= "END:VEVENT\r\nEND:VCALENDAR\r\n";
 
-        $filename = 'booking-' . ($booking->confirmation_code ?? ('BK' . str_pad($booking->id ?? 0, 6, '0', STR_PAD_LEFT))) . '.ics';
+        $filename = 'booking-' . $expected . '.ics';
         return response($ics, 200, [
             'Content-Type' => 'text/calendar; charset=utf-8',
             'Content-Disposition' => 'attachment; filename="' . $filename . '"',
@@ -2383,4 +2317,4 @@ Route::get('/bookings/{id}/calendar.ics', function ($id) {
     } catch (\Exception $e) {
         abort(500, 'Could not generate calendar file');
     }
-});
+})->name('bookings.ics');

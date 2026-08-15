@@ -525,6 +525,10 @@
             <div class="form-body">
                 <form id="bookingForm">
                     @csrf
+                    <div style="position:absolute;left:-10000px;top:auto;width:1px;height:1px;overflow:hidden;" aria-hidden="true">
+                        <label for="company_website_cal">Company website</label>
+                        <input type="text" name="company_website" id="company_website_cal" tabindex="-1" autocomplete="off">
+                    </div>
                         <input type="hidden" id="final_price_input" name="final_price" value="">
                     <div class="row">
                         <div class="col-md-6 mb-3">
@@ -539,8 +543,8 @@
                     </div>
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label for="email" class="form-label">Email</label>
-                            <input type="email" class="form-control" id="email" name="email">
+                            <label for="email" class="form-label">Email *</label>
+                            <input type="email" class="form-control" id="email" name="email" required>
                             <div class="invalid-feedback" id="emailFeedback"></div>
                         </div>
                         <div class="col-md-6 mb-3">
@@ -813,6 +817,7 @@
         </div>
     </div>
 
+    <script src="{{ asset('js/booking-slots.js') }}?v={{ @filemtime(public_path('js/booking-slots.js')) }}"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
     (function () {
@@ -1454,21 +1459,29 @@
                 day: 'numeric'
             });
 
-            fetch(`/bookings/slots?date=${formatYMD(date)}`)
-                .then(response => response.json())
+            const slotPromise = (window.DBT && typeof DBT.fetchSlots === 'function')
+                ? DBT.fetchSlots(formatYMD(date))
+                : fetch(`/bookings/slots?date=${formatYMD(date)}`).then(response => response.json());
+
+            slotPromise
                 .then(data => {
                     loading.style.display = 'none';
                     timeSlotsContainer.style.display = 'block';
 
                     if (data.success) {
-                        renderTimeSlots(markPastCalendarSlots(date, data.slots || []));
+                        if (data.message && (!data.slots || data.slots.length === 0)) {
+                            timeSlots.innerHTML = `<div class="alert alert-warning"><i class="bi bi-exclamation-triangle me-2"></i>${data.message}</div>`;
+                        } else {
+                            renderTimeSlots(markPastCalendarSlots(date, data.slots || []));
+                        }
                     } else {
-                        timeSlots.innerHTML = '<div class="alert alert-danger">Error loading time slots</div>';
+                        timeSlots.innerHTML = '<div class="alert alert-warning">Could not load available times. Please try again.</div>';
                     }
                 })
                 .catch(error => {
                     loading.style.display = 'none';
-                    timeSlots.innerHTML = '<div class="alert alert-danger">Error loading time slots</div>';
+                    timeSlotsContainer.style.display = 'block';
+                    timeSlots.innerHTML = '<div class="alert alert-warning">Could not load available times. Please try again.</div>';
                 });
         }
 

@@ -52,6 +52,13 @@
                                                href="{{ route('account.bookings.show', ['booking' => $b->id]) }}">
                                                 View
                                             </a>
+                                            @if(in_array($b->status, ['pending', 'confirmed'], true))
+                                                <a class="btn btn-sm btn-outline-secondary"
+                                                   style="border-radius:10px;font-weight:700;"
+                                                   href="{{ route('bookings.confirm', ['id' => $b->id, 'code' => $b->confirmation_code]) }}">
+                                                    Cancel / reschedule
+                                                </a>
+                                            @endif
                                         @else
                                             <span class="text-muted">—</span>
                                         @endif

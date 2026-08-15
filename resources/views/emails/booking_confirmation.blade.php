@@ -183,12 +183,12 @@
   <div class="email-container">
     <div class="header">
       <h1>Dabs Beauty Touch</h1>
-      <div class="header-badge">✓ Confirmed</div>
+      <div class="header-badge">Booking received</div>
     </div>
 
     <div class="content">
       <p class="greeting">Hi {{ $booking->name ?? 'Customer' }},</p>
-      <p class="message">Your booking is confirmed. We look forward to seeing you!</p>
+      <p class="message">We received your booking. It stays <strong>pending</strong> until the $20 Interac deposit is received.</p>
 
       <div class="info-card">
         <table class="info-table">
@@ -515,6 +515,16 @@
         <a href="{{ $gcal }}" target="_blank" rel="noopener" class="btn btn-secondary">Add to Google Calendar</a>
       </div>
       @endif
+
+      @php
+        $interacEmail = \App\Support\InteracDeposit::email();
+        $depositAmount = \App\Support\InteracDeposit::amountLabel();
+      @endphp
+      <div style="background:#fff7ed;border:2px solid #ff6600;border-radius:10px;padding:16px;margin:20px 0;">
+        <p style="margin:0 0 8px 0;font-weight:800;color:#9a3412;">Send {{ $depositAmount }} Interac e-Transfer to confirm</p>
+        <p style="margin:0 0 8px 0;font-size:14px;color:#4a5568;">Send to <strong>{{ $interacEmail }}</strong> and put booking ID <strong>BK{{ str_pad($booking->id ?? 0, 6, '0', STR_PAD_LEFT) }}</strong> in the message.</p>
+        <p style="margin:0;font-size:13px;color:#718096;">We'll email you again once the appointment is confirmed.</p>
+      </div>
 
       <div class="reminder">
         <strong>Reminder:</strong> Please arrive on time for your appointment.

@@ -123,7 +123,7 @@
                 </div>
                 <h1 class="mb-3">{{ $isDetailsMode ? 'Booking Details' : 'Booking Confirmed!' }}</h1>
                 <p class="lead mb-0">
-                    {{ $isDetailsMode ? 'Your appointment details are locked. Contact us if you need to reschedule.' : 'Your appointment has been successfully booked' }}
+                    {{ $isDetailsMode ? 'Style cannot be changed here. You can cancel or request a new time if you are more than 48 hours away.' : 'Your appointment has been successfully booked' }}
                 </p>
             </div>
 
@@ -135,10 +135,51 @@
                     </h5>
 
                     @if($isDetailsMode)
-                        <div class="alert alert-warning">
-                            <i class="fas fa-lock me-2"></i>
-                            Style and appointment time cannot be changed after booking. If you need to reschedule, please contact us at least 48 hours in advance.
-                        </div>
+                        @if(session('success'))
+                            <div class="alert alert-success">{{ session('success') }}</div>
+                        @endif
+                        @if(session('booking_error'))
+                            <div class="alert alert-danger">{{ session('error_message') }}</div>
+                        @endif
+                        @if(isset($booking) && ($booking->status ?? '') === 'cancelled')
+                            <div class="alert alert-danger">This appointment is cancelled.</div>
+                        @else
+                            <div class="alert alert-warning">
+                                <i class="fas fa-lock me-2"></i>
+                                Style cannot be changed here. Cancel or request a new time at least 48 hours in advance. Deposits are non-refundable once confirmed.
+                            </div>
+                            @if(isset($booking) && $confirmId && $confirmCode)
+                                @if($booking->canClientCancel())
+                                    <form method="POST" action="{{ url('/bookings/confirm/'.$confirmId.'/'.$confirmCode.'/cancel') }}" class="d-inline" onsubmit="return confirm('Cancel this appointment?');">
+                                        @csrf
+                                        <button type="submit" class="btn btn-outline-danger btn-sm me-2 mb-2">Cancel appointment</button>
+                                    </form>
+                                @endif
+                                @if($booking->canClientRequestReschedule())
+                                    <button type="button" class="btn btn-outline-primary btn-sm mb-2" onclick="document.getElementById('rescheduleForm').style.display='block'">Request a new time</button>
+                                    <form id="rescheduleForm" method="POST" action="{{ url('/bookings/confirm/'.$confirmId.'/'.$confirmCode.'/reschedule') }}" style="display:none;margin-top:12px;">
+                                        @csrf
+                                        <div class="row g-2">
+                                            <div class="col-md-6">
+                                                <label class="form-label">Preferred date</label>
+                                                <input type="date" name="preferred_date" class="form-control" required min="{{ now()->toDateString() }}">
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label class="form-label">Preferred time</label>
+                                                <input type="time" name="preferred_time" class="form-control" required>
+                                            </div>
+                                            <div class="col-12">
+                                                <label class="form-label">Note (optional)</label>
+                                                <textarea name="note" class="form-control" rows="2" maxlength="1000"></textarea>
+                                            </div>
+                                        </div>
+                                        <button type="submit" class="btn btn-primary btn-sm mt-2">Send request</button>
+                                    </form>
+                                @elseif(! $booking->canClientCancel())
+                                    <p class="text-muted small">Within 48 hours of your appointment, please WhatsApp or call us to cancel or reschedule.</p>
+                                @endif
+                            @endif
+                        @endif
                     @else
                         <div class="alert alert-success">
                             <i class="fas fa-info-circle me-2"></i>
@@ -363,6 +404,11 @@
                     @endif
                 @endif
 
+                @php
+                    $showDeposit = !isset($booking)
+                        || (($booking->status ?? 'pending') === 'pending' && ($booking->payment_status ?? 'pending') === 'pending');
+                @endphp
+                @if($showDeposit)
                 <div style="background:linear-gradient(135deg,#fff7ed,#fff3e0);border:2px solid #ff6600;border-radius:14px;padding:20px;margin:20px 0;">
                     <h6 style="color:#ff6600;font-weight:800;margin-bottom:12px;">
                         <i class="fas fa-credit-card me-2"></i>Deposit Required to Confirm Your Appointment
@@ -398,6 +444,7 @@
                     <i class="fas fa-info-circle me-2"></i>
                     <strong>Important:</strong> Save your Booking ID and Confirmation Code. Your appointment is pending until the $20 deposit is received and verified.
                 </div>
+                @endif
 
                 <div class="text-center mt-4">
                     <a href="{{ route('home') }}" class="btn-home me-3">

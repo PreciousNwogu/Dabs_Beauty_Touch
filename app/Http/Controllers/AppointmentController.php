@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Appointment;
+use App\Support\ServiceDuration;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Log;
@@ -1465,6 +1466,7 @@ class AppointmentController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'date' => 'required|date|after_or_equal:today',
+            'service' => 'nullable|string|max:255',
             'service_duration' => 'nullable|numeric|min:0.5|max:12', // Duration in hours
         ]);
 
@@ -1479,15 +1481,15 @@ class AppointmentController extends Controller
             $date = $request->date;
             $dateCarbon = \Carbon\Carbon::parse($date)->startOfDay();
             
-            // Always use 4-hour blocks for calendar display to ensure consistency
-            // between kids and regular bookings, preventing conflicts
-            // Users can book shorter services (like kids services) but calendar
-            // shows availability based on standard 4-hour blocks
-            $serviceDurationHours = $request->input('service_duration', 4);
-            $serviceDurationMinutes = $serviceDurationHours * 60;
+            $serviceDurationHours = ServiceDuration::hoursForRequest(
+                $request->input('service'),
+                $request->input('service_duration')
+            );
+            $serviceDurationMinutes = ServiceDuration::toMinutes($serviceDurationHours);
             
             Log::info('Calendar availability check', [
                 'date' => $date,
+                'service' => $request->input('service'),
                 'service_duration_hours' => $serviceDurationHours,
             ]);
 
@@ -1544,15 +1546,12 @@ class AppointmentController extends Controller
             }
 
             // Get booked time ranges for the day.
-            // Business rule: each booking blocks a 4-hour window from its start time.
-            // Maximum 2 bookings allowed per day with at least 4 hours between bookings.
-            // Example: 10:00 AM booking blocks 10:00 AM–2:00 PM, next available slot is 3:00 PM.
-            $bookingBlockMinutes = 4 * 60; // 4 hours = 240 minutes
+            // Each booking blocks its own service duration (default 4 hours when unknown).
             $bookedTimeRanges = [];
-            $bookingsForDay = \App\Models\Booking::where('appointment_date', $date)
+            $bookingsForDay = \App\Models\Booking::whereDate('appointment_date', $date)
                 ->whereNotIn('status', ['completed', 'cancelled'])
                 ->whereNotNull('appointment_time')
-                ->get(['appointment_time']);
+                ->get(['appointment_time', 'service_duration_minutes', 'service']);
 
             // Enforce maximum 2 bookings per day
             if ($bookingsForDay->count() >= 2) {
@@ -1583,8 +1582,7 @@ class AppointmentController extends Controller
                     $timeStr = \Carbon\Carbon::parse($t)->format('H:i');
                     $bookingStart = Carbon::createFromFormat('Y-m-d H:i', $date . ' ' . $timeStr, $appTz);
                     
-                    // Block forward: booking time + 4 hours (e.g., 10am blocks until 2pm)
-                    $forwardEnd = $bookingStart->copy()->addMinutes($bookingBlockMinutes);
+                    $forwardEnd = $bookingStart->copy()->addMinutes(ServiceDuration::minutesForBooking($b));
                     $bookedTimeRanges[] = [
                         'start' => $bookingStart,
                         'end' => $forwardEnd,
@@ -1704,8 +1702,7 @@ class AppointmentController extends Controller
                 return $a['start']->timestamp <=> $b['start']->timestamp;
             });
             
-            // Check for continuous window based on service duration
-            // The minimum window should be at least the service duration or 4 hours (whichever is greater)
+            // Check for a continuous window that fits this service's duration.
             // Business day start varies by day of week
             $dayOfWeek = $dateCarbon->dayOfWeek; // 0 = Sunday, 6 = Saturday
             
@@ -1721,7 +1718,7 @@ class AppointmentController extends Controller
             }
             
             $businessDayEnd = Carbon::createFromFormat('Y-m-d H:i', $date . ' 20:00', $appTz);
-            $minimumWindowMinutes = max($serviceDurationMinutes, $bookingBlockMinutes);
+            $minimumWindowMinutes = $serviceDurationMinutes;
             
             Log::info('Checking calendar availability with service duration', [
                 'date' => $date,

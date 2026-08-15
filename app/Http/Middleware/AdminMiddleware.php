@@ -18,13 +18,20 @@ class AdminMiddleware
     public function handle(Request $request, Closure $next)
     {
         if (!Auth::check()) {
+            if ($request->expectsJson()) {
+                return response()->json(['message' => 'Unauthenticated.'], 401);
+            }
+
             return redirect()->route('admin.login');
         }
 
         if (!Auth::user()->is_admin) {
-            Auth::logout();
-            return redirect()->route('admin.login')
-                ->withErrors(['email' => 'You do not have admin privileges.']);
+            if ($request->expectsJson()) {
+                return response()->json(['message' => 'Forbidden.'], 403);
+            }
+
+            return redirect()->route('home')
+                ->with('error', 'You do not have access to the admin area.');
         }
 
         return $next($request);

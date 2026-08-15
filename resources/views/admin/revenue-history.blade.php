@@ -46,9 +46,14 @@
                 <h1><i class="bi bi-graph-up-arrow me-2"></i>Revenue Growth Tracking</h1>
                 <p>Compare monthly revenue trends and track growth over time.</p>
             </div>
-            <a href="{{ route('admin.dashboard') }}" class="btn btn-light fw-bold px-4">
-                <i class="bi bi-arrow-left me-2"></i>Back to Dashboard
-            </a>
+            <div class="d-flex flex-wrap gap-2">
+                <a href="{{ route('admin.revenue.export') }}" class="btn btn-light fw-bold px-4">
+                    <i class="bi bi-download me-2"></i>Download CSV
+                </a>
+                <a href="{{ route('admin.dashboard') }}" class="btn btn-light fw-bold px-4">
+                    <i class="bi bi-arrow-left me-2"></i>Back to Dashboard
+                </a>
+            </div>
         </div>
     </div>
 

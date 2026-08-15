@@ -62,6 +62,15 @@
             margin-top: 10px;
         }
 
+        .stats-card.text-white .stats-number,
+        .stats-card.text-white .stats-label {
+            color: #fff;
+        }
+
+        .stats-card.text-white .stats-label {
+            opacity: 0.9;
+        }
+
         .appointment-card {
             background: white;
             border-radius: 15px;
@@ -752,6 +761,9 @@
                     <div class="stats-card">
                         <div class="stats-number">{{ $stats['pending_bookings'] }}</div>
                         <div class="stats-label">Pending</div>
+                        @if(!empty($stats['awaiting_deposit']))
+                            <small class="text-muted">{{ $stats['awaiting_deposit'] }} awaiting deposit</small>
+                        @endif
                     </div>
                 </div>
                 <div class="col-6 col-md-3">
@@ -767,19 +779,19 @@
                 <div class="col-12 col-md-4 mb-3 mb-md-0">
                     <div class="stats-card bg-success text-white">
                         <div class="stats-number">$<span>{{ number_format($stats['today_revenue'], 2) }}</span></div>
-                        <div class="stats-label">Today's Revenue</div>
+                        <div class="stats-label">Today's revenue</div>
                     </div>
                 </div>
                 <div class="col-12 col-md-4 mb-3 mb-md-0">
                     <div class="stats-card bg-primary text-white">
                         <div class="stats-number">$<span>{{ number_format($stats['monthly_revenue'], 2) }}</span></div>
-                        <div class="stats-label">This Month</div>
+                        <div class="stats-label">This month's revenue</div>
                     </div>
                 </div>
                 <div class="col-12 col-md-4">
                     <div class="stats-card bg-info text-white">
                         <div class="stats-number">{{ $stats['completed_bookings'] }}</div>
-                        <div class="stats-label">Completed</div>
+                        <div class="stats-label">Completed bookings</div>
                     </div>
                 </div>
             </div>
@@ -1107,62 +1119,66 @@
 
             <!-- Filters -->
         <div class="filter-section px-4 px-md-4 px-3 py-3">
-            <div class="row align-items-end">
-                <div class="col-12 col-md-3 mb-3 mb-md-0">
-                    <label for="statusFilter" class="form-label">Status Filter</label>
+            <div class="row align-items-end g-3">
+                <div class="col-12 col-md-3">
+                    <label for="statusFilter" class="form-label">Status</label>
                     <select class="form-select" id="statusFilter">
-                        <option value="">All Statuses</option>
-                        <option value="pending">Pending</option>
-                        <option value="confirmed">Confirmed</option>
-                        <option value="completed">Completed</option>
-                        <option value="cancelled">Cancelled</option>
+                        <option value="" @selected(!request('status'))>All statuses</option>
+                        <option value="pending" @selected(request('status') === 'pending')>Pending</option>
+                        <option value="deposit_pending" @selected(request('status') === 'deposit_pending')>Awaiting deposit</option>
+                        <option value="confirmed" @selected(request('status') === 'confirmed')>Confirmed</option>
+                        <option value="completed" @selected(request('status') === 'completed')>Completed</option>
+                        <option value="cancelled" @selected(request('status') === 'cancelled')>Cancelled</option>
                     </select>
                 </div>
-                <div class="col-12 col-md-3 mb-3 mb-md-0">
-                    <label for="dateFilter" class="form-label">Date Filter</label>
-                    <input type="date" class="form-control" id="dateFilter">
+                <div class="col-12 col-md-3">
+                    <label for="dateFilter" class="form-label">Date</label>
+                    <input type="date" class="form-control" id="dateFilter" value="{{ request('date') }}">
                 </div>
-                <div class="col-12 col-md-3 mb-3 mb-md-0">
-                    <label for="serviceFilter" class="form-label">Service Filter</label>
+                <div class="col-12 col-md-3">
+                    <label for="serviceFilter" class="form-label">Service</label>
                     <select class="form-select" id="serviceFilter">
-                        <option value="">All Services</option>
-                        <option value="Small Knotless Braids">Small Knotless Braids</option>
-                        <option value="Smedium Knotless Braids">Smedium Knotless Braids</option>
-                        <option value="Wig Installation">Wig Installation</option>
-                        <option value="Medium Knotless Braids">Medium Knotless Braids</option>
-                        <option value="Jumbo Knotless Braids">Jumbo Knotless Braids</option>
-                        <option value="Kids Braids">Kids Braids</option>
-                        <option value="8–10 Rows Stitch Braids">8–10 Rows Stitch Braids</option>
-                        <option value="Hair Mask/Relaxing">Hair Mask/Relaxing</option>
-                        <option value="Smedium Boho Braids">Smedium Boho Braids</option>
+                        <option value="" @selected(!request('service'))>All services</option>
+                        @foreach(['Small Knotless Braids','Smedium Knotless Braids','Wig Installation','Medium Knotless Braids','Jumbo Knotless Braids','Kids Braids','8–10 Rows Stitch Braids','Hair Mask/Relaxing','Smedium Boho Braids'] as $serviceName)
+                            <option value="{{ $serviceName }}" @selected(request('service') === $serviceName)>{{ $serviceName }}</option>
+                        @endforeach
                     </select>
                 </div>
-                <div class="col-6 col-md-2 mb-3 mb-md-0">
+                <div class="col-6 col-md-2">
                     <label class="form-label d-none d-md-block">&nbsp;</label>
                     <button class="btn btn-primary w-100" type="button" onclick="applyFilters()">
-                        <i class="bi bi-search me-2"></i><span class="d-none d-md-inline">Filter</span><span class="d-md-none">Filter</span>
+                        <i class="bi bi-search me-2"></i>Filter
                     </button>
                 </div>
-                <div class="col-6 col-md-1 mb-3 mb-md-0">
+                <div class="col-6 col-md-1">
                     <label class="form-label d-none d-md-block">&nbsp;</label>
-                    <button class="btn btn-outline-secondary w-100" type="button" onclick="clearFilters()" title="Clear all filters">
-                        <i class="bi bi-x-circle d-md-none"></i><span class="d-none d-md-inline"><i class="bi bi-x-circle"></i></span>
+                    <button class="btn btn-outline-secondary w-100" type="button" onclick="clearFilters()" title="Clear filters">
+                        <i class="bi bi-x-circle"></i>
                     </button>
                 </div>
+            </div>
+            <div class="d-flex flex-wrap gap-2 mt-3">
+                <a id="exportBookingsCsv" href="{{ route('admin.bookings.export', request()->only(['status', 'date', 'service'])) }}" class="btn btn-outline-primary">
+                    <i class="bi bi-download me-1"></i>Download CSV
+                </a>
+                <a href="{{ route('admin.revenue.export') }}" class="btn btn-outline-secondary">
+                    <i class="bi bi-graph-up-arrow me-1"></i>Download revenue
+                </a>
+            </div>
 
                 <!-- Bookings Table (all screen sizes; scrolls horizontally on small screens) -->
                 <div class="table-responsive mt-4">
                     <table class="table table-hover admin-bookings-table">
                         <thead>
                             <tr>
-                                <th class="cursor-pointer" onclick="sortTable('id')">Booking ID <i class="bi bi-arrow-down-up text-muted"></i></th>
-                                <th class="cursor-pointer" onclick="sortTable('name')">Customer Name <i class="bi bi-arrow-down-up text-muted"></i></th>
+                                <th class="cursor-pointer" onclick="sortTable('id')">ID <i class="bi bi-arrow-down-up text-muted"></i></th>
+                                <th class="cursor-pointer" onclick="sortTable('name')">Name <i class="bi bi-arrow-down-up text-muted"></i></th>
                                 <th>Contact</th>
                                 <th class="cursor-pointer" onclick="sortTable('service')">Service <i class="bi bi-arrow-down-up text-muted"></i></th>
-                                <th>Final Price</th>
-                                <th class="cursor-pointer" onclick="sortTable('appointment_date')">Appointment Date <i class="bi bi-arrow-down-up text-muted"></i></th>
-                                <th class="cursor-pointer" onclick="sortTable('appointment_time')">Appointment Time <i class="bi bi-arrow-down-up text-muted"></i></th>
-                                <th>Sample Image</th>
+                                <th>Price</th>
+                                <th class="cursor-pointer" onclick="sortTable('appointment_date')">Date <i class="bi bi-arrow-down-up text-muted"></i></th>
+                                <th class="cursor-pointer" onclick="sortTable('appointment_time')">Time <i class="bi bi-arrow-down-up text-muted"></i></th>
+                                <th>Sample</th>
                                 <th class="cursor-pointer" onclick="sortTable('status')">Status <i class="bi bi-arrow-down-up text-muted"></i></th>
                                 <th>Actions</th>
                             </tr>
@@ -1243,6 +1259,11 @@
                                             <span class="status-badge status-{{ $booking->status }}">
                                                 {{ ucfirst($booking->status) }}
                                             </span>
+                                            @if(($booking->status ?? '') === 'pending' && ($booking->payment_status ?? 'pending') === 'pending')
+                                                <div><small class="text-warning">Deposit pending</small></div>
+                                            @elseif(($booking->payment_status ?? '') === 'deposit_paid')
+                                                <div><small class="text-success">Deposit received</small></div>
+                                            @endif
                                         </td>
                                         <td>
                                             <div class="btn-group-vertical" role="group">
@@ -1258,6 +1279,11 @@
                                                     </a>
                                                 @endif
                                                 @if($booking->status === 'pending')
+                                                    @if(($booking->payment_status ?? 'pending') === 'pending')
+                                                    <button class="btn btn-warning btn-sm mb-1" onclick="updateStatusQuick({{ $booking->id }}, 'deposit_paid')">
+                                                        <i class="bi bi-cash"></i> Deposit received
+                                                    </button>
+                                                    @endif
                                                     <button class="btn btn-success btn-sm mb-1" onclick="updateStatusQuick({{ $booking->id }}, 'confirmed')">
                                                         <i class="bi bi-check"></i> Confirm
                                                     </button>
@@ -1386,6 +1412,11 @@
                                         </a>
                                     @endif
                                     @if($booking->status === 'pending')
+                                        @if(($booking->payment_status ?? 'pending') === 'pending')
+                                        <button class="btn btn-warning btn-sm" onclick="updateStatusQuick({{ $booking->id }}, 'deposit_paid')">
+                                            Deposit received
+                                        </button>
+                                        @endif
                                         <button class="btn btn-success btn-sm" onclick="updateStatusQuick({{ $booking->id }}, 'confirmed')">
                                             <i class="bi bi-check"></i> Confirm
                                         </button>
@@ -1523,7 +1554,7 @@
                                         <td>{{ $req->service ?? '-' }}</td>
                                         <td>{{ $req->created_at->diffForHumans() }}</td>
                                         <td>
-                                            <a href="{{ url('/admin/bookings/'.$req->id) }}" class="btn btn-sm btn-outline-primary">View</a>
+                                            <a href="{{ route('admin.custom-requests.show', $req->id) }}" class="btn btn-sm btn-outline-primary">View</a>
                                         </td>
                                     </tr>
                                 @endforeach
@@ -1821,6 +1852,9 @@
         document.addEventListener('DOMContentLoaded', function() {
             // Dashboard data is already loaded server-side, no need to fetch
             console.log('Dashboard loaded');
+            if (typeof updateBookingsExportLink === 'function') {
+                updateBookingsExportLink();
+            }
         });
 
         // Function to sort table columns
@@ -1920,11 +1954,28 @@
             }
         }
 
+        function currentBookingFilterParams() {
+            const params = new URLSearchParams();
+            const statusFilter = document.getElementById('statusFilter')?.value;
+            const dateFilter = document.getElementById('dateFilter')?.value;
+            const serviceFilter = document.getElementById('serviceFilter')?.value;
+            if (statusFilter) params.append('status', statusFilter);
+            if (dateFilter) params.append('date', dateFilter);
+            if (serviceFilter) params.append('service', serviceFilter);
+            return params;
+        }
+
+        function updateBookingsExportLink() {
+            const link = document.getElementById('exportBookingsCsv');
+            if (!link) return;
+            const params = currentBookingFilterParams();
+            link.href = '{{ route('admin.bookings.export') }}' + (params.toString() ? ('?' + params.toString()) : '');
+        }
+
         // Simple filter function that updates the table without page reload
         function applyFilters() {
-            const statusFilter = document.getElementById('statusFilter').value;
-            const dateFilter = document.getElementById('dateFilter').value;
-            const serviceFilter = document.getElementById('serviceFilter').value;
+            const params = currentBookingFilterParams();
+            updateBookingsExportLink();
 
             // Show loading state for both desktop and mobile views
             const tableBody = document.getElementById('appointmentsTable');
@@ -1939,12 +1990,6 @@
             }
 
             // Build query parameters
-            const params = new URLSearchParams();
-            if (statusFilter) params.append('status', statusFilter);
-            if (dateFilter) params.append('date', dateFilter);
-            if (serviceFilter) params.append('service', serviceFilter);
-
-            // Preserve current sorting
             const currentSortBy = '{{ request('sort_by', 'appointment_date') }}';
             const currentSortOrder = '{{ request('sort_order', 'desc') }}';
             params.set('sort_by', currentSortBy);
@@ -2004,6 +2049,7 @@
             document.getElementById('statusFilter').value = '';
             document.getElementById('dateFilter').value = '';
             document.getElementById('serviceFilter').value = '';
+            updateBookingsExportLink();
 
             // Show loading state for both desktop and mobile views
             const tableBody = document.getElementById('appointmentsTable');
@@ -2759,7 +2805,9 @@
                 return;
             }
 
-            const confirmMessage = `Are you sure you want to mark booking #${bookingId} as ${newStatus}?`;
+            const confirmMessage = newStatus === 'deposit_paid'
+                ? `Mark deposit received for booking #${bookingId}?`
+                : `Are you sure you want to mark booking #${bookingId} as ${newStatus}?`;
             if (!confirm(confirmMessage)) {
                 return;
             }

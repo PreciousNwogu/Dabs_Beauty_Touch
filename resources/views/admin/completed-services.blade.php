@@ -73,6 +73,11 @@
                     <button type="submit" class="btn btn-success w-100"><i class="bi bi-funnel me-1"></i>Apply</button>
                     <a href="{{ route('admin.completed-services') }}" class="btn btn-outline-secondary w-100">Clear</a>
                 </div>
+                <div class="col-12">
+                    <a href="{{ route('admin.bookings.export', array_filter(['status' => 'completed', 'date' => request('date'), 'service' => request('service')])) }}" class="btn btn-outline-success">
+                        <i class="bi bi-download me-1"></i>Download CSV
+                    </a>
+                </div>
             </form>
         </div>
 

@@ -13,6 +13,7 @@ class Kernel extends ConsoleKernel
         \App\Console\Commands\CancelBookingsRange::class,
         \App\Console\Commands\BackfillKidsSelectorFromNotes::class,
         \App\Console\Commands\SendBookingRemindersCommand::class,
+        \App\Console\Commands\SendDepositRemindersCommand::class,
     ];
 
     protected function schedule(Schedule $schedule)
@@ -20,6 +21,7 @@ class Kernel extends ConsoleKernel
         // Client + admin reminders, 24 hours and 1 hour before confirmed appointments
         $schedule->command('bookings:send-reminders 24')->everyTenMinutes()->withoutOverlapping();
         $schedule->command('bookings:send-reminders 1')->everyFiveMinutes()->withoutOverlapping();
+        $schedule->command('bookings:send-deposit-reminders')->hourly()->withoutOverlapping();
     }
 
     protected function commands()

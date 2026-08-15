@@ -55,6 +55,7 @@ class Booking extends Model
     'sample_picture',
         'reminder_24_sent',
         'reminder_1_sent',
+        'deposit_reminder_sent_at',
         'payment_status',
         'status_history',
     ];
@@ -82,6 +83,7 @@ class Booking extends Model
     'sample_picture' => 'string',
         'reminder_24_sent' => 'boolean',
         'reminder_1_sent' => 'boolean',
+        'deposit_reminder_sent_at' => 'datetime',
         'status_history' => 'array',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
@@ -98,6 +100,73 @@ class Booking extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function hasUsableEmail(): bool
+    {
+        $email = strtolower(trim((string) $this->email));
+
+        return $email !== '' && $email !== 'no-email@example.com';
+    }
+
+    public function depositIsPending(): bool
+    {
+        return ($this->payment_status ?? 'pending') === 'pending';
+    }
+
+    public function appointmentStartsAt(): ?\Carbon\Carbon
+    {
+        if (! $this->appointment_date || ! $this->appointment_time) {
+            return null;
+        }
+
+        try {
+            $tz = config('app.timezone') ?: 'America/Toronto';
+            $date = $this->appointment_date instanceof \Carbon\Carbon
+                ? $this->appointment_date->format('Y-m-d')
+                : \Carbon\Carbon::parse($this->appointment_date)->format('Y-m-d');
+            $time = \Carbon\Carbon::parse($this->appointment_time)->format('H:i');
+
+            return \Carbon\Carbon::createFromFormat('Y-m-d H:i', $date.' '.$time, $tz);
+        } catch (\Throwable $e) {
+            return null;
+        }
+    }
+
+    public function hoursUntilAppointment(): ?float
+    {
+        $start = $this->appointmentStartsAt();
+        if (! $start) {
+            return null;
+        }
+
+        return now($start->getTimezone())->floatDiffInHours($start, false);
+    }
+
+    public function canClientCancel(): bool
+    {
+        if (! in_array($this->status, ['pending', 'confirmed'], true)) {
+            return false;
+        }
+
+        if ($this->status === 'pending' && $this->depositIsPending()) {
+            return true;
+        }
+
+        $hours = $this->hoursUntilAppointment();
+
+        return $hours !== null && $hours >= 48;
+    }
+
+    public function canClientRequestReschedule(): bool
+    {
+        if (! in_array($this->status, ['pending', 'confirmed'], true)) {
+            return false;
+        }
+
+        $hours = $this->hoursUntilAppointment();
+
+        return $hours !== null && $hours >= 48;
     }
 
     /**

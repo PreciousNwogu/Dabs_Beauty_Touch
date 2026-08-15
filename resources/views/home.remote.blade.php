@@ -41,6 +41,10 @@
     <meta name="msapplication-TileImage" content="{{ asset('images/icon.ico.jpg') }}">
 
     <!-- Structured Data (JSON-LD) -->
+    @php
+        $googlePlaceId = trim((string) config('services.google.place_id'));
+        $googleListingUrl = $googlePlaceId !== '' ? \App\Support\GoogleReview::url() : null;
+    @endphp
     <script type="application/ld+json">
     {
         "@@context": "https://schema.org",
@@ -68,6 +72,10 @@
             "latitude": "45.4215",
             "longitude": "-75.6972"
         },
+        "areaServed": {
+            "@type": "City",
+            "name": "Ottawa"
+        },
         "openingHoursSpecification": [
             {
                 "@type": "OpeningHoursSpecification",
@@ -83,62 +91,8 @@
             }
         ],
         "sameAs": [
-            "https://www.instagram.com/dabs_beauty_touch"
-        ],
-        "aggregateRating": {
-            "@type": "AggregateRating",
-            "ratingValue": "5",
-            "reviewCount": "4"
-        },
-        "review": [
-            {
-                "@type": "Review",
-                "author": {
-                    "@type": "Person",
-                    "name": "Client 1"
-                },
-                "reviewRating": {
-                    "@type": "Rating",
-                    "ratingValue": "5"
-                },
-                "reviewBody": "DBT offers great services and she delivers excellently."
-            },
-            {
-                "@type": "Review",
-                "author": {
-                    "@type": "Person",
-                    "name": "Client 2"
-                },
-                "reviewRating": {
-                    "@type": "Rating",
-                    "ratingValue": "5"
-                },
-                "reviewBody": "Excellent service and attention to detail."
-            },
-            {
-                "@type": "Review",
-                "author": {
-                    "@type": "Person",
-                    "name": "Client 3"
-                },
-                "reviewRating": {
-                    "@type": "Rating",
-                    "ratingValue": "5"
-                },
-                "reviewBody": "Amazing work! Highly recommend."
-            },
-            {
-                "@type": "Review",
-                "author": {
-                    "@type": "Person",
-                    "name": "Client 4"
-                },
-                "reviewRating": {
-                    "@type": "Rating",
-                    "ratingValue": "5"
-                },
-                "reviewBody": "Best braiding service in Ottawa!"
-            }
+            "https://www.instagram.com/dabs_beauty_touch"@if($googleListingUrl),
+            "{{ $googleListingUrl }}"@endif
         ],
         "hasOfferCatalog": {
             "@type": "OfferCatalog",
@@ -223,6 +177,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
         <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+    <script src="{{ asset('js/booking-slots.js') }}?v={{ @filemtime(public_path('js/booking-slots.js')) }}"></script>
 
 
     <!-- Additional styling -->
@@ -3370,6 +3325,7 @@
         let calendarCurrentDate = new Date();
         let selectedCalendarDate = null;
         let selectedCalendarTime = null;
+        window.selectedCalendarDate = null;
 
     // Stitch rows selector (used for stitch-braids pricing)
     window.selectStitchRowsOption = function(option) {
@@ -3734,6 +3690,7 @@
             }
 
             selectedCalendarDate = date;
+            window.selectedCalendarDate = date;
 
             // Update calendar display
             document.querySelectorAll('#calendarModal .calendar-day').forEach(day => {
@@ -3780,51 +3737,40 @@
                 day: 'numeric'
             });
 
-            // Generate default time slots (9 AM to 6 PM)
-            const defaultSlots = markPastCalendarSlots(date, [
-                { time: '09:00', available: true, formatted_time: '9:00 AM' },
-                { time: '10:00', available: true, formatted_time: '10:00 AM' },
-                { time: '11:00', available: true, formatted_time: '11:00 AM' },
-                { time: '12:00', available: true, formatted_time: '12:00 PM' },
-                { time: '13:00', available: true, formatted_time: '1:00 PM' },
-                { time: '14:00', available: true, formatted_time: '2:00 PM' },
-                { time: '15:00', available: true, formatted_time: '3:00 PM' },
-                { time: '16:00', available: true, formatted_time: '4:00 PM' },
-                { time: '17:00', available: true, formatted_time: '5:00 PM' },
-                { time: '18:00', available: true, formatted_time: '6:00 PM' }
-            ]);
+            const slotError = (message) => {
+                loading.style.display = 'none';
+                timeSlotsContainer.style.display = 'block';
+                timeSlots.innerHTML = `<div class="alert alert-warning"><i class="bi bi-exclamation-triangle me-2"></i>${message}</div>`;
+                document.getElementById('confirmDateTimeBtn').disabled = true;
+            };
 
-            // Try to fetch from API first, but fallback to default slots
-            fetch(`/bookings/slots?date=${formatYMD(date)}`)
-                .then(response => response.json())
+            const slotPromise = (window.DBT && typeof DBT.fetchSlots === 'function')
+                ? DBT.fetchSlots(formatYMD(date))
+                : fetch(`/bookings/slots?date=${formatYMD(date)}`).then(response => response.json());
+
+            slotPromise
                 .then(data => {
                     loading.style.display = 'none';
                     timeSlotsContainer.style.display = 'block';
 
                     if (data.success) {
-                        if (data.message) {
-                            // Date is booked, show message
-                            timeSlots.innerHTML = `<div class="alert alert-warning"><i class="bi bi-exclamation-triangle me-2"></i>${data.message}</div>`;
-                            document.getElementById('confirmDateTimeBtn').disabled = true;
+                        if (data.message && (!data.slots || data.slots.length === 0)) {
+                            slotError(data.message);
                         } else if (data.slots && data.slots.length > 0) {
                             renderTimeSlotsInModal(markPastCalendarSlots(date, data.slots));
                         } else {
-                            // Use default slots if no slots returned
-                            renderTimeSlotsInModal(defaultSlots);
+                            slotError('No available slots for this date. Please select another date.');
                         }
                     } else {
-                        // Use default slots if API returns error
-                        renderTimeSlotsInModal(defaultSlots);
+                        slotError('Could not load available times. Please try again.');
                     }
                 })
                 .catch(error => {
-                    console.log('API error, using default slots:', error);
-                    loading.style.display = 'none';
-                    timeSlotsContainer.style.display = 'block';
-                    // Use default slots if API fails
-                    renderTimeSlotsInModal(defaultSlots);
+                    console.log('Slots API error:', error);
+                    slotError('Could not load available times. Please try again.');
                 });
         }
+        window.loadTimeSlotsForDate = loadTimeSlotsForDate;
 
         function renderTimeSlotsInModal(slots) {
             const timeSlots = document.getElementById('timeSlots');
@@ -4996,6 +4942,10 @@ function openOtherServicesModal() {
                     <!-- Single Booking Form -->
                     <form id="bookingForm" action="/bookings" method="POST" autocomplete="on" novalidate enctype="multipart/form-data">
                         @csrf
+                        <div style="position:absolute;left:-10000px;top:auto;width:1px;height:1px;overflow:hidden;" aria-hidden="true">
+                            <label for="company_website">Company website</label>
+                            <input type="text" name="company_website" id="company_website" tabindex="-1" autocomplete="off">
+                        </div>
                         <input type="hidden" id="appointment_date" name="appointment_date">
                         <input type="hidden" id="appointment_time_hidden" name="appointment_time">
                         <input type="hidden" id="selectedService" name="service">
@@ -5301,6 +5251,11 @@ function openOtherServicesModal() {
                     </div>
 
                     <form id="customServiceForm">
+                        @csrf
+                        <div style="position:absolute;left:-10000px;top:auto;width:1px;height:1px;overflow:hidden;" aria-hidden="true">
+                            <label for="custom_company_website">Company website</label>
+                            <input type="text" name="company_website" id="custom_company_website" tabindex="-1" autocomplete="off">
+                        </div>
                         <div class="row g-3">
                             <!-- Service Name -->
                             <div class="col-12">
@@ -5947,6 +5902,10 @@ function openOtherServicesModal() {
 
                             <form action="{{ route('contact.store') }}" method="POST" id="contactForm" class="bg-white p-4 rounded shadow-sm" style="border-radius:18px;">
                                 @csrf
+                                <div style="position:absolute;left:-10000px;top:auto;width:1px;height:1px;overflow:hidden;" aria-hidden="true">
+                                    <label for="contact_company_website">Company website</label>
+                                    <input type="text" name="company_website" id="contact_company_website" tabindex="-1" autocomplete="off">
+                                </div>
                                 <div class="row g-4">
                                     <div class="col-12 mb-3">
                                         <div class="form-floating">
@@ -5985,7 +5944,7 @@ function openOtherServicesModal() {
     <section class="py-5" style="background: linear-gradient(135deg, #030f68 0%, #05137c 100%);">
         <div class="container text-center" style="max-width: 720px;">
             <h3 style="color:#fff; font-weight:800; margin-bottom:10px;">Loved your look?</h3>
-            <p style="color:rgba(255,255,255,0.85); margin-bottom:18px;">Search <strong>Dabs Beauty Touch Ottawa</strong> on Google and leave a review. It helps other clients find us — no website link needed.</p>
+            <p style="color:rgba(255,255,255,0.85); margin-bottom:18px;">Search <strong>Dabs Beauty Touch Ottawa</strong> on Google and leave a review. It helps other clients find us.</p>
             <a href="{{ \App\Support\GoogleReview::url() }}" target="_blank" rel="noopener noreferrer" class="btn btn-warning" style="font-weight:800; border-radius:25px; padding:12px 28px;">
                 <i class="bi bi-google me-2"></i>Leave a Google Review
             </a>
@@ -7174,6 +7133,12 @@ function openOtherServicesModal() {
         }
 
         console.log('Quick service selected:', serviceName, 'Base price:', basePrice);
+
+        try {
+            if (window.selectedCalendarDate && typeof window.loadTimeSlotsForDate === 'function') {
+                window.loadTimeSlotsForDate(window.selectedCalendarDate);
+            }
+        } catch (e) {}
     };
 
     // Also define as regular function for backward compatibility

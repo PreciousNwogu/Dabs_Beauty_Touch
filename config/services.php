@@ -35,6 +35,11 @@ return [
         ],
     ],
 
+    'interac' => [
+        'email' => env('INTERAC_EMAIL', 'dabereprecious01@gmail.com'),
+        'amount' => env('INTERAC_DEPOSIT_AMOUNT', 20),
+    ],
+
     'google' => [
         'review_url' => env('GOOGLE_REVIEW_URL'),
         'place_id' => env('GOOGLE_PLACE_ID'),
