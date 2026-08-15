@@ -1251,9 +1251,9 @@
                                                 </button>
                                                 @if($booking->confirmation_code)
                                                     <a class="btn btn-outline-primary btn-sm mb-1"
-                                                       href="{{ url('/bookings/confirm/' . $booking->id . '/' . $booking->confirmation_code) }}"
+                                                       href="{{ url('/admin/bookings/' . $booking->id) }}"
                                                        target="_blank" rel="noopener"
-                                                       title="Edit Booking (public link)">
+                                                       title="View / edit booking">
                                                         <i class="bi bi-pencil-square"></i> Edit Booking
                                                     </a>
                                                 @endif
@@ -1379,9 +1379,9 @@
                                     </button>
                                     @if($booking->confirmation_code)
                                         <a class="btn btn-outline-primary btn-sm"
-                                           href="{{ url('/bookings/confirm/' . $booking->id . '/' . $booking->confirmation_code) }}"
+                                           href="{{ url('/admin/bookings/' . $booking->id) }}"
                                            target="_blank" rel="noopener"
-                                           title="Edit Booking (public link)">
+                                           title="View / edit booking">
                                             <i class="bi bi-pencil-square"></i> Edit
                                         </a>
                                     @endif
@@ -2110,9 +2110,7 @@
 
             const bookingId = booking.booking_id || booking.id;
             const confirmationCode = booking.confirmation_code ? String(booking.confirmation_code).trim() : '';
-            const editUrl = (booking.id && confirmationCode)
-                ? (`/bookings/confirm/${booking.id}/${encodeURIComponent(confirmationCode)}`)
-                : null;
+            const editUrl = booking.id ? (`/admin/bookings/${booking.id}`) : null;
             const apptDate = booking.appointment_date
                 ? new Date(String(booking.appointment_date).slice(0, 10) + 'T00:00:00').toLocaleDateString()
                 : 'N/A';

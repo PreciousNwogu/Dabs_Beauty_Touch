@@ -8,7 +8,7 @@ use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 use App\Models\Booking;
 
-class BookingReminderNotification extends Notification
+class ClientBookingReminderNotification extends Notification
 {
     use Queueable;
 
@@ -29,32 +29,41 @@ class BookingReminderNotification extends Notification
     public function toMail(object $notifiable): MailMessage
     {
         $b = $this->booking;
-        $formattedId = 'BK' . str_pad((string) $b->id, 6, '0', STR_PAD_LEFT);
-        $when = trim($this->formattedDate($b) . ' at ' . $this->formattedTime($b));
+        $firstName = $this->firstName($b->name);
         $isSoon = $this->hoursBefore <= 2;
 
         $subject = $isSoon
-            ? "Starting soon: {$b->name} — {$this->formattedTime($b)}"
-            : "Tomorrow: {$b->name} — {$this->formattedTime($b)}";
+            ? "We'll see you soon, {$firstName}"
+            : "See you tomorrow, {$firstName}";
 
         return (new MailMessage)
             ->subject($subject)
-            ->view('emails.booking_reminder_admin', [
+            ->view('emails.booking_reminder_client', [
                 'booking' => $b,
                 'hoursBefore' => $this->hoursBefore,
+                'firstName' => $firstName,
                 'isSoon' => $isSoon,
-                'formattedId' => $formattedId,
                 'formattedDate' => $this->formattedDate($b),
                 'formattedTime' => $this->formattedTime($b),
-                'whenLabel' => $when,
                 'locationLabel' => $this->locationLabel($b),
-                'adminUrl' => url('/admin/bookings/' . $b->id),
+                'isHomeService' => $b->appointment_type === 'mobile',
+                'manageUrl' => $this->manageUrl($b),
             ]);
     }
 
     public function toArray(object $notifiable): array
     {
         return [];
+    }
+
+    private function firstName(?string $name): string
+    {
+        $name = trim((string) $name);
+        if ($name === '') {
+            return 'there';
+        }
+
+        return explode(' ', $name)[0];
     }
 
     private function formattedDate(Booking $b): string
@@ -90,5 +99,14 @@ class BookingReminderNotification extends Notification
         }
 
         return 'Stylist location';
+    }
+
+    private function manageUrl(Booking $b): ?string
+    {
+        if (!$b->id || empty($b->confirmation_code)) {
+            return null;
+        }
+
+        return url('/bookings/confirm/' . $b->id . '/' . $b->confirmation_code);
     }
 }

@@ -268,9 +268,9 @@
           @endphp
           @if($publicUrl)
             <tr>
-              <td>Manage booking</td>
+              <td>Your booking</td>
               <td>
-                <a href="{{ $publicUrl }}" class="btn">Edit Booking</a>
+                <a href="{{ $publicUrl }}" class="btn">View Booking</a>
               </td>
             </tr>
           @endif

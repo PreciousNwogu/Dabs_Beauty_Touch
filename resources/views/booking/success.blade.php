@@ -114,8 +114,8 @@
                 // When accessed via /bookings/confirm/{id}/{code}, render as a booking details page
                 // (so admin/customer don't see the "Booking Confirmed!" marketing success message).
                 $isDetailsMode = isset($confirmId) && isset($confirmCode);
-                // Read-only mode: hide the modify form (used by admin/staff email "View Booking Details")
-                $isReadOnly = $isDetailsMode && request()->query('view') === '1';
+                // Clients cannot change style or time after booking. This page is view-only.
+                $isReadOnly = true;
             @endphp
             <div class="success-header" style="{{ $isDetailsMode ? 'background: linear-gradient(135deg, #0ea5e9 0%, #4a8bc2 100%);' : '' }}">
                 <div class="success-icon" style="{{ $isDetailsMode ? 'animation:none;' : '' }}">
@@ -123,7 +123,7 @@
                 </div>
                 <h1 class="mb-3">{{ $isDetailsMode ? 'Booking Details' : 'Booking Confirmed!' }}</h1>
                 <p class="lead mb-0">
-                    {{ $isDetailsMode ? 'View and manage your booking information' : 'Your appointment has been successfully booked' }}
+                    {{ $isDetailsMode ? 'Your appointment details are locked. Contact us if you need to reschedule.' : 'Your appointment has been successfully booked' }}
                 </p>
             </div>
 
@@ -135,9 +135,9 @@
                     </h5>
 
                     @if($isDetailsMode)
-                        <div class="alert alert-info">
-                            <i class="fas fa-info-circle me-2"></i>
-                            This is your booking details page. You can edit supported fields below (length / braid type) and the price will be recalculated automatically.
+                        <div class="alert alert-warning">
+                            <i class="fas fa-lock me-2"></i>
+                            Style and appointment time cannot be changed after booking. If you need to reschedule, please contact us at least 48 hours in advance.
                         </div>
                     @else
                         <div class="alert alert-success">
@@ -222,6 +222,24 @@
                             <div class="detail-label">Final Price</div>
                             <div class="detail-value">{{ $fmtMoney($bd['final_price'] ?? null) }}</div>
                         </div>
+                        @if(!empty($bd['appointment_type']))
+                            <div class="detail-row">
+                                <div class="detail-label">Location</div>
+                                <div class="detail-value">{{ ($bd['appointment_type'] ?? '') === 'mobile' ? 'Home service' : 'Stylist location' }}</div>
+                            </div>
+                        @endif
+                        @if(!empty($bd['address']))
+                            <div class="detail-row">
+                                <div class="detail-label">Service Address</div>
+                                <div class="detail-value">{{ $bd['address'] }}</div>
+                            </div>
+                        @endif
+                        @if(!empty($bd['phone']))
+                            <div class="detail-row">
+                                <div class="detail-label">Phone</div>
+                                <div class="detail-value">{{ $bd['phone'] }}</div>
+                            </div>
+                        @endif
                     </div>
 
                     @php

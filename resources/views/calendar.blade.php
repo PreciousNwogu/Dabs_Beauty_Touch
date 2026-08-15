@@ -17,14 +17,14 @@
     <meta property="og:url" content="{{ url('/calendar') }}">
     <meta property="og:title" content="Book Appointment - Dab's Beauty Touch | Online Booking">
     <meta property="og:description" content="Book your hair braiding appointment online. Choose from professional braiding services. Easy online scheduling available.">
-    <meta property="og:image" content="{{ asset('images/logo.jpg') }}">
+    <meta property="og:image" content="{{ asset('images/backgroundbraid.jpg') }}">
 
     <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:url" content="{{ url('/calendar') }}">
     <meta name="twitter:title" content="Book Appointment - Dab's Beauty Touch">
     <meta name="twitter:description" content="Book your hair braiding appointment online. Easy online scheduling available.">
-    <meta name="twitter:image" content="{{ asset('images/logo.jpg') }}">
+    <meta name="twitter:image" content="{{ asset('images/backgroundbraid.jpg') }}">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
     <style>
@@ -607,7 +607,7 @@
                         </small>
                     </div>
 
-                    <div class="mb-3" id="parkingFieldContainerCal" style="display: none;">
+                    <div class="mb-3 parking-choice-group" id="parkingFieldContainerCal" style="display: none;">
                         <label class="form-label">Parking at Address *</label>
                         <div class="d-flex gap-3">
                             <div class="form-check">
@@ -619,8 +619,11 @@
                                 <label class="form-check-label" for="parking_type_paid_cal">Paid parking</label>
                             </div>
                         </div>
+                        <div id="paidParkingNoteCal" class="alert alert-warning py-2 mt-2 mb-0" style="display:none; font-size:0.95rem;">
+                            <strong>Please note:</strong> You are responsible for covering the paid parking ticket so the stylist can park at your address.
+                        </div>
                         <small class="form-text text-muted mt-2">
-                            <i class="bi bi-p-circle me-1"></i>Required for mobile appointments.
+                            <i class="bi bi-p-circle me-1"></i>Required for mobile appointments. Paid parking is covered by the client.
                         </small>
                     </div>
 
@@ -633,7 +636,7 @@
                     <div class="form-check mb-3 text-start">
                         <input class="form-check-input" type="checkbox" id="termsAcceptedCal" name="terms_accepted" value="1" required>
                         <label class="form-check-label" for="termsAcceptedCal">
-                            I agree to the <a href="{{ route('home') }}#terms" target="_blank" rel="noopener" style="font-weight:600; text-decoration:none;">Terms &amp; Conditions</a>.
+                            I agree to the <a href="#" class="js-terms-popup" style="font-weight:600; text-decoration:none;">Terms &amp; Conditions</a>.
                         </label>
                     </div>
                     <div class="mb-3">
@@ -758,7 +761,7 @@
                                 <a href="https://wa.me/3432548848" target="_blank" rel="noopener" style="font-weight: 700; color: #128c7e; text-decoration: none;">WhatsApp</a>.
                             </div>
                         </div>
-                        <a href="{{ route('home') }}#terms" target="_blank" rel="noopener" style="color:#030f68; font-weight:600; text-decoration:none;">
+                        <a href="#" class="js-terms-popup" style="color:#030f68; font-weight:600; text-decoration:none;">
                             View full Terms &amp; Conditions
                         </a>
                     </div>
@@ -794,7 +797,61 @@
         </div>
     </div>
 
+    <!-- Terms preview overlay -->
+    <div id="termsPreviewOverlay" style="display:none; position:fixed; inset:0; z-index:20000; background:rgba(3,15,104,0.55); align-items:center; justify-content:center; padding:16px;">
+        <div style="background:#fff; max-width:960px; width:100%; max-height:90vh; display:flex; flex-direction:column; border-radius:18px; overflow:hidden; box-shadow:0 12px 40px rgba(0,0,0,0.25);">
+            <div style="background:linear-gradient(135deg, #030f68 0%, #4a8bc2 100%); color:#fff; padding:16px 20px; display:flex; align-items:center; justify-content:space-between;">
+                <strong style="font-size:1.1rem;">Terms &amp; Conditions</strong>
+                <button type="button" data-terms-close="1" style="background:transparent; border:0; color:#fff; font-size:1.6rem; line-height:1; cursor:pointer;" aria-label="Close">&times;</button>
+            </div>
+            <div id="termsPreviewOverlayBody" style="overflow:auto; padding:20px; background:#f8f9fa; flex:1;">
+                @include('partials.terms-content')
+            </div>
+            <div style="padding:14px 20px; text-align:right; background:#fff;">
+                <button type="button" data-terms-close="1" class="btn btn-primary" style="background:#030f68; border:none; font-weight:700;">Back to booking</button>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+    (function () {
+        function hideTermsPopup() {
+            var overlay = document.getElementById('termsPreviewOverlay');
+            if (overlay) overlay.style.display = 'none';
+        }
+        window.showTermsPopup = function (event) {
+            if (event) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+            var overlay = document.getElementById('termsPreviewOverlay');
+            if (!overlay) return false;
+            if (overlay.parentElement !== document.body) {
+                document.body.appendChild(overlay);
+            }
+            overlay.style.display = 'flex';
+            return false;
+        };
+        document.addEventListener('click', function (e) {
+            if (e.target.closest('[data-terms-close]')) {
+                e.preventDefault();
+                hideTermsPopup();
+                return;
+            }
+            var overlay = document.getElementById('termsPreviewOverlay');
+            if (overlay && e.target === overlay) {
+                hideTermsPopup();
+                return;
+            }
+            var link = e.target.closest('a.js-terms-popup');
+            if (!link) return;
+            e.preventDefault();
+            e.stopPropagation();
+            window.showTermsPopup(e);
+        }, true);
+    })();
+    </script>
     <script>
         let currentDate = new Date();
         let selectedDate = null;
@@ -1242,8 +1299,17 @@
                     input.required = false;
                     input.checked = false;
                 });
+                var paidNote = document.getElementById('paidParkingNoteCal');
+                if (paidNote) paidNote.style.display = 'none';
             }
         }
+
+        document.querySelectorAll('#bookingForm input[name="parking_type"]').forEach(function(input) {
+            input.addEventListener('change', function() {
+                var paidNote = document.getElementById('paidParkingNoteCal');
+                if (paidNote) paidNote.style.display = (input.value === 'paid' && input.checked) ? 'block' : 'none';
+            });
+        });
 
         // Initialize calendar
         document.addEventListener('DOMContentLoaded', function() {

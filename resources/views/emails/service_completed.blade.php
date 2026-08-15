@@ -213,6 +213,10 @@
       font-size: 13px;
       margin: 8px 0;
     }
+    .btn-review {
+      background: #ff6600;
+      margin-top: 10px;
+    }
     @media only screen and (max-width: 600px) {
       .content { padding: 24px 16px; }
       .header { padding: 24px 16px; }
@@ -288,6 +292,13 @@
             <span class="price-total-value">${{ number_format($displayTotal, 2) }}</span>
           </div>
         </div>
+      </div>
+
+      <div style="background: #fff7ed; border: 2px solid #ff6600; border-radius: 12px; padding: 24px; margin: 28px 0; text-align: center;">
+        <p style="margin: 0 0 8px 0; color: #030f68; font-size: 18px; font-weight: 800;">Loved your look?</p>
+        <p style="margin: 0 0 16px 0; color: #4a5568; font-size: 15px;">A Google review helps other clients find us. It only takes a minute.</p>
+        <a href="{{ $googleReviewUrl ?? \App\Support\GoogleReview::url() }}" class="btn btn-review" target="_blank" rel="noopener">Leave a Google Review</a>
+        <p style="margin: 14px 0 0 0; color: #718096; font-size: 13px;">Or search <strong>Dabs Beauty Touch Ottawa</strong> on Google and tap Reviews.</p>
       </div>
 
       <div style="text-align: center; margin: 32px 0;">

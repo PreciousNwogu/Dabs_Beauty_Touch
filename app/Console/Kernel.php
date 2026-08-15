@@ -12,13 +12,14 @@ class Kernel extends ConsoleKernel
         \App\Console\Commands\PreviewEmail::class,
         \App\Console\Commands\CancelBookingsRange::class,
         \App\Console\Commands\BackfillKidsSelectorFromNotes::class,
+        \App\Console\Commands\SendBookingRemindersCommand::class,
     ];
 
     protected function schedule(Schedule $schedule)
     {
-        // Send admin booking reminders 24 hours and 1 hour before appointment
-        $schedule->job(new \App\Jobs\SendBookingReminders(24))->everyTenMinutes();
-        $schedule->job(new \App\Jobs\SendBookingReminders(1))->everyFiveMinutes();
+        // Client + admin reminders, 24 hours and 1 hour before confirmed appointments
+        $schedule->command('bookings:send-reminders 24')->everyTenMinutes()->withoutOverlapping();
+        $schedule->command('bookings:send-reminders 1')->everyFiveMinutes()->withoutOverlapping();
     }
 
     protected function commands()

@@ -19,9 +19,10 @@
     <meta property="og:url" content="{{ url('/') }}">
     <meta property="og:title" content="Dab's Beauty Touch - Professional Hair Braiding Services | Ottawa">
     <meta property="og:description" content="Professional hair braiding services in Ottawa. Expert stylists specializing in knotless braids, box braids, wig installation, and custom styles. Book your appointment today.">
-    <meta property="og:image" content="{{ asset('images/logo.jpg') }}">
+    <meta property="og:image" content="{{ asset('images/backgroundbraid.jpg') }}">
     <meta property="og:image:width" content="1200">
     <meta property="og:image:height" content="630">
+    <meta property="og:image:alt" content="Professional knotless and box braids by Dab's Beauty Touch in Ottawa">
     <meta property="og:site_name" content="Dab's Beauty Touch">
     <meta property="og:locale" content="en_CA">
 
@@ -30,7 +31,7 @@
     <meta name="twitter:url" content="{{ url('/') }}">
     <meta name="twitter:title" content="Dab's Beauty Touch - Professional Hair Braiding Services">
     <meta name="twitter:description" content="Professional hair braiding services in Ottawa. Expert stylists specializing in knotless braids, box braids, wig installation, and custom styles.">
-    <meta name="twitter:image" content="{{ asset('images/logo.jpg') }}">
+    <meta name="twitter:image" content="{{ asset('images/backgroundbraid.jpg') }}">
 
     <!-- Favicon -->
     <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
@@ -48,8 +49,13 @@
         "description": "Professional hair braiding services in Ottawa. Expert stylists specializing in knotless braids, box braids, wig installation, and custom styles.",
         "url": "{{ url('/') }}",
         "logo": "{{ asset('images/logo.jpg') }}",
-        "image": "{{ asset('images/logo.jpg') }}",
-        "telephone": "(647) 834-8549",
+        "image": [
+            "{{ asset('images/backgroundbraid.jpg') }}",
+            "{{ asset('images/braidstyle.jpg') }}",
+            "{{ asset('images/logo.jpg') }}"
+        ],
+        "telephone": "+1-343-245-8848",
+        "email": "info@dabsbeautytouch.com",
         "priceRange": "$$",
         "address": {
             "@type": "PostalAddress",
@@ -65,12 +71,20 @@
         "openingHoursSpecification": [
             {
                 "@type": "OpeningHoursSpecification",
-                "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
+                "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
                 "opens": "09:00",
+                "closes": "19:00"
+            },
+            {
+                "@type": "OpeningHoursSpecification",
+                "dayOfWeek": ["Saturday"],
+                "opens": "10:00",
                 "closes": "18:00"
             }
         ],
-        "sameAs": [],
+        "sameAs": [
+            "https://www.instagram.com/dabs_beauty_touch"
+        ],
         "aggregateRating": {
             "@type": "AggregateRating",
             "ratingValue": "5",
@@ -1735,7 +1749,19 @@
             flex: 0 0 auto;
         }
 
-        /* Terms checkbox row: grid layout to guarantee no overlap */
+        .paid-parking-note { display: none; }
+        .parking-choice-group:has(input[value="paid"]:checked) .paid-parking-note { display: block; }
+
+        /* Terms preview popup sits above the booking modal */
+        #termsPreviewModal {
+            z-index: 1080;
+        }
+        #termsPreviewBody h2 {
+            font-size: 1.6rem !important;
+        }
+        #termsPreviewBody .card {
+            box-shadow: 0 2px 8px rgba(3,15,104,0.08) !important;
+        }
         #bookingModal .dbt-terms-consent,
         #kidsBookingModal .dbt-terms-consent {
             display: grid;
@@ -4610,7 +4636,7 @@ function openOtherServicesModal() {
                         We offer many more services beyond what's listed above. Book a consultation and let us know what you need!
                     </p>
                     <button type="button" class="btn btn-outline-primary btn-lg px-5" onclick="openOtherServicesModal()" style="font-weight: 600; border-radius: 25px; box-shadow: 0 4px 12px rgba(3, 15, 104, 0.2);">
-                        <i class="bi bi-plus-circle me-2"></i>Book Other Services
+                        <i class="bi bi-plus-circle me-2"></i>Custom Service Request
                     </button>
                     <div class="mt-3">
                         <small class="text-muted">
@@ -5084,7 +5110,7 @@ function openOtherServicesModal() {
                             </div>
 
                             <div class="col-12" id="parkingFieldContainer" style="display: none;">
-                                <div class="form-group">
+                                <div class="form-group parking-choice-group">
                                     <label class="form-label">Parking at Address *</label>
                                     <div class="d-flex gap-3">
                                         <div class="form-check">
@@ -5096,8 +5122,11 @@ function openOtherServicesModal() {
                                             <label class="form-check-label" for="parking_type_paid">Paid parking</label>
                                         </div>
                                     </div>
+                                    <div class="alert alert-warning py-2 mt-2 mb-0 paid-parking-note" style="font-size:0.95rem;">
+                                        <strong>Please note:</strong> You are responsible for covering the paid parking ticket so the stylist can park at your address.
+                                    </div>
                                     <small class="form-text text-muted mt-2">
-                                        <i class="bi bi-p-circle me-1"></i>Required for mobile appointments.
+                                        <i class="bi bi-p-circle me-1"></i>Required for mobile appointments. Paid parking is covered by the client.
                                     </small>
                                 </div>
                             </div>
@@ -5149,7 +5178,7 @@ function openOtherServicesModal() {
                                 <input class="form-check-input" type="checkbox" id="termsAcceptedMain" name="terms_accepted" value="1" required autocomplete="off">
                                 <div>
                                     <label for="termsAcceptedMain" style="text-align:left;">
-                                        I agree to the <a href="#terms" style="color:#030f68; font-weight:600; text-decoration:none;" onclick="closeModalAndGoToTerms(event)">Terms &amp; Conditions</a>.
+                                        I agree to the <a href="#" class="js-terms-popup" style="color:#030f68; font-weight:600; text-decoration:none;">Terms &amp; Conditions</a>.
                                     </label>
                                 </div>
                             </div>
@@ -5165,7 +5194,7 @@ function openOtherServicesModal() {
                                 <small class="text-muted">
                                     <i class="bi bi-info-circle me-1"></i>
                                     A $20 deposit is required to confirm your appointment. Mobile appointments are confirmed after deposit + address verification.
-                                    (<a href="#terms" class="text-decoration-none" style="color: #030f68; font-weight: 500;" onclick="closeModalAndGoToTerms(event)">Terms & Conditions</a>)
+                                    (<a href="#" class="js-terms-popup text-decoration-none" style="color: #030f68; font-weight: 500;">Terms & Conditions</a>)
                                 </small>
                             </div>
                         </div>
@@ -5882,7 +5911,7 @@ function openOtherServicesModal() {
                                     <ul class="ps-4 mb-0" style="font-size:0.98rem;">
                                         <li>Monday - Friday: 9:00 AM - 7:00 PM</li>
                                         <li>Saturday: 10:00 AM - 6:00 PM</li>
-                                        <li>Sunday: 1:00 PM - 6:00 PM</li>
+                                        <li>Sunday: Closed</li>
                                     </ul>
                                 </li>
                             </ul>
@@ -5953,207 +5982,23 @@ function openOtherServicesModal() {
         </div>
     </section>
 
+    <section class="py-5" style="background: linear-gradient(135deg, #030f68 0%, #05137c 100%);">
+        <div class="container text-center" style="max-width: 720px;">
+            <h3 style="color:#fff; font-weight:800; margin-bottom:10px;">Loved your look?</h3>
+            <p style="color:rgba(255,255,255,0.85); margin-bottom:18px;">Search <strong>Dabs Beauty Touch Ottawa</strong> on Google and leave a review. It helps other clients find us — no website link needed.</p>
+            <a href="{{ \App\Support\GoogleReview::url() }}" target="_blank" rel="noopener noreferrer" class="btn btn-warning" style="font-weight:800; border-radius:25px; padding:12px 28px;">
+                <i class="bi bi-google me-2"></i>Leave a Google Review
+            </a>
+        </div>
+    </section>
+
     <!-- Terms and Conditions Section -->
     <section id="terms" class="section section-xl" style="padding: 50px 0; background-color: #f8f9fa;">
         <div class="container">
-            <div class="row justify-content-center">
-                <div class="col-lg-10">
-                    <div class="text-center mb-5">
-                        <h2 class="section-title" style="font-size: 2.5rem; font-weight: 700; color: #030f68;">Terms & Conditions</h2>
-                        <div style="display:inline-block; max-width:820px; margin-top:18px; text-align:left;">
-                            <div style="background: linear-gradient(90deg, rgba(255,102,0,0.06), rgba(3,15,104,0.03)); border-left: 6px solid #ff6600; padding: 18px 20px; border-radius: 12px; box-shadow: 0 6px 18px rgba(3,15,104,0.06);">
-                                <div style="display:flex; align-items:flex-start; gap:12px;">
-                                    <div style="font-size:1.6rem; color:#ff6600; line-height:1; margin-top:2px;"><i class="bi bi-exclamation-triangle-fill"></i></div>
-                                    <div>
-                                        <div style="font-size:1.05rem; color:#03253f; font-weight:700; margin-bottom:6px;">Before booking, please review our terms and conditions</div>                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Important Hair Preparation Notice -->
-                    <div class="row mb-4">
-                        <div class="col-12">
-                            <div style="background: linear-gradient(135deg, rgba(255, 193, 7, 0.15), rgba(255, 152, 0, 0.1)); border-left: 6px solid #ff6600; border-top: 2px solid rgba(255, 102, 0, 0.3); padding: 20px 24px; border-radius: 12px; box-shadow: 0 4px 12px rgba(255, 102, 0, 0.1);">
-                                <p style="margin: 0; color: #ff6600; font-size: 1.1rem; line-height: 1.6;">
-                                    <strong style="font-weight: 700;">Important:</strong> Hair must come washed and blow dried/detangled for optimal styling results.
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="row g-4">
-                        <!-- Deposit & Payment Terms -->
-                        <div class="col-lg-6">
-                            <div class="card h-100 shadow-lg border-0" style="border-radius: 20px; background: #fff;">
-                                <div class="card-body p-4">
-                                    <div class="text-center mb-4">
-                                        <i class="bi bi-credit-card" style="font-size: 3rem; color: #ff6600;"></i>
-                                    </div>
-                                    <h4 style="color: #030f68; font-weight: 700; text-align: center; margin-bottom: 20px;">Deposit & Payment</h4>
-                                    <ul class="list-unstyled" style="font-size: 1rem; line-height: 1.8;">
-                                        <li class="mb-3">
-                                            <i class="bi bi-check-circle-fill text-success me-2"></i>
-                                            <strong>Deposit Required:</strong> A non-refundable deposit is required to secure your appointment
-                                        </li>
-                                        <li class="mb-3">
-                                            <i class="bi bi-check-circle-fill text-success me-2"></i>
-                                            <strong>Payment Methods:</strong> We accept cash, bank transfers, and mobile money payments
-                                        </li>
-                                        <li class="mb-3">
-                                            <i class="bi bi-check-circle-fill text-success me-2"></i>
-                                            <strong>Balance Payment:</strong> Remaining balance is due on the day of your appointment
-                                        </li>
-                                        <li class="mb-3">
-                                            <i class="bi bi-exclamation-triangle-fill text-warning me-2"></i>
-                                            <strong>No Refunds:</strong> Deposits are non-refundable once appointment is confirmed
-                                        </li>
-                                    </ul>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Cancellation Policy -->
-                        <div class="col-lg-6">
-                            <div class="card h-100 shadow-lg border-0" style="border-radius: 20px; background: #fff;">
-                                <div class="card-body p-4">
-                                    <div class="text-center mb-4">
-                                        <i class="bi bi-calendar-x" style="font-size: 3rem; color: #ff6600;"></i>
-                                    </div>
-                                    <h4 style="color: #030f68; font-weight: 700; text-align: center; margin-bottom: 20px;">Cancellation Policy</h4>
-                                    <ul class="list-unstyled" style="font-size: 1rem; line-height: 1.8;">
-                                        <li class="mb-3">
-                                            <i class="bi bi-clock-fill text-info me-2"></i>
-                                            <strong>Notice Required:</strong> Minimum 48 hours notice required for cancellations
-                                        </li>
-                                        <li class="mb-3">
-                                            <i class="bi bi-x-circle-fill text-danger me-2"></i>
-                                            <strong>No Show:</strong> No-shows will result in full charge and may affect future bookings
-                                        </li>
-                                        <li class="mb-3">
-                                            <i class="bi bi-arrow-clockwise text-success me-2"></i>
-                                            <strong>Rescheduling:</strong> Rescheduling is allowed with 48 hours notice
-                                        </li>
-                                        <li class="mb-3">
-                                            <i class="bi bi-calendar2-week-fill text-primary me-2"></i>
-                                            <strong>Reschedule Window:</strong> Reschedules must be within 1 month of the initial appointment date
-                                        </li>
-                                    </ul>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Home Service Terms -->
-                        <div class="col-lg-6">
-                            <div class="card h-100 shadow-lg border-0" style="border-radius: 20px; background: #fff;">
-                                <div class="card-body p-4">
-                                    <div class="text-center mb-4">
-                                        <i class="bi bi-house-heart" style="font-size: 3rem; color: #ff6600;"></i>
-                                    </div>
-                                    <h4 style="color: #030f68; font-weight: 700; text-align: center; margin-bottom: 20px;">Home Service</h4>
-                                    <ul class="list-unstyled" style="font-size: 1rem; line-height: 1.8;">
-                                        <li class="mb-3">
-                                            <i class="bi bi-check-circle-fill text-success me-2"></i>
-                                            <strong>No Extra Fee:</strong> Home service does not affect our standard pricing
-                                        </li>
-                                        <li class="mb-3">
-                                            <i class="bi bi-car-front-fill text-info me-2"></i>
-                                            <strong>Transportation:</strong> Clients are responsible for covering the cost of fueling the stylist’s transportation. Fees vary based on the distance to the service location.
-                                        </li>
-                                        <li class="mb-3">
-                                            <i class="bi bi-geo-alt-fill text-warning me-2"></i>
-                                            <strong>Service Area:</strong> Available within reasonable distance from our base location
-                                        </li>
-
-                                    </ul>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Contact Information -->
-                        <div class="col-lg-6">
-                            <div class="card h-100 shadow-lg border-0" style="border-radius: 20px; background: linear-gradient(135deg, #030f68 0%, #05137c 100%); color: white;">
-                                <div class="card-body p-4">
-                                    <div class="text-center mb-4">
-                                        <i class="bi bi-telephone-fill" style="font-size: 3rem; color: #ff6600;"></i>
-                                    </div>
-                                    <h4 style="color: #fff; font-weight: 700; text-align: center; margin-bottom: 20px;">Contact for More Information</h4>
-                                    <div class="contact-info" style="font-size: 1rem; line-height: 1.8;">
-                                        <div class="mb-3">
-                                            <i class="bi bi-telephone-fill text-warning me-2"></i>
-                                            <strong>Phone:</strong>
-                                            <a href="tel:+13432458848" style="color: #ff6600; text-decoration: none;">(+1)343-245-8848</a>
-                                        </div>
-                                        <div class="mb-3">
-                                            <i class="bi bi-envelope-fill text-warning me-2"></i>
-                                            <strong>Email:</strong>
-                                            <a href="mailto:info@dabsbeautytouch.com" style="color: #ff6600; text-decoration: none;">info@dabsbeautytouch.com</a>
-                                        </div>
-                                        <div class="mb-3">
-                                            <i class="bi bi-clock-fill text-warning me-2"></i>
-                                            <strong>Response Time:</strong> Within 24 hours
-                                        </div>
-                                        <div class="mb-3">
-                                            <i class="bi bi-chat-dots-fill text-warning me-2"></i>
-                                            <strong>Consultation:</strong> Free consultation available
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Additional Terms -->
-                    <div class="row mt-5">
-                        <div class="col-12">
-                            <div class="card shadow-lg border-0" style="border-radius: 20px; background: #fff;">
-                                <div class="card-body p-4">
-                                    <h4 style="color: #030f68; font-weight: 700; text-align: center; margin-bottom: 30px;">
-                                        <i class="bi bi-file-text me-2" style="color: #ff6600;"></i>
-                                        Additional Terms
-                                    </h4>
-                                    <div class="row">
-                                        <div class="col-md-6">
-                                            <ul class="list-unstyled" style="font-size: 1rem; line-height: 1.8;">
-                                                <li class="mb-3">
-                                                    <i class="bi bi-check-circle-fill text-success me-2"></i>
-                                                    <strong>Hair Preparation:</strong> Hair must be washed and detangled before appointment
-                                                </li>
-                                                <li class="mb-3">
-                                                    <i class="bi bi-check-circle-fill text-success me-2"></i>
-                                                    <strong>Extensions:</strong> Clients may provide their own extensions or purchase from us
-                                                </li>
-                                                <li class="mb-3">
-                                                    <i class="bi bi-check-circle-fill text-success me-2"></i>
-                                                    <strong>Duration:</strong> Service duration varies based on style complexity
-                                                </li>
-
-                                            </ul>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <ul class="list-unstyled" style="font-size: 1rem; line-height: 1.8;">
-                                                <li class="mb-3">
-                                                    <i class="bi bi-exclamation-circle-fill text-warning me-2"></i>
-                                                    <strong>Style Changes:</strong> No style changes allowed on the day of appointment or after confirmation, as a time window is reserved for your service
-                                                </li>
-                                                <li class="mb-3">
-                                                    <i class="bi bi-calendar-check-fill text-info me-2"></i>
-                                                    <strong>Time Reservation:</strong> Once confirmed, your appointment slot is exclusively reserved, preventing other bookings
-                                                </li>
-                                            </ul>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            @include('partials.terms-content')
         </div>
     </section>
     @include('partials.site-footer')
-
-
 
     <!-- JavaScript Files -->
     <script>
@@ -6222,7 +6067,9 @@ function openOtherServicesModal() {
         }
 
         // Clear form on page load to ensure it starts fresh
-        clearBookingForm();
+        if (typeof clearBookingForm === 'function') {
+            clearBookingForm();
+        }
 
     // Clear form data when page is about to unload (refresh/close)
     window.addEventListener('beforeunload', function() {
@@ -6285,27 +6132,38 @@ function openOtherServicesModal() {
         }, 300);
     }
 
-    // Function to close modal and navigate to terms
-    function closeModalAndGoToTerms(event) {
-        event.preventDefault();
-
-        // Close the booking modal
-        const bookingModal = bootstrap.Modal.getInstance(document.getElementById('bookingModal'));
-        if (bookingModal) {
-            bookingModal.hide();
+    // Show terms in an overlay so the booking form is not closed, reset, or scrolled away
+    function showTermsPopup(event) {
+        if (event) {
+            event.preventDefault();
+            event.stopPropagation();
+            if (typeof event.stopImmediatePropagation === 'function') {
+                event.stopImmediatePropagation();
+            }
         }
 
-        // Wait for modal to close then scroll to terms
-        setTimeout(function() {
-            const termsSection = document.getElementById('terms');
-            if (termsSection) {
-                termsSection.scrollIntoView({
-                    behavior: 'smooth',
-                    block: 'start'
-                });
-            }
-        }, 300); // Small delay to ensure modal closes first
+        var overlay = document.getElementById('termsPreviewOverlay');
+        var body = document.getElementById('termsPreviewOverlayBody');
+        var source = document.querySelector('#terms .container');
+        if (!overlay) {
+            return false;
+        }
+        if (body && source && !body.getAttribute('data-filled')) {
+            body.innerHTML = source.innerHTML;
+            body.setAttribute('data-filled', '1');
+        }
+        overlay.style.display = 'flex';
+        return false;
     }
+    window.showTermsPopup = showTermsPopup;
+    function closeModalAndGoToTerms(event) {
+        return showTermsPopup(event);
+    }
+    function hideTermsPopup() {
+        var overlay = document.getElementById('termsPreviewOverlay');
+        if (overlay) overlay.style.display = 'none';
+    }
+    window.hideTermsPopup = hideTermsPopup;
 
 </script>
 <script src="{{ asset('js/core.min.js') }}?v={{ @filemtime(public_path('js/core.min.js')) }}"></script>
@@ -6313,6 +6171,58 @@ function openOtherServicesModal() {
 
 <!-- Bootstrap JS (if not included in core.min.js) -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+(function () {
+    function hideTermsPopup() {
+        var overlay = document.getElementById('termsPreviewOverlay');
+        if (overlay) overlay.style.display = 'none';
+    }
+
+    window.showTermsPopup = function (event) {
+        if (event) {
+            event.preventDefault();
+            event.stopPropagation();
+            if (typeof event.stopImmediatePropagation === 'function') {
+                event.stopImmediatePropagation();
+            }
+        }
+        var overlay = document.getElementById('termsPreviewOverlay');
+        var body = document.getElementById('termsPreviewOverlayBody');
+        var source = document.querySelector('#terms .container');
+        if (!overlay) return false;
+        if (overlay.parentElement !== document.body) {
+            document.body.appendChild(overlay);
+        }
+        if (body && source && !body.getAttribute('data-filled')) {
+            body.innerHTML = source.innerHTML;
+            body.setAttribute('data-filled', '1');
+        }
+        overlay.style.display = 'flex';
+        return false;
+    };
+    window.hideTermsPopup = hideTermsPopup;
+
+    document.addEventListener('click', function (e) {
+        var closeBtn = e.target.closest('[data-terms-close]');
+        if (closeBtn) {
+            e.preventDefault();
+            hideTermsPopup();
+            return;
+        }
+        var overlay = document.getElementById('termsPreviewOverlay');
+        if (overlay && e.target === overlay) {
+            hideTermsPopup();
+            return;
+        }
+        var link = e.target.closest('a.js-terms-popup');
+        if (!link) return;
+        e.preventDefault();
+        e.stopPropagation();
+        window.showTermsPopup(e);
+    }, true);
+})();
+</script>
 
 <!-- Additional JavaScript -->
 <script>
@@ -9134,7 +9044,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                     </small>
                                 </div>
 
-                                <div class="mb-3 d-none" id="parkingFieldContainerKids">
+                                <div class="mb-3 d-none parking-choice-group" id="parkingFieldContainerKids">
                                     <label class="form-label">Parking at Address *</label>
                                     <div class="d-flex gap-3">
                                         <div class="form-check">
@@ -9146,8 +9056,11 @@ document.addEventListener('DOMContentLoaded', function() {
                                             <label class="form-check-label" for="parking_type_paid_kids">Paid parking</label>
                                         </div>
                                     </div>
+                                    <div class="alert alert-warning py-2 mt-2 mb-0 paid-parking-note" style="font-size:0.95rem;">
+                                        <strong>Please note:</strong> You are responsible for covering the paid parking ticket so the stylist can park at your address.
+                                    </div>
                                     <small class="form-text text-muted mt-2">
-                                        <i class="bi bi-p-circle me-1"></i>Required for mobile appointments.
+                                        <i class="bi bi-p-circle me-1"></i>Required for mobile appointments. Paid parking is covered by the client.
                                     </small>
                                 </div>
 
@@ -9195,7 +9108,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                             <input class="form-check-input" type="checkbox" id="termsAcceptedKids" name="terms_accepted" value="1" required autocomplete="off">
                                             <div>
                                                 <label for="termsAcceptedKids" style="font-size:0.95rem;">
-                                                    I agree to the <a href="#terms" style="color:#030f68; font-weight:600; text-decoration:none;" onclick="closeModalAndGoToTerms(event)">Terms &amp; Conditions</a>.
+                                                    I agree to the <a href="#" class="js-terms-popup" style="color:#030f68; font-weight:600; text-decoration:none;">Terms &amp; Conditions</a>.
                                                 </label>
                                             </div>
                                         </div>
@@ -9213,6 +9126,20 @@ document.addEventListener('DOMContentLoaded', function() {
                         </div>
                     </form>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Terms preview overlay (not a Bootstrap modal, so booking form stays open) -->
+    <div id="termsPreviewOverlay" style="display:none; position:fixed; inset:0; z-index:20000; background:rgba(3,15,104,0.55); align-items:center; justify-content:center; padding:16px;">
+        <div style="background:#fff; max-width:960px; width:100%; max-height:90vh; display:flex; flex-direction:column; border-radius:18px; overflow:hidden; box-shadow:0 12px 40px rgba(0,0,0,0.25);">
+            <div style="background:linear-gradient(135deg, #030f68 0%, #4a8bc2 100%); color:#fff; padding:16px 20px; display:flex; align-items:center; justify-content:space-between;">
+                <strong style="font-size:1.1rem;">Terms &amp; Conditions</strong>
+                <button type="button" data-terms-close="1" style="background:transparent; border:0; color:#fff; font-size:1.6rem; line-height:1; cursor:pointer;" aria-label="Close">&times;</button>
+            </div>
+            <div id="termsPreviewOverlayBody" style="overflow:auto; padding:20px; background:#f8f9fa; flex:1;"></div>
+            <div style="padding:14px 20px; text-align:right; background:#fff;">
+                <button type="button" data-terms-close="1" class="btn btn-primary" style="background:#030f68; border:none; font-weight:700;">Back to booking</button>
             </div>
         </div>
     </div>
@@ -9242,6 +9169,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             <li>Rescheduling requires 48 hours notice and must be within 1 month of the initial appointment date.</li>
                             <li>No-shows may result in a full charge and may affect future bookings.</li>
                             <li>For home service: clients cover fueling for the stylist's transportation; fees vary by distance.</li>
+                            <li>If parking at the home-service address is paid, the client covers the parking ticket.</li>
                             <li>For mobile service: travel fee may apply based on distance in Ottawa/Gatineau area.</li>
                     </div>
 
@@ -9252,7 +9180,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         </label>
                     </div>
                     <div class="mt-3">
-                        <a href="#terms" onclick="try{document.getElementById('terms')?.scrollIntoView({behavior:'smooth'});}catch(e){}"
+                        <a href="#" class="js-terms-popup"
                            style="color:#030f68; font-weight:600; text-decoration:none;">
                             View full Terms &amp; Conditions
                         </a>

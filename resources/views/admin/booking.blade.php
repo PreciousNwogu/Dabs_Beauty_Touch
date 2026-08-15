@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>
         @if(isset($booking))
             Booking #{{ $booking->id }} - Dab's Beauty Touch
@@ -13,9 +14,11 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         body { background: #f6f8fb; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        .container { margin-top: 40px; }
+        .container { margin-top: 40px; max-width: 1100px; }
         .sample-img { max-width: 100%; height: auto; border-radius: 8px; box-shadow: 0 6px 18px rgba(0,0,0,0.08); }
         .meta { color: #6c757d; }
+        .section-title { color: #030f68; font-weight: 700; font-size: 1.05rem; margin: 18px 0 10px; }
+        .form-label { font-weight: 600; color: #334155; }
     </style>
 </head>
 <body>
@@ -23,67 +26,204 @@
     <a href="{{ route('admin.dashboard') }}" class="btn btn-link mb-3">&larr; Back to dashboard</a>
 
     @if(isset($booking) && $booking)
+        @php
+            $timeValue = $booking->appointment_time;
+            try { $timeValue = $booking->appointment_time ? \Carbon\Carbon::parse($booking->appointment_time)->format('H:i') : ''; } catch (\Throwable $e) {}
+            $dateValue = $booking->appointment_date ? $booking->appointment_date->format('Y-m-d') : '';
+            $isKids = stripos((string) $booking->service, 'kids') !== false || !empty($booking->kb_braid_type) || !empty($booking->kb_length);
+            $lengths = ['neck'=>'Neck','shoulder'=>'Shoulder','armpit'=>'Armpit','bra_strap'=>'Bra strap','mid_back'=>'Mid back','waist'=>'Waist','hip'=>'Hip','tailbone'=>'Tailbone','classic'=>'Classic'];
+            $kidsTypes = ['protective'=>'Natural Hair Twist','cornrows'=>'Cornrows','cornrow_weave'=>'Cornrow Weave','knotless_small'=>'Knotless Small','knotless_med'=>'Knotless Medium','box_small'=>'Box Small','box_med'=>'Box Medium','stitch'=>'Stitch','half_weave_braid'=>'1/2 Weave & 1/2 Braid','half_weave_crotchet'=>'1/2 Weave & 1/2 Crotchet','crotchet_style'=>'Crotchet Style'];
+        @endphp
+        @if(session('success'))
+            <div class="alert alert-success">{{ session('success') }}</div>
+        @endif
+        @if($errors->any())
+            <div class="alert alert-danger">
+                <ul class="mb-0">@foreach($errors->all() as $err)<li>{{ $err }}</li>@endforeach</ul>
+            </div>
+        @endif
+
         <div class="card">
-            <div class="card-header bg-dark text-white">
+            <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
                 <h4 class="mb-0">Booking Details — #{{ sprintf('BK%06d', $booking->id) }}</h4>
+                <span class="badge bg-{{ $booking->status === 'confirmed' ? 'success' : ($booking->status === 'pending' ? 'warning text-dark' : 'secondary') }}">{{ ucfirst($booking->status) }}</span>
             </div>
             <div class="card-body">
-                <div class="row">
-                    <div class="col-md-7">
-                        <h5>Customer</h5>
-                        <p><strong>{{ $booking->name }}</strong><br>
-                        <span class="meta">{{ $booking->email ?: 'No email' }} • {{ $booking->phone ?: 'No phone' }}</span></p>
+                <form method="POST" action="{{ route('admin.bookings.update', ['id' => $booking->id]) }}">
+                    @csrf
+                    <div class="row">
+                        <div class="col-md-7">
+                            <div class="section-title">Customer</div>
+                            <div class="mb-2">
+                                <label class="form-label">Name</label>
+                                <input class="form-control" name="name" value="{{ old('name', $booking->name) }}" required>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 mb-2">
+                                    <label class="form-label">Email</label>
+                                    <input class="form-control" type="email" name="email" value="{{ old('email', $booking->email === 'no-email@example.com' ? '' : $booking->email) }}">
+                                </div>
+                                <div class="col-md-6 mb-2">
+                                    <label class="form-label">Phone</label>
+                                    <input class="form-control" name="phone" value="{{ old('phone', $booking->phone) }}">
+                                </div>
+                            </div>
 
-                        <h5>Appointment</h5>
-                        <p>
-                            <strong>Service:</strong> {{ $booking->service ?: 'General Service' }}<br>
-                            <strong>Date:</strong> {{ $booking->appointment_date ? $booking->appointment_date->format('F j, Y') : 'N/A' }}<br>
-                            <strong>Time:</strong> {{ $booking->appointment_time ?: 'N/A' }}<br>
-                            <strong>Length:</strong> {{ $booking->length ?: 'Not specified' }}<br>
-                            <strong>Final Price:</strong> {{ isset($booking->final_price) ? '$' . number_format($booking->final_price, 2) : 'N/A' }}
-                        </p>
+                            <div class="section-title">Appointment</div>
+                            <div class="mb-2">
+                                <label class="form-label">Service</label>
+                                <input class="form-control" name="service" value="{{ old('service', $booking->service) }}">
+                            </div>
+                            <div class="row">
+                                <div class="col-md-4 mb-2">
+                                    <label class="form-label">Date</label>
+                                    <input class="form-control" type="date" name="appointment_date" value="{{ old('appointment_date', $dateValue) }}" required>
+                                </div>
+                                <div class="col-md-4 mb-2">
+                                    <label class="form-label">Time</label>
+                                    <input class="form-control" type="time" name="appointment_time" value="{{ old('appointment_time', $timeValue) }}" required>
+                                </div>
+                                <div class="col-md-4 mb-2">
+                                    <label class="form-label">Length</label>
+                                    <select class="form-select" name="length">
+                                        <option value="">Not specified</option>
+                                        @foreach($lengths as $k => $label)
+                                            <option value="{{ $k }}" @selected(old('length', $booking->length) === $k)>{{ $label }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
 
-                        @if($booking->message)
-                            <h5>Customer Message</h5>
-                            <p class="border rounded p-3 bg-light">{{ $booking->message }}</p>
-                        @endif
+                            <div class="row">
+                                <div class="col-md-6 mb-2">
+                                    <label class="form-label">Location</label>
+                                    <select class="form-select" name="appointment_type" id="adminAppointmentType">
+                                        <option value="in-studio" @selected(old('appointment_type', $booking->appointment_type) !== 'mobile')>Stylist location</option>
+                                        <option value="mobile" @selected(old('appointment_type', $booking->appointment_type) === 'mobile')>Home service</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6 mb-2">
+                                    <label class="form-label">Parking</label>
+                                    <select class="form-select" name="parking_type">
+                                        <option value="">Not provided</option>
+                                        <option value="free" @selected(old('parking_type', $booking->parking_type) === 'free')>Free parking</option>
+                                        <option value="paid" @selected(old('parking_type', $booking->parking_type) === 'paid')>Paid parking (client covers ticket)</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="mb-2">
+                                <label class="form-label">Service Address</label>
+                                <input class="form-control" name="address" value="{{ old('address', $booking->address) }}" placeholder="Required for home service">
+                            </div>
 
-                        @if($booking->status === 'completed')
-                            <h5>Completion</h5>
-                            <p>
-                                <strong>Completed At:</strong> {{ $booking->completed_at ? $booking->completed_at->setTimezone('America/Toronto')->format('F j, Y g:i A') : 'N/A' }}<br>
-                                <strong>Completed By:</strong> {{ $booking->completed_by ?: 'N/A' }}<br>
-                                <strong>Service Duration:</strong> {{ $booking->service_duration_minutes ? $booking->service_duration_minutes . ' minutes' : 'N/A' }}
-                            </p>
-                            @if($booking->completion_notes)
-                                <p class="border rounded p-2 bg-light"><strong>Notes:</strong> {{ $booking->completion_notes }}</p>
+                            @if($isKids)
+                                <div class="section-title">Kids style details</div>
+                                <div class="row">
+                                    <div class="col-md-6 mb-2">
+                                        <label class="form-label">Braid type</label>
+                                        <select class="form-select" name="kb_braid_type">
+                                            <option value="">Not specified</option>
+                                            @foreach($kidsTypes as $k => $label)
+                                                <option value="{{ $k }}" @selected(old('kb_braid_type', $booking->kb_braid_type) === $k)>{{ $label }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    <div class="col-md-3 mb-2">
+                                        <label class="form-label">Finish</label>
+                                        <input class="form-control" name="kb_finish" value="{{ old('kb_finish', $booking->kb_finish) }}">
+                                    </div>
+                                    <div class="col-md-3 mb-2">
+                                        <label class="form-label">Kids length</label>
+                                        <select class="form-select" name="kb_length">
+                                            <option value="">Not specified</option>
+                                            @foreach($lengths as $k => $label)
+                                                <option value="{{ $k }}" @selected(old('kb_length', $booking->kb_length) === $k)>{{ $label }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="mb-2">
+                                    <label class="form-label">Extras</label>
+                                    <input class="form-control" name="kb_extras" value="{{ old('kb_extras', is_array($booking->kb_extras) ? implode(',', $booking->kb_extras) : $booking->kb_extras) }}">
+                                </div>
                             @endif
-                        @endif
-                    </div>
 
-                    <div class="col-md-5">
-                        <h5>Sample Picture</h5>
-                        @if($booking->sample_picture)
-                            <img src="{{ asset('storage/' . $booking->sample_picture) }}" alt="Sample picture" class="sample-img mb-2" id="samplePreview">
-                            <div>
-                                <a href="{{ asset('storage/' . $booking->sample_picture) }}" download class="btn btn-sm btn-outline-primary">Download image</a>
-                                <button class="btn btn-sm btn-secondary" onclick="openImageModal()">View larger</button>
+                            <div class="section-title">Pricing &amp; status</div>
+                            <div class="row">
+                                <div class="col-md-4 mb-2">
+                                    <label class="form-label">Base price</label>
+                                    <input class="form-control" type="number" step="0.01" name="base_price" value="{{ old('base_price', $booking->base_price ?? $booking->kb_base_price) }}">
+                                </div>
+                                <div class="col-md-4 mb-2">
+                                    <label class="form-label">Length adjustment</label>
+                                    <input class="form-control" type="number" step="0.01" name="length_adjustment" value="{{ old('length_adjustment', $booking->length_adjustment ?? $booking->kb_length_adjustment) }}">
+                                </div>
+                                <div class="col-md-4 mb-2">
+                                    <label class="form-label">Final price</label>
+                                    <input class="form-control" type="number" step="0.01" name="final_price" value="{{ old('final_price', $booking->final_price ?? $booking->kb_final_price) }}">
+                                </div>
                             </div>
-                        @else
-                            <div class="border rounded p-4 text-center text-muted">
-                                <i class="bi bi-image" style="font-size: 2rem"></i>
-                                <p class="mb-0">No sample image provided</p>
+                            <div class="row">
+                                <div class="col-md-6 mb-2">
+                                    <label class="form-label">Status</label>
+                                    <select class="form-select" name="status">
+                                        @foreach(['pending','confirmed','cancelled','completed'] as $st)
+                                            <option value="{{ $st }}" @selected(old('status', $booking->status) === $st)>{{ ucfirst($st) }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="col-md-6 mb-2">
+                                    <label class="form-label">Payment</label>
+                                    <select class="form-select" name="payment_status">
+                                        @foreach(['pending'=>'Pending','deposit_paid'=>'Deposit paid','fully_paid'=>'Fully paid'] as $k => $label)
+                                            <option value="{{ $k }}" @selected(old('payment_status', $booking->payment_status) === $k)>{{ $label }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
                             </div>
-                        @endif
+                            <div class="mb-2">
+                                <label class="form-label">Customer message</label>
+                                <textarea class="form-control" name="message" rows="2">{{ old('message', $booking->message) }}</textarea>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Admin notes</label>
+                                <textarea class="form-control" name="notes" rows="2">{{ old('notes', $booking->notes) }}</textarea>
+                            </div>
+                            <button type="submit" class="btn btn-primary" style="background:#030f68; border:none; font-weight:700;">
+                                Save booking changes
+                            </button>
+                        </div>
 
-                        <hr>
+                        <div class="col-md-5">
+                            <div class="section-title">Sample picture</div>
+                            @if($booking->sample_picture)
+                                <img src="{{ asset('storage/' . $booking->sample_picture) }}" alt="Sample picture" class="sample-img mb-2" id="samplePreview">
+                                <div>
+                                    <a href="{{ asset('storage/' . $booking->sample_picture) }}" download class="btn btn-sm btn-outline-primary">Download image</a>
+                                    <button type="button" class="btn btn-sm btn-secondary" onclick="openImageModal()">View larger</button>
+                                </div>
+                            @else
+                                <div class="border rounded p-4 text-center text-muted">
+                                    <p class="mb-0">No sample image provided</p>
+                                </div>
+                            @endif
 
-                        <h6>Meta</h6>
-                        <p class="meta">Booking ID: {{ sprintf('BK%06d', $booking->id) }}<br>
-                        Status: {{ ucfirst($booking->status) }}<br>
-                        Created: {{ $booking->created_at ? $booking->created_at->setTimezone('America/Toronto')->format('F j, Y g:i A') : 'N/A' }}</p>
+                            <hr>
+                            <h6>Summary</h6>
+                            <p class="meta mb-1">Booking ID: {{ sprintf('BK%06d', $booking->id) }}</p>
+                            <p class="meta mb-1">Confirmation: {{ $booking->confirmation_code ?: 'N/A' }}</p>
+                            <p class="meta mb-1">Created: {{ $booking->created_at ? $booking->created_at->setTimezone('America/Toronto')->format('F j, Y g:i A') : 'N/A' }}</p>
+                            @if($booking->hair_mask_option)
+                                <p class="meta mb-1">Hair mask option: {{ $booking->hair_mask_option }}</p>
+                            @endif
+                            @if($booking->stitch_rows_option)
+                                <p class="meta mb-1">Stitch rows: {{ $booking->stitch_rows_option }}</p>
+                            @endif
+                            <input type="hidden" name="hair_mask_option" value="{{ $booking->hair_mask_option }}">
+                            <input type="hidden" name="stitch_rows_option" value="{{ $booking->stitch_rows_option }}">
+                        </div>
                     </div>
-                </div>
+                </form>
             </div>
         </div>
     @elseif(isset($customRequest) && $customRequest)

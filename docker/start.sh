@@ -41,5 +41,11 @@ chmod -R 775 /var/www/html/bootstrap/cache
 
 echo "✅ Application setup complete! Starting Apache..."
 
+# Run Laravel's scheduler every minute so appointment reminders go out
+(while true; do
+    php artisan schedule:run --no-interaction >> /var/www/html/storage/logs/scheduler.log 2>&1 || true
+    sleep 60
+done) &
+
 # Start Apache in foreground
 exec apache2-foreground

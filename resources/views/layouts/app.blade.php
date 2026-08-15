@@ -18,7 +18,7 @@
     <meta property="og:url" content="@yield('og_url', url('/'))">
     <meta property="og:title" content="@yield('og_title', "Dab's Beauty Touch - Professional Hair Braiding Services")">
     <meta property="og:description" content="@yield('og_description', "Professional hair braiding services in Ottawa. Expert stylists specializing in knotless braids, box braids, wig installation, and custom styles.")">
-    <meta property="og:image" content="@yield('og_image', asset('images/logo.jpg'))">
+    <meta property="og:image" content="@yield('og_image', asset('images/backgroundbraid.jpg'))">
     <meta property="og:site_name" content="Dab's Beauty Touch">
     <meta property="og:locale" content="en_CA">
 
@@ -27,7 +27,7 @@
     <meta name="twitter:url" content="@yield('twitter_url', url('/'))">
     <meta name="twitter:title" content="@yield('twitter_title', "Dab's Beauty Touch - Professional Hair Braiding Services")">
     <meta name="twitter:description" content="@yield('twitter_description', "Professional hair braiding services in Ottawa. Expert stylists specializing in knotless braids, box braids, wig installation, and custom styles.")">
-    <meta name="twitter:image" content="@yield('twitter_image', asset('images/logo.jpg'))">
+    <meta name="twitter:image" content="@yield('twitter_image', asset('images/backgroundbraid.jpg'))">
 
     <!-- Additional Meta Tags -->
     @stack('meta')

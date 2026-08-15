@@ -106,6 +106,7 @@ class ServiceCompletedNotification extends Notification
                 'duration' => $duration,
                 'finalPrice' => $finalPrice,
                 'breakdown' => $breakdown,
+                'googleReviewUrl' => \App\Support\GoogleReview::url(),
             ]);
     }
 

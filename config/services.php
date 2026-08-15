@@ -35,4 +35,9 @@ return [
         ],
     ],
 
+    'google' => [
+        'review_url' => env('GOOGLE_REVIEW_URL'),
+        'place_id' => env('GOOGLE_PLACE_ID'),
+    ],
+
 ];
