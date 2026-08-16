@@ -161,15 +161,20 @@ class KidsStyleCatalog
     public static function slugVariantsFor(array $def): array
     {
         $raw = array_merge([$def['slug'] ?? ''], $def['alt_slugs'] ?? []);
+        $adultSlugs = AdultServiceCatalog::hardcodedSlugs();
         $out = [];
         foreach ($raw as $slug) {
             $slug = trim((string) $slug);
             if ($slug === '') {
                 continue;
             }
-            $out[] = $slug;
-            $out[] = str_replace('_', '-', $slug);
-            $out[] = str_replace('-', '_', $slug);
+            foreach ([$slug, str_replace('_', '-', $slug), str_replace('-', '_', $slug)] as $variant) {
+                // cornrow_weave → cornrow-weave would steal the adult homepage service.
+                if (in_array($variant, $adultSlugs, true) && ! in_array($variant, $raw, true)) {
+                    continue;
+                }
+                $out[] = $variant;
+            }
         }
 
         return array_values(array_unique($out));
@@ -253,6 +258,7 @@ class KidsStyleCatalog
         foreach (self::definitions() as $def) {
             $slugs = self::slugVariantsFor($def);
             $matches = Service::query()
+                ->when(Schema::hasColumn('services', 'for_kids'), fn ($q) => $q->where('for_kids', true))
                 ->where(function ($q) use ($slugs, $def) {
                     $q->whereIn('slug', $slugs)->orWhere('name', $def['name']);
                 })

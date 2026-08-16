@@ -152,4 +152,78 @@ class KidsServicesCmsTest extends TestCase
         $this->assertSame('box_small', $box->fresh()->slug);
         $this->assertSame('knotless_small', $knotless->fresh()->slug);
     }
+
+    public function test_adult_cornrow_weave_slug_is_not_treated_as_a_kids_style(): void
+    {
+        $this->assertNull(KidsStyleCatalog::canonicalSlug('cornrow-weave'));
+        $this->assertNull(KidsStyleCatalog::canonicalSlug('stitch-braids'));
+        $this->assertSame('cornrow_weave', KidsStyleCatalog::canonicalSlug('kids-cornrow-weave'));
+        $this->assertSame('stitch', KidsStyleCatalog::canonicalSlug('kids-stitch-braids'));
+    }
+
+    public function test_admin_can_update_adult_cornrow_and_stitch_photos_while_kids_styles_exist(): void
+    {
+        $admin = User::factory()->admin()->create();
+        KidsStyleCatalog::ensureCmsServices();
+
+        $cornrowWeave = Service::query()->create([
+            'name' => 'Cornrow Weave',
+            'slug' => 'cornrow-weave',
+            'base_price' => 100,
+            'is_active' => true,
+            'for_kids' => false,
+            'category' => 'Cornrow/Feed-in Braids',
+        ]);
+        $stitchBraids = Service::query()->create([
+            'name' => 'Stitch Braids',
+            'slug' => 'stitch-braids',
+            'base_price' => 120,
+            'is_active' => true,
+            'for_kids' => false,
+            'category' => 'Cornrow/Feed-in Braids',
+        ]);
+
+        $this->actingAs($admin)
+            ->get('/admin/services/'.$cornrowWeave->id)
+            ->assertRedirect(route('admin.services.edit', $cornrowWeave));
+
+        $this->actingAs($admin)
+            ->get(route('admin.services.edit', $cornrowWeave))
+            ->assertOk();
+
+        $this->actingAs($admin)
+            ->put(route('admin.services.update', $cornrowWeave), [
+                'name' => 'Cornrow Weave',
+                'slug' => 'cornrow-weave',
+                'base_price' => 100,
+                'is_active' => 1,
+                'image_url' => '/images/cornrow-weave.jpg',
+            ])
+            ->assertRedirect(route('admin.services.index'))
+            ->assertSessionHasNoErrors();
+
+        $this->actingAs($admin)
+            ->put(route('admin.services.update', $stitchBraids), [
+                'name' => 'Stitch Braids',
+                'slug' => 'stitch-braids',
+                'base_price' => 120,
+                'is_active' => 1,
+                'image_url' => '/images/stitch braid.jpg',
+            ])
+            ->assertRedirect(route('admin.services.index'))
+            ->assertSessionHasNoErrors();
+
+        $this->assertSame('cornrow-weave', $cornrowWeave->fresh()->slug);
+        $this->assertSame('stitch-braids', $stitchBraids->fresh()->slug);
+        $this->assertFalse((bool) $cornrowWeave->fresh()->for_kids);
+        $this->assertSame('/images/cornrow-weave.jpg', $cornrowWeave->fresh()->image_url);
+        $this->assertSame('/images/stitch braid.jpg', $stitchBraids->fresh()->image_url);
+
+        $kidsCornrow = Service::query()->where('slug', 'cornrow_weave')->first();
+        $kidsStitch = Service::query()->where('slug', 'stitch')->first();
+        $this->assertNotNull($kidsCornrow);
+        $this->assertNotNull($kidsStitch);
+        $this->assertTrue((bool) $kidsCornrow->for_kids);
+        $this->assertTrue((bool) $kidsStitch->for_kids);
+    }
 }

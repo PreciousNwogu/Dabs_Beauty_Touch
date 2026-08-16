@@ -131,9 +131,9 @@
                         $currentImage = old('image_url', $service->image_url ?? '');
                         $currentImageSrc = '';
                         if ($currentImage) {
-                            $currentImageSrc = preg_match('#^https?://#i', $currentImage)
+                            $currentImageSrc = preg_match('#^(https?:|data:)#i', $currentImage)
                                 ? $currentImage
-                                : asset(ltrim($currentImage, '/'));
+                                : \App\Support\AdultServiceCatalog::publicImageUrl($currentImage);
                         } elseif (isset($service)) {
                             $catalogFallback = \App\Support\KidsStyleCatalog::catalogImageForSlug($service->slug);
                             if ($catalogFallback !== '') {
@@ -336,6 +336,9 @@
                         @php
                             $sizeLabels = \App\Support\AdultServiceCatalog::sizeLabels();
                             $savedSizes = old('size_price', $service->size_options ?? []);
+                            if (! is_array($savedSizes)) {
+                                $savedSizes = [];
+                            }
                             $baseForSizes = (int) old('base_price', isset($service) ? (int) $service->base_price : 0);
                             $savedEnabled = old('size_enabled', array_fill_keys(array_keys($savedSizes ?: []), '1'));
                             $offerSizes = old('offer_braid_sizes', !empty($savedSizes));

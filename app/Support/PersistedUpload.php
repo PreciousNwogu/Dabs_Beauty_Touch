@@ -110,29 +110,33 @@ class PersistedUpload
 
     public static function persistExisting(?string $publicPath): ?string
     {
-        $publicPath = self::normalize($publicPath);
-        if ($publicPath === '' || ! self::isSafePublicPath($publicPath)) {
-            return null;
-        }
+        try {
+            $publicPath = self::normalize($publicPath);
+            if ($publicPath === '' || ! self::isSafePublicPath($publicPath)) {
+                return null;
+            }
 
-        $absolute = self::absolutePath($publicPath);
-        if (! is_file($absolute)) {
-            return self::hasStored($publicPath) ? $publicPath : null;
-        }
+            $absolute = self::absolutePath($publicPath);
+            if (! is_file($absolute)) {
+                return self::hasStored($publicPath) ? $publicPath : null;
+            }
 
-        $size = filesize($absolute);
-        if ($size !== false && $size > 4 * 1024 * 1024) {
+            $size = filesize($absolute);
+            if ($size !== false && $size > 4 * 1024 * 1024) {
+                return $publicPath;
+            }
+
+            $binary = file_get_contents($absolute);
+            if ($binary === false || $binary === '') {
+                return null;
+            }
+
+            self::put($publicPath, $binary, mime_content_type($absolute) ?: null);
+
             return $publicPath;
-        }
-
-        $binary = file_get_contents($absolute);
-        if ($binary === false || $binary === '') {
+        } catch (\Throwable $e) {
             return null;
         }
-
-        self::put($publicPath, $binary, mime_content_type($absolute) ?: null);
-
-        return $publicPath;
     }
 
     public static function isAvailable(?string $publicPath): bool

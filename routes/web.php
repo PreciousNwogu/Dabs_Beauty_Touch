@@ -68,6 +68,7 @@ Route::prefix('admin')->name('admin.')->middleware('admin')->group(function () {
     Route::get('services/create',                [AdminServiceController::class, 'create'])         ->name('services.create');
     Route::post('services',                      [AdminServiceController::class, 'store'])          ->name('services.store');
     Route::get('services/{service}/edit',        [AdminServiceController::class, 'edit'])           ->name('services.edit');
+    Route::get('services/{service}',             [AdminServiceController::class, 'show'])           ->name('services.show');
     Route::put('services/{service}',             [AdminServiceController::class, 'update'])         ->name('services.update');
     Route::patch('services/{service}/discount',  [AdminServiceController::class, 'updateDiscount'])->name('services.discount');
     Route::delete('services/{service}',          [AdminServiceController::class, 'destroy'])       ->name('services.destroy');

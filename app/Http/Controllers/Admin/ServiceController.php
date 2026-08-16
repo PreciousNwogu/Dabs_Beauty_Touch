@@ -4,11 +4,13 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Support\AdultServiceCatalog;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
 use App\Models\Service;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\ValidationException;
 
@@ -49,7 +51,7 @@ class ServiceController extends Controller
     {
         $data = $request->validate([
             'name'           => 'required|string|max:255|unique:services,name',
-            'slug'           => 'nullable|string|max:255',
+            'slug'           => 'nullable|string|max:255|unique:services,slug',
             'base_price'     => 'required|numeric|min:0',
             'discount_price' => 'nullable|numeric|min:0|lt:base_price',
             'discount_ends_at' => 'nullable|date|after:now',
@@ -79,12 +81,22 @@ class ServiceController extends Controller
         ], $this->imageUploadMessages());
 
         $data = $this->normalizeServicePayload($data);
+        $this->assertUniqueServiceSlug($data['slug'] ?? null);
         $data['image_url'] = $this->resolveServiceImage($request);
         $this->clearSiblingCategoryCards($data);
 
-        Service::create($data);
+        try {
+            Service::create($data);
+        } catch (QueryException $e) {
+            $this->rethrowUniqueServiceConflict($e);
+        }
 
         return redirect()->route('admin.services.index')->with('success', 'Service created successfully.');
+    }
+
+    public function show(Service $service)
+    {
+        return redirect()->route('admin.services.edit', $service);
     }
 
     public function edit(Service $service)
@@ -106,7 +118,7 @@ class ServiceController extends Controller
     {
         $data = $request->validate([
             'name'           => 'required|string|max:255|unique:services,name,' . $service->id,
-            'slug'           => 'nullable|string|max:255',
+            'slug'           => 'nullable|string|max:255|unique:services,slug,' . $service->id,
             'base_price'     => 'required|numeric|min:0',
             'discount_price' => 'nullable|numeric|min:0',
             'discount_ends_at' => 'nullable|date',
@@ -136,10 +148,15 @@ class ServiceController extends Controller
         ], $this->imageUploadMessages());
 
         $data = $this->normalizeServicePayload($data, $service);
+        $this->assertUniqueServiceSlug($data['slug'] ?? $service->slug, $service->id);
         $data['image_url'] = $this->resolveServiceImage($request, $service);
         $this->clearSiblingCategoryCards($data, $service);
 
-        $service->update($data);
+        try {
+            $service->update($data);
+        } catch (QueryException $e) {
+            $this->rethrowUniqueServiceConflict($e);
+        }
 
         return redirect()->route('admin.services.index')->with('success', 'Service updated successfully.');
     }
@@ -188,10 +205,15 @@ class ServiceController extends Controller
         }
         unset($data['new_category']);
 
+        $data['is_active'] = !empty($data['is_active']);
+        $data['for_kids'] = !empty($data['for_kids']);
+
         if (!empty($data['slug']) || $service) {
             $incoming = (string) ($data['slug'] ?? $service->slug ?? '');
-            $canonicalKids = \App\Support\KidsStyleCatalog::canonicalSlug($incoming)
-                ?: ($service ? \App\Support\KidsStyleCatalog::canonicalSlug($service->slug) : null);
+            $canonicalKids = $data['for_kids']
+                ? (\App\Support\KidsStyleCatalog::canonicalSlug($incoming)
+                    ?: ($service ? \App\Support\KidsStyleCatalog::canonicalSlug($service->slug) : null))
+                : null;
             if ($canonicalKids) {
                 $data['slug'] = $canonicalKids;
             } elseif (!empty($data['slug'])) {
@@ -206,9 +228,6 @@ class ServiceController extends Controller
         } else {
             unset($data['slug']);
         }
-
-        $data['is_active'] = !empty($data['is_active']);
-        $data['for_kids'] = !empty($data['for_kids']);
         $data['use_as_category_card'] = $data['for_kids'] ? false : !empty($data['use_as_category_card']);
         $data['has_length'] = !empty($data['has_length']);
         $data['has_tip_finish'] = !empty($data['has_tip_finish']);
@@ -299,7 +318,7 @@ class ServiceController extends Controller
                 $name = $file->getFilename();
                 $out[] = [
                     'path' => '/images/' . $name,
-                    'url' => asset('images/' . $name),
+                    'url' => AdultServiceCatalog::publicImageUrl('/images/' . $name),
                     'name' => $name,
                     'source' => 'gallery',
                 ];
@@ -322,7 +341,7 @@ class ServiceController extends Controller
                 $name = $file->getFilename();
                 $out[] = [
                     'path' => $urlPrefix . $name,
-                    'url' => asset(ltrim($urlPrefix . $name, '/')),
+                    'url' => AdultServiceCatalog::publicImageUrl($urlPrefix . $name),
                     'name' => $name,
                     'source' => 'upload',
                 ];
@@ -441,9 +460,48 @@ class ServiceController extends Controller
             $this->deleteStoredServiceImage($existing->image_url);
         }
 
-        $kept = \App\Support\PersistedUpload::persistExisting($picked);
+        try {
+            $kept = \App\Support\PersistedUpload::persistExisting($picked);
+        } catch (\Throwable $e) {
+            Log::warning('Could not persist a service card photo.', [
+                'path' => $picked,
+                'error' => $e->getMessage(),
+            ]);
+            $kept = null;
+        }
 
         return $kept ?: $picked;
+    }
+
+    private function assertUniqueServiceSlug(?string $slug, ?int $ignoreId = null): void
+    {
+        $slug = trim((string) $slug);
+        if ($slug === '') {
+            return;
+        }
+
+        $q = Service::query()->where('slug', $slug);
+        if ($ignoreId) {
+            $q->where('id', '!=', $ignoreId);
+        }
+        if ($q->exists()) {
+            throw ValidationException::withMessages([
+                'slug' => 'Another style already uses that web name. Leave the slug as it is and save the photo again.',
+            ]);
+        }
+    }
+
+    private function rethrowUniqueServiceConflict(QueryException $e): never
+    {
+        $sqlState = (string) ($e->errorInfo[0] ?? '');
+        $message = strtolower($e->getMessage());
+        if ($sqlState === '23000' || str_contains($message, 'unique') || str_contains($message, 'duplicate')) {
+            throw ValidationException::withMessages([
+                'name' => 'That style name or photo could not be saved because it collides with another service. Try again without renaming it.',
+            ]);
+        }
+
+        throw $e;
     }
 
     private function storeImageDataUrl(?string $dataUrl): ?string
