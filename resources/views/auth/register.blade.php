@@ -23,11 +23,11 @@
                         @csrf
                         <div class="mb-3">
                             <label class="form-label">Full name</label>
-                            <input class="form-control" type="text" name="name" value="{{ old('name') }}" required autocomplete="name">
+                            <input class="form-control" type="text" name="name" value="{{ old('name', request('name')) }}" required autocomplete="name">
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Email</label>
-                            <input class="form-control" type="email" name="email" value="{{ old('email') }}" required autocomplete="email">
+                            <input class="form-control" type="email" name="email" value="{{ old('email', request('email')) }}" required autocomplete="email">
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Password</label>

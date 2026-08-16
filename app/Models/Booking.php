@@ -116,6 +116,42 @@ class Booking extends Model
         return $email !== '' && $email !== 'no-email@example.com';
     }
 
+    public static function emailNeedsAccount(?string $email, mixed $userId = null): bool
+    {
+        if (! empty($userId)) {
+            return false;
+        }
+
+        $email = strtolower(trim((string) $email));
+        if ($email === '' || $email === 'no-email@example.com') {
+            return false;
+        }
+
+        try {
+            return ! User::query()->whereRaw('LOWER(email) = ?', [$email])->exists();
+        } catch (\Throwable $e) {
+            return true;
+        }
+    }
+
+    public function needsAccountSignup(): bool
+    {
+        return self::emailNeedsAccount($this->email, $this->user_id);
+    }
+
+    public static function signupUrlFor(?string $email, ?string $name = null): string
+    {
+        return route('register', array_filter([
+            'email' => $email ?: null,
+            'name' => $name ?: null,
+        ]));
+    }
+
+    public function accountSignupUrl(): string
+    {
+        return self::signupUrlFor($this->hasUsableEmail() ? $this->email : null, $this->name);
+    }
+
     public function depositIsPending(): bool
     {
         return ($this->payment_status ?? 'pending') === 'pending';

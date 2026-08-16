@@ -8617,6 +8617,8 @@ function openOtherServicesModal() {
                     <i class="bi bi-info-circle me-2"></i>
                     <strong>Important:</strong> Save your Booking ID and Confirmation Code. Your appointment is pending until the {{ $depositLabel }} deposit is received and verified.
                 </div>
+
+                @include('partials.account-signup-prompt', ['variant' => 'page', 'bookingDetails' => session('booking_details', [])])
             </div>
             <div class="modal-footer" style="border-top:none;padding:0 28px 20px;">
                 <a href="{{ route('home') }}" class="btn btn-secondary">Close</a>
@@ -8690,6 +8692,8 @@ function openOtherServicesModal() {
                         <a href="https://wa.me/3432548848" target="_blank" rel="noopener" class="btn btn-sm" style="background:#25d366;color:#fff;border-radius:8px;font-weight:600;"><i class="bi bi-whatsapp me-1"></i>WhatsApp</a>
                     </div>
                 </div>
+
+                @include('partials.account-signup-prompt', ['variant' => 'page', 'bookingDetails' => session('booking_details', [])])
 
                 <div class="text-center" style="margin-bottom:8px;">
                     <button type="button" class="btn" data-bs-dismiss="modal" style="background: linear-gradient(90deg,#06b6d4 0%,#10b981 100%); border:none; color:#05204a; color:#fff; padding:12px 60px; border-radius:999px; font-weight:800; font-size:16px;">OK</button>

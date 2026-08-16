@@ -526,6 +526,8 @@
         <p style="margin:0;font-size:13px;color:#718096;">We'll email you again once the appointment is confirmed.</p>
       </div>
 
+      @include('partials.account-signup-prompt', ['variant' => 'email'])
+
       @if(($booking->appointment_type ?? '') !== 'mobile')
       <div class="reminder">
         <strong>Reminder:</strong> Please arrive on time for your appointment.

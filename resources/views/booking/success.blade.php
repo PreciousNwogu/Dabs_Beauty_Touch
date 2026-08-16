@@ -453,6 +453,8 @@
                 </div>
                 @endif
 
+                @include('partials.account-signup-prompt', ['variant' => 'page'])
+
                 <div class="text-center mt-4">
                     <a href="{{ route('home') }}" class="btn-home me-3">
                         <i class="fas fa-home me-2"></i>
