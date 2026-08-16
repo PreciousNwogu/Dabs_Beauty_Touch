@@ -3910,6 +3910,8 @@
                     }catch(e){ /* noop */ }
                 }catch(e){ console.warn('Failed to populate kids booking inputs', e); }
 
+            try { if (typeof window.updateKidsConfirmState === 'function') window.updateKidsConfirmState(); } catch (e) {}
+
             // Persist chosen date/time so switching service flows keeps it
             try { window.__dbtSaveBookingDraftFromMain?.(); } catch (e) {}
             try { window.__dbtSaveBookingDraftFromKids?.(); } catch (e) {}
@@ -4035,26 +4037,302 @@
         </div>
     </section>
 
-    @if(\App\Support\SiteSettings::get('promo_enabled') && (trim((string) \App\Support\SiteSettings::get('promo_title', '')) !== '' || trim((string) \App\Support\SiteSettings::get('promo_text', '')) !== '' || \App\Support\SiteSettings::promoImageUrl() !== ''))
+    @php
+        $promoMedia = \App\Support\SiteSettings::promoMedia();
+        $promoHasMedia = count($promoMedia) > 0;
+    @endphp
+    @if(\App\Support\SiteSettings::get('promo_enabled') && (trim((string) \App\Support\SiteSettings::get('promo_title', '')) !== '' || trim((string) \App\Support\SiteSettings::get('promo_text', '')) !== '' || $promoHasMedia))
+    <style>
+        .promo-banner-wrap { perspective: 1100px; }
+        .promo-banner {
+            position: relative;
+            overflow: hidden;
+            isolation: isolate;
+            background: linear-gradient(135deg, #fff7ef 0%, #ffffff 52%, #eef2ff 100%);
+            border: 2px solid #ffb27a;
+            border-radius: 22px;
+            padding: 18px 22px;
+            box-shadow: 0 12px 30px rgba(255, 102, 0, 0.18);
+            transform-origin: top center;
+        }
+        .promo-banner .row { min-width: 0; }
+        .promo-banner [class*="col-"] { min-width: 0; max-width: 100%; }
+        .promo-banner.promo-motion-swing { animation: promoSwing 4s ease-in-out infinite; }
+        .promo-banner.promo-motion-float { animation: promoFloat 4.6s ease-in-out infinite; }
+        .promo-banner.promo-motion-glow { animation: promoGlow 3.4s ease-in-out infinite; }
+        .promo-banner.promo-motion-tilt { animation: promoTilt 5s ease-in-out infinite; }
+        .promo-banner.promo-motion-pulse { animation: promoCardPulse 3.8s ease-in-out infinite; }
+        .promo-banner::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: -40%;
+            width: 35%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,.55), transparent);
+            transform: skewX(-18deg);
+            animation: promoShine 5.5s ease-in-out infinite;
+            pointer-events: none;
+            z-index: 2;
+        }
+        .promo-media-stage {
+            position: relative;
+            width: 100%;
+            max-width: 100%;
+            aspect-ratio: 4 / 3;
+            height: auto;
+            max-height: 260px;
+            border-radius: 16px;
+            overflow: hidden;
+            background: #11183a;
+            box-shadow: 0 8px 18px rgba(3, 15, 104, 0.16);
+            contain: paint;
+            clip-path: inset(0 round 16px);
+            transform: translateZ(0);
+        }
+        .promo-media-item {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            overflow: hidden;
+        }
+        .promo-media-item.is-active {
+            opacity: 1;
+            pointer-events: auto;
+            z-index: 1;
+        }
+        .promo-media-item img,
+        .promo-media-item video {
+            width: 100%;
+            height: 100%;
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            object-position: center;
+            display: block;
+        }
+        .promo-media-item.is-active.promo-fx-fade { animation: promoFxFade .7s ease; }
+        .promo-media-item.is-active.promo-fx-slide-left { animation: promoFxSlideLeft .75s ease; }
+        .promo-media-item.is-active.promo-fx-slide-right { animation: promoFxSlideRight .75s ease; }
+        .promo-media-item.is-active.promo-fx-slide-up { animation: promoFxSlideUp .75s ease; }
+        .promo-media-item.is-active.promo-fx-zoom { animation: promoFxZoom .8s ease; }
+        .promo-media-item.is-active.promo-fx-flip { animation: promoFxFlip .9s ease; }
+        .promo-media-item.is-active.promo-fx-blur { animation: promoFxBlur .8s ease; }
+        .promo-media-item.is-active.promo-fx-spin { animation: promoFxSpin .85s ease; }
+        .promo-media-item.is-active.promo-fx-pop { animation: promoFxPop .65s cubic-bezier(.2,1.2,.3,1); }
+        .promo-media-item.is-active.promo-fx-wipe { animation: promoFxWipe .8s ease; }
+        .promo-media-item.is-active.promo-fx-ken img,
+        .promo-media-item.is-active.promo-fx-ken video { animation: promoKenBurns 6s ease-in-out; }
+        .promo-media-dots {
+            display: flex;
+            justify-content: center;
+            gap: 6px;
+            margin-top: 10px;
+        }
+        .promo-media-dot {
+            width: 8px;
+            height: 8px;
+            border: 0;
+            border-radius: 999px;
+            background: rgba(3,15,104,.25);
+            padding: 0;
+        }
+        .promo-media-dot.is-active { background: #ff6600; transform: scale(1.2); }
+        .promo-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #ff6600, #ff8533);
+            color: #fff;
+            font-weight: 800;
+            font-size: .72rem;
+            letter-spacing: .08em;
+            text-transform: uppercase;
+            padding: 5px 11px;
+            border-radius: 999px;
+            margin-bottom: 8px;
+            animation: promoPulse 2.4s ease-in-out infinite;
+        }
+        @keyframes promoSwing {
+            0%, 100% { transform: rotate(-1.25deg); }
+            50% { transform: rotate(1.25deg); }
+        }
+        @keyframes promoFloat {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
+        }
+        @keyframes promoGlow {
+            0%, 100% { box-shadow: 0 12px 30px rgba(255, 102, 0, 0.16); }
+            50% { box-shadow: 0 18px 40px rgba(255, 102, 0, 0.38); }
+        }
+        @keyframes promoTilt {
+            0%, 100% { transform: rotateX(0deg) rotateY(-4deg); }
+            50% { transform: rotateX(4deg) rotateY(4deg); }
+        }
+        @keyframes promoCardPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.012); }
+        }
+        @keyframes promoShine {
+            0% { left: -40%; }
+            100% { left: 120%; }
+        }
+        @keyframes promoPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        @keyframes promoFxFade { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes promoFxSlideLeft { from { opacity: 0; transform: translateX(10%); } to { opacity: 1; transform: none; } }
+        @keyframes promoFxSlideRight { from { opacity: 0; transform: translateX(-10%); } to { opacity: 1; transform: none; } }
+        @keyframes promoFxSlideUp { from { opacity: 0; transform: translateY(10%); } to { opacity: 1; transform: none; } }
+        @keyframes promoFxZoom { from { opacity: 0; transform: scale(.94); } to { opacity: 1; transform: none; } }
+        @keyframes promoFxFlip { from { opacity: 0; transform: rotateY(-18deg); } to { opacity: 1; transform: none; } }
+        @keyframes promoFxBlur { from { opacity: 0; filter: blur(8px); transform: scale(1.02); } to { opacity: 1; filter: none; transform: none; } }
+        @keyframes promoFxSpin { from { opacity: 0; transform: rotate(-4deg) scale(.96); } to { opacity: 1; transform: none; } }
+        @keyframes promoFxPop { 0% { opacity: 0; transform: scale(.92); } 70% { transform: scale(1.02); } 100% { opacity: 1; transform: none; } }
+        @keyframes promoFxWipe { from { clip-path: inset(0 100% 0 0); opacity: 1; } to { clip-path: inset(0 0 0 0); opacity: 1; } }
+        @keyframes promoKenBurns {
+            0% { transform: scale(1); }
+            100% { transform: scale(1.04); }
+        }
+        @media (max-width: 767.98px) {
+            .promo-media-stage { max-height: 220px; aspect-ratio: 16 / 10; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            .promo-banner,
+            .promo-banner::after,
+            .promo-badge,
+            .promo-media-item { animation: none !important; }
+        }
+    </style>
     <section class="py-4" style="background: linear-gradient(135deg, #fff7ef 0%, #f8f9fa 100%);">
-        <div class="container">
-            <div class="row align-items-center g-3">
-                @if(\App\Support\SiteSettings::promoImageUrl() !== '')
-                <div class="col-md-4">
-                    <img src="{{ \App\Support\SiteSettings::promoImageUrl() }}" alt="Promo" style="width:100%; border-radius:16px; object-fit:cover; max-height:220px;">
-                </div>
-                @endif
-                <div class="{{ \App\Support\SiteSettings::promoImageUrl() !== '' ? 'col-md-8' : 'col-12' }}">
-                    @if(trim((string) \App\Support\SiteSettings::get('promo_title', '')) !== '')
-                        <h3 style="color:#030f68; font-weight:800; margin-bottom:8px;">{{ \App\Support\SiteSettings::get('promo_title') }}</h3>
+        <div class="container promo-banner-wrap">
+            <div class="promo-banner promo-motion-swing" id="promoBanner">
+                <div class="row align-items-center g-3">
+                    @if($promoHasMedia)
+                    <div class="col-md-5">
+                        <div class="promo-media-stage" id="promoMediaStage">
+                            @foreach($promoMedia as $idx => $item)
+                                @if(($item['type'] ?? '') === 'video')
+                                    <div class="promo-media-item{{ $idx === 0 ? ' is-active promo-fx-fade' : '' }}" data-promo-type="video">
+                                        <video src="{{ $item['url'] }}" muted playsinline loop preload="metadata" {{ $idx === 0 ? 'autoplay' : '' }}></video>
+                                    </div>
+                                @else
+                                    <div class="promo-media-item{{ $idx === 0 ? ' is-active promo-fx-fade' : '' }}" data-promo-type="image">
+                                        <img src="{{ $item['url'] }}" alt="{{ \App\Support\SiteSettings::get('promo_title', 'Promo') }}">
+                                    </div>
+                                @endif
+                            @endforeach
+                        </div>
+                        @if(count($promoMedia) > 1)
+                        <div class="promo-media-dots" id="promoMediaDots">
+                            @foreach($promoMedia as $idx => $item)
+                                <button type="button" class="promo-media-dot{{ $idx === 0 ? ' is-active' : '' }}" data-promo-dot="{{ $idx }}" aria-label="Show promo {{ $idx + 1 }}"></button>
+                            @endforeach
+                        </div>
+                        @endif
+                    </div>
                     @endif
-                    @if(trim((string) \App\Support\SiteSettings::get('promo_text', '')) !== '')
-                        <p class="mb-0" style="color:#555;">{{ \App\Support\SiteSettings::get('promo_text') }}</p>
-                    @endif
+                    <div class="{{ $promoHasMedia ? 'col-md-7' : 'col-12' }}">
+                        <div class="promo-badge"><i class="bi bi-stars me-1"></i>Special</div>
+                        @if(trim((string) \App\Support\SiteSettings::get('promo_title', '')) !== '')
+                            <h3 style="color:#030f68; font-weight:800; margin-bottom:8px;">{{ \App\Support\SiteSettings::get('promo_title') }}</h3>
+                        @endif
+                        @if(trim((string) \App\Support\SiteSettings::get('promo_text', '')) !== '')
+                            <p class="mb-0" style="color:#555;">{{ \App\Support\SiteSettings::get('promo_text') }}</p>
+                        @endif
+                    </div>
                 </div>
             </div>
         </div>
     </section>
+    @if($promoHasMedia)
+    <script>
+    (function () {
+        var stage = document.getElementById('promoMediaStage');
+        var banner = document.getElementById('promoBanner');
+        if (!stage) return;
+        var slides = Array.prototype.slice.call(stage.querySelectorAll('.promo-media-item'));
+        if (!slides.length) return;
+        var dots = Array.prototype.slice.call(document.querySelectorAll('#promoMediaDots [data-promo-dot]'));
+        var effects = ['fade', 'slide-left', 'slide-right', 'slide-up', 'zoom', 'flip', 'blur', 'spin', 'pop', 'wipe', 'ken'];
+        var motions = ['swing', 'float', 'glow', 'tilt', 'pulse'];
+        var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        var index = 0;
+        var timer = null;
+        function pick(list) { return list[Math.floor(Math.random() * list.length)]; }
+        function clearFx(el) {
+            effects.forEach(function (name) { el.classList.remove('promo-fx-' + name); });
+        }
+        function setMotion() {
+            if (!banner || reduce) return;
+            motions.forEach(function (name) { banner.classList.remove('promo-motion-' + name); });
+            banner.classList.add('promo-motion-' + pick(motions));
+        }
+        function playSlide(el) {
+            var video = el.querySelector('video');
+            if (!video) return;
+            try { video.currentTime = 0; } catch (e) {}
+            var play = video.play();
+            if (play && typeof play.catch === 'function') play.catch(function () {});
+        }
+        function pauseOthers(active) {
+            slides.forEach(function (el) {
+                var video = el.querySelector('video');
+                if (video && el !== active) {
+                    try { video.pause(); } catch (e) {}
+                }
+            });
+        }
+        function show(next, forceFx) {
+            index = (next + slides.length) % slides.length;
+            slides.forEach(function (el, i) {
+                var on = i === index;
+                el.classList.toggle('is-active', on);
+                clearFx(el);
+                if (on) {
+                    el.classList.add('promo-fx-' + (reduce ? 'fade' : (forceFx || pick(effects))));
+                    pauseOthers(el);
+                    playSlide(el);
+                }
+            });
+            dots.forEach(function (dot, i) { dot.classList.toggle('is-active', i === index); });
+            setMotion();
+        }
+        function waitFor(el) {
+            var video = el.querySelector('video');
+            if (video) return Math.min(14000, Math.max(5000, (video.duration || 8) * 1000));
+            return 4500;
+        }
+        function tick() {
+            if (timer) clearTimeout(timer);
+            if (reduce) return;
+            timer = setTimeout(function () {
+                show(slides.length < 2 ? 0 : index + 1);
+                tick();
+            }, waitFor(slides[index]));
+        }
+        slides.forEach(function (el) {
+            var video = el.querySelector('video');
+            if (!video) return;
+            video.addEventListener('ended', function () {
+                show(slides.length < 2 ? 0 : index + 1);
+                tick();
+            });
+        });
+        dots.forEach(function (dot) {
+            dot.addEventListener('click', function () {
+                show(Number(dot.getAttribute('data-promo-dot') || 0));
+                tick();
+            });
+        });
+        show(0, 'fade');
+        tick();
+    })();
+    </script>
+    @endif
     @endif
 
     <!-- Image Slider Section -->
@@ -4528,12 +4806,16 @@
                 @if($catVisible('kids'))
                 <div class="col-lg-4 col-md-6 col-6 service-item" data-category="kids" style="order: {{ $catOrder('kids') }}">
                     <div class="service-card h-100" onclick="window.location.href='/kids-selector'">
-                        <img src="{{ $homeCardImage('kids', asset('images/kids hair style.webp')) }}" alt="{{ $catLabel('kids', 'Kids Braids') }}">
+                        <img src="{{ asset('images/kids hair style.webp') }}" alt="{{ $catLabel('kids', 'Kids Braids') }}">
                         <h4>{{ $catLabel('kids', 'Kids Braids') }}</h4>
                         <p class="mb-2">{{ $homeCardDesc('kids', 'Fun, gentle braiding styles designed for children—knotless, cornrows, and more.') }}</p>
                         <p class="mb-1"><strong>Time:</strong> 1–3 hrs • <strong>Sizes:</strong> Small, Medium, Large</p>
                         <p class="mb-3"><strong>Hair:</strong> Not included</p>
-                        @include('partials.service-price', ['priceKey' => 'kids_braids', 'priceDefault' => 80, 'priceLabel' => '(varies by style & length)'])
+                        @php $kidsLowest = \App\Support\KidsStyleCatalog::lowestVisiblePrice(); @endphp
+                        <p class="price">
+                            <strong>${{ number_format($kidsLowest, 0) }}</strong>
+                            <small class="text-muted">(varies by style &amp; length)</small>
+                        </p>
                         <button class="btn btn-warning mt-3">Select Style & Book</button>
                     </div>
                 </div>
@@ -5185,10 +5467,14 @@ function openOtherServicesModal() {
                             <button type="submit" class="btn btn-warning" id="bookAppointmentBtn" style="font-size:1.1rem; padding:12px 40px; font-weight:600; transition: all 0.3s ease; box-shadow: 0 4px 12px rgba(255, 193, 7, 0.3);">
                                 <i class="bi bi-calendar-check me-2"></i>Book Appointment
                             </button>
+                            @php
+                                $depositLabel = \App\Support\InteracDeposit::amountLabel();
+                                $depositEmail = \App\Support\InteracDeposit::email();
+                            @endphp
                             <div class="mt-3">
                                 <small class="text-muted">
                                     <i class="bi bi-info-circle me-1"></i>
-                                    A $20 deposit is required to confirm your appointment. Mobile appointments are confirmed after deposit + address verification.
+                                    A {{ $depositLabel }} deposit is required to confirm your appointment. Mobile appointments are confirmed after deposit + address verification.
                                     (<a href="#" class="js-terms-popup text-decoration-none" style="color: #030f68; font-weight: 500;">Terms & Conditions</a>)
                                 </small>
                             </div>
@@ -6862,7 +7148,7 @@ function openOtherServicesModal() {
                 window.__kidsOriginalBase = originalBaseConfigured;
 
                 // Helper maps
-                const typeAdj = { protective: -20, cornrows: -40, knotless_small: 20, knotless_med: 0, box_small: 10, box_med: 0, stitch: 20, half_weave_braid: 20, half_weave_crotchet: 0, crotchet_style: -10 };
+                const typeAdj = { protective: -20, cornrows: -30, knotless_small: 20, knotless_med: 0, box_small: 10, box_med: 0, stitch: 20, half_weave_braid: 20, half_weave_crotchet: 0, crotchet_style: -10 };
                 const lengthAdj = { shoulder: 0, armpit: 10, mid_back: 20, waist: 30 };
                 const finishAdj = { curled: -10, plain: 0 };
 
@@ -6992,6 +7278,8 @@ function openOtherServicesModal() {
                 }
             }catch(e){ console.warn('Kids price preview compute failed', e); }
 
+            try { fillKidsStyleRecap(typeof window !== 'undefined' ? window.__kidsSelectorData : null); } catch (e) {}
+
             // show modal
             const m = new bootstrap.Modal(document.getElementById('kidsBookingModal'));
             m.show();
@@ -7045,6 +7333,84 @@ function openOtherServicesModal() {
     }
     // Expose globally so inline onclick="openKidsBookingModal(...)" can reach it
     window.openKidsBookingModal = openKidsBookingModal;
+
+    function fillKidsStyleRecap(sel){
+        try{
+            var payload = Object.assign({}, sel || {});
+            try{
+                var raw = localStorage.getItem('kb_selector');
+                if(raw){
+                    var parsed = JSON.parse(raw);
+                    if(parsed && typeof parsed === 'object'){
+                        Object.keys(parsed).forEach(function(key){
+                            if(payload[key] == null || payload[key] === '') payload[key] = parsed[key];
+                        });
+                    }
+                }
+            }catch(e){}
+
+            var type = payload.kb_braid_type || payload.braid_type || '';
+            var meta = (window.__kidsStyleMeta && window.__kidsStyleMeta[type]) || {};
+            var name = payload.style_label || meta.label || 'Kids Braids';
+            var image = payload.style_image || meta.image || '';
+            var duration = payload.style_duration || meta.duration || '';
+            var disableSteps = !!meta.disable_steps;
+            var finishMap = { plain: 'Without curl', curled: 'With curled tip' };
+            var lengthMap = { shoulder: 'Shoulder', armpit: 'Armpit', mid_back: 'Mid back', waist: 'Waist' };
+            var addonMap = {
+                kb_add_detangle: 'Detangle / Blowdry',
+                kb_add_beads: 'Tiny beading',
+                kb_add_beads_full: 'Big eye beading',
+                kb_add_extension: 'Hair Extension',
+                kb_add_rest: '15-min break'
+            };
+            var finish = payload.finish_label || finishMap[payload.kb_finish || payload.finish] || '';
+            var length = payload.length_label || lengthMap[payload.kb_length || payload.hair_length || payload.length] || '';
+            var extrasRaw = payload.extras_labels || payload.kb_extras || payload.extras || '';
+            var extras = [];
+            if(payload.extras_labels){
+                extras = String(payload.extras_labels).split(',').map(function(s){ return s.trim(); }).filter(Boolean);
+            } else {
+                String(extrasRaw).split(',').forEach(function(token){
+                    token = String(token || '').trim();
+                    if(!token) return;
+                    extras.push(addonMap[token] || token);
+                });
+            }
+
+            var details = [];
+            if(!disableSteps){
+                if(finish) details.push(finish);
+                if(length) details.push(length);
+            }
+            extras.forEach(function(item){ if(item) details.push(item); });
+
+            var nameEl = document.getElementById('kidsRecapName');
+            var detailsEl = document.getElementById('kidsRecapDetails');
+            var timeEl = document.getElementById('kidsRecapTime');
+            var imgEl = document.getElementById('kidsRecapImage');
+            var box = document.getElementById('kidsStyleRecap');
+            if(nameEl) nameEl.textContent = name;
+            if(detailsEl) detailsEl.textContent = details.join(' · ');
+            if(timeEl) timeEl.textContent = duration ? ('About ' + duration) : '';
+            if(imgEl){
+                if(image){
+                    imgEl.src = image;
+                    imgEl.alt = name;
+                    imgEl.style.display = '';
+                } else {
+                    imgEl.removeAttribute('src');
+                    imgEl.style.display = 'none';
+                }
+            }
+            var colorEl = document.getElementById('kids_hair_color');
+            if(colorEl && payload.hair_color) colorEl.value = payload.hair_color;
+            var commentsEl = document.getElementById('kids_comments_input');
+            if(commentsEl && payload.comments) commentsEl.value = payload.comments;
+            if(box) box.style.display = '';
+        }catch(e){ console.warn('fillKidsStyleRecap failed', e); }
+    }
+    window.fillKidsStyleRecap = fillKidsStyleRecap;
 
     // Show the booking panel inside the kids modal (used when selector is embedded)
     window.showKidsBookingPanel = function(sel){
@@ -8221,21 +8587,21 @@ function openOtherServicesModal() {
                     </h6>
                     <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:14px;">
                         <div style="background:linear-gradient(135deg,#ff6600,#ff8533);color:#fff;border-radius:10px;padding:12px 24px;text-align:center;min-width:100px;">
-                            <div style="font-size:1.6rem;font-weight:800;">$20.00</div>
+                            <div style="font-size:1.6rem;font-weight:800;">{{ $depositLabel }}</div>
                             <div style="font-size:0.75rem;opacity:0.9;">Deposit due</div>
                         </div>
                         <div style="font-size:0.92rem;color:#555;flex:1;min-width:160px;">
-                            Your booking is <strong>pending</strong> until the $20 deposit is received.<br>
+                            Your booking is <strong>pending</strong> until the {{ $depositLabel }} deposit is received.<br>
                             The deposit is <strong>non-refundable</strong> once confirmed.
                         </div>
                     </div>
                     <div style="font-size:0.9rem;color:#333;margin-bottom:8px;"><strong>How to pay:</strong></div>
                     <div style="background:#fff;border:1.5px dashed #ff6600;border-radius:10px;padding:12px 14px;margin-bottom:12px;">
                         <div style="font-size:0.78rem;color:#888;font-weight:700;letter-spacing:.03em;text-transform:uppercase;margin-bottom:4px;">Interac e-Transfer</div>
-                        <a href="mailto:dabereprecious01@gmail.com" style="font-size:1.05rem;font-weight:800;color:#030f68;word-break:break-all;">dabereprecious01@gmail.com</a>
+                        <a href="mailto:{{ $depositEmail }}" style="font-size:1.05rem;font-weight:800;color:#030f68;word-break:break-all;">{{ $depositEmail }}</a>
                     </div>
                     <ol style="font-size:0.85rem;color:#444;line-height:1.9;margin:0 0 12px 0;padding-left:18px;">
-                        <li>Send an <strong>Interac e-Transfer</strong> of $20.00 to <strong>dabereprecious01@gmail.com</strong></li>
+                        <li>Send an <strong>Interac e-Transfer</strong> of {{ $depositLabel }} to <strong>{{ $depositEmail }}</strong></li>
                         <li>Include your booking ID in the payment message</li>
                         <li>Send us your payment receipt</li>
                         <li>We'll confirm your appointment within 24 hours</li>
@@ -8249,7 +8615,7 @@ function openOtherServicesModal() {
 
                 <div class="alert alert-info mt-3 mb-0">
                     <i class="bi bi-info-circle me-2"></i>
-                    <strong>Important:</strong> Save your Booking ID and Confirmation Code. Your appointment is pending until the $20 deposit is received and verified.
+                    <strong>Important:</strong> Save your Booking ID and Confirmation Code. Your appointment is pending until the {{ $depositLabel }} deposit is received and verified.
                 </div>
             </div>
             <div class="modal-footer" style="border-top:none;padding:0 28px 20px;">
@@ -8299,21 +8665,21 @@ function openOtherServicesModal() {
                     </h6>
                     <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:14px;">
                         <div style="background:linear-gradient(135deg,#ff6600,#ff8533);color:#fff;border-radius:10px;padding:12px 24px;text-align:center;min-width:100px;">
-                            <div style="font-size:1.6rem;font-weight:800;">$20.00</div>
+                            <div style="font-size:1.6rem;font-weight:800;">{{ $depositLabel }}</div>
                             <div style="font-size:0.75rem;opacity:0.9;">Deposit due</div>
                         </div>
                         <div style="font-size:0.92rem;color:#555;flex:1;min-width:160px;">
-                            Your booking is <strong>pending</strong> until the $20 deposit is received.<br>
+                            Your booking is <strong>pending</strong> until the {{ $depositLabel }} deposit is received.<br>
                             The deposit is <strong>non-refundable</strong> once confirmed.
                         </div>
                     </div>
                     <div style="font-size:0.9rem;color:#333;margin-bottom:8px;"><strong>How to pay:</strong></div>
                     <div style="background:#fff;border:1.5px dashed #ff6600;border-radius:10px;padding:12px 14px;margin-bottom:12px;">
                         <div style="font-size:0.78rem;color:#888;font-weight:700;letter-spacing:.03em;text-transform:uppercase;margin-bottom:4px;">Interac e-Transfer</div>
-                        <a href="mailto:dabereprecious01@gmail.com" style="font-size:1.05rem;font-weight:800;color:#030f68;word-break:break-all;">dabereprecious01@gmail.com</a>
+                        <a href="mailto:{{ $depositEmail }}" style="font-size:1.05rem;font-weight:800;color:#030f68;word-break:break-all;">{{ $depositEmail }}</a>
                     </div>
                     <ol style="font-size:0.85rem;color:#444;line-height:1.9;margin:0 0 12px 0;padding-left:18px;">
-                        <li>Send an <strong>Interac e-Transfer</strong> of $20.00 to <strong>dabereprecious01@gmail.com</strong></li>
+                        <li>Send an <strong>Interac e-Transfer</strong> of {{ $depositLabel }} to <strong>{{ $depositEmail }}</strong></li>
                         <li>Include your booking ID in the payment message</li>
                         <li>Send us your payment receipt</li>
                         <li>We'll confirm your appointment within 24 hours</li>
@@ -8500,6 +8866,49 @@ document.addEventListener('DOMContentLoaded', function(){
 .visually-hidden { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
 .accessible-kids-modal #kidsPricePreview { box-shadow: 0 6px 18px rgba(3,15,104,0.06); }
 .accessible-kids-modal [role="status"]:focus { outline: 3px solid #ffb703; }
+.kids-style-recap {
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+    background: #fff8f0;
+    border: 2px solid #ffd4b0;
+    border-radius: 12px;
+    padding: 14px 16px;
+}
+.kids-style-recap img {
+    width: 88px;
+    height: 88px;
+    object-fit: contain;
+    object-position: center;
+    border-radius: 10px;
+    flex-shrink: 0;
+    background: #f3efe8;
+}
+.kids-style-recap-name {
+    font-weight: 800;
+    color: #030f68;
+    font-size: 1.12rem;
+    line-height: 1.25;
+}
+.kids-style-recap-details,
+.kids-style-recap-time {
+    font-size: 0.9rem;
+    color: #555;
+    margin-top: 2px;
+}
+.kids-style-recap-change {
+    display: inline-block;
+    margin-top: 6px;
+    color: #ff6600;
+    font-weight: 700;
+    font-size: 0.88rem;
+    background: none;
+    border: 0;
+    padding: 0;
+    text-decoration: none;
+    cursor: pointer;
+}
+.kids-style-recap-change:hover { text-decoration: underline; }
 </style>
 
 <script>
@@ -8961,184 +9370,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }, 500);
 });
 </script>
-    <!-- Kids Booking Modal (placed at end to ensure it is top-level) -->
-    <div class="modal fade" id="kidsBookingModal" tabindex="-1" aria-labelledby="kidsBookingModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg modal-dialog-centered">
-            <div class="modal-content" style="border-radius: 12px;">
-                <div class="modal-header" style="background: linear-gradient(135deg, #ff6600 0%, #ff8533 100%); color: white; border-radius: 12px 12px 0 0;">
-                    <h5 class="modal-title" id="kidsBookingModalLabel">Kids Booking</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body p-4">
-                    <form id="kidsBookingForm" action="/bookings" method="POST" autocomplete="on" novalidate enctype="multipart/form-data">
-                        @csrf
-                        <input type="hidden" id="kids_service_input" name="service" value="">
-                        <input type="hidden" id="kids_service_type_input" name="service_type" value="kids-braids">
-                        <input type="hidden" id="kids_braid_type_input" name="kb_braid_type" value="">
-                        <input type="hidden" id="kids_finish_input" name="kb_finish" value="">
-                        <input type="hidden" id="kids_length_input" name="kb_length" value="">
-                        <input type="hidden" id="kids_extras_input" name="kb_extras" value="">
-                        <input type="hidden" id="kids_price_input" name="price" value="">
-                        <input type="hidden" id="kids_final_price_input" name="final_price" value="">
-                        <input type="hidden" name="appointment_date" value="" />
-                        <input type="hidden" name="appointment_time" value="" />
-
-                        <div class="row">
-                            <div class="col-md-7">
-                                <div class="mb-3">
-                                    <label class="form-label">Child's Name *</label>
-                                    <input id="kids_name" name="name" type="text" class="form-control" required>
-                                    <div id="kids_name_error" class="text-danger small mt-1" style="display:none;"></div>
-                                </div>
-                                <div class="mb-3">
-                                    <label class="form-label">Parent / Guardian Email *</label>
-                                    <input id="kids_email" name="email" type="email" class="form-control" placeholder="you@example.com" required>
-                                    <div id="kids_email_error" class="text-danger small mt-1" style="display:none;"></div>
-                                </div>
-                                <div class="mb-3">
-                                    <label class="form-label">Parent / Guardian Phone *</label>
-                                    <input id="kids_phone" name="phone" type="tel" class="form-control" required pattern="[0-9+()\s\-]{7,}" placeholder="+1 555 555 5555">
-                                    <div class="form-text small text-muted">Include country code, e.g. <code>+1</code></div>
-                                    <div id="kids_phone_error" class="text-danger small mt-1" style="display:none;"></div>
-                                </div>
-                                <div class="mb-3 d-flex gap-2 align-items-center">
-                                    <div>
-                                        <label class="form-label mb-1">Selected Date</label>
-                                        <div id="kidsSelectedDateLabel" class="form-control-plaintext">--</div>
-                                    </div>
-                                    <div>
-                                        <label class="form-label mb-1">Selected Time</label>
-                                        <div id="kidsSelectedTimeLabel" class="form-control-plaintext">--</div>
-                                    </div>
-                                </div>
-                                <div class="mb-3">
-                                    <label class="form-label">Date (opens calendar) *</label>
-                                    <input id="kidsBookingDate" type="text" class="form-control" readonly onclick="openCalendarModal(); return false;" />
-                                    <div id="kidsBookingDate_error" class="text-danger small mt-1" style="display:none;"></div>
-                                </div>
-                                <div class="mb-3">
-                                    <label class="form-label">Time *</label>
-                                    <input id="kidsBookingTime" type="text" class="form-control" readonly />
-                                    <div id="kidsBookingTime_error" class="text-danger small mt-1" style="display:none;"></div>
-                                </div>
-
-                                <!-- Appointment Type -->
-                                <div class="mb-3">
-                                    <label class="form-label">Appointment Type *</label>
-                                    <div class="d-flex gap-3">
-                                        <div class="form-check">
-                                            <input class="form-check-input" type="radio" name="appointment_type" id="appointment_type_in_studio_kids" value="in-studio" checked>
-                                            <label class="form-check-label" for="appointment_type_in_studio_kids">
-                                                <i class="bi bi-house-door me-1"></i>Stylist address
-                                            </label>
-                                        </div>
-                                        <div class="form-check">
-                                            <input class="form-check-input" type="radio" name="appointment_type" id="appointment_type_mobile_kids" value="mobile">
-                                            <label class="form-check-label" for="appointment_type_mobile_kids">
-                                                <i class="bi bi-truck me-1"></i>Mobile (I want you to come to me)
-                                            </label>
-                                        </div>
-                                    </div>
-                                    <small class="form-text text-muted mt-2">
-                                        <i class="bi bi-info-circle me-1"></i>Mobile service available in Ottawa/Gatineau. Travel fee may apply based on distance.
-                                    </small>
-                                </div>
-
-                                <!-- Mobile Service Address (conditional) -->
-                                <div class="mb-3 d-none" id="addressFieldContainerKids">
-                                    <label for="kids_address" class="form-label">Mobile Service Address (Ottawa) *</label>
-                                    <input type="text" class="form-control" id="kids_address" name="address" placeholder="Enter your complete address" autocomplete="off" minlength="10">
-                                    <div class="invalid-feedback">Please enter a complete mobile address (at least 10 characters).</div>
-                                    <small class="form-text text-muted mt-2">
-                                        <i class="bi bi-geo-alt me-1"></i>Required for mobile appointments so we can confirm travel availability and any travel fee.
-                                    </small>
-                                </div>
-
-                                <div class="mb-3 d-none parking-choice-group" id="parkingFieldContainerKids">
-                                    <label class="form-label">Parking at Address *</label>
-                                    <div class="d-flex gap-3">
-                                        <div class="form-check">
-                                            <input class="form-check-input parking-option-kids" type="radio" name="parking_type" id="parking_type_free_kids" value="free">
-                                            <label class="form-check-label" for="parking_type_free_kids">Free parking</label>
-                                        </div>
-                                        <div class="form-check">
-                                            <input class="form-check-input parking-option-kids" type="radio" name="parking_type" id="parking_type_paid_kids" value="paid">
-                                            <label class="form-check-label" for="parking_type_paid_kids">Paid parking</label>
-                                        </div>
-                                    </div>
-                                    <div class="alert alert-warning py-2 mt-2 mb-0 paid-parking-note" style="font-size:0.95rem;">
-                                        <strong>Please note:</strong> You are responsible for covering the paid parking ticket so the stylist can park at your address.
-                                    </div>
-                                    <small class="form-text text-muted mt-2">
-                                        <i class="bi bi-p-circle me-1"></i>Required for mobile appointments. Paid parking is covered by the client.
-                                    </small>
-                                </div>
-
-                                <div class="mb-3">
-                                    <label class="form-label">Sample Picture (optional)</label>
-                                    <input id="kids_sample_picture" name="sample_picture" type="file" accept="image/*" class="form-control">
-                                    <div id="kids_imagePreview" class="mt-2" style="display:none;">
-                                        <img id="kids_previewImg" src="" alt="Sample preview" style="max-width:120px; border-radius:8px; display:block;" />
-                                        <div id="kids_fileName" class="small text-muted mt-1"></div>
-                                        <button type="button" id="kids_removeSampleBtn" class="btn btn-sm btn-outline-secondary mt-2">Remove</button>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="col-md-5">
-                                <div style="background:#ffffff;border-radius:12px;padding:20px;border:2px solid #ff6600;box-shadow:0 4px 12px rgba(0,0,0,0.1);">
-                                    <h5 style="color:#0b3a66;font-weight:800;margin-bottom:16px;font-size:1.2rem;border-bottom:2px solid #ff6600;padding-bottom:8px;">Price Summary</h5>
-                                    <div style="margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid #e3e3e0;">
-                                        <div style="display:flex;justify-content:space-between;align-items:center;">
-                                            <span style="color:#666;font-size:0.95rem;">Base Price:</span>
-                                            <span>
-                                                <span id="kidsModal_base_original" style="font-size:0.85rem;color:#999;text-decoration:line-through;margin-right:4px;display:none;"></span>
-                                                <span id="kidsModal_base" style="font-size:1.1rem;font-weight:600;color:#0b3a66;">$--</span>
-                                                <span id="kidsModal_discount_badge" style="background:#ff6600;color:#fff;font-size:0.65rem;font-weight:700;padding:2px 6px;border-radius:4px;margin-left:4px;display:none;">DISCOUNTED</span>
-                                            </span>
-                                        </div>
-                                    </div>
-                                    <div style="margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid #e3e3e0;">
-                                        <div style="display:flex;justify-content:space-between;align-items:center;">
-                                            <span style="color:#666;font-size:0.95rem;">Adjustments:</span>
-                                            <span id="kidsModal_adjustments" style="font-size:1.1rem;font-weight:600;color:#0b3a66;">+ $0.00</span>
-                                        </div>
-                                    </div>
-                                    <div style="margin-top:16px;padding-top:16px;border-top:2px solid #ff6600;background:#fff7e0;border-radius:8px;padding:14px;">
-                                        <div style="display:flex;justify-content:space-between;align-items:center;">
-                                            <span style="color:#0b3a66;font-size:1.1rem;font-weight:700;">Total:</span>
-                                            <span id="kidsModal_total" style="font-size:1.5rem;font-weight:800;color:#ff6600;">$--</span>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="d-grid mt-3">
-                                        <!-- Terms acceptance (required) -->
-                                        <input type="hidden" name="terms_accepted" value="0">
-                                        <div class="dbt-terms-consent mb-2">
-                                            <input class="form-check-input" type="checkbox" id="termsAcceptedKids" name="terms_accepted" value="1" required autocomplete="off">
-                                            <div>
-                                                <label for="termsAcceptedKids" style="font-size:0.95rem;">
-                                                    I agree to the <a href="#" class="js-terms-popup" style="color:#030f68; font-weight:600; text-decoration:none;">Terms &amp; Conditions</a>.
-                                                </label>
-                                            </div>
-                                        </div>
-                                        <div class="mb-2">
-                                            <div class="alert alert-warning py-2 mb-0" style="font-size:0.9rem;">
-                                                <strong>Note:</strong> We do not accept style changes on the day of the appointment. Please review your selection before confirming.
-                                            </div>
-                                        </div>
-                                    <div class="d-flex gap-2">
-                                        <button type="button" id="kidsBackToSelectorBtn" class="btn btn-secondary" style="font-weight:600;" onclick="backToKidsSelector()">Back to selector</button>
-                                        <button type="submit" class="btn btn-warning" id="kidsBookAppointmentBtn" style="font-weight:600;">Confirm Booking</button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
+    @include('partials.kids-booking-modal')
 
     <!-- Terms preview overlay (not a Bootstrap modal, so booking form stays open) -->
     <div id="termsPreviewOverlay" style="display:none; position:fixed; inset:0; z-index:20000; background:rgba(3,15,104,0.55); align-items:center; justify-content:center; padding:16px;">
@@ -10554,7 +10786,7 @@ document.addEventListener('DOMContentLoaded', function(){
             }
 
             // Clear errors when user starts typing/selecting
-            const requiredFields = ['kids_name', 'kids_phone', 'kidsBookingDate', 'kidsBookingTime'];
+            const requiredFields = ['kids_name', 'kids_parent_name', 'kids_age', 'kids_phone', 'kidsBookingDate', 'kidsBookingTime'];
             requiredFields.forEach(fieldId => {
                 const field = document.getElementById(fieldId);
                 if(field) {
@@ -10592,6 +10824,26 @@ document.addEventListener('DOMContentLoaded', function(){
                     errors.push('Child\'s name');
                 } else {
                     clearFieldError('kids_name');
+                }
+
+                const parentField = document.getElementById('kids_parent_name');
+                const parentValue = parentField ? parentField.value.trim() : '';
+                if(!parentValue) {
+                    showFieldError('kids_parent_name', 'Please enter the parent or guardian name.');
+                    isValid = false;
+                    errors.push('Parent name');
+                } else {
+                    clearFieldError('kids_parent_name');
+                }
+
+                const ageField = document.getElementById('kids_age');
+                const ageValue = ageField ? ageField.value.trim() : '';
+                if(!ageValue) {
+                    showFieldError('kids_age', 'Please choose the child\'s age.');
+                    isValid = false;
+                    errors.push('Child age');
+                } else {
+                    clearFieldError('kids_age');
                 }
 
                 // Validate Phone
@@ -10776,7 +11028,7 @@ document.addEventListener('DOMContentLoaded', function(){
                     if (exInput) exInput.value = extras ? String(extras).trim() : '';
 
                     // Compute a final fallback total if not already set, using captured selector values.
-                    const typeAdj = { protective: -20, cornrows: -40, knotless_small: 20, knotless_med: 0, box_small: 10, box_med: 0, stitch: 20, half_weave_braid: 20, half_weave_crotchet: 0, crotchet_style: -10 };
+                    const typeAdj = { protective: -20, cornrows: -30, knotless_small: 20, knotless_med: 0, box_small: 10, box_med: 0, stitch: 20, half_weave_braid: 20, half_weave_crotchet: 0, crotchet_style: -10 };
                     const lengthAdj = { shoulder: 0, armpit: 10, mid_back: 20, waist: 30 };
                     const finishAdj = { plain: 0, curled: -10 };
                     const addonMap = { kb_add_detangle: 15, kb_add_beads: 10, kb_add_beads_full: 15, kb_add_extension: 20, kb_add_rest: 5 };

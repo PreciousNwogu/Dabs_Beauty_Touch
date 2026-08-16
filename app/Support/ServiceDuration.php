@@ -101,6 +101,13 @@ class ServiceDuration
         return self::toMinutes(self::hoursForName($booking->service));
     }
 
+    public static function extraMinutesForKidsExtras(mixed $extras): int
+    {
+        $raw = is_array($extras) ? implode(',', $extras) : (string) $extras;
+
+        return str_contains($raw, 'kb_add_rest') ? 15 : 0;
+    }
+
     /**
      * @return array<string, float>
      */

@@ -3,9 +3,12 @@
 namespace App\Support;
 
 use App\Models\Service;
+use Illuminate\Support\Facades\Schema;
 
 class KidsStyleCatalog
 {
+    public const PLACEHOLDER_DESCRIPTION = 'Kids Braids selector style. Edit this price independently of other services.';
+
     /**
      * Built-in kids selector styles and the CMS service that owns each price.
      * Changing one of these services does not change Kids Braids or adult services.
@@ -20,14 +23,20 @@ class KidsStyleCatalog
                 'default_price' => 80,
                 'disable_steps' => true,
                 'fallback_adj' => -20,
+                'duration' => '1–2 hrs',
+                'blurb' => ' Protective style on natural hair. No extensions.',
+                'image' => '/images/kids-natual-hair-twist.png',
             ],
             'cornrows' => [
                 'slug' => 'cornrows',
                 'alt_slugs' => ['kids-cornrows'],
                 'name' => 'Kids Cornrows',
-                'default_price' => 40,
+                'default_price' => 50,
                 'disable_steps' => true,
-                'fallback_adj' => -40,
+                'fallback_adj' => -30,
+                'duration' => '0.5-1 hr',
+                'blurb' => 'Classic cornrows with no extensions, quick and easy.',
+                'image' => '/images/kid cornrow, no extention.png',
             ],
             'cornrow_weave' => [
                 'slug' => 'cornrow_weave',
@@ -36,6 +45,9 @@ class KidsStyleCatalog
                 'default_price' => 100,
                 'disable_steps' => false,
                 'fallback_adj' => 0,
+                'duration' => '2–3 hrs',
+                'blurb' => 'Cornrows with added hair for extra fullness and length.',
+                'image' => '/images/kids cornrow weave.png',
             ],
             'knotless_small' => [
                 'slug' => 'knotless_small',
@@ -44,6 +56,9 @@ class KidsStyleCatalog
                 'default_price' => 120,
                 'disable_steps' => false,
                 'fallback_adj' => 20,
+                'duration' => '3–4 hrs',
+                'blurb' => 'Finer knotless braids. Smaller size, longer sit time.',
+                'image' => '/images/kids small knotless.png',
             ],
             'knotless_med' => [
                 'slug' => 'knotless_med',
@@ -52,6 +67,9 @@ class KidsStyleCatalog
                 'default_price' => 100,
                 'disable_steps' => false,
                 'fallback_adj' => 0,
+                'duration' => '2–3 hrs',
+                'blurb' => 'Medium knotless braids. A popular everyday kids style.',
+                'image' => '/images/kids medium knotless.png',
             ],
             'box_small' => [
                 'slug' => 'box_small',
@@ -60,6 +78,9 @@ class KidsStyleCatalog
                 'default_price' => 110,
                 'disable_steps' => false,
                 'fallback_adj' => 10,
+                'duration' => '3–4 hrs',
+                'blurb' => 'Smaller box braids for a neater, longer-lasting look.',
+                'image' => '/images/box_braid_size_small_png.webp',
             ],
             'box_med' => [
                 'slug' => 'box_med',
@@ -68,6 +89,9 @@ class KidsStyleCatalog
                 'default_price' => 100,
                 'disable_steps' => false,
                 'fallback_adj' => 0,
+                'duration' => '2–3 hrs',
+                'blurb' => 'Medium box braids. Less time than the small size.',
+                'image' => '/images/kids medium box braid.png',
             ],
             'stitch' => [
                 'slug' => 'stitch',
@@ -76,6 +100,9 @@ class KidsStyleCatalog
                 'default_price' => 120,
                 'disable_steps' => false,
                 'fallback_adj' => 20,
+                'duration' => '2–3 hrs',
+                'blurb' => 'Clean stitch cornrows, neat parts, extra definition.',
+                'image' => '/images/kids stitch braid.png',
             ],
             'half_weave_braid' => [
                 'slug' => 'half_weave_braid',
@@ -84,6 +111,9 @@ class KidsStyleCatalog
                 'default_price' => 120,
                 'disable_steps' => false,
                 'fallback_adj' => 0,
+                'duration' => '2–3 hrs',
+                'blurb' => 'Half weave, half braid mix for two looks in one.',
+                'image' => '/images/kids half weave and half knotless.png',
             ],
             'half_weave_crotchet' => [
                 'slug' => 'half_weave_crotchet',
@@ -92,6 +122,9 @@ class KidsStyleCatalog
                 'default_price' => 100,
                 'disable_steps' => true,
                 'fallback_adj' => 0,
+                'duration' => '1.5–2.5 hrs',
+                'blurb' => 'Half weave with crotchet. No length choice needed.',
+                'image' => '/images/kids half weave & half crotchet.png',
             ],
             'crotchet_style' => [
                 'slug' => 'crotchet_style',
@@ -100,6 +133,9 @@ class KidsStyleCatalog
                 'default_price' => 90,
                 'disable_steps' => true,
                 'fallback_adj' => 0,
+                'duration' => '1–2 hrs',
+                'blurb' => 'Faster protective install with crotchet hair.',
+                'image' => '/images/kids crotchet.png',
             ],
         ];
     }
@@ -108,30 +144,159 @@ class KidsStyleCatalog
     {
         $slugs = [];
         foreach (self::definitions() as $def) {
-            $slugs[] = $def['slug'];
-            foreach ($def['alt_slugs'] ?? [] as $alt) {
-                $slugs[] = $alt;
+            foreach (self::slugVariantsFor($def) as $slug) {
+                $slugs[] = $slug;
             }
         }
 
         return array_values(array_unique($slugs));
     }
 
+    /**
+     * Underscore and hyphen versions of a kids catalog slug.
+     * Saving in CMS runs Str::slug(), which turns box_small into box-small.
+     *
+     * @return list<string>
+     */
+    public static function slugVariantsFor(array $def): array
+    {
+        $raw = array_merge([$def['slug'] ?? ''], $def['alt_slugs'] ?? []);
+        $out = [];
+        foreach ($raw as $slug) {
+            $slug = trim((string) $slug);
+            if ($slug === '') {
+                continue;
+            }
+            $out[] = $slug;
+            $out[] = str_replace('_', '-', $slug);
+            $out[] = str_replace('-', '_', $slug);
+        }
+
+        return array_values(array_unique($out));
+    }
+
+    public static function canonicalSlug(?string $slug): ?string
+    {
+        $slug = trim((string) $slug);
+        if ($slug === '') {
+            return null;
+        }
+        foreach (self::definitions() as $def) {
+            if (in_array($slug, self::slugVariantsFor($def), true)) {
+                return $def['slug'];
+            }
+        }
+
+        return null;
+    }
+
     public static function isCatalogSlug(?string $slug): bool
     {
-        return $slug && in_array($slug, self::slugs(), true);
+        return self::canonicalSlug($slug) !== null;
+    }
+
+    public static function catalogImageForSlug(?string $slug): string
+    {
+        $canonical = self::canonicalSlug($slug);
+        if (!$canonical) {
+            return '';
+        }
+        foreach (self::definitions() as $def) {
+            if (($def['slug'] ?? '') === $canonical) {
+                return (string) ($def['image'] ?? '');
+            }
+        }
+
+        return '';
+    }
+
+    public static function catalogBlurbForSlug(?string $slug): string
+    {
+        $canonical = self::canonicalSlug($slug);
+        if (!$canonical) {
+            return '';
+        }
+        foreach (self::definitions() as $def) {
+            if (($def['slug'] ?? '') === $canonical) {
+                return trim((string) ($def['blurb'] ?? ''));
+            }
+        }
+
+        return '';
+    }
+
+    public static function usableBlurb(?string $cmsDescription, string $fallback = ''): string
+    {
+        $text = trim((string) $cmsDescription);
+        if ($text === '' || self::isPlaceholderDescription($text)) {
+            return trim($fallback);
+        }
+
+        return $text;
+    }
+
+    public static function isPlaceholderDescription(?string $text): bool
+    {
+        return trim((string) $text) === self::PLACEHOLDER_DESCRIPTION;
     }
 
     /**
-     * @return array<string, array{price:int, original:int, slug:string, from_cms:bool}>
+     * Insert missing built-in kids CMS rows. Does not overwrite salon edits.
+     */
+    public static function ensureCmsServices(): void
+    {
+        if (! Schema::hasTable('services')) {
+            return;
+        }
+
+        $now = now();
+        foreach (self::definitions() as $def) {
+            $slugs = self::slugVariantsFor($def);
+            $matches = Service::query()
+                ->where(function ($q) use ($slugs, $def) {
+                    $q->whereIn('slug', $slugs)->orWhere('name', $def['name']);
+                })
+                ->get();
+
+            if ($matches->isEmpty()) {
+                $row = [
+                    'name' => $def['name'],
+                    'slug' => $def['slug'],
+                    'base_price' => $def['default_price'],
+                    'discount_price' => null,
+                    'description' => trim((string) ($def['blurb'] ?? '')),
+                    'is_active' => true,
+                    'for_kids' => true,
+                    'created_at' => $now,
+                    'updated_at' => $now,
+                ];
+                if (Schema::hasColumn('services', 'category')) {
+                    $row['category'] = 'Kids Braids';
+                }
+                if (Schema::hasColumn('services', 'duration')) {
+                    $row['duration'] = $def['duration'] ?? null;
+                }
+                if (Schema::hasColumn('services', 'has_length')) {
+                    $row['has_length'] = empty($def['disable_steps']);
+                }
+
+                Service::query()->create($row);
+                continue;
+            }
+
+            $keeper = $matches->firstWhere('slug', $def['slug']) ?? $matches->first();
+            if ($keeper && $keeper->slug !== $def['slug'] && ! Service::query()->where('slug', $def['slug'])->exists()) {
+                $keeper->slug = $def['slug'];
+                $keeper->save();
+            }
+        }
+    }
+
+    /**
+     * @return array<string, array{price:int, original:int, slug:string, from_cms:bool, image_url:string, duration:string, name:string, description:string, is_active:bool, has_length:?bool, discount_ends:?string}>
      */
     public static function cardPrices(): array
     {
-        static $cached = null;
-        if ($cached !== null) {
-            return $cached;
-        }
-
         $defs = self::definitions();
         $services = collect();
         try {
@@ -162,6 +327,15 @@ class KidsStyleCatalog
                     'original' => (int) $svc->base_price,
                     'slug' => $svc->slug,
                     'from_cms' => true,
+                    'image_url' => (string) ($svc->image_url ?? ''),
+                    'duration' => (string) ($svc->duration ?? ''),
+                    'name' => (string) $svc->name,
+                    'description' => (string) ($svc->description ?? ''),
+                    'is_active' => (bool) $svc->is_active,
+                    'has_length' => isset($svc->has_length) ? (bool) $svc->has_length : null,
+                    'discount_ends' => ($svc->has_discount && $svc->discount_ends_at)
+                        ? $svc->discount_ends_at->toIso8601String()
+                        : '',
                 ];
                 continue;
             }
@@ -173,10 +347,17 @@ class KidsStyleCatalog
                 'original' => $price,
                 'slug' => $def['slug'],
                 'from_cms' => false,
+                'image_url' => '',
+                'duration' => '',
+                'name' => (string) ($def['name'] ?? ''),
+                'description' => '',
+                'is_active' => true,
+                'has_length' => empty($def['disable_steps']),
+                'discount_ends' => '',
             ];
         }
 
-        return $cached = $out;
+        return $out;
     }
 
     public static function startingPrice(?string $braidType): ?float
@@ -227,6 +408,11 @@ class KidsStyleCatalog
 
         $def = self::definitions()[$braidType] ?? null;
         if ($def) {
+            $row = self::cardPrices()[$braidType] ?? null;
+            if ($row && array_key_exists('has_length', $row) && $row['has_length'] !== null) {
+                return (bool) $row['has_length'];
+            }
+
             return empty($def['disable_steps']);
         }
 
@@ -240,8 +426,15 @@ class KidsStyleCatalog
         }
 
         $overrides = (array) SiteSettings::get('kids_styles', []);
-        if (isset($overrides[$braidType]['label']) && trim((string) $overrides[$braidType]['label']) !== '') {
-            return (string) $overrides[$braidType]['label'];
+        $defaultLabel = trim((string) (SiteSettings::defaultKidsStyles()[$braidType]['label'] ?? ''));
+        $overrideLabel = trim((string) ($overrides[$braidType]['label'] ?? ''));
+        if ($overrideLabel !== '' && strcasecmp($overrideLabel, $defaultLabel) !== 0) {
+            return $overrideLabel;
+        }
+
+        $cmsName = trim((string) (self::cardPrices()[$braidType]['name'] ?? ''));
+        if ($cmsName !== '') {
+            return $cmsName;
         }
 
         $friendly = [
@@ -272,7 +465,7 @@ class KidsStyleCatalog
     /**
      * Ordered, visible kids selector cards for the booking UI.
      *
-     * @return list<array{key:string,label:string,price:int,disable_steps:bool,from_price:bool}>
+     * @return list<array{key:string,label:string,price:int,disable_steps:bool,from_price:bool,image:string,duration:string,blurb:string}>
      */
     public static function selectorCards(): array
     {
@@ -281,23 +474,124 @@ class KidsStyleCatalog
         $rows = [];
         $index = 0;
         foreach (self::definitions() as $key => $def) {
+            $cms = $prices[$key] ?? [];
+            if (! empty($cms['from_cms']) && array_key_exists('is_active', $cms) && ! $cms['is_active']) {
+                continue;
+            }
             $row = $overrides[$key] ?? [];
             if (array_key_exists('visible', $row) && ! $row['visible']) {
                 continue;
             }
-            $price = (int) ($prices[$key]['price'] ?? $def['default_price']);
+            $price = (int) ($cms['price'] ?? $def['default_price']);
+            $cmsImage = trim((string) ($cms['image_url'] ?? ''));
+            $cmsDuration = trim((string) ($cms['duration'] ?? ''));
+            $image = AdultServiceCatalog::usableImageUrl($cmsImage);
+            if ($image === '') {
+                $image = AdultServiceCatalog::publicImageUrl((string) ($def['image'] ?? ''));
+            }
+            $hasLength = array_key_exists('has_length', $cms) && $cms['has_length'] !== null
+                ? (bool) $cms['has_length']
+                : empty($def['disable_steps']);
             $rows[] = [
                 'key' => $key,
                 'label' => self::displayName($key) ?: $def['name'],
                 'price' => $price,
-                'disable_steps' => ! empty($def['disable_steps']),
-                'from_price' => empty($def['disable_steps']),
+                'disable_steps' => ! $hasLength,
+                'from_price' => $hasLength,
+                'image' => $image,
+                'duration' => $cmsDuration !== '' ? $cmsDuration : (string) ($def['duration'] ?? ''),
+                'blurb' => self::usableBlurb($cms['description'] ?? '', (string) ($def['blurb'] ?? '')),
                 'sort' => (int) ($row['sort'] ?? (($index + 1) * 10)),
+                'discount_ends' => (string) ($cms['discount_ends'] ?? ''),
             ];
             $index++;
         }
+
+        try {
+            foreach (self::customServices() as $svc) {
+                $key = 'cms_'.$svc->id;
+                $row = $overrides[$key] ?? [];
+                if (array_key_exists('visible', $row) && ! $row['visible']) {
+                    continue;
+                }
+                $hasLength = ! isset($svc->has_length) || (bool) $svc->has_length;
+                $rows[] = [
+                    'key' => $key,
+                    'label' => (string) $svc->name,
+                    'price' => (int) $svc->effective_price,
+                    'disable_steps' => ! $hasLength,
+                    'from_price' => $hasLength,
+                    'image' => AdultServiceCatalog::usableImageUrl($svc->image_url ?? ''),
+                    'duration' => (string) ($svc->duration ?? ''),
+                    'blurb' => self::usableBlurb($svc->description ?? '', ''),
+                    'sort' => (int) ($row['sort'] ?? (($index + 1) * 10)),
+                    'discount_ends' => ($svc->has_discount && $svc->discount_ends_at)
+                        ? $svc->discount_ends_at->toIso8601String()
+                        : '',
+                ];
+                $index++;
+            }
+        } catch (\Throwable $e) {
+            // Built-in cards still show if extra CMS styles cannot be loaded.
+        }
+
         usort($rows, fn ($a, $b) => $a['sort'] <=> $b['sort']);
 
         return $rows;
+    }
+
+    /** Lowest visible kids selector price for the homepage card. */
+    public static function lowestVisiblePrice(): int
+    {
+        $min = null;
+        foreach (self::selectorCards() as $card) {
+            $price = (int) ($card['price'] ?? 0);
+            if ($price <= 0) {
+                continue;
+            }
+            if ($min === null || $price < $min) {
+                $min = $price;
+            }
+        }
+
+        return $min ?? (int) config('service_prices.kids_braids', 40);
+    }
+
+    /**
+     * Style labels, photos, and times for the kids booking modal recap.
+     *
+     * @return array<string, array{label:string,image:string,duration:string,blurb:string,price:int,disable_steps:bool}>
+     */
+    public static function publicMeta(): array
+    {
+        $out = [];
+        foreach (self::selectorCards() as $card) {
+            $out[$card['key']] = [
+                'label' => $card['label'],
+                'image' => $card['image'],
+                'duration' => $card['duration'],
+                'blurb' => $card['blurb'],
+                'price' => $card['price'],
+                'disable_steps' => ! empty($card['disable_steps']),
+            ];
+        }
+
+        try {
+            foreach (self::customServices() as $svc) {
+                $key = 'cms_'.$svc->id;
+                $out[$key] = [
+                    'label' => (string) $svc->name,
+                    'image' => AdultServiceCatalog::usableImageUrl($svc->image_url ?? ''),
+                    'duration' => (string) ($svc->duration ?? ''),
+                    'blurb' => trim((string) ($svc->description ?? '')),
+                    'price' => (int) $svc->effective_price,
+                    'disable_steps' => isset($svc->has_length) && ! (bool) $svc->has_length,
+                ];
+            }
+        } catch (\Throwable $e) {
+            // Keep built-in styles when custom services cannot be loaded.
+        }
+
+        return $out;
     }
 }

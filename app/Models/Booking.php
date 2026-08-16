@@ -31,6 +31,11 @@ class Booking extends Model
         'message',
         'status',
         'notes',
+        'reschedule_requested_date',
+        'reschedule_requested_time',
+        'reschedule_request_note',
+        'reschedule_request_status',
+        'reschedule_requested_at',
         'confirmed_at',
         'completed_at',
         'cancelled_at',
@@ -67,6 +72,8 @@ class Booking extends Model
      */
     protected $casts = [
         'appointment_date' => 'date',
+        'reschedule_requested_date' => 'date',
+        'reschedule_requested_at' => 'datetime',
         'confirmed_at' => 'datetime',
         'completed_at' => 'datetime',
         'cancelled_at' => 'datetime',
@@ -167,6 +174,68 @@ class Booking extends Model
         $hours = $this->hoursUntilAppointment();
 
         return $hours !== null && $hours >= 48;
+    }
+
+    public function hasPendingRescheduleRequest(): bool
+    {
+        if (! \Illuminate\Support\Facades\Schema::hasColumn($this->getTable(), 'reschedule_request_status')) {
+            return false;
+        }
+
+        return ($this->reschedule_request_status ?? '') === 'pending'
+            && filled($this->reschedule_requested_date)
+            && filled($this->reschedule_requested_time);
+    }
+
+    public function requestedRescheduleLabel(): string
+    {
+        if (! filled($this->reschedule_requested_date) || ! filled($this->reschedule_requested_time)) {
+            return '';
+        }
+
+        try {
+            $date = $this->reschedule_requested_date instanceof \Carbon\Carbon
+                ? $this->reschedule_requested_date->format('F j, Y')
+                : \Carbon\Carbon::parse($this->reschedule_requested_date)->format('F j, Y');
+            $time = \Carbon\Carbon::parse($this->reschedule_requested_time)->format('g:i A');
+
+            return $date.' at '.$time;
+        } catch (\Throwable $e) {
+            return trim((string) $this->reschedule_requested_date.' '.(string) $this->reschedule_requested_time);
+        }
+    }
+
+    public function currentAppointmentLabel(): string
+    {
+        $date = $this->appointment_date
+            ? ($this->appointment_date instanceof \Carbon\Carbon
+                ? $this->appointment_date->format('F j, Y')
+                : \Carbon\Carbon::parse($this->appointment_date)->format('F j, Y'))
+            : '';
+        $time = '';
+        try {
+            $time = $this->appointment_time ? \Carbon\Carbon::parse($this->appointment_time)->format('g:i A') : '';
+        } catch (\Throwable $e) {
+            $time = (string) $this->appointment_time;
+        }
+
+        return trim($date.($time !== '' ? ' at '.$time : ''));
+    }
+
+    public function settleRescheduleRequest(string $status): void
+    {
+        if (! in_array($status, ['approved', 'declined'], true)) {
+            return;
+        }
+        if (! \Illuminate\Support\Facades\Schema::hasColumn($this->getTable(), 'reschedule_request_status')) {
+            return;
+        }
+        if (($this->reschedule_request_status ?? '') !== 'pending') {
+            return;
+        }
+
+        $this->reschedule_request_status = $status;
+        $this->save();
     }
 
     /**
@@ -412,7 +481,7 @@ class Booking extends Model
             $serviceType = strtolower((string) ($b->service_type ?? $b->service ?? ''));
             if ($serviceType === 'kids-braids' || stripos($b->service ?? '', 'kids') !== false || $selector) {
                 $baseConfigured = (float) (config('service_prices.kids_braids', 80));
-                $typeAdj = ['protective'=>-20,'cornrows'=>-40,'knotless_small'=>20,'knotless_med'=>0,'box_small'=>10,'box_med'=>0,'stitch'=>20];
+                $typeAdj = ['protective'=>-20,'cornrows'=>-30,'knotless_small'=>20,'knotless_med'=>0,'box_small'=>10,'box_med'=>0,'stitch'=>20];
                 $lengthAdj = ['shoulder'=>0,'armpit'=>10,'mid_back'=>20,'waist'=>30];
                 $finishAdj = ['curled'=>-10,'plain'=>0];
 
@@ -467,7 +536,7 @@ class Booking extends Model
                 'classic' => 'Classic',
                 'long' => 'Long'
             ];
-            $addonMap = ['kb_add_detangle' => 'Detangle', 'kb_add_beads' => 'Beads', 'kb_add_beads_full' => 'Beads (full)', 'kb_add_extension' => 'Extension', 'kb_add_rest' => 'Resting'];
+            $addonMap = ['kb_add_detangle' => 'Detangle', 'kb_add_beads' => 'Beads', 'kb_add_beads_full' => 'Beads (full)', 'kb_add_extension' => 'Extension', 'kb_add_rest' => '15-min break'];
 
             $sel = $selector ?: [];
             $bt = $sel['braid_type'] ?? $b->kb_braid_type ?? null;

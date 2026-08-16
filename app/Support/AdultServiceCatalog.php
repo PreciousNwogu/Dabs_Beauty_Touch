@@ -136,8 +136,7 @@ class AdultServiceCatalog
             return true;
         }
         foreach (KidsStyleCatalog::definitions() as $def) {
-            $slugs = array_merge([$def['slug'] ?? ''], $def['alt_slugs'] ?? []);
-            if (in_array($slug, $slugs, true)) {
+            if (in_array($slug, KidsStyleCatalog::slugVariantsFor($def), true)) {
                 return true;
             }
         }
@@ -356,12 +355,31 @@ class AdultServiceCatalog
             return $path;
         }
 
-        $path = ltrim($path, '/');
+        $path = ltrim(str_replace('\\', '/', $path), '/');
         $parts = explode('/', $path);
         $file = array_pop($parts);
+        $file = rawurldecode(str_replace('+', ' ', (string) $file));
         $parts[] = rawurlencode($file);
 
         return asset(implode('/', $parts));
+    }
+
+    public static function usableImageUrl(?string $path): string
+    {
+        $path = trim((string) $path);
+        if ($path === '') {
+            return '';
+        }
+        if (preg_match('#^https?://#i', $path) || str_starts_with($path, '//')) {
+            return $path;
+        }
+
+        $normalized = PersistedUpload::normalize($path);
+        if (! PersistedUpload::isAvailable($normalized)) {
+            return '';
+        }
+
+        return self::publicImageUrl($normalized);
     }
 
     /**
@@ -390,7 +408,7 @@ class AdultServiceCatalog
                 continue;
             }
 
-            $image = self::publicImageUrl($svc->image_url ?? '');
+            $image = self::usableImageUrl($svc->image_url ?? '');
             $description = trim((string) ($svc->description ?? ''));
             $flagged = !empty($svc->use_as_category_card);
             $isKnownCard = isset(self::categories()[$key]) || $key === 'kids';
@@ -502,6 +520,16 @@ class AdultServiceCatalog
             ->values();
     }
 
+    /** Services CMS list filter, including Kids Braids. Homepage forms still use mergedNames(). */
+    public static function adminFilterNames($dbCategories = []): Collection
+    {
+        return self::mergedNames($dbCategories)
+            ->push('Kids Braids')
+            ->unique(fn ($cat) => strtolower((string) $cat))
+            ->sort()
+            ->values();
+    }
+
     /**
      * CMS adult styles to inject into homepage/calendar size maps.
      *
@@ -545,7 +573,7 @@ class AdultServiceCatalog
                 'eightToTenRowsPrice' => $rowFlags['eightToTenRowsPrice'],
                 'tenPlusRowsPrice' => $rowFlags['tenPlusRowsPrice'],
                 'fifteenPlusRowsPrice' => $rowFlags['fifteenPlusRowsPrice'],
-                'image' => self::publicImageUrl($svc->image_url ?? ''),
+                'image' => self::usableImageUrl($svc->image_url ?? ''),
                 'description' => trim((string) ($svc->description ?? '')),
                 'cms' => true,
             ];
@@ -568,7 +596,7 @@ class AdultServiceCatalog
             }
 
             if (!in_array($key, $knownKeys, true)) {
-                $image = self::publicImageUrl($svc->image_url ?? '');
+                $image = self::usableImageUrl($svc->image_url ?? '');
                 $description = trim((string) ($svc->description ?? ''));
                 $flagged = !empty($svc->use_as_category_card);
                 if (!isset($customCards[$key])) {
@@ -713,7 +741,7 @@ class AdultServiceCatalog
             'eightToTenRowsPrice' => $rowFlags['eightToTenRowsPrice'],
             'tenPlusRowsPrice' => $rowFlags['tenPlusRowsPrice'],
             'fifteenPlusRowsPrice' => $rowFlags['fifteenPlusRowsPrice'],
-            'image' => self::publicImageUrl($svc->image_url ?? ''),
+            'image' => self::usableImageUrl($svc->image_url ?? ''),
             'description' => trim((string) ($svc->description ?? '')),
             'cms' => true,
             'hidden' => empty($svc->is_active),

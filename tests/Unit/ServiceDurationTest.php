@@ -23,6 +23,12 @@ class ServiceDurationTest extends TestCase
         $this->assertSame(3.0, ServiceDuration::hoursForName('Kids Cornrows'));
     }
 
+    public function test_kids_rest_addon_adds_fifteen_minutes(): void
+    {
+        $this->assertSame(15, ServiceDuration::extraMinutesForKidsExtras('kb_add_detangle,kb_add_rest'));
+        $this->assertSame(0, ServiceDuration::extraMinutesForKidsExtras('kb_add_beads'));
+    }
+
     public function test_unknown_adult_services_default_to_four_hours(): void
     {
         $this->assertSame(4.0, ServiceDuration::hoursForName('Small Knotless Braids'));

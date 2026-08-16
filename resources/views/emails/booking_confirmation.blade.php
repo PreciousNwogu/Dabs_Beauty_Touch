@@ -188,7 +188,7 @@
 
     <div class="content">
       <p class="greeting">Hi {{ $booking->name ?? 'Customer' }},</p>
-      <p class="message">We received your booking. It stays <strong>pending</strong> until the $20 Interac deposit is received.</p>
+      <p class="message">We received your booking. It stays <strong>pending</strong> until the {{ \App\Support\InteracDeposit::amountLabel() }} Interac deposit is received.</p>
 
       <div class="info-card">
         <table class="info-table">
@@ -320,7 +320,7 @@
               $parts = [];
             }
             if(!empty($parts)){
-              $friendly = ['kb_add_detangle'=>'Detangle','kb_add_beads'=>'Beads','kb_add_beads_full'=>'Full beads','kb_add_extension'=>'Extension','kb_add_rest'=>'Resting'];
+              $friendly = ['kb_add_detangle'=>'Detangle','kb_add_beads'=>'Beads','kb_add_beads_full'=>'Full beads','kb_add_extension'=>'Extension','kb_add_rest'=>'15-min break'];
               $displayParts = [];
               foreach($parts as $p){
                 if(isset($friendly[$p])) $displayParts[] = $friendly[$p]; else $displayParts[] = $p;
@@ -526,9 +526,11 @@
         <p style="margin:0;font-size:13px;color:#718096;">We'll email you again once the appointment is confirmed.</p>
       </div>
 
+      @if(($booking->appointment_type ?? '') !== 'mobile')
       <div class="reminder">
         <strong>Reminder:</strong> Please arrive on time for your appointment.
       </div>
+      @endif
 
       <!-- Signature -->
       <div class="signature">

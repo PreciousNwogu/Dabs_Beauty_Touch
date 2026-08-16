@@ -18,6 +18,7 @@
   @if($note)
     <p>Note: {{ $note }}</p>
   @endif
+  <p>Open the booking to <strong>Approve</strong> or <strong>Decline</strong> this request. Approve moves the appointment to the requested time and emails the client. Decline keeps the original time and emails them.</p>
   <p><a href="{{ url('/admin/bookings/'.$booking->id) }}">Open booking in admin</a></p>
 </body>
 </html>

@@ -13,7 +13,7 @@
     </div>
     <div style="padding:24px;">
       <p>Hi {{ $booking->name ?? 'there' }},</p>
-      <p>We received your $20 deposit. Your appointment is now <strong>confirmed</strong>.</p>
+      <p>We received your {{ \App\Support\InteracDeposit::amountLabel() }} deposit. Your appointment is now <strong>confirmed</strong>.</p>
       <p>
         <strong>{{ $booking->service ?? 'Appointment' }}</strong><br>
         {{ $booking->appointment_date ? $booking->appointment_date->format('l, F j, Y') : '' }}

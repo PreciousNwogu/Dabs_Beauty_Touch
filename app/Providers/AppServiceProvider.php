@@ -12,7 +12,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->app->singleton(
+            \Illuminate\Foundation\Console\ServeCommand::class,
+            \App\Support\LocalServeCommand::class
+        );
     }
 
     /**
@@ -20,6 +23,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        \App\Support\UploadTempDir::ensure();
+
         // Force HTTPS in any non-local environment.
         if (!app()->environment('local')) {
             \Illuminate\Support\Facades\URL::forceScheme('https');

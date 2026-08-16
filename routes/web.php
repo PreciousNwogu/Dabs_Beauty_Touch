@@ -255,6 +255,7 @@ Route::get('/my-bookings/{booking}', [AccountController::class, 'showBooking'])-
 
 // Kids Braids Selector page
 Route::get('/kids-selector', function () {
+    \App\Support\KidsStyleCatalog::ensureCmsServices();
     // Pass service prices to the selector page (from config or Service model)
     $servicePrices = config('service_prices', []);
     $forKidsExists2 = \Illuminate\Support\Facades\Schema::hasColumn('services', 'for_kids');
@@ -344,7 +345,26 @@ Route::prefix('admin')->name('admin.')->middleware('admin')->group(function () {
 // Paginate bookings (10 per page)
             $bookings = $query->orderBy('appointment_date', 'desc')
                 ->orderBy('appointment_time', 'desc')
-                ->paginate(10);
+                    ->paginate(10);
+
+            $rescheduleRequests = collect();
+            $pendingRescheduleCount = 0;
+            try {
+                if (\Illuminate\Support\Facades\Schema::hasColumn('bookings', 'reschedule_request_status')) {
+                    $rescheduleRequests = \App\Models\Booking::query()
+                        ->where('reschedule_request_status', 'pending')
+                        ->whereNotIn('status', ['cancelled', 'completed'])
+                        ->orderByDesc('reschedule_requested_at')
+                        ->take(12)
+                        ->get();
+                    $pendingRescheduleCount = \App\Models\Booking::query()
+                        ->where('reschedule_request_status', 'pending')
+                        ->whereNotIn('status', ['cancelled', 'completed'])
+                        ->count();
+                }
+            } catch (\Throwable $e) {
+                $rescheduleRequests = collect();
+            }
 
             // Revenue fallback: prefer final_price, then kids final price, then base+adjustment.
             $revenueAmountSql = 'COALESCE(final_price, kb_final_price, (COALESCE(base_price, 0) + COALESCE(length_adjustment, 0)), 0)';
@@ -388,7 +408,7 @@ Route::prefix('admin')->name('admin.')->middleware('admin')->group(function () {
                 $customRequests = collect([]); // Empty collection as fallback
             }
 
-            return view('admin.dashboard', compact('bookings', 'stats', 'customRequests'));
+            return view('admin.dashboard', compact('bookings', 'stats', 'customRequests', 'rescheduleRequests', 'pendingRescheduleCount'));
         } catch (\Exception $e) {
             Log::error('Admin dashboard error: ' . $e->getMessage(), [
                 'trace' => $e->getTraceAsString(),
@@ -760,6 +780,11 @@ Route::prefix('admin')->name('admin.')->middleware('admin')->group(function () {
         abort(404, 'Booking not found');
     })->name('bookings.show');
 
+    Route::post('/bookings/{id}/reschedule-request/approve', [\App\Http\Controllers\Admin\BookingRescheduleRequestController::class, 'approve'])
+        ->name('bookings.reschedule-request.approve');
+    Route::post('/bookings/{id}/reschedule-request/decline', [\App\Http\Controllers\Admin\BookingRescheduleRequestController::class, 'decline'])
+        ->name('bookings.reschedule-request.decline');
+
     Route::post('/bookings/{id}/update', function (\Illuminate\Http\Request $request, $id) {
         $booking = \App\Models\Booking::findOrFail($id);
 
@@ -1128,6 +1153,11 @@ Route::post('/bookings', function(Request $request) {
         'final_price' => 'nullable|numeric|min:0|max:9999.99',
         // Must accept terms at submit time (server-side enforcement)
         'terms_accepted' => 'accepted',
+        'booking_origin' => 'nullable|string|in:home,kids-selector',
+        'parent_name' => 'nullable|string|max:255',
+        'child_age' => 'nullable|integer|min:3|max:8',
+        'hair_color' => 'nullable|string|max:80',
+        'comments' => 'nullable|string|max:800',
     ];
 
     // Only validate sample_picture if a file was actually uploaded
@@ -1136,6 +1166,14 @@ Route::post('/bookings', function(Request $request) {
         if ($file->isValid() && $file->getError() === UPLOAD_ERR_OK) {
             $validationRules['sample_picture'] = 'file|image|mimes:jpeg,png,jpg,gif|max:5120'; // 5MB max
         }
+    }
+
+    $isKidsBooking = str_contains(strtolower((string) ($request->input('service_type') ?: $request->input('service') ?: '')), 'kids')
+        || $request->input('booking_origin') === 'kids-selector'
+        || $request->filled('kb_braid_type');
+    if ($isKidsBooking) {
+        $validationRules['parent_name'] = 'required|string|max:255';
+        $validationRules['child_age'] = 'required|integer|min:3|max:8';
     }
 
     // Validate the booking form
@@ -1155,7 +1193,7 @@ Route::post('/bookings', function(Request $request) {
                 ], 422);
             }
 
-            return redirect()->route('home')
+            return redirect()->route(\App\Support\BookingReturn::routeName($request))
                 ->withErrors(['address' => $addressMessage])
                 ->withInput()
                 ->with([
@@ -1174,7 +1212,7 @@ Route::post('/bookings', function(Request $request) {
                 ], 422);
             }
 
-            return redirect()->route('home')
+            return redirect()->route(\App\Support\BookingReturn::routeName($request))
                 ->withErrors(['parking_type' => $parkingMessage])
                 ->withInput()
                 ->with([
@@ -1246,6 +1284,11 @@ Route::post('/bookings', function(Request $request) {
                 // move single + to start
                 $normalizedPhone = '+' . str_replace('+', '', $normalizedPhone);
             }
+        }
+
+        $kidsMessage = \App\Support\BookingReturn::composeKidsMessage($request);
+        if ($kidsMessage) {
+            $request->merge(['message' => $kidsMessage]);
         }
 
         $bookingData = [
@@ -1345,7 +1388,7 @@ Route::post('/bookings', function(Request $request) {
 
                 // Compute authoritative kids price using the same mapping as notifications
                 $baseConfigured = (float) (config('service_prices.kids_braids', 80));
-                $typeAdj = ['protective'=>-20,'cornrows'=>-40,'knotless_small'=>20,'knotless_med'=>0,'box_small'=>10,'box_med'=>0,'stitch'=>20];
+                $typeAdj = ['protective'=>-20,'cornrows'=>-30,'knotless_small'=>20,'knotless_med'=>0,'box_small'=>10,'box_med'=>0,'stitch'=>20];
                 $lengthAdj = ['shoulder'=>0,'armpit'=>10,'mid_back'=>20,'waist'=>30];
                 $finishAdj = ['curled'=>-10,'plain'=>0];
                 $addonMap = ['kb_add_detangle'=>15,'kb_add_beads'=>10,'kb_add_beads_full'=>15,'kb_add_extension'=>20,'kb_add_rest'=>5];
@@ -1393,7 +1436,7 @@ Route::post('/bookings', function(Request $request) {
                 $bookingData['kb_extras'] = $selectorFields['extras'] ?? null;
 
                 $baseConfigured = (float) (config('service_prices.kids_braids', 80));
-                $typeAdj = ['protective'=>-20,'cornrows'=>-40,'knotless_small'=>20,'knotless_med'=>0,'box_small'=>10,'box_med'=>0,'stitch'=>20];
+                $typeAdj = ['protective'=>-20,'cornrows'=>-30,'knotless_small'=>20,'knotless_med'=>0,'box_small'=>10,'box_med'=>0,'stitch'=>20];
                 $lengthAdj = ['shoulder'=>0,'armpit'=>10,'mid_back'=>20,'waist'=>30];
                 $finishAdj = ['curled'=>-10,'plain'=>0];
                 $addonMap = ['kb_add_detangle'=>15,'kb_add_beads'=>10,'kb_add_beads_full'=>15,'kb_add_extension'=>20,'kb_add_rest'=>5];
@@ -1668,7 +1711,10 @@ Route::post('/bookings', function(Request $request) {
         }
 
         $durationHours = ServiceDuration::hoursForName($bookingData['service'] ?? null);
-        $bookingData['service_duration_minutes'] = ServiceDuration::toMinutes($durationHours);
+        $durationMinutes = ServiceDuration::toMinutes($durationHours)
+            + ServiceDuration::extraMinutesForKidsExtras($bookingData['kb_extras'] ?? $request->input('kb_extras') ?? $request->input('extras'));
+        $bookingData['service_duration_minutes'] = $durationMinutes;
+        $durationHours = $durationMinutes / 60;
 
         // Create the booking (lock the date so two clients cannot take the same slot)
         Log::info('=== CREATING BOOKING ===', ['data' => $bookingData]);
@@ -2228,7 +2274,13 @@ Route::post('/bookings/confirm/{id}/{code}/reschedule', function (\Illuminate\Ht
         'note' => 'nullable|string|max:1000',
     ]);
 
-    $booking->notes = trim(($booking->notes ?? '')."\nReschedule request: ".$data['preferred_date'].' '.$data['preferred_time'].($data['note'] ? ' — '.$data['note'] : ''));
+    $preferredTime = \Carbon\Carbon::parse($data['preferred_time'])->format('H:i');
+    $booking->notes = trim(($booking->notes ?? '')."\nReschedule request: ".$data['preferred_date'].' '.$preferredTime.($data['note'] ? ' — '.$data['note'] : ''));
+    $booking->reschedule_requested_date = $data['preferred_date'];
+    $booking->reschedule_requested_time = $preferredTime;
+    $booking->reschedule_request_note = $data['note'] ?? null;
+    $booking->reschedule_request_status = 'pending';
+    $booking->reschedule_requested_at = now();
     $booking->save();
 
     try {
@@ -2321,3 +2373,19 @@ Route::get('/bookings/{id}/{code}/calendar.ics', function ($id, $code) {
         abort(500, 'Could not generate calendar file');
     }
 })->name('bookings.ics');
+
+Route::get('/images/uploads/{path}', \App\Http\Controllers\PersistedImageController::class)
+    ->where('path', '.*')
+    ->name('images.uploads');
+Route::get('/images/site/{path}', \App\Http\Controllers\PersistedImageController::class)
+    ->where('path', '.*')
+    ->name('images.site');
+Route::get('/images/services/{path}', \App\Http\Controllers\PersistedImageController::class)
+    ->where('path', '.*')
+    ->name('images.services');
+Route::get('/storage/service-images/{path}', \App\Http\Controllers\PersistedImageController::class)
+    ->where('path', '.*')
+    ->name('images.storage-services');
+Route::get('/storage/site/{path}', \App\Http\Controllers\PersistedImageController::class)
+    ->where('path', '.*')
+    ->name('images.storage-site');

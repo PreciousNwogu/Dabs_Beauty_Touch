@@ -56,8 +56,34 @@ document.addEventListener('DOMContentLoaded', () => {
         nowIndicator: true,
         editable: true,
         selectable: true,
+        selectMirror: true,
+        unselectAuto: true,
         timeZone: 'UTC', // Use UTC to avoid timezone conversion issues with blocked dates
         events: eventsUrl,
+        dateClick: function(info) {
+            openDayCloseMenu({
+                startYmd: toYmd(info.date),
+                endYmdExclusive: nextYmd(toYmd(info.date)),
+                jsEvent: info.jsEvent,
+            });
+        },
+        select: function(info) {
+            const startYmd = (info.startStr || toYmd(info.start)).slice(0, 10);
+            const endYmdExclusive = (info.endStr || toYmd(info.end)).slice(0, 10);
+            if (!startYmd || !endYmdExclusive || startYmd >= endYmdExclusive) {
+                calendar.unselect();
+                return;
+            }
+            // Single-day clicks are handled by dateClick.
+            if (nextYmd(startYmd) === endYmdExclusive) {
+                return;
+            }
+            openDayCloseMenu({
+                startYmd,
+                endYmdExclusive,
+                jsEvent: info.jsEvent,
+            });
+        },
         eventDrop: function(info) {
             const id = info.event.id;
             if (!id || !id.startsWith('booking-')) { info.revert(); return; }
@@ -128,24 +154,18 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            // allow admin to delete slot (blocked/availability) by clicking
             if (id.startsWith('slot-')) {
-                // ids for expanded blocked-day events are like: slot-<origId>-YYYYMMDD
+                info.jsEvent && info.jsEvent.preventDefault();
+                const startYmd = toYmd(info.event.start);
                 const parts = id.split('-');
                 const origId = parts.length > 1 ? parts[1] : id.replace('slot-', '');
-                if (confirm('Delete this schedule slot / block?')) {
-                    fetch('/admin/schedules/' + origId, {
-                        method: 'DELETE',
-                        headers: { 'X-CSRF-TOKEN': getCsrfToken() }
-                    }).then(r => r.json()).then(data => {
-                        if (data.success) {
-                            calendar.refetchEvents();
-                            alert('Slot deleted');
-                        } else {
-                            alert('Failed to delete slot');
-                        }
-                    }).catch(err => { console.error('Delete slot error', err); alert('Error deleting slot'); });
-                }
+                openDayCloseMenu({
+                    startYmd,
+                    endYmdExclusive: nextYmd(startYmd),
+                    jsEvent: info.jsEvent,
+                    fromBlockedEvent: true,
+                    unblockIds: origId ? [String(origId)] : [],
+                });
             }
         }
     });
@@ -177,7 +197,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 const editingNotice = document.getElementById('editingBlockNotice');
                 const submitBtn = document.getElementById('submitBlock');
                 
-                if (blockTitle) blockTitle.value = '';
+                if (blockTitle) blockTitle.value = 'Closed';
+                try { window.selectBlockLabel && window.selectBlockLabel('Closed'); } catch (e) {}
                 if (blockStart) blockStart.value = '';
                 if (blockEnd) blockEnd.value = '';
                 if (blockAllDay) blockAllDay.checked = true;
@@ -248,6 +269,251 @@ document.addEventListener('DOMContentLoaded', () => {
         return { startIso, endIso };
     };
 
+    const toYmd = (date) => {
+        const d = date instanceof Date ? date : new Date(date);
+        return `${d.getUTCFullYear()}-${pad2(d.getUTCMonth() + 1)}-${pad2(d.getUTCDate())}`;
+    };
+    const shiftYmd = (ymd, days) => {
+        const [y, m, d] = String(ymd).split('-').map((v) => parseInt(v, 10));
+        return toYmd(new Date(Date.UTC(y, m - 1, d + days, 0, 0, 0, 0)));
+    };
+    const nextYmd = (ymd) => shiftYmd(ymd, 1);
+    const previousYmd = (ymd) => shiftYmd(ymd, -1);
+    const inclusiveEndYmd = (endYmdExclusive) => previousYmd(endYmdExclusive);
+    const formatYmdLabel = (ymd) => {
+        const [y, m, d] = String(ymd).split('-').map((v) => parseInt(v, 10));
+        return new Date(Date.UTC(y, m - 1, d)).toLocaleDateString('en-US', {
+            weekday: 'long', month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC',
+        });
+    };
+    const utcRangeForDays = (startYmd, endYmdExclusive) => {
+        const [sy, sm, sd] = String(startYmd).split('-').map((v) => parseInt(v, 10));
+        const [ey, em, ed] = String(endYmdExclusive).split('-').map((v) => parseInt(v, 10));
+        return {
+            start: new Date(Date.UTC(sy, sm - 1, sd, 0, 0, 0, 0)),
+            end: new Date(Date.UTC(ey, em - 1, ed, 0, 0, 0, 0)),
+        };
+    };
+
+    const dayCloseState = { startYmd: null, endYmdExclusive: null, unblockIds: [] };
+
+    const hideDayCloseMenu = () => {
+        const pop = document.getElementById('dayClosePopover');
+        if (pop) pop.hidden = true;
+        try { calendar.unselect(); } catch (e) {}
+    };
+
+    const allDayBlockIdsCovering = (startYmd, endYmdExclusive) => {
+        const range = utcRangeForDays(startYmd, endYmdExclusive);
+        const ids = new Set();
+        calendar.getEvents().forEach((ev) => {
+            if (!ev.extendedProps || ev.extendedProps.type !== 'blocked') return;
+            const s = ev.start ? ev.start.getTime() : 0;
+            const e = ev.end ? ev.end.getTime() : (s + 24 * 60 * 60 * 1000);
+            if (!(s < range.end.getTime() && e > range.start.getTime())) return;
+            const startIso = ev.extendedProps.orig_start || (ev.start ? ev.start.toISOString() : '');
+            const endIso = ev.extendedProps.orig_end || (ev.end ? ev.end.toISOString() : '');
+            if (!ev.allDay && !looksAllDayUTC(startIso, endIso)) return;
+            const origId = extractOrigScheduleId(ev.id, ev.extendedProps);
+            if (origId) ids.add(String(origId));
+        });
+        return Array.from(ids);
+    };
+
+    const positionDayCloseMenu = (jsEvent) => {
+        const pop = document.getElementById('dayClosePopover');
+        if (!pop) return;
+        pop.hidden = false;
+        const pad = 12;
+        const x = jsEvent && typeof jsEvent.clientX === 'number' ? jsEvent.clientX : window.innerWidth / 2;
+        const y = jsEvent && typeof jsEvent.clientY === 'number' ? jsEvent.clientY : 120;
+        const width = pop.offsetWidth || 320;
+        const height = pop.offsetHeight || 280;
+        pop.style.left = `${Math.min(Math.max(pad, x + 8), window.innerWidth - width - pad)}px`;
+        pop.style.top = `${Math.min(Math.max(pad, y + 8), window.innerHeight - height - pad)}px`;
+    };
+
+    function openDayCloseMenu({ startYmd, endYmdExclusive, jsEvent, fromBlockedEvent = false, unblockIds = [] }) {
+        if (!startYmd || !endYmdExclusive || startYmd >= endYmdExclusive) return;
+
+        const today = new Date();
+        const todayYmd = `${today.getFullYear()}-${pad2(today.getMonth() + 1)}-${pad2(today.getDate())}`;
+        if (inclusiveEndYmd(endYmdExclusive) < todayYmd) {
+            hideDayCloseMenu();
+            alert('That day has already passed.');
+            return;
+        }
+
+        dayCloseState.startYmd = startYmd;
+        dayCloseState.endYmdExclusive = endYmdExclusive;
+        dayCloseState.unblockIds = unblockIds;
+
+        const pop = document.getElementById('dayClosePopover');
+        if (!pop) return;
+        const titleEl = document.getElementById('dayCloseTitle');
+        const hintEl = document.getElementById('dayCloseHint');
+        const closeDayBtn = pop.querySelector('[data-day-close-action="close-day"]');
+        const morningBtn = pop.querySelector('[data-day-close-action="close-morning"]');
+        const unblockBtn = pop.querySelector('[data-day-close-action="unblock"]');
+
+        const lastYmd = inclusiveEndYmd(endYmdExclusive);
+        const isRange = startYmd !== lastYmd;
+        const label = isRange
+            ? `${formatYmdLabel(startYmd)} – ${formatYmdLabel(lastYmd)}`
+            : formatYmdLabel(startYmd);
+        const blockedIds = allDayBlockIdsCovering(startYmd, endYmdExclusive);
+        const alreadyClosed = blockedIds.length > 0 || fromBlockedEvent;
+
+        if (titleEl) titleEl.textContent = alreadyClosed ? `Reopen ${label}?` : `Close ${label}?`;
+        if (hintEl) {
+            hintEl.textContent = alreadyClosed
+                ? 'This date is already blocked. Reopen it to allow bookings again.'
+                : 'Clients will not be able to book these dates.';
+        }
+        if (closeDayBtn) {
+            closeDayBtn.hidden = alreadyClosed;
+            closeDayBtn.innerHTML = isRange
+                ? '<i class="bi bi-slash-circle me-1"></i>Close these days'
+                : '<i class="bi bi-slash-circle me-1"></i>Close this day';
+        }
+        if (morningBtn) morningBtn.hidden = alreadyClosed || isRange;
+        const labelSelect = document.getElementById('dayCloseLabel');
+        if (labelSelect) {
+            labelSelect.hidden = alreadyClosed;
+            const labelField = labelSelect.previousElementSibling;
+            if (labelField && labelField.tagName === 'LABEL') labelField.hidden = alreadyClosed;
+            if (!alreadyClosed && !labelSelect.value) labelSelect.value = 'Closed';
+        }
+        if (unblockBtn) {
+            unblockBtn.hidden = !alreadyClosed;
+            unblockBtn.innerHTML = isRange
+                ? '<i class="bi bi-unlock me-1"></i>Reopen these days'
+                : '<i class="bi bi-unlock me-1"></i>Reopen this day';
+        }
+
+        positionDayCloseMenu(jsEvent);
+    }
+
+    const conflictMessage = (data) => {
+        const names = (data && Array.isArray(data.conflicts))
+            ? data.conflicts.map((c) => c.name || ('#' + c.id)).join(', ')
+            : '';
+        return names
+            ? `Can't close that date — it overlaps existing bookings (${names}). Cancel or move those first.`
+            : ((data && data.message) ? data.message : 'Could not close that date.');
+    };
+
+    async function createClosedRange(title, startIso, endIso) {
+        const token = getCsrfToken();
+        const res = await fetch(storeUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': token,
+            },
+            body: JSON.stringify({ title, start: startIso, end: endIso, type: 'blocked' }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok || !data.success) {
+            throw new Error(conflictMessage(data));
+        }
+        calendar.refetchEvents();
+        hideDayCloseMenu();
+    }
+
+    async function deleteBlockedIds(ids) {
+        if (!ids.length) {
+            throw new Error('No closed block found for that day.');
+        }
+        const token = getCsrfToken();
+        for (const id of ids) {
+            const res = await fetch('/admin/schedules/' + id, {
+                method: 'DELETE',
+                headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': token },
+            });
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok || !data.success) {
+                throw new Error(data.message || 'Could not reopen that date.');
+            }
+        }
+        calendar.refetchEvents();
+        hideDayCloseMenu();
+    }
+
+    const openCustomBlockForSelection = (startYmd, lastYmd) => {
+        hideDayCloseMenu();
+        const openBtn = document.getElementById('openBlockModal');
+        if (openBtn) openBtn.click();
+        const blockStart = document.getElementById('blockStart');
+        const blockEnd = document.getElementById('blockEnd');
+        const blockAllDay = document.getElementById('blockAllDay');
+        const blockTitle = document.getElementById('blockTitle');
+        if (blockAllDay) {
+            blockAllDay.checked = true;
+            try { updateBlockMode(); } catch (e) {}
+        }
+        if (blockTitle && !blockTitle.value) blockTitle.value = 'Closed';
+        try { window.selectBlockLabel && window.selectBlockLabel(blockTitle ? blockTitle.value : 'Closed'); } catch (e) {}
+        if (blockStart) blockStart.value = `${startYmd}T00:00`;
+        if (blockEnd) blockEnd.value = `${lastYmd}T23:59`;
+        try { updateBlockPreview(); } catch (e) {}
+    };
+
+    const dayClosePopover = document.getElementById('dayClosePopover');
+    if (dayClosePopover) {
+        dayClosePopover.addEventListener('click', async (e) => {
+            const btn = e.target.closest('[data-day-close-action]');
+            if (!btn) return;
+            const action = btn.getAttribute('data-day-close-action');
+            const startYmd = dayCloseState.startYmd;
+            const endYmdExclusive = dayCloseState.endYmdExclusive;
+            if (!startYmd || !endYmdExclusive) return;
+
+            try {
+                if (action === 'cancel') {
+                    hideDayCloseMenu();
+                    return;
+                }
+                if (action === 'custom') {
+                    openCustomBlockForSelection(startYmd, inclusiveEndYmd(endYmdExclusive));
+                    return;
+                }
+                if (action === 'close-day') {
+                    const range = utcRangeForDays(startYmd, endYmdExclusive);
+                    const label = (document.getElementById('dayCloseLabel')?.value || 'Closed').trim() || 'Closed';
+                    await createClosedRange(label, range.start.toISOString(), range.end.toISOString());
+                    return;
+                }
+                if (action === 'close-morning') {
+                    const [y, m, d] = startYmd.split('-').map((v) => parseInt(v, 10));
+                    const start = new Date(Date.UTC(y, m - 1, d, 0, 0, 0, 0));
+                    const end = new Date(Date.UTC(y, m - 1, d, 14, 0, 0, 0));
+                    const chosen = (document.getElementById('dayCloseLabel')?.value || '').trim();
+                    const label = chosen && chosen !== 'Closed' ? chosen : 'Closed until 2 PM';
+                    await createClosedRange(label, start.toISOString(), end.toISOString());
+                    return;
+                }
+                if (action === 'unblock') {
+                    const ids = allDayBlockIdsCovering(startYmd, endYmdExclusive);
+                    await deleteBlockedIds(ids.length ? ids : (dayCloseState.unblockIds || []));
+                }
+            } catch (err) {
+                alert(err && err.message ? err.message : 'Something went wrong.');
+            }
+        });
+    }
+
+    document.addEventListener('mousedown', (e) => {
+        const pop = document.getElementById('dayClosePopover');
+        if (!pop || pop.hidden) return;
+        if (pop.contains(e.target)) return;
+        if (e.target.closest('.fc-daygrid-day, .fc-event, .fc-timegrid-slot')) return;
+        hideDayCloseMenu();
+    });
+
+    window.openDayCloseMenu = openDayCloseMenu;
+
     const openEditBlockInModal = (slotObj) => {
         const modalEl = document.getElementById('blockModal');
         if (!modalEl) return;
@@ -276,7 +542,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         updateBlockMode();
 
-        if (blockTitle) blockTitle.value = slotObj.title || 'Blocked';
+        if (blockTitle) blockTitle.value = slotObj.title || 'Closed';
+        try { window.selectBlockLabel && window.selectBlockLabel(blockTitle ? blockTitle.value : 'Closed'); } catch (e) {}
 
         try {
             if (isAllDay) {
@@ -633,6 +900,67 @@ document.addEventListener('DOMContentLoaded', () => {
             } finally {
                 reusePreviousMonthBtn.disabled = false;
                 reusePreviousMonthBtn.innerHTML = originalText;
+            }
+        });
+    }
+
+    const PRESET_BLOCK_LABELS = [
+        'Closed', 'Holiday', 'Vacation', 'Personal day', 'Off sick',
+        'Family emergency', 'Training', 'Fully booked', 'Lunch break',
+        'Closed until 2 PM', 'Closed after 2 PM',
+    ];
+
+    window.selectBlockLabel = function (label) {
+        const titleInput = document.getElementById('blockTitle');
+        const chips = document.querySelectorAll('#blockLabelOptions [data-block-label]');
+        const value = (label || '').trim();
+        const isPreset = PRESET_BLOCK_LABELS.some((item) => item.toLowerCase() === value.toLowerCase());
+        const matched = PRESET_BLOCK_LABELS.find((item) => item.toLowerCase() === value.toLowerCase());
+
+        chips.forEach((chip) => {
+            const chipVal = chip.getAttribute('data-block-label');
+            const selected = isPreset ? chipVal === matched : chipVal === '__custom';
+            chip.classList.toggle('is-selected', selected);
+        });
+
+        if (titleInput && isPreset && matched) {
+            titleInput.value = matched;
+        }
+        try { updateBlockPreview(); } catch (e) {}
+    };
+
+    const blockLabelOptions = document.getElementById('blockLabelOptions');
+    if (blockLabelOptions) {
+        blockLabelOptions.addEventListener('click', (e) => {
+            const chip = e.target.closest('[data-block-label]');
+            if (!chip) return;
+            e.preventDefault();
+            const value = chip.getAttribute('data-block-label');
+            const titleInput = document.getElementById('blockTitle');
+            if (value === '__custom') {
+                window.selectBlockLabel('__custom');
+                document.querySelectorAll('#blockLabelOptions [data-block-label]').forEach((el) => {
+                    el.classList.toggle('is-selected', el.getAttribute('data-block-label') === '__custom');
+                });
+                if (titleInput) {
+                    titleInput.focus();
+                    titleInput.select();
+                }
+                return;
+            }
+            if (titleInput) titleInput.value = value;
+            window.selectBlockLabel(value);
+        });
+    }
+
+    const blockTitleInput = document.getElementById('blockTitle');
+    if (blockTitleInput) {
+        blockTitleInput.addEventListener('input', () => {
+            window.selectBlockLabel(blockTitleInput.value);
+            if (!PRESET_BLOCK_LABELS.some((item) => item.toLowerCase() === blockTitleInput.value.trim().toLowerCase())) {
+                document.querySelectorAll('#blockLabelOptions [data-block-label]').forEach((el) => {
+                    el.classList.toggle('is-selected', el.getAttribute('data-block-label') === '__custom');
+                });
             }
         });
     }
@@ -999,7 +1327,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 updateBlockMode();
                 blockStart.value = formatDateTimeLocal(new Date(today.getFullYear(), today.getMonth(), today.getDate(), 0, 0));
                 blockEnd.value = formatDateTimeLocal(new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59));
-                if (blockTitle) blockTitle.value = 'Holiday - Closed';
+                if (blockTitle) blockTitle.value = 'Holiday';
+                try { window.selectBlockLabel && window.selectBlockLabel('Holiday'); } catch (e) {}
                 break;
 
             case 'fullday-range':
@@ -1007,7 +1336,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 updateBlockMode();
                 blockStart.value = formatDateTimeLocal(new Date(today.getFullYear(), today.getMonth(), today.getDate(), 0, 0));
                 blockEnd.value = formatDateTimeLocal(new Date(tomorrow.getFullYear(), tomorrow.getMonth(), tomorrow.getDate(), 23, 59));
-                if (blockTitle) blockTitle.value = 'Weekend Closure';
+                if (blockTitle) blockTitle.value = 'Vacation';
+                try { window.selectBlockLabel && window.selectBlockLabel('Vacation'); } catch (e) {}
                 break;
 
             case 'time-morning':
@@ -1019,7 +1349,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 // For the last day, it will block from 00:00 to 14:00
                 blockStart.value = formatDateTimeLocal(new Date(today.getFullYear(), today.getMonth(), today.getDate(), 0, 0));
                 blockEnd.value = formatDateTimeLocal(new Date(nextWeek.getFullYear(), nextWeek.getMonth(), nextWeek.getDate(), 14, 0));
-                if (blockTitle) blockTitle.value = 'Morning Blocked - Open from 3 PM';
+                if (blockTitle) blockTitle.value = 'Closed until 2 PM';
+                try { window.selectBlockLabel && window.selectBlockLabel('Closed until 2 PM'); } catch (e) {}
                 break;
 
             case 'time-afternoon':
@@ -1031,7 +1362,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 // For the last day, it will block from 14:00 to 23:59
                 blockStart.value = formatDateTimeLocal(new Date(today.getFullYear(), today.getMonth(), today.getDate(), 14, 0));
                 blockEnd.value = formatDateTimeLocal(new Date(nextWeek.getFullYear(), nextWeek.getMonth(), nextWeek.getDate(), 23, 59));
-                if (blockTitle) blockTitle.value = 'Afternoon Blocked - Open till 1 PM';
+                if (blockTitle) blockTitle.value = 'Closed after 2 PM';
+                try { window.selectBlockLabel && window.selectBlockLabel('Closed after 2 PM'); } catch (e) {}
                 break;
 
             case 'time-lunch':
@@ -1039,7 +1371,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 updateBlockMode();
                 blockStart.value = formatDateTimeLocal(new Date(today.getFullYear(), today.getMonth(), today.getDate(), 12, 0));
                 blockEnd.value = formatDateTimeLocal(new Date(today.getFullYear(), today.getMonth(), today.getDate(), 13, 0));
-                if (blockTitle) blockTitle.value = 'Lunch Break';
+                if (blockTitle) blockTitle.value = 'Lunch break';
+                try { window.selectBlockLabel && window.selectBlockLabel('Lunch break'); } catch (e) {}
                 break;
         }
 

@@ -33,6 +33,7 @@ class SiteSettings
             'kids_styles' => self::defaultKidsStyles(),
             'hero_image' => '',
             'promo_image' => '',
+            'promo_media' => [],
             'promo_title' => '',
             'promo_text' => '',
             'promo_enabled' => false,
@@ -246,15 +247,82 @@ class SiteSettings
 
     public static function promoImageUrl(): string
     {
-        $path = trim((string) self::get('promo_image', ''));
-        if ($path === '') {
-            return '';
+        foreach (self::promoMedia() as $item) {
+            if (($item['type'] ?? '') !== 'video' && ($item['url'] ?? '') !== '') {
+                return (string) $item['url'];
+            }
         }
 
-        return AdultServiceCatalog::publicImageUrl(
-            str_starts_with($path, 'http') || str_starts_with($path, '/')
-                ? $path
-                : '/storage/'.ltrim($path, '/')
-        );
+        $first = self::promoMedia()[0]['url'] ?? '';
+
+        return is_string($first) ? $first : '';
+    }
+
+    public static function promoMedia(): array
+    {
+        $items = self::normalizePromoMedia(self::get('promo_media', []));
+        if ($items === []) {
+            $legacy = trim((string) self::get('promo_image', ''));
+            if ($legacy !== '') {
+                $items[] = self::promoMediaItem($legacy);
+            }
+        }
+
+        return array_values(array_filter(
+            $items,
+            fn ($item) => is_array($item) && ($item['url'] ?? '') !== ''
+        ));
+    }
+
+    public static function isPromoVideoPath(string $path): bool
+    {
+        return (bool) preg_match('/\.(mp4|webm|mov|m4v|ogg)(\?|#|$)/i', $path);
+    }
+
+    public static function promoMediaItem(string $path, ?string $type = null): array
+    {
+        $path = trim($path);
+        $kind = ($type === 'video' || self::isPromoVideoPath($path)) ? 'video' : 'image';
+        $url = '';
+        if ($path !== '') {
+            $url = AdultServiceCatalog::publicImageUrl(
+                str_starts_with($path, 'http') || str_starts_with($path, '/')
+                    ? $path
+                    : '/storage/'.ltrim($path, '/')
+            );
+        }
+
+        return [
+            'path' => $path,
+            'type' => $kind,
+            'url' => $url,
+        ];
+    }
+
+    public static function normalizePromoMedia(mixed $raw): array
+    {
+        if (! is_array($raw)) {
+            return [];
+        }
+
+        $out = [];
+        $seen = [];
+        foreach ($raw as $row) {
+            if (is_string($row)) {
+                $item = self::promoMediaItem($row);
+            } elseif (is_array($row)) {
+                $item = self::promoMediaItem((string) ($row['path'] ?? ''), isset($row['type']) ? (string) $row['type'] : null);
+            } else {
+                continue;
+            }
+            $key = $item['path'];
+            if ($key === '' || isset($seen[$key])) {
+                continue;
+            }
+            $seen[$key] = true;
+            $out[] = $item;
+        }
+
+        return $out;
     }
 }

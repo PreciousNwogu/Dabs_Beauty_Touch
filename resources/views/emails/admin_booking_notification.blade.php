@@ -170,7 +170,7 @@
           'kb_add_beads' => 'Tiny beading',
           'kb_add_beads_full' => 'Big eye beading',
           'kb_add_extension' => 'Extension',
-          'kb_add_rest' => 'Resting',
+          'kb_add_rest' => '15-min break',
         ];
         if(!empty($sf['extras']) && is_array($sf['extras'])){
             $extrasVal = implode(', ', array_map(function($it) use ($addonNameMap){

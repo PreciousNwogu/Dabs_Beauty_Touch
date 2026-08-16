@@ -643,6 +643,50 @@
             box-shadow: 0 3px 6px rgba(220, 53, 69, 0.4);
         }
 
+        #adminCalendar .fc-daygrid-day {
+            cursor: pointer;
+        }
+        #adminCalendar .fc-daygrid-day:hover {
+            background: rgba(220, 53, 69, 0.06);
+        }
+        .day-close-popover {
+            position: fixed;
+            z-index: 1080;
+            width: min(320px, calc(100vw - 24px));
+            background: #fff;
+            border-radius: 14px;
+            box-shadow: 0 12px 40px rgba(3, 15, 104, 0.22);
+            border: 1px solid #e6eaf5;
+            padding: 16px;
+        }
+        .day-close-popover[hidden] { display: none !important; }
+        .day-close-popover .day-close-title {
+            font-weight: 800;
+            color: #030f68;
+            margin: 0 0 4px;
+            font-size: 1.05rem;
+        }
+        .day-close-popover .day-close-hint {
+            font-size: 0.85rem;
+            color: #64748b;
+            margin: 0 0 12px;
+        }
+        .day-close-popover .btn { font-weight: 600; }
+        .block-label-chip {
+            border: 1px solid #d0d7e8;
+            background: #f8fafc;
+            color: #030f68;
+            font-weight: 700;
+            font-size: 0.8rem;
+            border-radius: 999px;
+            padding: 6px 12px;
+        }
+        .block-label-chip.is-selected {
+            background: #030f68;
+            border-color: #030f68;
+            color: #fff;
+        }
+
         /* Booking details modal (View Details) */
         .bd-card {
             border: 1px solid rgba(0,0,0,0.08);
@@ -747,6 +791,34 @@
                 <h1 class="mb-3">Admin Dashboard</h1>
                 <p class="mb-0">Manage appointments and view business insights</p>
             </div>
+
+            @if(session('success'))
+                <div class="mx-4 mt-3 alert alert-success">{{ session('success') }}</div>
+            @endif
+            @if(session('error'))
+                <div class="mx-4 mt-3 alert alert-danger">{{ session('error') }}</div>
+            @endif
+
+            @php
+                $rescheduleRequests = $rescheduleRequests ?? collect();
+                $pendingRescheduleCount = $pendingRescheduleCount ?? $rescheduleRequests->count();
+            @endphp
+            @if($rescheduleRequests->count())
+                <div class="mx-4 mt-3 alert alert-warning" style="border-left: 5px solid #ff6600;">
+                    <strong>{{ $pendingRescheduleCount }} time-change {{ $pendingRescheduleCount === 1 ? 'request' : 'requests' }} waiting.</strong>
+                    <span class="d-block small mb-2">Approve moves the appointment and emails the client. Decline keeps the original time and emails them.</span>
+                    <ul class="mb-0 ps-3">
+                        @foreach($rescheduleRequests as $req)
+                            <li class="mb-1">
+                                <strong>{{ $req->name }}</strong>
+                                asked for <strong>{{ $req->requestedRescheduleLabel() }}</strong>
+                                instead of {{ $req->currentAppointmentLabel() }}.
+                                <a href="{{ route('admin.bookings.show', $req->id) }}" class="ms-1">Review</a>
+                            </li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
 
             <!-- Statistics -->
             <div class="row p-4 p-md-4 p-3">
@@ -881,11 +953,24 @@
 
                                     <div class="mb-4">
                                         <label class="form-label fw-semibold mb-2">
-                                            <i class="bi bi-tag me-1"></i>Title / Reason
-                                            <span class="text-muted small">(optional)</span>
+                                            <i class="bi bi-tag me-1"></i>Label
                                         </label>
-                                        <input id="blockTitle" type="text" class="form-control form-control-lg" placeholder="e.g., Closed for holidays, Staff training, Maintenance">
-                                        <small class="form-text text-muted">This will be displayed to users when they try to book on blocked dates.</small>
+                                        <div id="blockLabelOptions" class="d-flex flex-wrap gap-2 mb-2">
+                                            <button type="button" class="block-label-chip is-selected" data-block-label="Closed">Closed</button>
+                                            <button type="button" class="block-label-chip" data-block-label="Holiday">Holiday</button>
+                                            <button type="button" class="block-label-chip" data-block-label="Vacation">Vacation</button>
+                                            <button type="button" class="block-label-chip" data-block-label="Personal day">Personal day</button>
+                                            <button type="button" class="block-label-chip" data-block-label="Off sick">Off sick</button>
+                                            <button type="button" class="block-label-chip" data-block-label="Family emergency">Family emergency</button>
+                                            <button type="button" class="block-label-chip" data-block-label="Training">Training</button>
+                                            <button type="button" class="block-label-chip" data-block-label="Fully booked">Fully booked</button>
+                                            <button type="button" class="block-label-chip" data-block-label="Lunch break">Lunch break</button>
+                                            <button type="button" class="block-label-chip" data-block-label="Closed until 2 PM">Until 2 PM</button>
+                                            <button type="button" class="block-label-chip" data-block-label="Closed after 2 PM">After 2 PM</button>
+                                            <button type="button" class="block-label-chip" data-block-label="__custom">Other</button>
+                                        </div>
+                                        <input id="blockTitle" type="text" class="form-control form-control-lg" value="Closed" placeholder="Choose a label or type your own">
+                                        <small class="form-text text-muted">This label shows on the calendar and to clients.</small>
                                     </div>
 
                                     <div class="mb-4">
@@ -1069,7 +1154,7 @@
                         <div class="appointment-header d-flex justify-content-between align-items-center">
                             <div>
                                 <h4 class="mb-0">Schedule (Calendar)</h4>
-                                <small class="text-muted">Drag confirmed/pending bookings to reschedule</small>
+                                <small class="text-muted">Click a day to close it. Drag across days to close a range. Drag a booking to reschedule.</small>
                             </div>
                             <div class="btn-group" role="group">
                                 <button id="openBlockModal" class="btn btn-outline-danger btn-sm">
@@ -1085,6 +1170,39 @@
                         </div>
                         <div class="appointment-body">
                             <div id="adminCalendar" data-events-url="{{ route('admin.schedules.events') }}" data-reschedule-url="{{ route('admin.schedules.reschedule') }}" data-store-url="{{ route('admin.schedules.store') }}" data-reuse-previous-month-url="{{ route('admin.schedules.reuse-previous-month') }}" style="max-width: 100%; min-height: 650px;" class="calendar-responsive"></div>
+                            <div id="dayClosePopover" class="day-close-popover" hidden>
+                                <p class="day-close-title" id="dayCloseTitle">Close this day</p>
+                                <p class="day-close-hint" id="dayCloseHint">This stops clients from booking these dates.</p>
+                                <label class="form-label small fw-semibold mb-1" for="dayCloseLabel">Label</label>
+                                <select id="dayCloseLabel" class="form-select mb-3">
+                                    <option value="Closed" selected>Closed</option>
+                                    <option value="Holiday">Holiday</option>
+                                    <option value="Vacation">Vacation</option>
+                                    <option value="Personal day">Personal day</option>
+                                    <option value="Off sick">Off sick</option>
+                                    <option value="Family emergency">Family emergency</option>
+                                    <option value="Training">Training</option>
+                                    <option value="Fully booked">Fully booked</option>
+                                    <option value="Lunch break">Lunch break</option>
+                                    <option value="Closed until 2 PM">Closed until 2 PM</option>
+                                    <option value="Closed after 2 PM">Closed after 2 PM</option>
+                                </select>
+                                <div class="d-grid gap-2">
+                                    <button type="button" class="btn btn-danger" data-day-close-action="close-day">
+                                        <i class="bi bi-slash-circle me-1"></i>Close this day
+                                    </button>
+                                    <button type="button" class="btn btn-outline-warning" data-day-close-action="close-morning">
+                                        <i class="bi bi-sunrise me-1"></i>Close until 2 PM
+                                    </button>
+                                    <button type="button" class="btn btn-outline-danger" data-day-close-action="unblock" hidden>
+                                        <i class="bi bi-unlock me-1"></i>Reopen this day
+                                    </button>
+                                    <button type="button" class="btn btn-outline-secondary" data-day-close-action="custom">
+                                        More options…
+                                    </button>
+                                    <button type="button" class="btn btn-link text-muted" data-day-close-action="cancel">Cancel</button>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -1281,6 +1399,9 @@
                                             @elseif(($booking->payment_status ?? '') === 'deposit_paid')
                                                 <div><small class="text-success">Deposit received</small></div>
                                             @endif
+                                            @if($booking->hasPendingRescheduleRequest())
+                                                <div><small class="text-danger fw-semibold">New time asked</small></div>
+                                            @endif
                                         </td>
                                         <td>
                                             <div class="btn-group-vertical" role="group">
@@ -1413,6 +1534,13 @@
                                              title="Click to view full size"
                                              style="width: 60px; height: 60px;">
                                     </span>
+                                </div>
+                                @endif
+
+                                @if($booking->hasPendingRescheduleRequest())
+                                <div class="card-row">
+                                    <span class="card-label">Time change:</span>
+                                    <span class="card-value text-danger fw-semibold">Asked for {{ $booking->requestedRescheduleLabel() }}</span>
                                 </div>
                                 @endif
 
@@ -2173,6 +2301,18 @@
 
             const bookingId = booking.booking_id || booking.id;
             const confirmationCode = booking.confirmation_code ? String(booking.confirmation_code).trim() : '';
+            const pendingReschedule = String(booking.reschedule_request_status || '') === 'pending'
+                && booking.reschedule_requested_date && booking.reschedule_requested_time;
+            const reqDate = String(booking.reschedule_requested_date || '').slice(0, 10);
+            const reqTimeRaw = String(booking.reschedule_requested_time || '');
+            let reqTimeNice = reqTimeRaw;
+            try {
+                const t = new Date(`1970-01-01T${reqTimeRaw}`);
+                if (!Number.isNaN(t.getTime())) {
+                    reqTimeNice = t.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+                }
+            } catch (e) {}
+            const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
             const editUrl = booking.id ? (`/admin/bookings/${booking.id}`) : null;
             const apptDate = booking.appointment_date
                 ? new Date(String(booking.appointment_date).slice(0, 10) + 'T00:00:00').toLocaleDateString()
@@ -2233,7 +2373,7 @@
                     kb_add_beads: 'Beads',
                     kb_add_beads_full: 'Beads (full)',
                     kb_add_extension: 'Extension',
-                    kb_add_rest: 'Resting'
+                    kb_add_rest: '15-min break'
                 };
 
                 if (raw === null || typeof raw === 'undefined') return '—';
@@ -2293,6 +2433,13 @@
                 : '';
 
             const detailsHtml = `
+                ${pendingReschedule ? `
+                    <div class="alert alert-warning" style="border-left:5px solid #ff6600;">
+                        <strong>Time-change request</strong>
+                        <div class="small mt-1">They asked for <strong>${safe(reqDate, '')} at ${safe(reqTimeNice, reqTimeRaw)}</strong>.</div>
+                        ${booking.reschedule_request_note ? `<div class="small mt-1">Note: ${safe(booking.reschedule_request_note, '')}</div>` : ''}
+                    </div>
+                ` : ''}
                 <div class="row g-3">
                     <div class="col-lg-6">
                         <div class="bd-card">
@@ -2496,6 +2643,16 @@
                         <button type="button" class="btn btn-outline-primary" onclick="openRescheduleModal(${booking.id}, '${String(booking.appointment_date || '').slice(0,10)}', '${safe(booking.appointment_time, '')}')">
                             <i class="bi bi-calendar2-week me-1"></i> Reschedule
                         </button>
+                    ` : ''}
+                    ${pendingReschedule ? `
+                        <form method="POST" action="/admin/bookings/${booking.id}/reschedule-request/approve" class="d-inline" onsubmit="return confirm('Move this appointment to the requested time and email the client?');">
+                            <input type="hidden" name="_token" value="${csrf}">
+                            <button type="submit" class="btn btn-success">Approve new time</button>
+                        </form>
+                        <form method="POST" action="/admin/bookings/${booking.id}/reschedule-request/decline" class="d-inline" onsubmit="return confirm('Keep the original time and email the client that the new time is not available?');">
+                            <input type="hidden" name="_token" value="${csrf}">
+                            <button type="submit" class="btn btn-outline-danger">Decline request</button>
+                        </form>
                     ` : ''}
                     ${booking.status !== 'completed' && booking.status !== 'cancelled' ? `
                         <button type="button" class="btn btn-info" onclick="updateStatusQuick(${booking.id}, 'completed')">

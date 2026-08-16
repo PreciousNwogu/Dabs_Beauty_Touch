@@ -427,6 +427,11 @@ class ScheduleController extends Controller
             Log::error('Failed to send reschedule notification: ' . $e->getMessage(), ['booking_id' => $booking->id]);
         }
 
+        try {
+            $booking->settleRescheduleRequest('approved');
+        } catch (\Throwable $e) {
+        }
+
         return response()->json(['success' => true, 'booking' => $booking]);
     }
 

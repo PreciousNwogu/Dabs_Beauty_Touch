@@ -57,7 +57,72 @@ class SiteSettingsImageUploadTest extends TestCase
         $this->assertStringStartsWith('/images/site/', $heroPath);
         $this->assertFileExists(public_path(ltrim($promoPath, '/')));
         $this->assertFileExists(public_path(ltrim($heroPath, '/')));
+        $this->assertTrue(\App\Models\StoredImage::query()->where('public_path', $promoPath)->exists());
+        $this->assertTrue(\App\Models\StoredImage::query()->where('public_path', $heroPath)->exists());
         $this->assertStringContainsString('/images/site/', SiteSettings::promoImageUrl());
         $this->assertStringContainsString('/images/site/', SiteSettings::heroImageUrl());
+        $this->assertCount(1, SiteSettings::promoMedia());
+        $this->assertSame('image', SiteSettings::promoMedia()[0]['type']);
+    }
+
+    public function test_admin_can_upload_multiple_promo_photos_and_videos(): void
+    {
+        $admin = User::factory()->admin()->create();
+
+        $this->actingAs($admin)
+            ->put('/admin/settings', [
+                'interac_email' => 'deposit@example.com',
+                'interac_amount' => 20,
+                'max_bookings_per_day' => 2,
+                'finished_tip_amount' => 20,
+                'front_back_amount' => 20,
+                'promo_enabled' => 1,
+                'promo_title' => 'Hair',
+                'promo_text' => 'Weekend special',
+                'promo_files' => [
+                    \Illuminate\Http\UploadedFile::fake()->image('promo-one.jpg', 24, 24),
+                    \Illuminate\Http\UploadedFile::fake()->createWithContent('promo-clip.mp4', str_repeat("\0", 2048)),
+                ],
+            ])
+            ->assertRedirect(route('admin.settings.edit'))
+            ->assertSessionHasNoErrors();
+
+        SiteSettings::clearCache();
+
+        $media = SiteSettings::promoMedia();
+        $this->assertCount(2, $media);
+        $types = collect($media)->pluck('type')->sort()->values()->all();
+        $this->assertSame(['image', 'video'], $types);
+
+        $this->get('/')
+            ->assertOk()
+            ->assertSee('promoMediaStage', false)
+            ->assertSee('promo-fx-fade', false)
+            ->assertSee('<video', false);
+    }
+
+    public function test_promo_video_php_limit_shows_a_clear_error(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $temp = tempnam(sys_get_temp_dir(), 'promo');
+        file_put_contents($temp, 'clip');
+
+        $this->actingAs($admin)
+            ->put('/admin/settings', [
+                'interac_email' => 'deposit@example.com',
+                'interac_amount' => 20,
+                'max_bookings_per_day' => 2,
+                'finished_tip_amount' => 20,
+                'front_back_amount' => 20,
+                'promo_files' => [
+                    new \Illuminate\Http\UploadedFile($temp, 'clip.mp4', 'video/mp4', UPLOAD_ERR_INI_SIZE, true),
+                ],
+            ])
+            ->assertSessionHasErrors('promo_files.0');
+
+        $this->assertStringContainsString(
+            'too large',
+            session('errors')->first('promo_files.0')
+        );
     }
 }

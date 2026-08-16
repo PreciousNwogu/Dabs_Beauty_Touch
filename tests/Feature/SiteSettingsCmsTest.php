@@ -64,6 +64,14 @@ class SiteSettingsCmsTest extends TestCase
         $this->assertSame('Natural Twists', KidsStyleCatalog::displayName('protective'));
         $this->assertFalse(collect(KidsStyleCatalog::selectorCards())->contains(fn ($c) => $c['key'] === 'cornrows'));
 
+        $cards = KidsStyleCatalog::selectorCards();
+        $this->assertNotEmpty($cards);
+        $protective = collect($cards)->firstWhere('key', 'protective');
+        $this->assertNotNull($protective);
+        $this->assertNotSame('', $protective['image']);
+        $this->assertNotSame('', $protective['duration']);
+        $this->assertStringContainsString('kids-natual-hair-twist', $protective['image']);
+
         $pricing = app(PriceCalculator::class)->calculate([
             'service_input' => 'Jumbo Knotless Braids',
             'service_type' => 'jumbo_knotless',
@@ -78,5 +86,41 @@ class SiteSettingsCmsTest extends TestCase
     public function test_guests_cannot_open_settings(): void
     {
         $this->get('/admin/settings')->assertRedirect(route('admin.login'));
+    }
+
+    public function test_kids_selector_shows_photos_time_and_mobile_total(): void
+    {
+        $this->get('/kids-selector')
+            ->assertOk()
+            ->assertSee('kbMobileTotalBar', false)
+            ->assertSee('data-duration', false)
+            ->assertSee('kids-natual-hair-twist', false)
+            ->assertSee('1–2 hrs', false)
+            ->assertSee('braids-length-guide.jpg', false)
+            ->assertSee('Before you come', false)
+            ->assertSee('Kids usually sit about', false)
+            ->assertSee('15-min break', false)
+            ->assertSee('Child\'s first name', false)
+            ->assertSee('kidsBookingModal', false)
+            ->assertSee('calendarModal', false);
+    }
+
+    public function test_kids_booking_notes_include_parent_age_and_color(): void
+    {
+        $request = \Illuminate\Http\Request::create('/bookings', 'POST', [
+            'parent_name' => 'Jane Parent',
+            'child_age' => 6,
+            'hair_color' => 'burgundy',
+            'comments' => 'First visit',
+        ]);
+
+        $message = \App\Support\BookingReturn::composeKidsMessage($request);
+        $this->assertStringContainsString('Parent/Guardian: Jane Parent', $message);
+        $this->assertStringContainsString('Child age: 6', $message);
+        $this->assertStringContainsString('burgundy', $message);
+        $this->assertStringContainsString('First visit', $message);
+        $this->assertSame('kids.selector', \App\Support\BookingReturn::routeName(
+            \Illuminate\Http\Request::create('/bookings', 'POST', ['booking_origin' => 'kids-selector'])
+        ));
     }
 }

@@ -133,7 +133,7 @@ class BookingConfirmation extends Notification
             if($serviceType === 'kids-braids' || stripos($b->service ?? '', 'kids') !== false || $selector){
                 $baseConfigured = (float) (config('service_prices.kids_braids', 80));
                 // adjustments maps
-                $typeAdj = ['protective'=>-20,'cornrows'=>-40,'knotless_small'=>20,'knotless_med'=>0,'box_small'=>10,'box_med'=>0,'stitch'=>20,'half_weave_braid'=>20,'half_weave_crotchet'=>0,'crotchet_style'=>-10];
+                $typeAdj = ['protective'=>-20,'cornrows'=>-30,'knotless_small'=>20,'knotless_med'=>0,'box_small'=>10,'box_med'=>0,'stitch'=>20,'half_weave_braid'=>20,'half_weave_crotchet'=>0,'crotchet_style'=>-10];
                 $lengthAdj = ['shoulder'=>0,'armpit'=>10,'mid_back'=>20,'waist'=>30];
                 $finishAdj = ['curled'=>-10,'plain'=>0];
 
@@ -202,7 +202,7 @@ class BookingConfirmation extends Notification
                 'waist' => 'Waist',
                 'long' => 'Long',
             ];
-            $addonMap = ['kb_add_detangle' => 'Detangle', 'kb_add_beads' => 'Beads', 'kb_add_beads_full' => 'Beads (full)', 'kb_add_extension' => 'Extension', 'kb_add_rest' => 'Resting'];
+            $addonMap = ['kb_add_detangle' => 'Detangle', 'kb_add_beads' => 'Beads', 'kb_add_beads_full' => 'Beads (full)', 'kb_add_extension' => 'Extension', 'kb_add_rest' => '15-min break'];
 
             $sel = $selector ?: [];
             $bt = $sel['braid_type'] ?? $b->kb_braid_type ?? null;

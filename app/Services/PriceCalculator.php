@@ -298,7 +298,7 @@ class PriceCalculator
             if (is_string($kb_length)) $kb_length = str_replace(['-', ' '], '_', strtolower($kb_length));
 
             // Kids selector adjustments: type + length + finish (matching UI calculation)
-            $typeAdj = ['protective'=>-20,'cornrows'=>-40,'knotless_small'=>20,'knotless_med'=>0,'box_small'=>10,'box_med'=>0,'stitch'=>20,'half_weave_braid'=>0,'half_weave_crotchet'=>0,'crotchet_style'=>0];
+            $typeAdj = ['protective'=>-20,'cornrows'=>-30,'knotless_small'=>20,'knotless_med'=>0,'box_small'=>10,'box_med'=>0,'stitch'=>20,'half_weave_braid'=>0,'half_weave_crotchet'=>0,'crotchet_style'=>0];
             $lengthAdj = ['shoulder'=>0,'armpit'=>10,'mid_back'=>20,'waist'=>30];
             $finishAdj = ['curled'=>-10,'plain'=>0];
 

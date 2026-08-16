@@ -37,6 +37,31 @@
         </div>
     @endif
 
+    @if(isset($booking) && $booking && $booking->hasPendingRescheduleRequest())
+        <div class="alert alert-warning d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3" style="border-left:5px solid #ff6600;">
+            <div>
+                <strong>Time-change request waiting</strong>
+                <div class="small mt-1">
+                    Current: {{ $booking->currentAppointmentLabel() }}<br>
+                    Asked for: <strong>{{ $booking->requestedRescheduleLabel() }}</strong>
+                    @if($booking->reschedule_request_note)
+                        <br>Note: {{ $booking->reschedule_request_note }}
+                    @endif
+                </div>
+            </div>
+            <div class="d-flex flex-wrap gap-2">
+                <form method="POST" action="{{ route('admin.bookings.reschedule-request.approve', $booking->id) }}" onsubmit="return confirm('Move this appointment to the requested time and email the client?');">
+                    @csrf
+                    <button type="submit" class="btn btn-success fw-bold">Approve new time</button>
+                </form>
+                <form method="POST" action="{{ route('admin.bookings.reschedule-request.decline', $booking->id) }}" onsubmit="return confirm('Keep the original time and email the client that the new time is not available?');">
+                    @csrf
+                    <button type="submit" class="btn btn-outline-danger fw-bold">Decline request</button>
+                </form>
+            </div>
+        </div>
+    @endif
+
     @if(isset($booking) && $booking)
         @php
             $timeValue = $booking->appointment_time;

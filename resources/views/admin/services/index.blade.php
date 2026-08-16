@@ -53,11 +53,16 @@
         <div class="d-flex align-items-start justify-content-between flex-wrap gap-3">
             <div>
                 <h1><i class="bi bi-grid-3x3-gap me-2"></i>Services CMS</h1>
-                <p>Add, edit, delete services and manage pricing &amp; discounts.</p>
+                <p>Add and edit adult homepage styles and kids selector styles.</p>
             </div>
-            <a href="{{ route('admin.services.create') }}" class="btn btn-warning fw-bold px-4">
-                <i class="bi bi-plus-circle me-2"></i>Add New Service
-            </a>
+            <div class="d-flex flex-wrap gap-2">
+                <a href="{{ route('admin.services.create', ['for_kids' => 1]) }}" class="btn btn-outline-warning fw-bold px-4">
+                    <i class="bi bi-emoji-smile me-2"></i>Add Kids Style
+                </a>
+                <a href="{{ route('admin.services.create') }}" class="btn btn-warning fw-bold px-4">
+                    <i class="bi bi-plus-circle me-2"></i>Add New Service
+                </a>
+            </div>
         </div>
     </div>
 
@@ -115,7 +120,11 @@
                         $linkedSlug = \App\Support\AdultServiceCatalog::hardcodedSlugForCms($service->slug, $service->name);
                         $cmsCategory = $service->category
                             ?: (\App\Support\AdultServiceCatalog::hardcodedCategoryBySlug()[$linkedSlug ?? $service->slug] ?? '');
+                        if ($cmsCategory === '' && !empty($service->for_kids)) {
+                            $cmsCategory = 'Kids Braids';
+                        }
                         $shownOnSite = $linkedSlug !== null;
+                        $protectFromDelete = $shownOnSite || \App\Support\KidsStyleCatalog::isCatalogSlug($service->slug);
                         $searchAliases = $linkedSlug ? ' '.$linkedSlug.' '.str_replace('-', ' ', $linkedSlug) : '';
                     @endphp
                     <tr
@@ -219,8 +228,8 @@
                                 <button type="button" class="btn btn-sm btn-outline-danger btn-action js-delete-service"
                                         data-id="{{ $service->id }}"
                                         data-name="{{ $service->name }}"
-                                        data-onsite="{{ $shownOnSite ? '1' : '0' }}">
-                                    <i class="bi bi-trash me-1"></i>{{ $shownOnSite ? 'Hide' : 'Delete' }}
+                                        data-onsite="{{ $protectFromDelete ? '1' : '0' }}">
+                                    <i class="bi bi-trash me-1"></i>{{ $protectFromDelete ? 'Hide' : 'Delete' }}
                                 </button>
                             </div>
 
@@ -340,6 +349,13 @@ function applyFilters() {
 function clearFilters() {
     ['filterCategory','filterStatus','filterSearch'].forEach(id => document.getElementById(id).value = '');
     applyFilters();
+}
+if (new URLSearchParams(location.search).get('audience') === 'kids') {
+    const status = document.getElementById('filterStatus');
+    if (status) {
+        status.value = 'kids';
+        applyFilters();
+    }
 }
 </script>
 </body>

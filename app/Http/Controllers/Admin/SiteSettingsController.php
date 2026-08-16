@@ -8,12 +8,12 @@ use App\Support\KidsStyleCatalog;
 use App\Support\SiteSettings;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Facades\File;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 
 class SiteSettingsController extends Controller
 {
+    private const PROMO_FILE_MAX_KB = 102400;
+
     public function edit()
     {
         $settings = SiteSettings::all();
@@ -71,12 +71,18 @@ class SiteSettingsController extends Controller
             'hero_image_data' => 'nullable|string',
             'promo_image_data' => 'nullable|string',
             'hero_image' => 'nullable|file|max:10240',
-            'promo_image' => 'nullable|file|max:10240',
+            'promo_image' => 'nullable|file|max:'.self::PROMO_FILE_MAX_KB,
+            'promo_files' => 'nullable|array|max:12',
+            'promo_files.*' => $this->promoFileRules(),
             'remove_hero_image' => 'nullable|boolean',
             'remove_promo_image' => 'nullable|boolean',
+            'remove_promo_media' => 'nullable|array',
+            'remove_promo_media.*' => 'nullable|string|max:400',
         ], [
             'hero_image.max' => 'The hero image must be 10 MB or smaller.',
-            'promo_image.max' => 'The promo image must be 10 MB or smaller.',
+            'promo_image.max' => 'Each promo photo or video must be 100 MB or smaller.',
+            'promo_files.*.uploaded' => 'That photo or video could not be received. Use a shorter MP4 or WEBM clip under 100 MB.',
+            'promo_files.*.max' => 'Each promo photo or video must be 100 MB or smaller.',
         ]);
 
         $lengthDefaults = SiteSettings::defaults()['length_adjustments'];
@@ -116,16 +122,7 @@ class SiteSettingsController extends Controller
             $heroPath = $heroStored;
         }
 
-        $promoPath = (string) SiteSettings::get('promo_image', '');
-        if ($request->boolean('remove_promo_image')) {
-            $this->deleteStoredImage($promoPath);
-            $promoPath = '';
-        }
-        $promoStored = $this->resolveSiteImage($request, 'promo_image', 'promo_image_data', 'promo');
-        if ($promoStored !== null) {
-            $this->deleteStoredImage($promoPath);
-            $promoPath = $promoStored;
-        }
+        $promoMedia = $this->syncPromoMedia($request);
 
         SiteSettings::putMany([
             'interac_email' => $data['interac_email'],
@@ -137,7 +134,11 @@ class SiteSettingsController extends Controller
             'categories' => $categories,
             'kids_styles' => $kids,
             'hero_image' => $heroPath,
-            'promo_image' => $promoPath,
+            'promo_image' => $this->firstPromoImagePath($promoMedia),
+            'promo_media' => array_map(fn ($item) => [
+                'path' => $item['path'],
+                'type' => $item['type'],
+            ], $promoMedia),
             'promo_title' => trim((string) ($data['promo_title'] ?? '')),
             'promo_text' => trim((string) ($data['promo_text'] ?? '')),
             'promo_enabled' => $request->boolean('promo_enabled'),
@@ -211,51 +212,192 @@ class SiteSettingsController extends Controller
     private function storeUploadedFile(UploadedFile $file, string $prefix): string
     {
         $ext = strtolower((string) ($file->getClientOriginalExtension() ?: $file->guessExtension() ?: 'jpg'));
-        if (! in_array($ext, ['jpg', 'jpeg', 'png', 'gif', 'webp'], true)) {
+        $ext = $ext === 'jpeg' ? 'jpg' : $ext;
+        $allowed = $prefix === 'promo'
+            ? ['jpg', 'png', 'gif', 'webp', 'mp4', 'webm', 'mov', 'm4v']
+            : ['jpg', 'png', 'gif', 'webp'];
+        if (! in_array($ext, $allowed, true)) {
             $ext = 'jpg';
         }
 
-        $binary = file_get_contents($file->getRealPath());
-        if ($binary === false || $binary === '') {
+        $source = $file->getRealPath() ?: $file->getPathname();
+        if (! is_string($source) || $source === '' || ! is_file($source)) {
             throw ValidationException::withMessages([
-                $prefix === 'promo' ? 'promo_image' : 'hero_image' => 'The image could not be read. Please try again.',
+                $prefix === 'promo' ? 'promo_files' : 'hero_image' => 'The file could not be read. Please try again.',
             ]);
         }
 
-        return $this->writeSiteBinary($binary, $prefix, $ext === 'jpeg' ? 'jpg' : $ext, $prefix === 'promo' ? 'promo_image' : 'hero_image');
+        $name = $prefix.'-'.substr(uniqid('', true), -8).'.'.$ext;
+        $videoMime = [
+            'mp4' => 'video/mp4',
+            'webm' => 'video/webm',
+            'mov' => 'video/quicktime',
+            'm4v' => 'video/mp4',
+        ];
+        $mime = $videoMime[$ext] ?? ($ext === 'jpg' ? 'image/jpeg' : 'image/'.$ext);
+
+        try {
+            return \App\Support\PersistedUpload::putFile('/images/site/'.$name, $source, $mime);
+        } catch (\Throwable $e) {
+            throw ValidationException::withMessages([
+                $prefix === 'promo' ? 'promo_files' : 'hero_image' => 'The file could not be saved. Check that storage is writable.',
+            ]);
+        }
     }
 
     private function writeSiteBinary(string $binary, string $prefix, string $ext, string $errorField): string
     {
         $name = $prefix.'-'.substr(uniqid('', true), -8).'.'.$ext;
-        $publicDir = public_path('images/site');
-        File::ensureDirectoryExists($publicDir);
-        $absolute = $publicDir.DIRECTORY_SEPARATOR.$name;
+        $videoMime = [
+            'mp4' => 'video/mp4',
+            'webm' => 'video/webm',
+            'mov' => 'video/quicktime',
+            'm4v' => 'video/mp4',
+        ];
+        $mime = $videoMime[$ext] ?? ($ext === 'jpg' ? 'image/jpeg' : 'image/'.$ext);
 
-        if (file_put_contents($absolute, $binary) !== false) {
-            return '/images/site/'.$name;
+        try {
+            return \App\Support\PersistedUpload::put('/images/site/'.$name, $binary, $mime);
+        } catch (\Throwable $e) {
+            throw ValidationException::withMessages([
+                $errorField => 'The file could not be saved. Check that storage is writable.',
+            ]);
+        }
+    }
+
+    private function syncPromoMedia(Request $request): array
+    {
+        $existing = SiteSettings::promoMedia();
+        if ($request->boolean('remove_promo_image')) {
+            foreach ($existing as $item) {
+                $this->deleteStoredImage((string) ($item['path'] ?? ''));
+            }
+
+            return [];
         }
 
-        File::ensureDirectoryExists(storage_path('app/public/site'));
-        $relative = 'site/'.$name;
-        if (Storage::disk('public')->put($relative, $binary)) {
-            return '/storage/'.$relative;
+        $remove = array_map(
+            fn ($path) => \App\Support\PersistedUpload::normalize((string) $path),
+            (array) $request->input('remove_promo_media', [])
+        );
+        $kept = [];
+        foreach ($existing as $item) {
+            $path = \App\Support\PersistedUpload::normalize((string) ($item['path'] ?? ''));
+            if ($path === '' || in_array($path, $remove, true)) {
+                if ($path !== '') {
+                    $this->deleteStoredImage($path);
+                }
+                continue;
+            }
+            $kept[] = $item;
         }
 
-        throw ValidationException::withMessages([
-            $errorField => 'The image could not be saved. Check that storage is writable.',
-        ]);
+        $added = [];
+        $fromData = $this->resolveSiteImage($request, 'promo_image', 'promo_image_data', 'promo');
+        if ($fromData !== null) {
+            $added[] = SiteSettings::promoMediaItem($fromData);
+        }
+
+        $files = $request->file('promo_files', []);
+        if ($files instanceof UploadedFile) {
+            $files = [$files];
+        }
+        foreach ((array) $files as $file) {
+            if (! $file instanceof UploadedFile || ! $file->isValid()) {
+                continue;
+            }
+            $stored = $this->storePromoFile($file);
+            if ($stored !== null) {
+                $added[] = $stored;
+            }
+        }
+
+        $merged = array_values(array_filter(array_merge($kept, $added), fn ($item) => ($item['path'] ?? '') !== ''));
+        $unique = [];
+        $seen = [];
+        foreach ($merged as $item) {
+            $key = (string) $item['path'];
+            if (isset($seen[$key])) {
+                continue;
+            }
+            $seen[$key] = true;
+            $unique[] = $item;
+            if (count($unique) >= 12) {
+                break;
+            }
+        }
+
+        return $unique;
+    }
+
+    private function storePromoFile(UploadedFile $file): array
+    {
+        $mime = strtolower((string) ($file->getMimeType() ?: ''));
+        $ext = strtolower((string) ($file->getClientOriginalExtension() ?: $file->guessExtension() ?: ''));
+        $ext = $ext === 'jpeg' ? 'jpg' : $ext;
+        $imageMime = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif'];
+        $videoMime = ['video/mp4', 'video/webm', 'video/quicktime', 'video/ogg', 'video/x-m4v', 'video/x-mp4', 'application/mp4'];
+        $imageExt = ['jpg', 'png', 'webp', 'gif'];
+        $videoExt = ['mp4', 'webm', 'mov', 'm4v', 'ogg'];
+        $isImage = in_array($mime, $imageMime, true) || in_array($ext, $imageExt, true);
+        $isVideo = in_array($mime, $videoMime, true) || in_array($ext, $videoExt, true);
+        if (! $isImage && ! $isVideo) {
+            throw ValidationException::withMessages([
+                'promo_files' => 'Use JPG, PNG, WEBP, GIF photos or MP4 / WEBM videos.',
+            ]);
+        }
+
+        $path = $this->storeUploadedFile($file, 'promo');
+
+        return SiteSettings::promoMediaItem($path, $isVideo ? 'video' : 'image');
+    }
+
+    private function firstPromoImagePath(array $media): string
+    {
+        foreach ($media as $item) {
+            if (($item['type'] ?? '') !== 'video') {
+                return (string) ($item['path'] ?? '');
+            }
+        }
+
+        return (string) (($media[0]['path'] ?? ''));
+    }
+
+    private function promoFileRules(): array
+    {
+        return [
+            'nullable',
+            function (string $attribute, $value, $fail) {
+                if ($value === null || $value === '') {
+                    return;
+                }
+                if (! $value instanceof UploadedFile) {
+                    $fail('Use a photo or a short MP4 / WEBM video.');
+                    return;
+                }
+                if ($value->getError() === UPLOAD_ERR_NO_FILE) {
+                    return;
+                }
+                if (! $value->isValid()) {
+                    $fail($this->describeUploadError($value));
+                    return;
+                }
+                if ($value->getSize() > self::PROMO_FILE_MAX_KB * 1024) {
+                    $fail('Each promo photo or video must be 100 MB or smaller.');
+                }
+            },
+        ];
     }
 
     private function describeUploadError(UploadedFile $file): string
     {
         return match ($file->getError()) {
-            UPLOAD_ERR_INI_SIZE, UPLOAD_ERR_FORM_SIZE => 'The image is too large. Use a file under 10 MB.',
-            UPLOAD_ERR_PARTIAL => 'The image only uploaded partway. Please try again.',
-            UPLOAD_ERR_NO_TMP_DIR => 'The server is missing a temporary folder for uploads. Try choosing the image again.',
-            UPLOAD_ERR_CANT_WRITE => 'The server could not save the uploaded image.',
-            UPLOAD_ERR_EXTENSION => 'A server extension blocked the image upload.',
-            default => 'The image could not be uploaded. Try a JPG or PNG under 10 MB.',
+            UPLOAD_ERR_INI_SIZE, UPLOAD_ERR_FORM_SIZE => 'That photo or video is too large to receive. Use a shorter MP4 or WEBM clip under 100 MB, then save again.',
+            UPLOAD_ERR_PARTIAL => 'The file only uploaded partway. Please try again.',
+            UPLOAD_ERR_NO_TMP_DIR => 'The server is missing a temporary folder for uploads. Try the file again.',
+            UPLOAD_ERR_CANT_WRITE => 'The server could not save that photo or video.',
+            UPLOAD_ERR_EXTENSION => 'A server extension blocked the upload.',
+            default => 'That photo or video could not be uploaded. Try a shorter MP4 or WEBM clip under 100 MB.',
         };
     }
 
@@ -268,24 +410,6 @@ class SiteSettingsController extends Controller
 
         $normalized = '/'.ltrim(str_replace('\\', '/', $path), '/');
 
-        if (str_starts_with($normalized, '/images/site/')) {
-            $absolute = public_path(ltrim($normalized, '/'));
-            if (is_file($absolute)) {
-                @unlink($absolute);
-            }
-
-            return;
-        }
-
-        $relative = ltrim(preg_replace('#^/storage/#', '', $normalized) ?? $normalized, '/');
-        if ($relative === '' || str_starts_with($relative, 'images/')) {
-            return;
-        }
-
-        try {
-            Storage::disk('public')->delete($relative);
-        } catch (\Throwable $e) {
-            // ignore missing files
-        }
+        \App\Support\PersistedUpload::forget($normalized);
     }
 }

@@ -156,6 +156,11 @@
                                     </form>
                                 @endif
                                 @if($booking->canClientRequestReschedule())
+                                    @if($booking->hasPendingRescheduleRequest())
+                                        <div class="alert alert-info py-2 small">
+                                            We have your request for <strong>{{ $booking->requestedRescheduleLabel() }}</strong>. We will email you when a time is confirmed. You can send a new request below if you need a different day.
+                                        </div>
+                                    @endif
                                     <button type="button" class="btn btn-outline-primary btn-sm mb-2" onclick="document.getElementById('rescheduleForm').style.display='block'">Request a new time</button>
                                     <form id="rescheduleForm" method="POST" action="{{ url('/bookings/confirm/'.$confirmId.'/'.$confirmCode.'/reschedule') }}" style="display:none;margin-top:12px;">
                                         @csrf
@@ -407,6 +412,8 @@
                 @php
                     $showDeposit = !isset($booking)
                         || (($booking->status ?? 'pending') === 'pending' && ($booking->payment_status ?? 'pending') === 'pending');
+                    $depositLabel = \App\Support\InteracDeposit::amountLabel();
+                    $depositEmail = \App\Support\InteracDeposit::email();
                 @endphp
                 @if($showDeposit)
                 <div style="background:linear-gradient(135deg,#fff7ed,#fff3e0);border:2px solid #ff6600;border-radius:14px;padding:20px;margin:20px 0;">
@@ -415,21 +422,21 @@
                     </h6>
                     <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:14px;">
                         <div style="background:linear-gradient(135deg,#ff6600,#ff8533);color:#fff;border-radius:10px;padding:12px 24px;text-align:center;min-width:100px;">
-                            <div style="font-size:1.6rem;font-weight:800;">$20.00</div>
+                            <div style="font-size:1.6rem;font-weight:800;">{{ $depositLabel }}</div>
                             <div style="font-size:0.75rem;opacity:0.9;">Deposit due</div>
                         </div>
                         <div style="font-size:0.92rem;color:#555;flex:1;min-width:180px;">
-                            Your booking is <strong>pending</strong> until the $20 deposit is received.<br>
+                            Your booking is <strong>pending</strong> until the {{ $depositLabel }} deposit is received.<br>
                             The deposit is <strong>non-refundable</strong> once confirmed.
                         </div>
                     </div>
                     <div style="font-size:0.9rem;color:#333;margin-bottom:8px;"><strong>How to pay:</strong></div>
                     <div style="background:#fff;border:1.5px dashed #ff6600;border-radius:10px;padding:12px 14px;margin-bottom:12px;">
                         <div style="font-size:0.78rem;color:#888;font-weight:700;letter-spacing:.03em;text-transform:uppercase;margin-bottom:4px;">Interac e-Transfer</div>
-                        <a href="mailto:dabereprecious01@gmail.com" style="font-size:1.05rem;font-weight:800;color:#030f68;word-break:break-all;">dabereprecious01@gmail.com</a>
+                        <a href="mailto:{{ $depositEmail }}" style="font-size:1.05rem;font-weight:800;color:#030f68;word-break:break-all;">{{ $depositEmail }}</a>
                     </div>
                     <ol style="font-size:0.88rem;color:#444;line-height:1.9;margin:0 0 12px 0;padding-left:20px;">
-                        <li>Send an <strong>Interac e-Transfer</strong> of $20.00 to <strong>dabereprecious01@gmail.com</strong></li>
+                        <li>Send an <strong>Interac e-Transfer</strong> of {{ $depositLabel }} to <strong>{{ $depositEmail }}</strong></li>
                         <li>Include your booking ID in the payment message</li>
                         <li>Send us your payment receipt</li>
                         <li>We'll confirm your appointment within 24 hours</li>
@@ -442,7 +449,7 @@
                 </div>
                 <div class="alert alert-info">
                     <i class="fas fa-info-circle me-2"></i>
-                    <strong>Important:</strong> Save your Booking ID and Confirmation Code. Your appointment is pending until the $20 deposit is received and verified.
+                    <strong>Important:</strong> Save your Booking ID and Confirmation Code. Your appointment is pending until the {{ $depositLabel }} deposit is received and verified.
                 </div>
                 @endif
 

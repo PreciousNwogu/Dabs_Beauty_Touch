@@ -10,7 +10,6 @@ use App\Models\Service;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Schema;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 
 class ServiceController extends Controller
@@ -18,6 +17,7 @@ class ServiceController extends Controller
     public function index()
     {
         AdultServiceCatalog::ensureRequiredCmsServices();
+        \App\Support\KidsStyleCatalog::ensureCmsServices();
         $hasCat = \Illuminate\Support\Facades\Schema::hasColumn('services', 'category');
         $q = Service::orderBy('name');
         if ($hasCat) {
@@ -27,15 +27,22 @@ class ServiceController extends Controller
             $categories = collect();
         }
         $services = $q->get();
-        $categories = AdultServiceCatalog::mergedNames($categories);
+        $categories = AdultServiceCatalog::adminFilterNames($categories);
         return view('admin.services.index', compact('services', 'categories'));
     }
 
-    public function create()
+    public function create(Request $request)
     {
+        \App\Support\KidsStyleCatalog::ensureCmsServices();
         $categories = $this->adultCategories();
         $galleryImages = $this->galleryImages();
-        return view('admin.services.form', ['service' => null, 'categories' => $categories, 'galleryImages' => $galleryImages]);
+        $prefillKids = $request->boolean('for_kids');
+        return view('admin.services.form', [
+            'service' => null,
+            'categories' => $categories,
+            'galleryImages' => $galleryImages,
+            'prefillKids' => $prefillKids,
+        ]);
     }
 
     public function store(Request $request)
@@ -82,6 +89,7 @@ class ServiceController extends Controller
 
     public function edit(Service $service)
     {
+        \App\Support\KidsStyleCatalog::ensureCmsServices();
         $categories = $this->adultCategories();
         if (empty($service->category)) {
             $mapped = AdultServiceCatalog::hardcodedCategoryBySlug()[$service->slug] ?? null;
@@ -90,7 +98,8 @@ class ServiceController extends Controller
             }
         }
         $galleryImages = $this->galleryImages();
-        return view('admin.services.form', compact('service', 'categories', 'galleryImages'));
+        $prefillKids = false;
+        return view('admin.services.form', compact('service', 'categories', 'galleryImages', 'prefillKids'));
     }
 
     public function update(Request $request, Service $service)
@@ -152,10 +161,13 @@ class ServiceController extends Controller
 
     public function destroy(Service $service)
     {
-        if (AdultServiceCatalog::isHardcodedSlug($service->slug, $service->name)) {
+        if (AdultServiceCatalog::isHardcodedSlug($service->slug, $service->name)
+            || \App\Support\KidsStyleCatalog::isCatalogSlug($service->slug)) {
             $service->update(['is_active' => false]);
-            return redirect()->route('admin.services.index')->with('success', 'This on-site style is now hidden. Edit it and set Active to show it again.');
+            $where = \App\Support\KidsStyleCatalog::isCatalogSlug($service->slug) ? 'kids selector' : 'website';
+            return redirect()->route('admin.services.index')->with('success', "This style is now hidden from the {$where}. Edit it and set Active to show it again.");
         }
+        \App\Support\PersistedUpload::forget($service->image_url);
         $service->delete();
         return redirect()->route('admin.services.index')->with('success', 'Service deleted.');
     }
@@ -176,8 +188,19 @@ class ServiceController extends Controller
         }
         unset($data['new_category']);
 
-        if (!empty($data['slug'])) {
-            $data['slug'] = Str::slug($data['slug']);
+        if (!empty($data['slug']) || $service) {
+            $incoming = (string) ($data['slug'] ?? $service->slug ?? '');
+            $canonicalKids = \App\Support\KidsStyleCatalog::canonicalSlug($incoming)
+                ?: ($service ? \App\Support\KidsStyleCatalog::canonicalSlug($service->slug) : null);
+            if ($canonicalKids) {
+                $data['slug'] = $canonicalKids;
+            } elseif (!empty($data['slug'])) {
+                $data['slug'] = Str::slug($data['slug']);
+            } elseif (!$service) {
+                $data['slug'] = Service::makeSlug($data['name']);
+            } else {
+                unset($data['slug']);
+            }
         } elseif (!$service) {
             $data['slug'] = Service::makeSlug($data['name']);
         } else {
@@ -186,15 +209,15 @@ class ServiceController extends Controller
 
         $data['is_active'] = !empty($data['is_active']);
         $data['for_kids'] = !empty($data['for_kids']);
-        $data['use_as_category_card'] = !empty($data['use_as_category_card']);
+        $data['use_as_category_card'] = $data['for_kids'] ? false : !empty($data['use_as_category_card']);
         $data['has_length'] = !empty($data['has_length']);
-        $data['has_tip_finish'] = $data['for_kids'] ? false : !empty($data['has_tip_finish']);
-        $data['has_row_options'] = $data['for_kids'] ? false : !empty($data['has_row_options']);
-        $data['has_eight_to_ten_rows'] = $data['for_kids'] ? false : !empty($data['has_eight_to_ten_rows']);
-        $data['has_fifteen_plus_rows'] = $data['for_kids'] ? false : !empty($data['has_fifteen_plus_rows']);
-        $data['eight_to_ten_rows_price'] = $data['for_kids'] ? 0 : self::normalizeRowPrice($data['eight_to_ten_rows_price'] ?? null, 0);
-        $data['ten_plus_rows_price'] = $data['for_kids'] ? 30 : self::normalizeRowPrice($data['ten_plus_rows_price'] ?? null, 30);
-        $data['fifteen_plus_rows_price'] = $data['for_kids'] ? 30 : self::normalizeRowPrice($data['fifteen_plus_rows_price'] ?? null, 30);
+        $data['has_tip_finish'] = !empty($data['has_tip_finish']);
+        $data['has_row_options'] = !empty($data['has_row_options']);
+        $data['has_eight_to_ten_rows'] = !empty($data['has_eight_to_ten_rows']);
+        $data['has_fifteen_plus_rows'] = !empty($data['has_fifteen_plus_rows']);
+        $data['eight_to_ten_rows_price'] = self::normalizeRowPrice($data['eight_to_ten_rows_price'] ?? null, 0);
+        $data['ten_plus_rows_price'] = self::normalizeRowPrice($data['ten_plus_rows_price'] ?? null, 30);
+        $data['fifteen_plus_rows_price'] = self::normalizeRowPrice($data['fifteen_plus_rows_price'] ?? null, 30);
         $data['duration'] = (isset($data['duration']) && $data['duration'] !== '') ? $data['duration'] : null;
         if ($data['for_kids']) {
             $data['category'] = 'Kids Braids';
@@ -206,7 +229,7 @@ class ServiceController extends Controller
 
         $sizeOptions = [];
         $offerSizes = !empty($data['offer_braid_sizes']);
-        if (empty($data['for_kids']) && $offerSizes) {
+        if ($offerSizes) {
             $enabled = $data['size_enabled'] ?? [];
             $prices = $data['size_price'] ?? [];
             $base = isset($data['base_price']) ? (float) $data['base_price'] : 0;
@@ -286,6 +309,8 @@ class ServiceController extends Controller
         foreach ([
             storage_path('app/public/service-images') => '/storage/service-images/',
             public_path('images/services') => '/images/services/',
+            public_path('images/uploads') => '/images/uploads/',
+            public_path('images/site') => '/images/site/',
         ] as $uploadDir => $urlPrefix) {
             if (!is_dir($uploadDir)) {
                 continue;
@@ -386,28 +411,16 @@ class ServiceController extends Controller
             }
 
             $this->deleteStoredServiceImage($existing?->image_url);
-            File::ensureDirectoryExists(storage_path('app/public/service-images'));
 
             $ext = strtolower((string) ($file->getClientOriginalExtension() ?: $file->guessExtension() ?: 'jpg'));
-            if (!in_array($ext, ['jpg', 'jpeg', 'png', 'gif', 'webp', 'avif'], true)) {
-                $ext = 'jpg';
-            }
-            $base = Str::slug(pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME)) ?: 'service';
-            $name = $base . '-' . substr(uniqid('', true), -6) . '.' . $ext;
-
-            $stored = $file->storeAs('service-images', $name, 'public');
-            if (!$stored) {
-                $fallbackDir = public_path('images/services');
-                File::ensureDirectoryExists($fallbackDir);
-                if (!$file->move($fallbackDir, $name)) {
-                    throw ValidationException::withMessages([
-                        'image' => 'The image could not be saved. Check that storage is writable.',
-                    ]);
-                }
-                return '/images/services/' . $name;
+            $binary = @file_get_contents($file->getRealPath() ?: $file->getPathname());
+            if ($binary === false || $binary === '') {
+                throw ValidationException::withMessages([
+                    'image' => 'The image could not be read. Please try again.',
+                ]);
             }
 
-            return '/storage/' . ltrim(str_replace('\\', '/', $stored), '/');
+            return \App\Support\PersistedUpload::storeUpload('service', $binary, $ext, $file->getMimeType());
         }
 
         if ($request->boolean('remove_image')) {
@@ -428,7 +441,9 @@ class ServiceController extends Controller
             $this->deleteStoredServiceImage($existing->image_url);
         }
 
-        return $picked;
+        $kept = \App\Support\PersistedUpload::persistExisting($picked);
+
+        return $kept ?: $picked;
     }
 
     private function storeImageDataUrl(?string $dataUrl): ?string
@@ -451,22 +466,7 @@ class ServiceController extends Controller
             ]);
         }
 
-        $name = 'service-' . substr(uniqid('', true), -8) . '.' . $ext;
-        File::ensureDirectoryExists(storage_path('app/public/service-images'));
-        $relative = 'service-images/' . $name;
-        if (Storage::disk('public')->put($relative, $binary)) {
-            return '/storage/' . $relative;
-        }
-
-        $fallbackDir = public_path('images/services');
-        File::ensureDirectoryExists($fallbackDir);
-        if (file_put_contents($fallbackDir . DIRECTORY_SEPARATOR . $name, $binary) === false) {
-            throw ValidationException::withMessages([
-                'image' => 'The image could not be saved. Check that storage is writable.',
-            ]);
-        }
-
-        return '/images/services/' . $name;
+        return \App\Support\PersistedUpload::storeUpload('service', $binary, $ext);
     }
 
     private function isAllowedImagePath(string $path): bool
@@ -480,14 +480,6 @@ class ServiceController extends Controller
 
     private function deleteStoredServiceImage(?string $url): void
     {
-        if (!$url || !str_contains($url, '/storage/service-images/')) {
-            return;
-        }
-
-        $path = parse_url($url, PHP_URL_PATH) ?: $url;
-        $relative = ltrim(str_replace('/storage/', '', $path), '/');
-        if ($relative !== '' && Storage::disk('public')->exists($relative)) {
-            Storage::disk('public')->delete($relative);
-        }
+        \App\Support\PersistedUpload::forget($url);
     }
 }

@@ -122,8 +122,8 @@
                     <div class="mb-3">
                         <label class="form-label">Card Description</label>
                         <textarea name="description" class="form-control @error('description') is-invalid @enderror"
-                                  rows="3" maxlength="1000" placeholder="Shown on the style card when customers pick this service…">{{ old('description', $service->description ?? '') }}</textarea>
-                        <div class="slug-hint">Customers see this under the style name. Leave blank to keep the default size text.</div>
+                                  rows="3" maxlength="1000" placeholder="Shown on the style card when customers pick this service…">{{ old('description', isset($service) && !\App\Support\KidsStyleCatalog::isPlaceholderDescription($service->description ?? '') ? ($service->description ?? '') : (isset($service) ? \App\Support\KidsStyleCatalog::catalogBlurbForSlug($service->slug) : '')) }}</textarea>
+                        <div class="slug-hint" id="descriptionHint">Customers see this under the style name. Leave blank to keep the default size text.</div>
                         @error('description')<div class="invalid-feedback">{{ $message }}</div>@enderror
                     </div>
 
@@ -134,7 +134,13 @@
                             $currentImageSrc = preg_match('#^https?://#i', $currentImage)
                                 ? $currentImage
                                 : asset(ltrim($currentImage, '/'));
+                        } elseif (isset($service)) {
+                            $catalogFallback = \App\Support\KidsStyleCatalog::catalogImageForSlug($service->slug);
+                            if ($catalogFallback !== '') {
+                                $currentImageSrc = \App\Support\AdultServiceCatalog::publicImageUrl($catalogFallback);
+                            }
                         }
+                        $forKidsChecked = (bool) old('for_kids', $service->for_kids ?? ($prefillKids ?? false));
                     @endphp
                     <div class="mb-3">
                         <label class="form-label">Service Card Image <span class="text-muted fw-normal">(optional)</span></label>
@@ -185,7 +191,7 @@
                                 </button>
                                 @error('image_url')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
 
-                                <div class="form-check form-switch mt-3">
+                                <div class="form-check form-switch mt-3" id="categoryCardToggle">
                                     <input class="form-check-input" type="checkbox" name="use_as_category_card" id="useAsCategoryCard" value="1"
                                            {{ old('use_as_category_card', $service->use_as_category_card ?? false) ? 'checked' : '' }}
                                            style="width:2.5em;height:1.3em">
@@ -262,7 +268,8 @@
                         <div class="col-md-6">
                             <label class="form-label">Homepage Category</label>
                             <select name="category" id="categorySelect" class="form-select @error('category') is-invalid @enderror"
-                                    onchange="toggleNewCategory(this.value)">
+                                    onchange="toggleNewCategory(this.value)"
+                                    {{ $forKidsChecked ? 'disabled' : '' }}>
                                 <option value="">— None —</option>
                                 @foreach($categories as $cat)
                                     <option value="{{ $cat }}"
@@ -272,7 +279,8 @@
                                 @endforeach
                                 <option value="__new__">+ Add new category…</option>
                             </select>
-                            <div class="slug-hint">Adult styles appear inside this category card on the homepage.</div>
+                            <input type="hidden" name="category" id="kidsCategoryValue" value="Kids Braids" {{ $forKidsChecked ? '' : 'disabled' }}>
+                            <div class="slug-hint" id="categoryHint">Adult styles appear inside this category card on the homepage.</div>
                             @error('category')<div class="invalid-feedback">{{ $message }}</div>@enderror
                         </div>
                         <div class="col-md-6" id="newCatWrapper" style="display:none">
@@ -294,6 +302,8 @@
                             <label class="form-check-label fw-bold" for="isActive">Active (visible to customers)</label>
                             @if(isset($service) && \App\Support\AdultServiceCatalog::isHardcodedSlug($service->slug, $service->name))
                                 <div class="slug-hint mt-1">This style is already on the homepage. Edit name, price, photo, or time to update that card. Turn Active off or use Hide to remove it from the site.</div>
+                            @elseif(isset($service) && \App\Support\KidsStyleCatalog::isCatalogSlug($service->slug))
+                                <div class="slug-hint mt-1">This style is on the kids selector. Edit name, price, photo, description, or time here. Turn Active off or use Hide to remove it from the selector.</div>
                             @endif
                         </div>
                     </div>
@@ -302,49 +312,24 @@
                         <label class="form-label d-block">Service Audience</label>
                         <div class="form-check form-switch">
                             <input class="form-check-input" type="checkbox" name="for_kids" id="forKids" value="1"
-                                   {{ old('for_kids', $service->for_kids ?? false) ? 'checked' : '' }}
+                                   {{ $forKidsChecked ? 'checked' : '' }}
                                    style="width:2.5em;height:1.3em">
                             <label class="form-check-label fw-bold" for="forKids">For Kids (appears in Kids Braids selector)</label>
-                            <div class="slug-hint mt-1">Turn this on to add a new kids style, the same way adult styles are added to the homepage. Price, photo, and description stay independent of other services.</div>
+                            <div class="slug-hint mt-1">Same create and edit form as adult styles. Turn this on so the card shows on the kids selector instead of the homepage.</div>
                         </div>
                     </div>
 
-                    <div id="kidsStyleOptions" style="display:none">
-                        <p class="section-title mt-4"><i class="bi bi-emoji-smile me-2"></i>Kids Booking Options</p>
-                        <p class="slug-hint mb-3">This service is added as a new card in the Kids Braids selector. Customers can book it like the built-in kids styles.</p>
+                    <div id="bookingStyleOptions">
+                        <p class="section-title mt-4"><i class="bi bi-sliders me-2"></i><span id="bookingOptionsTitle">Booking Options</span></p>
+                        <p class="slug-hint mb-3" id="bookingOptionsHint">These options apply to this style on the homepage — including existing service cards. Turn length, tip, sizes, or row add-ons on or off here.</p>
 
                         <div class="row g-3 mb-3">
                             <div class="col-md-6">
                                 <label class="form-label">Time estimate</label>
-                                <input type="text" name="duration" class="form-control" id="kidsDuration"
-                                       value="{{ old('duration', $service->duration ?? '') }}"
-                                       placeholder="e.g. 1–2 hrs">
-                                <div class="slug-hint">Shown on the kids style card.</div>
-                            </div>
-                        </div>
-
-                        <div class="mb-4">
-                            <div class="form-check form-switch">
-                                <input class="form-check-input" type="checkbox" name="has_length" id="kidsHasLength" value="1"
-                                       {{ old('has_length', $service->has_length ?? true) ? 'checked' : '' }}
-                                       style="width:2.5em;height:1.3em">
-                                <label class="form-check-label fw-bold" for="kidsHasLength">Ask for finish and length</label>
-                                <div class="slug-hint mt-1">Off = fixed price, like Crotchet. On = customers also choose curl finish and length.</div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div id="adultStyleOptions">
-                        <p class="section-title mt-4"><i class="bi bi-sliders me-2"></i>Adult Booking Options</p>
-                        <p class="slug-hint mb-3">These options apply to this style on the homepage — including existing service cards. Turn length, tip, sizes, or row add-ons on or off here.</p>
-
-                        <div class="row g-3 mb-3">
-                            <div class="col-md-6">
-                                <label class="form-label">Time estimate</label>
-                                <input type="text" name="duration" class="form-control"
+                                <input type="text" name="duration" class="form-control" id="durationInput"
                                        value="{{ old('duration', $service->duration ?? '') }}"
                                        placeholder="e.g. 3–4 hrs">
-                                <div class="slug-hint">Shown on the style card in the size picker.</div>
+                                <div class="slug-hint" id="durationHint">Shown on the style card in the size picker.</div>
                             </div>
                         </div>
 
@@ -356,6 +341,7 @@
                             $offerSizes = old('offer_braid_sizes', !empty($savedSizes));
                             $offerSizes = filter_var($offerSizes, FILTER_VALIDATE_BOOLEAN);
                         @endphp
+                        <div id="adultOnlyBookingOptions">
                         <div class="mb-4">
                             <div class="form-check form-switch mb-2">
                                 <input type="hidden" name="offer_braid_sizes" value="0">
@@ -395,17 +381,19 @@
                                 </div>
                             </div>
                         </div>
+                        </div>
 
                         <div class="mb-3">
                             <div class="form-check form-switch">
                                 <input class="form-check-input" type="checkbox" name="has_length" id="hasLength" value="1"
                                        {{ old('has_length', $service->has_length ?? true) ? 'checked' : '' }}
                                        style="width:2.5em;height:1.3em">
-                                <label class="form-check-label fw-bold" for="hasLength">Length adjustment (price changes with length)</label>
-                                <div class="slug-hint">Customers pick neck through classic length. Price updates from the length map.</div>
+                                <label class="form-check-label fw-bold" for="hasLength" id="hasLengthLabel">Length adjustment (price changes with length)</label>
+                                <div class="slug-hint" id="hasLengthHint">Customers pick neck through classic length. Price updates from the length map.</div>
                             </div>
                         </div>
 
+                        <div id="adultTipAndRows">
                         <div class="mb-3">
                             <div class="form-check form-switch">
                                 <input class="form-check-input" type="checkbox" name="has_tip_finish" id="hasTipFinish" value="1"
@@ -450,6 +438,7 @@
                                 </div>
                             </div>
                         @endforeach
+                        </div>
                     </div>
 
                     {{-- SUBMIT --}}
@@ -620,9 +609,11 @@ function toggleDiscountExpiry(val) {
 (function() {
     const kids = document.getElementById('forKids');
     const hint = document.getElementById('kidsPriceHint');
-    const adult = document.getElementById('adultStyleOptions');
-    const kidsOpts = document.getElementById('kidsStyleOptions');
+    const adultOnly = document.getElementById('adultOnlyBookingOptions');
+    const adultTip = document.getElementById('adultTipAndRows');
     const categorySelect = document.getElementById('categorySelect');
+    const kidsCategory = document.getElementById('kidsCategoryValue');
+    const categoryCard = document.getElementById('categoryCardToggle');
     const setDisabled = (root, disabled) => {
         if (!root) return;
         root.querySelectorAll('input, select, textarea').forEach(function(el) {
@@ -633,13 +624,41 @@ function toggleDiscountExpiry(val) {
     const sync = () => {
         const isKids = !!(kids && kids.checked);
         if (hint) hint.style.display = isKids ? '' : 'none';
-        if (adult) adult.style.display = isKids ? 'none' : '';
-        if (kidsOpts) kidsOpts.style.display = isKids ? '' : 'none';
-        setDisabled(adult, isKids);
-        setDisabled(kidsOpts, !isKids);
-        if (categorySelect) {
-            categorySelect.disabled = isKids;
-        }
+        if (adultOnly) adultOnly.style.display = isKids ? 'none' : '';
+        if (adultTip) adultTip.style.display = isKids ? 'none' : '';
+        if (categoryCard) categoryCard.style.display = isKids ? 'none' : '';
+        setDisabled(adultOnly, isKids);
+        setDisabled(adultTip, isKids);
+        if (categorySelect) categorySelect.disabled = isKids;
+        if (kidsCategory) kidsCategory.disabled = !isKids;
+        const title = document.getElementById('bookingOptionsTitle');
+        const bookingHint = document.getElementById('bookingOptionsHint');
+        const durationHint = document.getElementById('durationHint');
+        const durationInput = document.getElementById('durationInput');
+        const hasLengthLabel = document.getElementById('hasLengthLabel');
+        const hasLengthHint = document.getElementById('hasLengthHint');
+        const descriptionHint = document.getElementById('descriptionHint');
+        const categoryHint = document.getElementById('categoryHint');
+        if (title) title.textContent = isKids ? 'Kids Booking Options' : 'Booking Options';
+        if (bookingHint) bookingHint.textContent = isKids
+            ? 'This card shows on the kids selector. Name, photo, price, description, and time are edited here the same way as adult styles.'
+            : 'These options apply to this style on the homepage. Turn length, tip, sizes, or row add-ons on or off here.';
+        if (durationHint) durationHint.textContent = isKids
+            ? 'Shown on the kids style card.'
+            : 'Shown on the style card in the size picker.';
+        if (durationInput) durationInput.placeholder = isKids ? 'e.g. 1–2 hrs' : 'e.g. 3–4 hrs';
+        if (hasLengthLabel) hasLengthLabel.textContent = isKids
+            ? 'Ask for curl finish and length'
+            : 'Length adjustment (price changes with length)';
+        if (hasLengthHint) hasLengthHint.textContent = isKids
+            ? 'Off = fixed price, like Crotchet. On = customers also choose curl finish and length.'
+            : 'Customers pick neck through classic length. Price updates from the length map.';
+        if (descriptionHint) descriptionHint.textContent = isKids
+            ? 'Customers see this under the style name on the kids selector.'
+            : 'Customers see this under the style name. Leave blank to keep the default size text.';
+        if (categoryHint) categoryHint.textContent = isKids
+            ? 'Kids styles stay in the kids selector, not a homepage category.'
+            : 'Adult styles appear inside this category card on the homepage.';
         if (!isKids) {
             const offer = document.getElementById('offerBraidSizes');
             toggleBraidSizeEditor(!!(offer && offer.checked));

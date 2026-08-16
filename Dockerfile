@@ -34,6 +34,9 @@ RUN a2enmod rewrite
 # Set working directory
 WORKDIR /var/www/html
 
+# Copy PHP upload limits
+COPY docker/php/uploads.ini /usr/local/etc/php/conf.d/uploads.ini
+
 # Copy Apache configuration
 COPY docker/apache/000-default.conf /etc/apache2/sites-available/000-default.conf
 

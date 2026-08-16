@@ -139,7 +139,7 @@ class BackfillKidsSelectorFromNotes extends Command
 
         $typeAdj = [
             'protective' => -20,
-            'cornrows' => -40,
+            'cornrows' => -30,
             'knotless_small' => 20,
             'knotless_med' => 0,
             'box_small' => 10,

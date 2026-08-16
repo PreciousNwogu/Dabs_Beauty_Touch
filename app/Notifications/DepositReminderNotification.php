@@ -24,7 +24,7 @@ class DepositReminderNotification extends Notification
     public function toMail(object $notifiable): MailMessage
     {
         return (new MailMessage)
-            ->subject('Reminder: $20 deposit to hold your appointment')
+            ->subject('Reminder: '.InteracDeposit::amountLabel().' deposit to hold your appointment')
             ->view('emails.deposit_reminder', [
                 'booking' => $this->booking,
                 'interacEmail' => InteracDeposit::email(),

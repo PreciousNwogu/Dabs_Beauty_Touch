@@ -378,12 +378,13 @@
         <a href="{{ url('/bookings/confirm/' . ($booking->id ?? '') . '/' . ($booking->confirmation_code ?? '')) }}" class="btn">View Booking Details</a>
       </div>
 
-      <!-- Important Notes -->
+      @if(($booking->appointment_type ?? '') !== 'mobile')
       <div style="background: #f0f9ff; border-left: 4px solid #0ea5e9; padding: 16px; border-radius: 6px; margin: 24px 0;">
         <p style="margin: 0; color: #0c4a6e; font-size: 14px; line-height: 1.6;">
           <strong>Reminder:</strong> Please arrive on time for your appointment.
         </p>
       </div>
+      @endif
 
       <!-- Signature -->
       <div class="signature">

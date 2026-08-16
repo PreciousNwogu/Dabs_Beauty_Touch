@@ -32,6 +32,7 @@
             </div>
         @endif
         @include('partials.kids-selector-form')
+        @include('partials.kids-page-booking')
     </div>
 @endsection
 
@@ -157,15 +158,33 @@ document.addEventListener('DOMContentLoaded', function(){
                         return;
                     }
 
+                    const radio = document.querySelector('input[name="kb_braid_type"]:checked');
+                    const commentsEl = document.getElementById('kb_comments');
+                    const colorEl = document.getElementById('kb_hair_color');
                     const selectorSnapshot = {
                         kb_braid_type: braidType,
                         kb_finish: finish,
                         kb_length: length,
                         kb_extras: extras.join(','),
-                        price: String(res.total)
+                        price: String(res.total),
+                        style_label: (radio && radio.dataset && radio.dataset.label) || '',
+                        style_image: (radio && radio.dataset && radio.dataset.image) || '',
+                        style_duration: (radio && radio.dataset && radio.dataset.duration) || '',
+                        finish_label: finish === 'curled' ? 'With curled tip' : (finish ? 'Without curl' : ''),
+                        length_label: ({shoulder:'Shoulder',armpit:'Armpit',mid_back:'Mid back',waist:'Waist'})[length] || length,
+                        extras_labels: extras.map(function(id){
+                            return ({kb_add_detangle:'Detangle / Blowdry',kb_add_beads:'Tiny beading',kb_add_beads_full:'Big eye beading',kb_add_extension:'Hair Extension',kb_add_rest:'15-min break'})[id] || id;
+                        }).filter(Boolean).join(', '),
+                        comments: commentsEl ? commentsEl.value : '',
+                        hair_color: colorEl ? colorEl.value : ''
                     };
                     try { localStorage.setItem('kb_selector', JSON.stringify(selectorSnapshot)); } catch (storageErr) { console.warn('Failed to persist kb_selector snapshot', storageErr); }
                     try { window.__kidsSelectorData = selectorSnapshot; } catch (stateErr) { console.warn('Failed to set in-memory selector snapshot', stateErr); }
+
+                    if (typeof openKidsBookingModal === 'function' && document.getElementById('kidsBookingModal')) {
+                        openKidsBookingModal('Kids Braids', 'kids-braids');
+                        return;
+                    }
 
                     const qs = new URLSearchParams();
                     qs.set('ks', '1');

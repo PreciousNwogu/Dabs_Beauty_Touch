@@ -20,6 +20,11 @@
         .form-label { font-weight:700; font-size:.88rem; color:#030f68; }
         .hint { font-size:.8rem; color:#777; }
         .preview { width:100%; max-height:180px; object-fit:cover; border-radius:12px; border:1px solid #e6eaf5; }
+        #promoPreview { object-fit: contain; background:#11183a; }
+        .promo-media-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(110px,1fr)); gap:10px; }
+        .promo-media-thumb { display:block; border:1px solid #e6eaf5; border-radius:12px; overflow:hidden; background:#11183a; }
+        .promo-media-thumb img, .promo-media-thumb video { width:100%; height:88px; object-fit:contain; object-position:center; display:block; background:#11183a; }
+        .promo-media-thumb .promo-media-remove { display:flex; align-items:center; gap:6px; padding:6px 8px; font-size:.75rem; color:#5c6380; }
     </style>
 </head>
 <body>
@@ -38,7 +43,7 @@
         <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
             <div>
                 <h1><i class="bi bi-sliders me-2"></i>Business Settings</h1>
-                <p class="mb-0 opacity-75">Deposit, booking capacity, add-on prices, homepage categories, kids styles, and promo images.</p>
+                <p class="mb-0 opacity-75">Deposit, booking capacity, add-on prices, homepage categories, kids styles, and promo photos or videos.</p>
             </div>
             <a href="{{ route('admin.services.index') }}" class="btn btn-light fw-bold px-4">Back to Services</a>
         </div>
@@ -134,7 +139,10 @@
 
         <div class="form-card">
             <p class="section-title"><i class="bi bi-emoji-smile me-2"></i>Kids styles</p>
-            <p class="hint mb-3">Rename, hide, or reorder built-in kids selector styles. Prices still come from Services CMS.</p>
+            <p class="hint mb-3">Rename, hide, or reorder built-in kids selector styles here. Add new kids styles, photos, prices, and descriptions in <a href="{{ route('admin.services.index', ['audience' => 'kids']) }}">Services CMS</a> — same form as adult styles.</p>
+            <a href="{{ route('admin.services.create', ['for_kids' => 1]) }}" class="btn btn-warning fw-bold mb-3">
+                <i class="bi bi-plus-circle me-2"></i>Add kids style
+            </a>
             <div class="table-responsive">
                 <table class="table align-middle">
                     <thead>
@@ -181,18 +189,39 @@
                     <img class="preview" id="heroPreview" src="{{ \App\Support\SiteSettings::heroImageUrl() }}" alt="Hero preview">
                 </div>
                 <div class="col-md-6">
-                    <label class="form-label">Promo banner image (optional)</label>
+                    <label class="form-label">Promo banner photos &amp; videos</label>
+                    @php $promoMedia = \App\Support\SiteSettings::promoMedia(); @endphp
+                    @if(count($promoMedia))
+                        <div class="promo-media-grid mb-2">
+                            @foreach($promoMedia as $item)
+                                <label class="promo-media-thumb">
+                                    @if(($item['type'] ?? '') === 'video')
+                                        <video src="{{ $item['url'] }}" muted playsinline></video>
+                                    @else
+                                        <img src="{{ $item['url'] }}" alt="Promo preview">
+                                    @endif
+                                    <span class="promo-media-remove">
+                                        <input type="checkbox" class="form-check-input mt-0" name="remove_promo_media[]" value="{{ $item['path'] }}">
+                                        Remove
+                                    </span>
+                                </label>
+                            @endforeach
+                        </div>
+                    @endif
                     <textarea name="promo_image_data" id="promoImageData" hidden>{{ old('promo_image_data') }}</textarea>
+                    <label class="form-label small fw-semibold">Add a photo</label>
                     <input type="file" id="promoImageInput" class="form-control mb-2" accept=".jpg,.jpeg,.png,.webp,.gif,image/jpeg,image/png,image/webp,image/gif" onchange="onSiteImageChosen(this, 'promoImageData', 'promoPreview')">
-                    <p class="hint mb-2">JPG, PNG, WEBP, or GIF · max 10 MB</p>
+                    <label class="form-label small fw-semibold">Add more photos or videos</label>
+                    <input type="file" name="promo_files[]" id="promoFilesInput" class="form-control mb-2" accept=".jpg,.jpeg,.png,.webp,.gif,.mp4,.webm,.mov,.m4v,image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm,video/quicktime" multiple onchange="onPromoFilesChosen(this)">
+                    <p class="hint mb-2">You can add several photos and short clips. They take turns on the homepage, each with a different display effect. JPG, PNG, WEBP, GIF, MP4, or WEBM · max 100 MB each · up to 12 files.</p>
                     <div class="form-check mb-2">
                         <input type="hidden" name="promo_enabled" value="0">
                         <input type="checkbox" class="form-check-input" name="promo_enabled" value="1" id="promoEnabled" @checked(old('promo_enabled', $settings['promo_enabled']))>
                         <label class="form-check-label" for="promoEnabled">Show promo banner on homepage</label>
                     </div>
                     <div class="form-check mb-2">
-                        <input type="checkbox" class="form-check-input" name="remove_promo_image" value="1" id="removePromo" onchange="if(this.checked){ document.getElementById('promoImageData').value=''; document.getElementById('promoImageInput').value=''; document.getElementById('promoPreview').style.display='none'; }">
-                        <label class="form-check-label" for="removePromo">Remove promo image</label>
+                        <input type="checkbox" class="form-check-input" name="remove_promo_image" value="1" id="removePromo" onchange="if(this.checked){ document.getElementById('promoImageData').value=''; document.getElementById('promoImageInput').value=''; var p=document.getElementById('promoPreview'); if(p) p.style.display='none'; }">
+                        <label class="form-check-label" for="removePromo">Remove all promo photos and videos</label>
                     </div>
                     <input type="text" name="promo_title" class="form-control mb-2" placeholder="Promo title" value="{{ old('promo_title', $settings['promo_title']) }}">
                     <textarea name="promo_text" class="form-control mb-2" rows="3" placeholder="Promo text">{{ old('promo_text', $settings['promo_text']) }}</textarea>
@@ -252,6 +281,15 @@ function onSiteImageChosen(input, dataFieldId, previewId) {
         alert('Could not read that image. Please try another file.');
     };
     reader.readAsDataURL(file);
+}
+function onPromoFilesChosen(input) {
+    const files = input.files ? Array.from(input.files) : [];
+    const maxBytes = 100 * 1024 * 1024;
+    const tooBig = files.find(function (file) { return file.size > maxBytes; });
+    if (tooBig) {
+        input.value = '';
+        alert('"' + tooBig.name + '" is over 100 MB. Use a shorter clip, then try again.');
+    }
 }
 </script>
 </body>
