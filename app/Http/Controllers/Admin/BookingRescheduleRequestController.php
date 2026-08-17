@@ -4,14 +4,15 @@ namespace App\Http\Controllers\Admin;
 
 use App\Exceptions\SlotUnavailableException;
 use App\Http\Controllers\Controller;
+use App\Mail\BookingRescheduleDeclinedMail;
 use App\Models\Booking;
 use App\Models\Schedule;
-use App\Notifications\BookingRescheduleDeclinedNotification;
 use App\Notifications\BookingRescheduledNotification;
 use App\Support\ServiceDuration;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Notification;
 
 class BookingRescheduleRequestController extends Controller
@@ -87,16 +88,49 @@ class BookingRescheduleRequestController extends Controller
         $booking->notes = trim(($booking->notes ?? '')."\nReschedule declined".($note !== '' ? ': '.$note : '').'. Original time kept.');
         $booking->save();
 
-        try {
-            if ($booking->hasUsableEmail()) {
-                Notification::route('mail', $booking->email)
-                    ->notify(new BookingRescheduleDeclinedNotification($booking, $requested, $note !== '' ? $note : null));
-            }
-        } catch (\Throwable $e) {
-            Log::warning('Declined reschedule email failed', ['booking_id' => $booking->id, 'error' => $e->getMessage()]);
+        $emailed = $this->emailDeclinedReschedule($booking, $requested, $note !== '' ? $note : null);
+
+        return back()->with(
+            $emailed ? 'success' : 'error',
+            $emailed
+                ? 'Request declined. The original time is still booked. The client was emailed.'
+                : 'Request declined and the original time is still booked, but the client email did not send. Reply to them from your inbox.'
+        );
+    }
+
+    private function emailDeclinedReschedule(Booking $booking, string $requested, ?string $note): bool
+    {
+        $addresses = collect([$booking->email, $booking->user?->email])
+            ->map(fn ($email) => strtolower(trim((string) $email)))
+            ->filter(fn ($email) => $email !== ''
+                && $email !== 'no-email@example.com'
+                && filter_var($email, FILTER_VALIDATE_EMAIL))
+            ->unique()
+            ->values();
+
+        if ($addresses->isEmpty()) {
+            Log::warning('Declined reschedule email skipped: no usable client email', ['booking_id' => $booking->id]);
+
+            return false;
         }
 
-        return back()->with('success', 'Request declined. The original time is still booked. The client was emailed.');
+        try {
+            Mail::to($addresses->all())->send(new BookingRescheduleDeclinedMail($booking, $requested, $note));
+            Log::info('Declined reschedule email sent', [
+                'booking_id' => $booking->id,
+                'to' => $addresses->all(),
+            ]);
+
+            return true;
+        } catch (\Throwable $e) {
+            Log::error('Declined reschedule email failed', [
+                'booking_id' => $booking->id,
+                'to' => $addresses->all(),
+                'error' => $e->getMessage(),
+            ]);
+
+            return false;
+        }
     }
 
     private function assertSlotOpen(Booking $booking, string $date, string $time): void

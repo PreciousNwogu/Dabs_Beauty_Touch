@@ -4010,6 +4010,15 @@
     @include('partials.cookie-consent')
     @include('partials.site-header')
 
+    @php
+        $promoMedia = \App\Support\SiteSettings::promoMedia();
+        $promoHasMedia = count($promoMedia) > 0;
+        $showPromo = (bool) \App\Support\SiteSettings::get('promo_enabled')
+            && (trim((string) \App\Support\SiteSettings::get('promo_title', '')) !== ''
+                || trim((string) \App\Support\SiteSettings::get('promo_text', '')) !== ''
+                || $promoHasMedia);
+    @endphp
+    <div class="home-landing{{ $showPromo ? ' has-promo' : '' }}">
     <!-- Hero Section -->
     <section id="home" class="hero-section">
         <div class="container" style="padding-top: 120px; padding-bottom: 80px;">
@@ -4037,12 +4046,10 @@
         </div>
     </section>
 
-    @php
-        $promoMedia = \App\Support\SiteSettings::promoMedia();
-        $promoHasMedia = count($promoMedia) > 0;
-    @endphp
-    @if(\App\Support\SiteSettings::get('promo_enabled') && (trim((string) \App\Support\SiteSettings::get('promo_title', '')) !== '' || trim((string) \App\Support\SiteSettings::get('promo_text', '')) !== '' || $promoHasMedia))
+    @if($showPromo)
     <style>
+        .home-landing.has-promo { display: flex; flex-direction: column; }
+        .promo-banner-section { order: 2; }
         .promo-banner-wrap { perspective: 1100px; }
         .promo-banner {
             position: relative;
@@ -4198,7 +4205,54 @@
             100% { transform: scale(1.04); }
         }
         @media (max-width: 767.98px) {
-            .promo-media-stage { max-height: 220px; aspect-ratio: 16 / 10; }
+            .home-landing.has-promo .hero-section {
+                order: 2;
+                min-height: auto;
+                padding: 56px 0 36px;
+            }
+            .home-landing.has-promo .promo-banner-section {
+                order: 1;
+                padding-top: 14px;
+                padding-bottom: 14px;
+            }
+            .promo-banner-wrap { perspective: none; }
+            .promo-banner,
+            .promo-banner::after,
+            .promo-badge,
+            .promo-media-item {
+                animation: none !important;
+            }
+            .promo-banner {
+                transform: none !important;
+                overflow: visible;
+                padding: 14px;
+            }
+            .promo-banner::after { display: none; }
+            .promo-media-stage {
+                min-height: 180px;
+                max-height: none;
+                height: auto;
+                aspect-ratio: 16 / 10;
+                contain: none;
+                clip-path: none;
+                transform: none;
+            }
+            .promo-media-item {
+                position: relative;
+                inset: auto;
+                display: none;
+                opacity: 1;
+                min-height: 180px;
+            }
+            .promo-media-item.is-active {
+                display: flex;
+            }
+            .promo-media-item img,
+            .promo-media-item video {
+                height: auto;
+                max-height: 240px;
+                width: 100%;
+            }
         }
         @media (prefers-reduced-motion: reduce) {
             .promo-banner,
@@ -4207,7 +4261,7 @@
             .promo-media-item { animation: none !important; }
         }
     </style>
-    <section class="py-4" style="background: linear-gradient(135deg, #fff7ef 0%, #f8f9fa 100%);">
+    <section class="promo-banner-section py-4" style="background: linear-gradient(135deg, #fff7ef 0%, #f8f9fa 100%);">
         <div class="container promo-banner-wrap">
             <div class="promo-banner promo-motion-swing" id="promoBanner">
                 <div class="row align-items-center g-3">
@@ -4217,7 +4271,7 @@
                             @foreach($promoMedia as $idx => $item)
                                 @if(($item['type'] ?? '') === 'video')
                                     <div class="promo-media-item{{ $idx === 0 ? ' is-active promo-fx-fade' : '' }}" data-promo-type="video">
-                                        <video src="{{ $item['url'] }}" muted playsinline loop preload="metadata" {{ $idx === 0 ? 'autoplay' : '' }}></video>
+                                        <video src="{{ $item['url'] }}" muted playsinline webkit-playsinline loop preload="metadata" {{ $idx === 0 ? 'autoplay' : '' }}></video>
                                     </div>
                                 @else
                                     <div class="promo-media-item{{ $idx === 0 ? ' is-active promo-fx-fade' : '' }}" data-promo-type="image">
@@ -4334,6 +4388,7 @@
     </script>
     @endif
     @endif
+    </div>
 
     <!-- Image Slider Section -->
     <section class="image-slider-section" style="padding: 50px 0; background: linear-gradient(135deg, #f8f9fa 0%, #e3eafc 100%);">

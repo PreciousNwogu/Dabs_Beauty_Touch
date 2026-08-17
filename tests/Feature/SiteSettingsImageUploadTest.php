@@ -96,9 +96,14 @@ class SiteSettingsImageUploadTest extends TestCase
 
         $this->get('/')
             ->assertOk()
+            ->assertSee('home-landing has-promo', false)
+            ->assertSee('promo-banner-section', false)
             ->assertSee('promoMediaStage', false)
             ->assertSee('promo-fx-fade', false)
-            ->assertSee('<video', false);
+            ->assertSee('<video', false)
+            ->assertSee('webkit-playsinline', false)
+            ->assertSee('.home-landing.has-promo .promo-banner-section {', false)
+            ->assertSee('order: 1;', false);
     }
 
     public function test_promo_video_php_limit_shows_a_clear_error(): void

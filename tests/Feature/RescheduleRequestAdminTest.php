@@ -2,11 +2,12 @@
 
 namespace Tests\Feature;
 
+use App\Mail\BookingRescheduleDeclinedMail;
 use App\Models\Booking;
 use App\Models\User;
-use App\Notifications\BookingRescheduleDeclinedNotification;
 use App\Notifications\BookingRescheduledNotification;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Notification;
 use Tests\TestCase;
 
@@ -74,7 +75,7 @@ class RescheduleRequestAdminTest extends TestCase
 
     public function test_admin_can_decline_a_reschedule_request(): void
     {
-        Notification::fake();
+        Mail::fake();
         $admin = User::factory()->admin()->create();
         $booking = $this->futureBooking([
             'reschedule_requested_date' => now()->addDays(20)->toDateString(),
@@ -94,7 +95,19 @@ class RescheduleRequestAdminTest extends TestCase
         $this->assertSame('10:00', $booking->appointment_time);
         $this->assertSame(now()->addDays(12)->toDateString(), $booking->appointment_date->toDateString());
 
-        Notification::assertSentOnDemand(BookingRescheduleDeclinedNotification::class);
+        Mail::assertSent(BookingRescheduleDeclinedMail::class, function (BookingRescheduleDeclinedMail $mail) use ($booking) {
+            return $mail->hasTo('client@example.com')
+                && $mail->booking->is($booking)
+                && str_contains($mail->requestedLabel, '2:30');
+        });
+
+        $html = view('emails.reschedule_request_declined', [
+            'booking' => $booking,
+            'requestedLabel' => 'August 20, 2026 at 2:30 PM',
+            'note' => null,
+        ])->render();
+        $this->assertStringContainsString('original appointment is still booked', $html);
+        $this->assertStringContainsString('/bookings/confirm/'.$booking->id.'/CONFRESCH1', $html);
     }
 
     public function test_approve_is_blocked_when_the_slot_is_taken(): void
