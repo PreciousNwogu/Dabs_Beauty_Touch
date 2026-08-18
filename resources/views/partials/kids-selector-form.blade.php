@@ -619,8 +619,8 @@
     <div class="card shadow-lg" style="border: none; border-radius: 16px; overflow: hidden;">
         <!-- Header -->
         <div class="kb-header">
-            <h1>👧🏾 Kids Braids Selector</h1>
-            <p>Professional braiding for ages 3–8 • Customize your child's perfect style</p>
+            <h1>👧🏾 {{ __('kids.heading') }}</h1>
+            <p>{{ __('kids.subtitle') }}</p>
         </div>
 
         <!-- Announcement -->
@@ -628,9 +628,9 @@
             <div class="kb-announcement-content">
                 <span class="kb-announcement-icon">📣</span>
                 <div class="kb-announcement-text">
-                    <div class="kb-announcement-label">Announcement: Braiding Extensions Available</div>
+                    <div class="kb-announcement-label">{{ __('kids.announcement_label') }}</div>
                     <p class="kb-announcement-message">
-                        We have braiding extensions in various colors. Pick a color below, or message us on <span style="font-weight: 600;">WhatsApp</span>.
+                        {{ __('kids.announcement_body') }}
                     </p>
                 </div>
             </div>
@@ -642,19 +642,19 @@
         <div class="kb-progress">
             <div class="kb-progress-step active" data-step="1" id="kb_progress_type">
                 <span class="step-number">1</span>
-                <span class="step-label">Braid Type</span>
+                <span class="step-label">{{ __('kids.steps.type') }}</span>
             </div>
             <div class="kb-progress-step" data-step="2" id="kb_progress_finish">
                 <span class="step-number">2</span>
-                <span class="step-label">Finish</span>
+                <span class="step-label">{{ __('kids.steps.finish') }}</span>
             </div>
             <div class="kb-progress-step" data-step="3" id="kb_progress_length">
                 <span class="step-number">3</span>
-                <span class="step-label">Length</span>
+                <span class="step-label">{{ __('kids.steps.length') }}</span>
             </div>
             <div class="kb-progress-step" data-step="4" id="kb_progress_addons">
                 <span class="step-number">4</span>
-                <span class="step-label">Add-Ons</span>
+                <span class="step-label">{{ __('kids.steps.addons') }}</span>
             </div>
         </div>
 
@@ -667,9 +667,9 @@
                     <!-- Step 1: Braid Type -->
                     <div class="kb-section" data-step="1">
                         <h2 class="kb-section-title">
-                            <span style="color: #ff6600;">✨</span> Choose Braid Type
+                            <span style="color: #ff6600;">✨</span> {{ __('kids.type.title') }}
                         </h2>
-                        <p class="kb-section-subtitle">Select the perfect style for your child</p>
+                        <p class="kb-section-subtitle">{{ __('kids.type.subtitle') }}</p>
 
                         @php
                             $kbCatalog = \App\Support\KidsStyleCatalog::cardPrices();
@@ -722,22 +722,22 @@
                     <!-- Step 2: Finish -->
                     <div class="kb-section" id="kb-finish-section" data-step="2">
                         <h2 class="kb-section-title" id="kb-finish-header">
-                            <span style="color: #ff6600;">💫</span> Choose Finish
+                            <span style="color: #ff6600;">💫</span> {{ __('kids.finish.title') }}
                         </h2>
-                        <p class="kb-section-subtitle">How would you like the ends styled?</p>
+                        <p class="kb-section-subtitle">{{ __('kids.finish.subtitle') }}</p>
 
                         <div class="kb-option-group" id="kb-finish-block">
                             <label class="kb-option-btn" for="kb_finish_plain">
                                 <input type="radio" name="kb_finish" id="kb_finish_plain" value="plain" checked>
                                 <div class="kb-option-label">
-                                    Without Curl
+                                    {{ __('kids.finish.plain') }}
                                 </div>
                             </label>
 
                             <label class="kb-option-btn" for="kb_finish_curled">
                                 <input type="radio" name="kb_finish" id="kb_finish_curled" value="curled">
                                 <div class="kb-option-label">
-                                    With curled tip
+                                    {{ __('kids.finish.curled') }}
                                     <span class="kb-option-price">-$10</span>
                                 </div>
                             </label>
@@ -747,30 +747,30 @@
                     <!-- Step 3: Hair Length -->
                     <div class="kb-section" id="kb-length-section" data-step="3">
                         <h2 class="kb-section-title" id="kb-length-header">
-                            <span style="color: #ff6600;">📏</span> Choose Hair Length
+                            <span style="color: #ff6600;">📏</span> {{ __('kids.length.title') }}
                         </h2>
-                        <p class="kb-section-subtitle">Select the length on the picture that matches what you want</p>
+                        <p class="kb-section-subtitle">{{ __('kids.length.subtitle') }}</p>
 
                         <div class="kb-length-guide">
-                            <img src="{{ asset('images/braids-length-guide.jpg') }}" alt="Hair length guide from shoulder to waist">
+                            <img src="{{ asset('images/braids-length-guide.jpg') }}" alt="{{ __('kids.length.guide_alt') }}">
                         </div>
 
                         <div class="kb-option-group" id="kb-lengths">
                             <label class="kb-option-btn kb-length-card" for="kb_len_shoulder">
                                 <input type="radio" name="kb_length" id="kb_len_shoulder" value="shoulder" checked>
                                 <div class="kb-option-label">
-                                    Shoulder
+                                    {{ __('kids.length.shoulder') }}
                                     <span class="kb-length-bar" style="width:38%;"></span>
-                                    <span class="kb-length-hint">Sits at the shoulder</span>
+                                    <span class="kb-length-hint">{{ __('kids.length.shoulder_hint') }}</span>
                                 </div>
                             </label>
 
                             <label class="kb-option-btn kb-length-card" for="kb_len_armpit">
                                 <input type="radio" name="kb_length" id="kb_len_armpit" value="armpit">
                                 <div class="kb-option-label">
-                                    Armpit
+                                    {{ __('kids.length.armpit') }}
                                     <span class="kb-length-bar" style="width:52%;"></span>
-                                    <span class="kb-length-hint">A little longer</span>
+                                    <span class="kb-length-hint">{{ __('kids.length.armpit_hint') }}</span>
                                     <span class="kb-option-price">+$10</span>
                                 </div>
                             </label>
@@ -778,9 +778,9 @@
                             <label class="kb-option-btn kb-length-card" for="kb_len_midback">
                                 <input type="radio" name="kb_length" id="kb_len_midback" value="mid_back">
                                 <div class="kb-option-label">
-                                    Mid Back
+                                    {{ __('kids.length.mid_back') }}
                                     <span class="kb-length-bar" style="width:70%;"></span>
-                                    <span class="kb-length-hint">Halfway down the back</span>
+                                    <span class="kb-length-hint">{{ __('kids.length.mid_back_hint') }}</span>
                                     <span class="kb-option-price">+$20</span>
                                 </div>
                             </label>
@@ -788,9 +788,9 @@
                             <label class="kb-option-btn kb-length-card" for="kb_len_waist">
                                 <input type="radio" name="kb_length" id="kb_len_waist" value="waist">
                                 <div class="kb-option-label">
-                                    Waist
+                                    {{ __('kids.length.waist') }}
                                     <span class="kb-length-bar" style="width:88%;"></span>
-                                    <span class="kb-length-hint">Longest kids length</span>
+                                    <span class="kb-length-hint">{{ __('kids.length.waist_hint') }}</span>
                                     <span class="kb-option-price">+$30</span>
                                 </div>
                             </label>
@@ -800,38 +800,38 @@
                     <!-- Step 4: Add-Ons -->
                     <div class="kb-section" data-step="4">
                         <h2 class="kb-section-title">
-                            <span style="color: #ff6600;">🎀</span> Add Extra Services
+                            <span style="color: #ff6600;">🎀</span> {{ __('kids.addons.title') }}
                         </h2>
-                        <p class="kb-section-subtitle">Optional extras. Add the 15-min break if your child may need a rest.</p>
+                        <p class="kb-section-subtitle">{{ __('kids.addons.subtitle') }}</p>
 
                         <div class="kb-addon-grid" id="kb-addons">
                             <label class="kb-addon-card" for="kb_add_detangle">
                                 <input type="checkbox" id="kb_add_detangle" value="15">
-                                <span class="kb-addon-label">Detangle / Blowdry <span class="kb-addon-hint">If hair is knotted or not fully dry</span></span>
+                                <span class="kb-addon-label">{{ __('kids.addons.detangle') }} <span class="kb-addon-hint">{{ __('kids.addons.detangle_hint') }}</span></span>
                                 <span class="kb-addon-price">+$15</span>
                             </label>
 
                             <label class="kb-addon-card" for="kb_add_beads">
                                 <input type="checkbox" id="kb_add_beads" value="15">
-                                <span class="kb-addon-label">Tiny beading <span class="kb-addon-hint">Small beads on the ends</span></span>
+                                <span class="kb-addon-label">{{ __('kids.addons.beads') }} <span class="kb-addon-hint">{{ __('kids.addons.beads_hint') }}</span></span>
                                 <span class="kb-addon-price">+$15</span>
                             </label>
 
                             <label class="kb-addon-card" for="kb_add_beads_full">
                                 <input type="checkbox" id="kb_add_beads_full" value="10">
-                                <span class="kb-addon-label">Big eye beading <span class="kb-addon-hint">Larger decorative beads</span></span>
+                                <span class="kb-addon-label">{{ __('kids.addons.beads_full') }} <span class="kb-addon-hint">{{ __('kids.addons.beads_full_hint') }}</span></span>
                                 <span class="kb-addon-price">+$10</span>
                             </label>
 
                             <label class="kb-addon-card" for="kb_add_extension">
                                 <input type="checkbox" id="kb_add_extension" value="20">
-                                <span class="kb-addon-label">Hair Extension <span class="kb-addon-hint">If you need the stylist to provide hair</span></span>
+                                <span class="kb-addon-label">{{ __('kids.addons.extension') }} <span class="kb-addon-hint">{{ __('kids.addons.extension_hint') }}</span></span>
                                 <span class="kb-addon-price">+$20</span>
                             </label>
 
                             <label class="kb-addon-card" for="kb_add_rest">
                                 <input type="checkbox" id="kb_add_rest" value="5">
-                                <span class="kb-addon-label">15-min break <span class="kb-addon-hint">Add this if your child may need a rest during the styling</span></span>
+                                <span class="kb-addon-label">{{ __('kids.addons.rest') }} <span class="kb-addon-hint">{{ __('kids.addons.rest_hint') }}</span></span>
                                 <span class="kb-addon-price">+$5</span>
                             </label>
                         </div>
@@ -840,7 +840,7 @@
                     <!-- Hair color + comments -->
                     <div class="kb-comment-section">
                         <label for="kb_hair_color" class="kb-comment-label">
-                            <span>🎨</span> Hair color preference
+                            <span>🎨</span> {{ __('kids.notes.color') }}
                         </label>
                         <input
                             type="text"
@@ -849,17 +849,17 @@
                             class="kb-comment-textarea"
                             style="min-height:0;height:48px;resize:none;"
                             maxlength="80"
-                            placeholder="e.g. black, mixed brown, burgundy">
-                        <div class="kb-comment-hint">Optional • Lands on the booking so we don't miss it in the comment box</div>
+                            placeholder="{{ __('kids.notes.color_placeholder') }}">
+                        <div class="kb-comment-hint">{{ __('kids.notes.color_hint') }}</div>
 
                         <label for="kb_comments" class="kb-comment-label" style="margin-top:16px;">
-                            <span>💬</span> Other notes
+                            <span>💬</span> {{ __('kids.notes.other') }}
                         </label>
                         <textarea
                             id="kb_comments"
                             name="comments"
                             class="kb-comment-textarea"
-                            placeholder="Allergies, first visit, or anything else we should know..."></textarea>
+                            placeholder="{{ __('kids.notes.other_placeholder') }}"></textarea>
                     </div>
 
                     <input type="hidden" name="price" id="kb_price_input" value="">
@@ -873,14 +873,14 @@
             <!-- Right Column: Price Summary -->
             <div class="col-lg-4" style="background: #f8f9fa; padding: 30px 20px;">
                 <div class="kb-price-summary">
-                    <h3 class="kb-price-title">💰 Price Summary</h3>
+                    <h3 class="kb-price-title">💰 {{ __('kids.summary.title') }}</h3>
 
                     @php
                         $kidsBaseServer = (int) config('service_prices.kids_braids', 80);
                         $kidsOrigServer = (int) config('service_prices_original.kids_braids', $kidsBaseServer);
                         $kidsInitialCard = $kbSelectorCards[0] ?? null;
                         $kidsInitialTotal = $kidsInitialCard['price'] ?? ($kbCardPrices['protective'] ?? $kidsBaseServer);
-                        $kidsInitialLabel = $kidsInitialCard['label'] ?? 'Choose a style';
+                        $kidsInitialLabel = $kidsInitialCard['label'] ?? __('kids.choose_style');
                         $kidsInitialTime = $kidsInitialCard['duration'] ?? '';
                     @endphp
 
@@ -890,24 +890,24 @@
                             <strong id="kb_style_price">${{ $kidsInitialTotal }}</strong>
                         </div>
                         <div class="kb-price-item" id="kb_time_line" @if($kidsInitialTime === '') style="display:none;" @endif>
-                            <span>Time</span>
+                            <span>{{ __('kids.summary.time') }}</span>
                             <strong id="kb_style_time">{{ $kidsInitialTime !== '' ? $kidsInitialTime : '--' }}</strong>
                         </div>
                         <!-- Braid Type Adjustment -->
                         <div class="kb-price-item" id="kb_braid_type_line" style="display: none;">
-                            <span id="kb_braid_type_name">• Adjustment</span>
+                            <span id="kb_braid_type_name">• {{ __('kids.summary.adjustment') }}</span>
                             <strong id="kb_braid_type_price">$0</strong>
                         </div>
 
                         <!-- Finish Adjustment -->
                         <div class="kb-price-item" id="kb_finish_line" style="display: none;">
-                            <span id="kb_finish_name">• Finish</span>
+                            <span id="kb_finish_name">• {{ __('kids.summary.finish') }}</span>
                             <strong id="kb_finish_price">$0</strong>
                         </div>
 
                         <!-- Length Adjustment -->
                         <div class="kb-price-item" id="kb_length_line" style="display: none;">
-                            <span id="kb_length_name">• Length</span>
+                            <span id="kb_length_name">• {{ __('kids.summary.length') }}</span>
                             <strong id="kb_length_price">$0</strong>
                         </div>
 
@@ -917,28 +917,28 @@
 
                     <!-- Original (strikethrough) — shown by JS only for discounted braid types -->
                     <div id="kb_original_price_row" style="display:none;justify-content:space-between;align-items:center;margin-bottom:6px;padding-bottom:6px;border-bottom:1px solid #e3e3e0;">
-                        <span style="font-size:0.85rem;color:#999;">Original price:</span>
+                        <span style="font-size:0.85rem;color:#999;">{{ __('kids.summary.original') }}</span>
                         <span id="kb_original_price_val" style="font-size:0.85rem;color:#999;text-decoration:line-through;">${{ $kidsOrigServer }}</span>
                     </div>
 
                     <!-- Total -->
                     <div class="kb-price-total">
-                        <span>Total <span id="kb_discount_badge" style="background:#ff6600;color:#fff;font-size:0.65rem;font-weight:700;padding:2px 6px;border-radius:4px;margin-left:4px;vertical-align:middle;display:none;">DISCOUNTED</span></span>
+                        <span>{{ __('kids.summary.total') }} <span id="kb_discount_badge" style="background:#ff6600;color:#fff;font-size:0.65rem;font-weight:700;padding:2px 6px;border-radius:4px;margin-left:4px;vertical-align:middle;display:none;">{{ __('booking.js.discounted') }}</span></span>
                         <span class="kb-price-total-amount" id="kb_total_price">${{ $kidsInitialTotal }}</span>
                     </div>
 
                     <!-- Discount countdown (shown for discounted braid types with an end date) -->
                     <div id="kb_discount_countdown" style="display:none;margin-top:8px;font-size:.8rem;font-weight:700;color:#cc0000;background:#fff3f3;border:1px solid #ffcccc;border-radius:8px;padding:5px 10px;text-align:center;">
-                        <i class="bi bi-alarm me-1"></i><span id="kb_countdown_text">Offer ends soon</span>
+                        <i class="bi bi-alarm me-1"></i><span id="kb_countdown_text">{{ __('kids.summary.offer_soon') }}</span>
                     </div>
 
                     <!-- Action Buttons -->
                     <div class="kb-action-buttons">
                         <button id="kb_proceed_btn" class="kb-btn-continue" type="submit" form="kidsSelectorForm">
-                            <i class="bi bi-arrow-right-circle me-2"></i>Continue to Booking
+                            <i class="bi bi-arrow-right-circle me-2"></i>{{ __('kids.summary.continue') }}
                         </button>
                         <a href="{{ route('home') }}" class="kb-btn-cancel">
-                            <i class="bi bi-x-circle me-1"></i>Cancel
+                            <i class="bi bi-x-circle me-1"></i>{{ __('kids.summary.cancel') }}
                         </a>
                     </div>
                 </div>
@@ -950,11 +950,11 @@
 
 <div class="kb-mobile-total-bar" id="kbMobileTotalBar">
     <div class="kb-mobile-total-meta">
-        <div class="kb-mobile-total-style" id="kb_mobile_style">{{ $kidsInitialLabel ?? 'Choose a style' }}</div>
+        <div class="kb-mobile-total-style" id="kb_mobile_style">{{ $kidsInitialLabel ?? __('kids.choose_style') }}</div>
         <div class="kb-mobile-total-amount" id="kb_mobile_total">${{ $kidsInitialTotal }}</div>
         <div class="kb-mobile-total-time" id="kb_mobile_time">{{ $kidsInitialTime ?? '' }}</div>
     </div>
-    <button type="button" id="kb_mobile_continue" class="kb-btn-continue">Continue</button>
+    <button type="button" id="kb_mobile_continue" class="kb-btn-continue">{{ __('kids.summary.continue_short') }}</button>
 </div>
 
 <!-- Enhanced UI Interaction Script -->
@@ -1201,7 +1201,7 @@ document.addEventListener('DOMContentLoaded', function(){
                 @endif
             @endforeach
 
-            const braidTypeName = (braidType && braidType.dataset.label) ? braidType.dataset.label : (braidTypeNames[braidTypeValue] || 'Unknown');
+            const braidTypeName = (braidType && braidType.dataset.label) ? braidType.dataset.label : (braidTypeNames[braidTypeValue] || window.dbtT('unknown'));
             const braidTypeAdj = braidTypeAdjustments[braidTypeValue] !== undefined ? braidTypeAdjustments[braidTypeValue] : 0;
 
             // protective and cornrows always use the original (non-discounted) base — their prices are fixed
@@ -1244,11 +1244,11 @@ document.addEventListener('DOMContentLoaded', function(){
 
                 if(finishLine) finishLine.style.display = '';
                 if(finishVal === 'curled') {
-                    if(finishNameEl) finishNameEl.textContent = 'With curled tip';
+                    if(finishNameEl) finishNameEl.textContent = window.DBT_KIDS.finishLabel('curled');
                     if(finishPriceEl) finishPriceEl.textContent = '-$10';
                 } else {
-                    if(finishNameEl) finishNameEl.textContent = 'Without curl';
-                    if(finishPriceEl) finishPriceEl.textContent = 'included';
+                    if(finishNameEl) finishNameEl.textContent = window.DBT_KIDS.finishLabel('plain');
+                    if(finishPriceEl) finishPriceEl.textContent = window.dbtT('included');
                 }
             } else {
                 if(finishLine) finishLine.style.display = 'none';
@@ -1263,13 +1263,18 @@ document.addEventListener('DOMContentLoaded', function(){
             if(!shouldDisable) {
                 const lengthEl = document.querySelector('input[name="kb_length"]:checked');
                 const lengthVal = lengthEl ? lengthEl.value : 'shoulder';
-                const lengthNames = { 'shoulder': 'Shoulder length', 'armpit': 'Armpit length', 'mid_back': 'Mid back length', 'waist': 'Waist length' };
+                const lengthNames = {
+                    'shoulder': window.DBT_KIDS.lengthLabel('shoulder', true),
+                    'armpit': window.DBT_KIDS.lengthLabel('armpit', true),
+                    'mid_back': window.DBT_KIDS.lengthLabel('mid_back', true),
+                    'waist': window.DBT_KIDS.lengthLabel('waist', true)
+                };
                 const lengthAdjMap = { 'shoulder': 0, 'armpit': 10, 'mid_back': 20, 'waist': 30 };
                 lengthAdj = lengthAdjMap[lengthVal] || 0;
 
                 if(lengthLine) lengthLine.style.display = '';
                 if(lengthNameEl) lengthNameEl.textContent = lengthNames[lengthVal] || lengthVal;
-                if(lengthPriceEl) lengthPriceEl.textContent = lengthAdj !== 0 ? ('+$' + lengthAdj) : 'included';
+                if(lengthPriceEl) lengthPriceEl.textContent = lengthAdj !== 0 ? ('+$' + lengthAdj) : window.dbtT('included');
             } else {
                 if(lengthLine) lengthLine.style.display = 'none';
             }
@@ -1277,11 +1282,11 @@ document.addEventListener('DOMContentLoaded', function(){
             // Add-ons - show each one individually
             const addonsContainer = document.getElementById('kb_addons_lines');
             const addonNames = {
-                'kb_add_detangle': 'Detangle / Blowdry',
-                'kb_add_beads': 'Tiny beading',
-                'kb_add_beads_full': 'Big eye beading',
-                'kb_add_extension': 'Hair Extension',
-                'kb_add_rest': '15-min break'
+                'kb_add_detangle': window.DBT_KIDS.addonLabel('kb_add_detangle'),
+                'kb_add_beads': window.DBT_KIDS.addonLabel('kb_add_beads'),
+                'kb_add_beads_full': window.DBT_KIDS.addonLabel('kb_add_beads_full'),
+                'kb_add_extension': window.DBT_KIDS.addonLabel('kb_add_extension'),
+                'kb_add_rest': window.DBT_KIDS.addonLabel('kb_add_rest')
             };
 
             let addonsHTML = '';
@@ -1343,7 +1348,7 @@ document.addEventListener('DOMContentLoaded', function(){
                         var diff = ends - new Date();
                         if (!countdownTxt) return;
                         if (diff <= 0) {
-                            countdownTxt.textContent = 'Offer ended';
+                            countdownTxt.textContent = window.dbtT('offer_ended');
                             countdownEl.style.color = '#888';
                             if (window._kbCountdownInterval) clearInterval(window._kbCountdownInterval);
                             return;
@@ -1357,7 +1362,7 @@ document.addEventListener('DOMContentLoaded', function(){
                         parts.push((h<10?'0':'')+h+'h');
                         parts.push((m<10?'0':'')+m+'m');
                         parts.push((s<10?'0':'')+s+'s');
-                        countdownTxt.textContent = 'Ends in ' + parts.join(' ');
+                        countdownTxt.textContent = window.dbtT('ends_in', { time: parts.join(' ') });
                         countdownEl.style.color = '#cc0000';
                     }
                     kbTickCountdown();
@@ -1475,8 +1480,8 @@ document.addEventListener('DOMContentLoaded', function(){
                     sel.style_label = radio ? (radio.dataset.label || '') : '';
                     sel.style_image = radio ? (radio.dataset.image || '') : '';
                     sel.style_duration = radio ? (radio.dataset.duration || '') : '';
-                    sel.finish_label = sel.kb_finish === 'curled' ? 'With curled tip' : (sel.kb_finish ? 'Without curl' : '');
-                    sel.length_label = ({shoulder:'Shoulder',armpit:'Armpit',mid_back:'Mid back',waist:'Waist'})[sel.kb_length] || sel.kb_length;
+                    sel.finish_label = window.DBT_KIDS.finishLabel(sel.kb_finish);
+                    sel.length_label = window.DBT_KIDS.lengthLabel(sel.kb_length);
 
                     // collect add-ons values (sum when numeric), also keep list
                     const addons = [];
@@ -1488,7 +1493,7 @@ document.addEventListener('DOMContentLoaded', function(){
                     });
                     sel.extras = addons.length ? addons.join(',') : '';
                     sel.extras_labels = addons.map(function(id){
-                        return ({kb_add_detangle:'Detangle / Blowdry',kb_add_beads:'Tiny beading',kb_add_beads_full:'Big eye beading',kb_add_extension:'Hair Extension',kb_add_rest:'15-min break'})[id] || id;
+                        return window.DBT_KIDS.addonLabel(id);
                     }).filter(Boolean).join(', ');
                     // price: try use kb_price_input if present, else leave blank
                     const kbPrice = document.getElementById('kb_price_input');
@@ -1706,10 +1711,10 @@ if(typeof window.showKidsBookingPanel !== 'function'){
                     var selTotalEl = document.getElementById('kb_total_price');
                     if(selBaseEl && selAdjustEl && selTotalEl && kb_base && kb_adjust && kb_total){
                         // copy inner contents (selector displays simple values)
-                        kb_base.innerHTML = 'Base: <strong>' + (selBaseEl.textContent || selBaseEl.innerText || selBaseEl.innerHTML).replace(/^\$/,'') + '</strong>';
+                        kb_base.innerHTML = window.dbtT('base_label') + ' <strong>' + (selBaseEl.textContent || selBaseEl.innerText || selBaseEl.innerHTML).replace(/^\$/,'') + '</strong>';
                         // selector's adjustments may be plain text like "$75" or include sign; normalize
-                        kb_adjust.innerHTML = 'Adjustments: <strong>' + (selAdjustEl.textContent || selAdjustEl.innerText || selAdjustEl.innerHTML) + '</strong>';
-                        kb_total.innerHTML = '<strong>Total: ' + (selTotalEl.textContent || selTotalEl.innerText || selTotalEl.innerHTML) + '</strong>';
+                        kb_adjust.innerHTML = window.dbtT('adjustments_label') + ' <strong>' + (selAdjustEl.textContent || selAdjustEl.innerText || selAdjustEl.innerHTML) + '</strong>';
+                        kb_total.innerHTML = '<strong>' + window.dbtT('total_label') + ' ' + (selTotalEl.textContent || selTotalEl.innerText || selTotalEl.innerHTML) + '</strong>';
                         // also write hidden price fields from selector total if possible
                         var priceMatch = (selTotalEl.textContent||selTotalEl.innerText||'').match(/\$\s*([0-9,\.]+)/);
                         if(priceMatch){
@@ -1780,14 +1785,14 @@ if(typeof window.showKidsBookingPanel !== 'function'){
                     const computedTotal = Number(base) + Number(adjustmentsTotal);
 
                     // Format with 2 decimal places to match email format
-                    if(kb_base) kb_base.innerHTML = 'Base: <strong>$' + Number(base).toFixed(2) + '</strong>';
-                    if(kb_adjust) kb_adjust.innerHTML = 'Adjustments: <strong>' + (adjustmentsTotal >= 0 ? '+' : '-') + '$' + Math.abs(Number(adjustmentsTotal)).toFixed(2) + '</strong>';
-                    if(kb_total) kb_total.innerHTML = '<strong>Total: $' + Number(computedTotal).toFixed(2) + '</strong>';
+                    if(kb_base) kb_base.innerHTML = window.dbtT('base_label') + ' <strong>$' + Number(base).toFixed(2) + '</strong>';
+                    if(kb_adjust) kb_adjust.innerHTML = window.dbtT('adjustments_label') + ' <strong>' + (adjustmentsTotal >= 0 ? '+' : '-') + '$' + Math.abs(Number(adjustmentsTotal)).toFixed(2) + '</strong>';
+                    if(kb_total) kb_total.innerHTML = '<strong>' + window.dbtT('total_label') + ' $' + Number(computedTotal).toFixed(2) + '</strong>';
                 }catch(e){
                     // fallback to previous behavior
                     if(kb_total){
                         const total = sel && sel.price ? Number(sel.price).toFixed(0) : (document.getElementById('kb_total_price') ? document.getElementById('kb_total_price').textContent.replace('$','') : '');
-                        kb_total.innerHTML = '<strong>Total: $' + (total || '--') + '</strong>';
+                        kb_total.innerHTML = '<strong>' + window.dbtT('total_label') + ' $' + (total || '--') + '</strong>';
                     }
                 }
             }catch(e){ console.warn('populate kids modal fallback failed', e); }
@@ -1817,9 +1822,9 @@ if(typeof window.showKidsBookingPanel !== 'function'){
                             var b = json.breakdown;
                             // Calculate adjustments total (length adjustments + addons) to match email format
                             var adjustmentsTotal = (Number(b.kb_length_adjustment||0) + Number(b.kb_extras_total||0));
-                            try{ if(kb_base) kb_base.innerHTML = 'Base: <strong>$' + (Number(b.kb_base_price || b.base_price || 0)).toFixed(2) + '</strong>'; }catch(e){}
-                            try{ if(kb_adjust) kb_adjust.innerHTML = 'Adjustments: <strong>' + (adjustmentsTotal >= 0 ? '+' : '-') + '$' + Math.abs(adjustmentsTotal).toFixed(2) + '</strong>'; }catch(e){}
-                            try{ if(kb_total) kb_total.innerHTML = '<strong>Total: $' + (Number(b.kb_final_price || b.final_price || 0)).toFixed(2) + '</strong>'; }catch(e){}
+                            try{ if(kb_base) kb_base.innerHTML = window.dbtT('base_label') + ' <strong>$' + (Number(b.kb_base_price || b.base_price || 0)).toFixed(2) + '</strong>'; }catch(e){}
+                            try{ if(kb_adjust) kb_adjust.innerHTML = window.dbtT('adjustments_label') + ' <strong>' + (adjustmentsTotal >= 0 ? '+' : '-') + '$' + Math.abs(adjustmentsTotal).toFixed(2) + '</strong>'; }catch(e){}
+                            try{ if(kb_total) kb_total.innerHTML = '<strong>' + window.dbtT('total_label') + ' $' + (Number(b.kb_final_price || b.final_price || 0)).toFixed(2) + '</strong>'; }catch(e){}
                             // write hidden inputs
                             try{ var kidsPriceInput = document.getElementById('kids_price_input'); if(kidsPriceInput) kidsPriceInput.value = Number(b.kb_final_price || b.final_price || 0).toFixed(2); }catch(e){}
                             try{ var kidsFinalInput = document.getElementById('kids_final_price_input'); if(kidsFinalInput) kidsFinalInput.value = Number(b.kb_final_price || b.final_price || 0).toFixed(2); }catch(e){}
@@ -2108,30 +2113,30 @@ document.addEventListener('DOMContentLoaded', function(){
                 var errors = [];
             var nameEl = document.getElementById('kids_name');
                 var nameVal = nameEl ? (nameEl.value||'').trim() : '';
-                if(!nameVal) errors.push({el: nameEl, msg: "Please enter the child's name."});
+                if(!nameVal) errors.push({el: nameEl, msg: window.dbtT('child_name')});
 
                 var phoneEl = document.getElementById('kids_phone');
                 var phoneVal = phoneEl ? (phoneEl.value||'').trim() : '';
-                if(!kidsPhoneLooksValid(phoneVal)) errors.push({el: phoneEl, msg: 'Please enter a valid parent/guardian phone number.'});
+                if(!kidsPhoneLooksValid(phoneVal)) errors.push({el: phoneEl, msg: window.dbtT('parent_phone_valid')});
 
                 var dateVal = kidsFilledValue(['kids_appointment_date','kidsBookingDate'], 'appointment_date', 'kidsSelectedDateLabel');
                 var timeVal = kidsFilledValue(['kids_appointment_time','kidsBookingTime'], 'appointment_time', 'kidsSelectedTimeLabel');
-                if(!dateVal) errors.push({el: document.getElementById('kidsBookingDate'), msg: 'Please select an appointment date.'});
-                if(!timeVal) errors.push({el: document.getElementById('kidsBookingTime'), msg: 'Please select an appointment time.'});
+                if(!dateVal) errors.push({el: document.getElementById('kidsBookingDate'), msg: window.dbtT('select_date')});
+                if(!timeVal) errors.push({el: document.getElementById('kidsBookingTime'), msg: window.dbtT('select_time')});
 
                 // Ensure service/selection details are present
                 var braidInput = document.getElementById('kids_braid_type_input');
                 if(!braidInput || !(braidInput.value||'').trim()){
                     // try to read from selector radios
                     var selectedBraid = (document.querySelector('input[name="kb_braid_type"]:checked')||{}).value || '';
-                    if(!selectedBraid) errors.push({el: document.getElementById('kb-braid-types'), msg: 'Please choose a braid type.'});
+                    if(!selectedBraid) errors.push({el: document.getElementById('kb-braid-types'), msg: window.dbtT('choose_braid_short')});
                 }
 
                 // final price must be set and greater than zero
                 var finalPriceEl = document.getElementById('kids_final_price_input') || document.getElementById('kids_price_input') || document.getElementById('kb_price_input');
                 var finalPriceVal = 0;
                 try{ if(finalPriceEl && finalPriceEl.value) finalPriceVal = Number(String(finalPriceEl.value).replace(/[^0-9.\-]+/g,'')) || 0; }catch(e){}
-                if(!finalPriceVal || finalPriceVal <= 0) errors.push({el: finalPriceEl || document.getElementById('kb_total_price'), msg: 'Price is not set. Please complete the selector.'});
+                if(!finalPriceVal || finalPriceVal <= 0) errors.push({el: finalPriceEl || document.getElementById('kb_total_price'), msg: window.dbtT('price_unset')});
 
                 if(errors.length){
                     console.log('kidsBookingForm validation failed', errors);

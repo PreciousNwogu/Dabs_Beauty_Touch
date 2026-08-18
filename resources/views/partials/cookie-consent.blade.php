@@ -7,16 +7,16 @@
             </div>
             <div class="cookie-consent-text">
                 <p class="cookie-consent-message">
-                    We use cookies to improve your experience.
-                    <a href="{{ route('home') }}#terms" class="cookie-consent-link">Learn more</a>
+                    {{ __('cookies.message') }}
+                    <a href="{{ route('home') }}#terms" class="cookie-consent-link">{{ __('cookies.learn_more') }}</a>
                 </p>
             </div>
             <div class="cookie-consent-buttons">
                 <button type="button" class="btn btn-outline-light btn-sm cookie-consent-decline" id="cookieDeclineBtn">
-                    Decline
+                    {{ __('cookies.decline') }}
                 </button>
                 <button type="button" class="btn btn-warning btn-sm cookie-consent-accept" id="cookieAcceptBtn">
-                    Accept
+                    {{ __('cookies.accept') }}
                 </button>
             </div>
         </div>

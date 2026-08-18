@@ -49,8 +49,8 @@
     <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
         <div class="modal-content" style="border-radius: 12px;">
             <div class="modal-header" style="background: linear-gradient(135deg, #ff6600 0%, #ff8533 100%); color: white; border-radius: 12px 12px 0 0;">
-                <h5 class="modal-title" id="kidsBookingModalLabel">Kids Booking</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                <h5 class="modal-title" id="kidsBookingModalLabel">{{ __('kids.modal.title') }}</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="{{ __('booking.close') }}"></button>
             </div>
             <div class="modal-body p-4">
                 <form id="kidsBookingForm" action="{{ url('/bookings') }}" method="POST" autocomplete="on" novalidate enctype="multipart/form-data">
@@ -71,11 +71,11 @@
                     <div id="kidsStyleRecap" class="kids-style-recap mb-3">
                         <img id="kidsRecapImage" alt="" style="display:none;">
                         <div>
-                            <div class="small text-muted">Selected style</div>
-                            <div id="kidsRecapName" class="kids-style-recap-name">Kids Braids</div>
+                            <div class="small text-muted">{{ __('kids.modal.selected_style') }}</div>
+                            <div id="kidsRecapName" class="kids-style-recap-name">{{ __('kids.service_name') }}</div>
                             <div id="kidsRecapDetails" class="kids-style-recap-details"></div>
                             <div id="kidsRecapTime" class="kids-style-recap-time"></div>
-                            <button type="button" class="kids-style-recap-change" onclick="backToKidsSelector()">Change style</button>
+                            <button type="button" class="kids-style-recap-change" onclick="backToKidsSelector()">{{ __('kids.modal.change_style') }}</button>
                         </div>
                     </div>
 
@@ -83,16 +83,16 @@
 
                     <div class="row">
                         <div class="col-md-7">
-                            <p class="fw-bold mb-2" style="color:#030f68;">Child</p>
+                            <p class="fw-bold mb-2" style="color:#030f68;">{{ __('kids.modal.child') }}</p>
                             <div class="mb-3">
-                                <label class="form-label" for="kids_name">Child's first name *</label>
+                                <label class="form-label" for="kids_name">{{ __('kids.modal.child_name') }}</label>
                                 <input id="kids_name" name="name" type="text" class="form-control" required autocomplete="given-name">
                                 <div id="kids_name_error" class="text-danger small mt-1" style="display:none;"></div>
                             </div>
                             <div class="mb-3">
-                                <label class="form-label" for="kids_age">Child's age (3–8) *</label>
+                                <label class="form-label" for="kids_age">{{ __('kids.modal.child_age') }}</label>
                                 <select id="kids_age" name="child_age" class="form-select" required>
-                                    <option value="">Select age</option>
+                                    <option value="">{{ __('kids.modal.select_age') }}</option>
                                     @for ($age = 3; $age <= 8; $age++)
                                         <option value="{{ $age }}">{{ $age }}</option>
                                     @endfor
@@ -100,124 +100,124 @@
                                 <div id="kids_age_error" class="text-danger small mt-1" style="display:none;"></div>
                             </div>
                             <div class="mb-3">
-                                <label class="form-label" for="kids_hair_color">Hair color preference</label>
-                                <input id="kids_hair_color" name="hair_color" type="text" class="form-control" maxlength="80" placeholder="e.g. black, mixed brown">
+                                <label class="form-label" for="kids_hair_color">{{ __('kids.modal.hair_color') }}</label>
+                                <input id="kids_hair_color" name="hair_color" type="text" class="form-control" maxlength="80" placeholder="{{ __('kids.modal.hair_color_placeholder') }}">
                             </div>
 
-                            <p class="fw-bold mb-2 mt-3" style="color:#030f68;">Parent / Guardian</p>
+                            <p class="fw-bold mb-2 mt-3" style="color:#030f68;">{{ __('kids.modal.parent') }}</p>
                             <div class="mb-3">
-                                <label class="form-label" for="kids_parent_name">Parent / Guardian name *</label>
+                                <label class="form-label" for="kids_parent_name">{{ __('kids.modal.parent_name') }}</label>
                                 <input id="kids_parent_name" name="parent_name" type="text" class="form-control" required autocomplete="name">
                                 <div id="kids_parent_name_error" class="text-danger small mt-1" style="display:none;"></div>
                             </div>
                             <div class="mb-3">
-                                <label class="form-label" for="kids_email">Parent / Guardian email *</label>
+                                <label class="form-label" for="kids_email">{{ __('kids.modal.parent_email') }}</label>
                                 <input id="kids_email" name="email" type="email" class="form-control" placeholder="you@example.com" required>
                                 <div id="kids_email_error" class="text-danger small mt-1" style="display:none;"></div>
                             </div>
                             <div class="mb-3">
-                                <label class="form-label" for="kids_phone">Parent / Guardian phone *</label>
+                                <label class="form-label" for="kids_phone">{{ __('kids.modal.parent_phone') }}</label>
                                 <input id="kids_phone" name="phone" type="tel" class="form-control" required pattern="[0-9+()\s\-]{7,}" placeholder="+1 555 555 5555">
-                                <div class="form-text small text-muted">Include country code, e.g. <code>+1</code></div>
+                                <div class="form-text small text-muted">{{ __('kids.modal.phone_help') }} <code>+1</code></div>
                                 <div id="kids_phone_error" class="text-danger small mt-1" style="display:none;"></div>
                             </div>
 
                             <div class="mb-3 d-flex gap-2 align-items-center">
                                 <div>
-                                    <label class="form-label mb-1">Selected Date</label>
+                                    <label class="form-label mb-1">{{ __('kids.modal.selected_date') }}</label>
                                     <div id="kidsSelectedDateLabel" class="form-control-plaintext">--</div>
                                 </div>
                                 <div>
-                                    <label class="form-label mb-1">Selected Time</label>
+                                    <label class="form-label mb-1">{{ __('kids.modal.selected_time') }}</label>
                                     <div id="kidsSelectedTimeLabel" class="form-control-plaintext">--</div>
                                 </div>
                             </div>
                             <div class="mb-3">
-                                <label class="form-label">Date (opens calendar) *</label>
+                                <label class="form-label">{{ __('kids.modal.date') }}</label>
                                 <input id="kidsBookingDate" type="text" class="form-control" readonly onclick="openCalendarModal(); return false;" />
                                 <div id="kidsBookingDate_error" class="text-danger small mt-1" style="display:none;"></div>
                             </div>
                             <div class="mb-3">
-                                <label class="form-label">Time *</label>
+                                <label class="form-label">{{ __('kids.modal.time') }}</label>
                                 <input id="kidsBookingTime" type="text" class="form-control" readonly />
                                 <div id="kidsBookingTime_error" class="text-danger small mt-1" style="display:none;"></div>
                             </div>
 
                             <div class="mb-3">
-                                <label class="form-label">Appointment Type *</label>
+                                <label class="form-label">{{ __('booking.form.type') }}</label>
                                 <div class="d-flex gap-3">
                                     <div class="form-check">
                                         <input class="form-check-input" type="radio" name="appointment_type" id="appointment_type_in_studio_kids" value="in-studio" checked>
-                                        <label class="form-check-label" for="appointment_type_in_studio_kids">Stylist address</label>
+                                        <label class="form-check-label" for="appointment_type_in_studio_kids">{{ __('booking.form.in_studio') }}</label>
                                     </div>
                                     <div class="form-check">
                                         <input class="form-check-input" type="radio" name="appointment_type" id="appointment_type_mobile_kids" value="mobile">
-                                        <label class="form-check-label" for="appointment_type_mobile_kids">Mobile (I want you to come to me)</label>
+                                        <label class="form-check-label" for="appointment_type_mobile_kids">{{ __('booking.form.mobile') }}</label>
                                     </div>
                                 </div>
-                                <small class="form-text text-muted mt-2">Mobile service available in Ottawa/Gatineau. Travel fee may apply based on distance.</small>
+                                <small class="form-text text-muted mt-2">{{ __('booking.form.mobile_help') }}</small>
                             </div>
 
                             <div class="mb-3 d-none" id="addressFieldContainerKids">
-                                <label for="kids_address" class="form-label">Mobile Service Address (Ottawa) *</label>
-                                <input type="text" class="form-control" id="kids_address" name="address" placeholder="Enter your complete address" autocomplete="off" minlength="10">
-                                <div class="invalid-feedback">Please enter a complete mobile address (at least 10 characters).</div>
+                                <label for="kids_address" class="form-label">{{ __('booking.form.address') }}</label>
+                                <input type="text" class="form-control" id="kids_address" name="address" placeholder="{{ __('booking.form.address_placeholder') }}" autocomplete="off" minlength="10">
+                                <div class="invalid-feedback">{{ __('booking.form.address_invalid') }}</div>
                             </div>
 
                             <div class="mb-3 d-none parking-choice-group" id="parkingFieldContainerKids">
-                                <label class="form-label">Parking at Address *</label>
+                                <label class="form-label">{{ __('booking.form.parking') }}</label>
                                 <div class="d-flex gap-3">
                                     <div class="form-check">
                                         <input class="form-check-input parking-option-kids" type="radio" name="parking_type" id="parking_type_free_kids" value="free">
-                                        <label class="form-check-label" for="parking_type_free_kids">Free parking</label>
+                                        <label class="form-check-label" for="parking_type_free_kids">{{ __('booking.form.parking_free') }}</label>
                                     </div>
                                     <div class="form-check">
                                         <input class="form-check-input parking-option-kids" type="radio" name="parking_type" id="parking_type_paid_kids" value="paid">
-                                        <label class="form-check-label" for="parking_type_paid_kids">Paid parking</label>
+                                        <label class="form-check-label" for="parking_type_paid_kids">{{ __('booking.form.parking_paid') }}</label>
                                     </div>
                                 </div>
                                 <div class="alert alert-warning py-2 mt-2 mb-0 paid-parking-note" style="font-size:0.95rem;">
-                                    <strong>Please note:</strong> You are responsible for covering the paid parking ticket so the stylist can park at your address.
+                                    {!! __('booking.form.parking_note') !!}
                                 </div>
                             </div>
 
                             <div class="mb-3">
-                                <label class="form-label">Sample Picture (optional)</label>
+                                <label class="form-label">{{ __('kids.modal.sample') }}</label>
                                 <input id="kids_sample_picture" name="sample_picture" type="file" accept="image/*" class="form-control">
                                 <div id="kids_imagePreview" class="mt-2" style="display:none;">
-                                    <img id="kids_previewImg" src="" alt="Sample preview" style="max-width:120px; border-radius:8px; display:block;" />
+                                    <img id="kids_previewImg" src="" alt="{{ __('kids.modal.sample_preview') }}" style="max-width:120px; border-radius:8px; display:block;" />
                                     <div id="kids_fileName" class="small text-muted mt-1"></div>
-                                    <button type="button" id="kids_removeSampleBtn" class="btn btn-sm btn-outline-secondary mt-2">Remove</button>
+                                    <button type="button" id="kids_removeSampleBtn" class="btn btn-sm btn-outline-secondary mt-2">{{ __('booking.remove') }}</button>
                                 </div>
                             </div>
                         </div>
 
                         <div class="col-md-5">
                             <div style="background:#ffffff;border-radius:12px;padding:20px;border:2px solid #ff6600;box-shadow:0 4px 12px rgba(0,0,0,0.1);">
-                                <h5 style="color:#0b3a66;font-weight:800;margin-bottom:16px;font-size:1.2rem;border-bottom:2px solid #ff6600;padding-bottom:8px;">Price Summary</h5>
+                                <h5 style="color:#0b3a66;font-weight:800;margin-bottom:16px;font-size:1.2rem;border-bottom:2px solid #ff6600;padding-bottom:8px;">{{ __('kids.summary.title') }}</h5>
                                 <div style="margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid #e3e3e0;">
                                     <div style="display:flex;justify-content:space-between;align-items:center;">
-                                        <span style="color:#666;font-size:0.95rem;">Base Price:</span>
+                                        <span style="color:#666;font-size:0.95rem;">{{ __('kids.modal.base') }}</span>
                                         <span>
                                             <span id="kidsModal_base_original" style="font-size:0.85rem;color:#999;text-decoration:line-through;margin-right:4px;display:none;"></span>
                                             <span id="kidsModal_base" style="font-size:1.1rem;font-weight:600;color:#0b3a66;">$--</span>
-                                            <span id="kidsModal_discount_badge" style="background:#ff6600;color:#fff;font-size:0.65rem;font-weight:700;padding:2px 6px;border-radius:4px;margin-left:4px;display:none;">DISCOUNTED</span>
+                                            <span id="kidsModal_discount_badge" style="background:#ff6600;color:#fff;font-size:0.65rem;font-weight:700;padding:2px 6px;border-radius:4px;margin-left:4px;display:none;">{{ __('booking.js.discounted') }}</span>
                                         </span>
                                     </div>
                                 </div>
                                 <div style="margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid #e3e3e0;">
                                     <div style="display:flex;justify-content:space-between;align-items:center;">
-                                        <span style="color:#666;font-size:0.95rem;">Adjustments:</span>
+                                        <span style="color:#666;font-size:0.95rem;">{{ __('kids.modal.adjustments') }}</span>
                                         <span id="kidsModal_adjustments" style="font-size:1.1rem;font-weight:600;color:#0b3a66;">+ $0.00</span>
                                     </div>
                                 </div>
                                 <div style="margin-top:16px;padding-top:16px;border-top:2px solid #ff6600;background:#fff7e0;border-radius:8px;padding:14px;">
                                     <div style="display:flex;justify-content:space-between;align-items:center;">
-                                        <span style="color:#0b3a66;font-size:1.1rem;font-weight:700;">Total:</span>
+                                        <span style="color:#0b3a66;font-size:1.1rem;font-weight:700;">{{ __('kids.modal.total') }}</span>
                                         <span id="kidsModal_total" style="font-size:1.5rem;font-weight:800;color:#ff6600;">$--</span>
                                     </div>
                                 </div>
-                                <div class="small text-muted mt-3">A {{ \App\Support\InteracDeposit::amountLabel() }} Interac deposit is needed after you submit. Details arrive in your email.</div>
+                                <div class="small text-muted mt-3">{{ __('kids.modal.deposit', ['amount' => \App\Support\InteracDeposit::amountLabel()]) }}</div>
                             </div>
                             <div class="d-grid mt-3">
                                 <input type="hidden" name="terms_accepted" value="0">
@@ -225,18 +225,18 @@
                                     <input class="form-check-input" type="checkbox" id="termsAcceptedKids" name="terms_accepted" value="1" required autocomplete="off">
                                     <div>
                                         <label for="termsAcceptedKids" style="font-size:0.95rem;">
-                                            I agree to the <a href="#" class="js-terms-popup" style="color:#030f68; font-weight:600; text-decoration:none;">Terms &amp; Conditions</a>.
+                                            {!! __('kids.modal.agree_html') !!}
                                         </label>
                                     </div>
                                 </div>
                                 <div class="mb-2">
                                     <div class="alert alert-warning py-2 mb-0" style="font-size:0.9rem;">
-                                        <strong>Note:</strong> We do not accept style changes on the day of the appointment. Please review your selection before confirming.
+                                        {!! __('booking.form.no_changes') !!}
                                     </div>
                                 </div>
                                 <div class="d-flex gap-2">
-                                    <button type="button" id="kidsBackToSelectorBtn" class="btn btn-secondary" style="font-weight:600;" onclick="backToKidsSelector()">Back to selector</button>
-                                    <button type="submit" class="btn btn-warning" id="kidsBookAppointmentBtn" style="font-weight:600;">Confirm Booking</button>
+                                    <button type="button" id="kidsBackToSelectorBtn" class="btn btn-secondary" style="font-weight:600;" onclick="backToKidsSelector()">{{ __('kids.modal.back') }}</button>
+                                    <button type="submit" class="btn btn-warning" id="kidsBookAppointmentBtn" style="font-weight:600;">{{ __('kids.modal.confirm') }}</button>
                                 </div>
                             </div>
                         </div>

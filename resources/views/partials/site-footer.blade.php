@@ -4,10 +4,10 @@
         <div class="row">
             <div class="col-lg-6">
                 <h5>Dab's Beauty Touch</h5>
-                <p>Professional hair braiding services delivering flawless results with every appointment.</p>
+                <p>{{ __('footer.tagline') }}</p>
             </div>
             <div class="col-lg-6 text-lg-end">
-                <p>&copy; {{ date('Y') }} Dab's Beauty Touch. All rights reserved.</p>
+                <p>&copy; {{ date('Y') }} Dab's Beauty Touch. {{ __('footer.rights') }}</p>
             </div>
         </div>
     </div>

@@ -21,6 +21,10 @@ return Application::configure(basePath: dirname(__DIR__))
             'admin' => \App\Http\Middleware\AdminMiddleware::class,
         ]);
 
+        $middleware->web(append: [
+            \App\Http\Middleware\SetLocale::class,
+        ]);
+
         // HTTPS is handled by Render proxy - no need for custom redirect middleware
         // Force HTTPS only in production
         // if (env('APP_ENV') === 'production') {

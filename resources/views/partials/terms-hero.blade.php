@@ -4,8 +4,8 @@
             <i class="bi bi-exclamation-circle-fill"></i>
         </div>
         <div>
-            <p style="margin:0; font-weight:700; color:#b45309; font-size:1.1rem;">Please read our Terms & Conditions carefully before booking your appointment.</p>
-            <p style="margin:4px 0 0 0; color:#5b3e00;">Deposits are non-refundable and cancellations within 48 hours forfeit the deposit.</p>
+            <p style="margin:0; font-weight:700; color:#b45309; font-size:1.1rem;">{{ __('terms.hero') }}</p>
+            <p style="margin:4px 0 0 0; color:#5b3e00;">{{ __('terms.hero_sub') }}</p>
         </div>
     </div>
 </div>

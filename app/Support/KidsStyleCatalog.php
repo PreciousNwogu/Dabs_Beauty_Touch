@@ -3,6 +3,7 @@
 namespace App\Support;
 
 use App\Models\Service;
+use Illuminate\Support\Facades\Lang;
 use Illuminate\Support\Facades\Schema;
 
 class KidsStyleCatalog
@@ -238,6 +239,16 @@ class KidsStyleCatalog
         }
 
         return $text;
+    }
+
+    public static function localizedBlurb(string $key, ?string $cmsDescription, string $fallback = ''): string
+    {
+        $translationKey = 'kids.cards.'.$key;
+        if (app()->getLocale() !== 'en' && Lang::has($translationKey)) {
+            return (string) __($translationKey);
+        }
+
+        return self::usableBlurb($cmsDescription, $fallback);
     }
 
     public static function isPlaceholderDescription(?string $text): bool
@@ -506,7 +517,7 @@ class KidsStyleCatalog
                 'from_price' => $hasLength,
                 'image' => $image,
                 'duration' => $cmsDuration !== '' ? $cmsDuration : (string) ($def['duration'] ?? ''),
-                'blurb' => self::usableBlurb($cms['description'] ?? '', (string) ($def['blurb'] ?? '')),
+                'blurb' => self::localizedBlurb($key, $cms['description'] ?? '', (string) ($def['blurb'] ?? '')),
                 'sort' => (int) ($row['sort'] ?? (($index + 1) * 10)),
                 'discount_ends' => (string) ($cms['discount_ends'] ?? ''),
             ];

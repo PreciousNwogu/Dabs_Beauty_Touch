@@ -100,7 +100,7 @@ class SiteSettingsCmsTest extends TestCase
             ->assertSee('Before you come', false)
             ->assertSee('Kids usually sit about', false)
             ->assertSee('15-min break', false)
-            ->assertSee('Child\'s first name', false)
+            ->assertSee('Child&#039;s first name', false)
             ->assertSee('kidsBookingModal', false)
             ->assertSee('calendarModal', false);
     }

@@ -1,16 +1,16 @@
 @extends('layouts.app')
 
-@section('title', "Kids Braids Selector - Dab's Beauty Touch")
-@section('meta_title', "Kids Braids Selector - Dab's Beauty Touch | Customize Your Child's Braids")
-@section('meta_description', "Customize your child's braiding service with our interactive kids braids selector. Choose braid type, length, finish, and extras. Professional, gentle braiding services for children in Ottawa.")
-@section('meta_keywords', 'kids braids, children braiding, kids hair braiding Ottawa, customize braids, kids hair styles')
+@section('title', __('kids.meta.title'))
+@section('meta_title', __('kids.meta.meta_title'))
+@section('meta_description', __('kids.meta.meta_description'))
+@section('meta_keywords', __('kids.meta.meta_keywords'))
 @section('canonical', url('/kids-selector'))
 @section('og_url', url('/kids-selector'))
-@section('og_title', "Kids Braids Selector - Dab's Beauty Touch")
-@section('og_description', "Customize your child's braiding service with our interactive kids braids selector. Professional, gentle braiding services for children.")
+@section('og_title', __('kids.meta.og_title'))
+@section('og_description', __('kids.meta.og_description'))
 @section('twitter_url', url('/kids-selector'))
-@section('twitter_title', "Kids Braids Selector - Dab's Beauty Touch")
-@section('twitter_description', "Customize your child's braiding service with our interactive kids braids selector.")
+@section('twitter_title', __('kids.meta.og_title'))
+@section('twitter_description', __('kids.meta.twitter_description'))
 
 @push('styles')
 <style>
@@ -26,7 +26,7 @@
     <div class="container mt-4">
         @if(session('booking_error') || $errors->any())
             <div class="alert alert-danger alert-dismissible fade show" role="alert" style="border-radius: 12px;">
-                <strong>Booking Error:</strong>
+                <strong>{{ __('kids.booking_error') }}:</strong>
                 {{ session('error_message') ?: $errors->first() }}
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
@@ -154,7 +154,7 @@ document.addEventListener('DOMContentLoaded', function(){
                         }
                     }
                     if(!braidType){
-                        alert('Please choose a braid type before continuing.');
+                        alert(window.dbtT('choose_braid'));
                         return;
                     }
 
@@ -170,10 +170,10 @@ document.addEventListener('DOMContentLoaded', function(){
                         style_label: (radio && radio.dataset && radio.dataset.label) || '',
                         style_image: (radio && radio.dataset && radio.dataset.image) || '',
                         style_duration: (radio && radio.dataset && radio.dataset.duration) || '',
-                        finish_label: finish === 'curled' ? 'With curled tip' : (finish ? 'Without curl' : ''),
-                        length_label: ({shoulder:'Shoulder',armpit:'Armpit',mid_back:'Mid back',waist:'Waist'})[length] || length,
+                        finish_label: window.DBT_KIDS.finishLabel(finish),
+                        length_label: window.DBT_KIDS.lengthLabel(length),
                         extras_labels: extras.map(function(id){
-                            return ({kb_add_detangle:'Detangle / Blowdry',kb_add_beads:'Tiny beading',kb_add_beads_full:'Big eye beading',kb_add_extension:'Hair Extension',kb_add_rest:'15-min break'})[id] || id;
+                            return window.DBT_KIDS.addonLabel(id);
                         }).filter(Boolean).join(', '),
                         comments: commentsEl ? commentsEl.value : '',
                         hair_color: colorEl ? colorEl.value : ''

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -442,6 +442,7 @@
     </style>
 </head>
 <body>
+    @include('partials.i18n-js')
     <!-- Navigation -->
     <nav class="navbar navbar-expand-lg navbar-light fixed-top">
         <div class="container">
@@ -454,11 +455,12 @@
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
+                    @include('partials.locale-switcher')
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ route('home') }}">Home</a>
+                        <a class="nav-link" href="{{ route('home') }}">{{ __('nav.home') }}</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link active" href="{{ route('calendar') }}">Book Appointment</a>
+                        <a class="nav-link active" href="{{ route('calendar') }}">{{ __('nav.book') }}</a>
                     </li>
                 </ul>
             </div>
@@ -469,8 +471,8 @@
         <!-- Calendar Header -->
         <div class="calendar-container">
             <div class="calendar-header">
-                <h1 class="mb-3">Book Your Appointment</h1>
-                <p class="mb-0">Select a date and time that works best for you</p>
+                <h1 class="mb-3">{{ __('booking.page_title') }}</h1>
+                <p class="mb-0">{{ __('booking.page_subtitle') }}</p>
             </div>
 
             <!-- Calendar Navigation -->
@@ -478,7 +480,7 @@
                 <div class="row align-items-center g-2">
                     <div class="col-6 col-md-4">
                         <button class="btn btn-outline-primary w-100" onclick="previousMonth()">
-                            <i class="bi bi-chevron-left"></i> Previous
+                            <i class="bi bi-chevron-left"></i> {{ __('booking.previous') }}
                         </button>
                     </div>
                     <div class="col-12 col-md-4 text-center order-3 order-md-2">
@@ -486,7 +488,7 @@
                     </div>
                     <div class="col-6 col-md-4 text-end order-2 order-md-3">
                         <button class="btn btn-outline-primary w-100" onclick="nextMonth()">
-                            Next <i class="bi bi-chevron-right"></i>
+                            {{ __('booking.next') }} <i class="bi bi-chevron-right"></i>
                         </button>
                     </div>
                 </div>
@@ -495,13 +497,13 @@
             <!-- Calendar Grid -->
             <div class="calendar-grid">
                 <div class="calendar-weekdays">
-                    <div class="calendar-weekday">Sun</div>
-                    <div class="calendar-weekday">Mon</div>
-                    <div class="calendar-weekday">Tue</div>
-                    <div class="calendar-weekday">Wed</div>
-                    <div class="calendar-weekday">Thu</div>
-                    <div class="calendar-weekday">Fri</div>
-                    <div class="calendar-weekday">Sat</div>
+                    <div class="calendar-weekday">{{ __('booking.sun') }}</div>
+                    <div class="calendar-weekday">{{ __('booking.mon') }}</div>
+                    <div class="calendar-weekday">{{ __('booking.tue') }}</div>
+                    <div class="calendar-weekday">{{ __('booking.wed') }}</div>
+                    <div class="calendar-weekday">{{ __('booking.thu') }}</div>
+                    <div class="calendar-weekday">{{ __('booking.fri') }}</div>
+                    <div class="calendar-weekday">{{ __('booking.sat') }}</div>
                 </div>
                 <div id="calendarDays" class="calendar-days"></div>
             </div>
@@ -510,7 +512,7 @@
         <!-- Time Slots -->
         <div id="timeSlotsContainer" class="time-slots" style="display: none;">
             <div class="calendar-header">
-                <h3 class="mb-0">Available Time Slots</h3>
+                <h3 class="mb-0">{{ __('booking.slots_title') }}</h3>
                 <p class="mb-0" id="selectedDateText"></p>
             </div>
             <div id="timeSlots" class="p-3"></div>
@@ -519,7 +521,7 @@
         <!-- Booking Form -->
         <div id="bookingFormContainer" class="booking-form" style="display: none;">
             <div class="form-header">
-                <h3 class="mb-0">Complete Your Booking</h3>
+                <h3 class="mb-0">{{ __('booking.complete') }}</h3>
                 <p class="mb-0" id="bookingSummary"></p>
             </div>
             <div class="form-body">
@@ -532,26 +534,26 @@
                         <input type="hidden" id="final_price_input" name="final_price" value="">
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label for="name" class="form-label">Full Name *</label>
+                            <label for="name" class="form-label">{{ __('booking.form.name') }}</label>
                             <input type="text" class="form-control" id="name" name="name" required>
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label for="phone" class="form-label">Phone Number *</label>
+                            <label for="phone" class="form-label">{{ __('booking.form.phone') }}</label>
                             <input type="tel" class="form-control" id="phone" name="phone" required>
                             <div class="invalid-feedback" id="phoneFeedback"></div>
                         </div>
                     </div>
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label for="email" class="form-label">Email *</label>
+                            <label for="email" class="form-label">{{ __('booking.form.email') }}</label>
                             <input type="email" class="form-control" id="email" name="email" required>
                             <div class="invalid-feedback" id="emailFeedback"></div>
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label for="service" class="form-label">Service *</label>
+                            <label for="service" class="form-label">{{ __('booking.form.service') }}</label>
                             <!-- Keep the real select for form submit, but hide it and drive selection via a guided modal -->
                             <select class="form-select d-none" id="service" name="service" required>
-                                <option value="">Select a service</option>
+                                <option value="">{{ __('booking.form.select_service') }}</option>
                                 <option value="Small Knotless Braids">Small Knotless Braids</option>
                                 <option value="Smedium Knotless Braids">Smedium Knotless Braids</option>
                                 <option value="Wig Installation">Wig Installation</option>
@@ -568,12 +570,12 @@
                                 <input type="text"
                                        class="form-control"
                                        id="serviceDisplay"
-                                       placeholder="Select a service"
+                                       placeholder="{{ __('booking.form.select_service') }}"
                                        readonly
                                        style="background-color:#f8f9fa; cursor:pointer;"
                                        onclick="openServiceForWhoModalCal()">
                                 <button class="btn btn-outline-secondary" type="button" onclick="openServiceForWhoModalCal()">
-                                    Choose
+                                    {{ __('booking.choose') }}
                                 </button>
                             </div>
                         </div>
@@ -581,58 +583,58 @@
 
                     <!-- Appointment Type -->
                     <div class="mb-3">
-                        <label class="form-label">Appointment Type *</label>
+                        <label class="form-label">{{ __('booking.form.type') }}</label>
                         <div class="d-flex gap-3">
                             <div class="form-check">
                                 <input class="form-check-input" type="radio" name="appointment_type" id="appointment_type_in_studio_cal" value="in-studio" checked onclick="toggleAddressFieldCal()">
                                 <label class="form-check-label" for="appointment_type_in_studio_cal">
-                                    <i class="bi bi-house-door me-1"></i>Stylist address
+                                    <i class="bi bi-house-door me-1"></i>{{ __('booking.form.in_studio') }}
                                 </label>
                             </div>
                             <div class="form-check">
                                 <input class="form-check-input" type="radio" name="appointment_type" id="appointment_type_mobile_cal" value="mobile" onclick="toggleAddressFieldCal()">
                                 <label class="form-check-label" for="appointment_type_mobile_cal">
-                                    <i class="bi bi-truck me-1"></i>Mobile (I want you to come to me)
+                                    <i class="bi bi-truck me-1"></i>{{ __('booking.form.mobile') }}
                                 </label>
                             </div>
                         </div>
                         <small class="form-text text-muted mt-2">
-                            <i class="bi bi-info-circle me-1"></i>Mobile service available in Ottawa/Gatineau. Travel fee may apply based on distance.
+                            <i class="bi bi-info-circle me-1"></i>{{ __('booking.form.mobile_help') }}
                         </small>
                     </div>
 
                     <!-- Mobile Service Address (conditional) -->
                     <div class="mb-3" id="addressFieldContainerCal" style="display: none;">
-                        <label for="address" class="form-label">Mobile Service Address (Ottawa) *</label>
-                        <input type="text" class="form-control" id="address" name="address" placeholder="Enter your complete address" autocomplete="off" minlength="10">
-                        <div class="invalid-feedback">Please enter a complete mobile address (at least 10 characters).</div>
+                        <label for="address" class="form-label">{{ __('booking.form.address') }}</label>
+                        <input type="text" class="form-control" id="address" name="address" placeholder="{{ __('booking.form.address_placeholder') }}" autocomplete="off" minlength="10">
+                        <div class="invalid-feedback">{{ __('booking.form.address_invalid') }}</div>
                         <small class="form-text text-muted mt-2">
-                            <i class="bi bi-geo-alt me-1"></i>Required for mobile appointments so we can confirm travel availability and any travel fee.
+                            <i class="bi bi-geo-alt me-1"></i>{{ __('booking.form.address_help') }}
                         </small>
                     </div>
 
                     <div class="mb-3 parking-choice-group" id="parkingFieldContainerCal" style="display: none;">
-                        <label class="form-label">Parking at Address *</label>
+                        <label class="form-label">{{ __('booking.form.parking') }}</label>
                         <div class="d-flex gap-3">
                             <div class="form-check">
                                 <input class="form-check-input" type="radio" name="parking_type" id="parking_type_free_cal" value="free">
-                                <label class="form-check-label" for="parking_type_free_cal">Free parking</label>
+                                <label class="form-check-label" for="parking_type_free_cal">{{ __('booking.form.parking_free') }}</label>
                             </div>
                             <div class="form-check">
                                 <input class="form-check-input" type="radio" name="parking_type" id="parking_type_paid_cal" value="paid">
-                                <label class="form-check-label" for="parking_type_paid_cal">Paid parking</label>
+                                <label class="form-check-label" for="parking_type_paid_cal">{{ __('booking.form.parking_paid') }}</label>
                             </div>
                         </div>
                         <div id="paidParkingNoteCal" class="alert alert-warning py-2 mt-2 mb-0" style="display:none; font-size:0.95rem;">
-                            <strong>Please note:</strong> You are responsible for covering the paid parking ticket so the stylist can park at your address.
+                            {!! __('booking.form.parking_note') !!}
                         </div>
                         <small class="form-text text-muted mt-2">
-                            <i class="bi bi-p-circle me-1"></i>Required for mobile appointments. Paid parking is covered by the client.
+                            <i class="bi bi-p-circle me-1"></i>{{ __('booking.form.parking_help') }}
                         </small>
                     </div>
 
                     <div class="mb-3">
-                        <label for="notes" class="form-label">Special Requests or Notes</label>
+                        <label for="notes" class="form-label">{{ __('booking.form.notes') }}</label>
                         <textarea class="form-control" id="notes" name="notes" rows="3"></textarea>
                     </div>
                     <!-- Terms acceptance (required) -->
@@ -640,18 +642,18 @@
                     <div class="form-check mb-3 text-start">
                         <input class="form-check-input" type="checkbox" id="termsAcceptedCal" name="terms_accepted" value="1" required>
                         <label class="form-check-label" for="termsAcceptedCal">
-                            I agree to the <a href="#" class="js-terms-popup" style="font-weight:600; text-decoration:none;">Terms &amp; Conditions</a>.
+                            {{ __('booking.form.agree') }} <a href="#" class="js-terms-popup" style="font-weight:600; text-decoration:none;">{{ __('booking.form.terms') }}</a>.
                         </label>
                     </div>
                     <div class="mb-3">
                         <div class="alert alert-warning py-2 mb-0" style="font-size:0.95rem;">
-                            <strong>Note:</strong> We do not accept style changes on the day of the appointment. Please review your selection before confirming.
+                            {!! __('booking.form.no_changes') !!}
                         </div>
                     </div>
                     <div class="text-center">
                         <button type="submit" class="btn btn-primary btn-lg">
                             <i class="bi bi-calendar-check me-2"></i>
-                            Confirm Booking
+                            {{ __('booking.confirm_booking') }}
                         </button>
                     </div>
                 </form>
@@ -661,9 +663,9 @@
         <!-- Loading -->
         <div id="loading" class="loading">
             <div class="spinner-border" role="status">
-                <span class="visually-hidden">Loading...</span>
+                <span class="visually-hidden">{{ __('booking.loading') }}</span>
             </div>
-            <p class="mt-3">Loading available slots...</p>
+            <p class="mt-3">{{ __('booking.loading_slots') }}</p>
         </div>
     </div>
 
@@ -1107,7 +1109,7 @@
                 try {
                     if (selectedDate) {
                         next.appointment_date = formatYMD(selectedDate);
-                        next.bookingDateDisplay = selectedDate.toLocaleDateString('en-US', {
+                        next.bookingDateDisplay = selectedDate.toLocaleDateString(document.documentElement.lang || 'en', {
                             weekday: 'long',
                             year: 'numeric',
                             month: 'long',
@@ -1357,7 +1359,7 @@
             const month = currentDate.getMonth();
 
             document.getElementById('currentMonth').textContent =
-                new Date(year, month).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+                new Date(year, month).toLocaleDateString(document.documentElement.lang || 'en', { month: 'long', year: 'numeric' });
 
             const firstDay = new Date(year, month, 1);
             const lastDay = new Date(year, month + 1, 0);
@@ -1452,7 +1454,7 @@
             loading.style.display = 'block';
             timeSlotsContainer.style.display = 'none';
 
-            selectedDateText.textContent = date.toLocaleDateString('en-US', {
+            selectedDateText.textContent = date.toLocaleDateString(document.documentElement.lang || 'en', {
                 weekday: 'long',
                 year: 'numeric',
                 month: 'long',
@@ -1510,7 +1512,7 @@
 
             const selectable = (slots || []).filter(slot => slot.available);
             if (!slots.length || !selectable.length) {
-                timeSlots.innerHTML = '<div class="alert alert-info">No remaining times for this date. Please select another date.</div>';
+                timeSlots.innerHTML = '<div class="alert alert-info">' + window.dbtT('no_remaining') + '</div>';
                 return;
             }
 
@@ -1601,7 +1603,7 @@
             const bookingFormContainer = document.getElementById('bookingFormContainer');
             const bookingSummary = document.getElementById('bookingSummary');
             ensureTermsAccepted(() => {
-                bookingSummary.textContent = `${selectedDate.toLocaleDateString('en-US', {
+                bookingSummary.textContent = `${selectedDate.toLocaleDateString(document.documentElement.lang || 'en', {
                     weekday: 'long',
                     year: 'numeric',
                     month: 'long',
@@ -1620,7 +1622,7 @@
             // Terms must be accepted (required). Since we preventDefault, enforce it manually.
             const termsCb = document.getElementById('termsAcceptedCal');
             if (termsCb && !termsCb.checked) {
-                alert('Please accept the Terms & Conditions to continue.');
+                alert(window.DBT_I18N.accept_terms);
                 try { termsCb.focus(); } catch(e) {}
                 return;
             }
@@ -1628,7 +1630,7 @@
             // Ensure a service is selected via the guided flow
             const svc = document.getElementById('service');
             if (!svc || !svc.value) {
-                alert('Please select a service to continue.');
+                alert(window.DBT_I18N.select_service);
                 openServiceForWhoModalCal();
                 return;
             }
@@ -1660,7 +1662,7 @@
                     if (window.showFieldError) {
                         showFieldError(emailInput, 'Please enter a valid email address');
                     } else {
-                        alert('Please enter a valid email address.');
+                        alert(window.DBT_I18N.valid_email);
                     }
                     if (emailInput) emailInput.focus();
                     return;
@@ -1671,7 +1673,7 @@
                     if (window.showFieldError) {
                         showFieldError(phoneInput, 'Please enter a valid phone number (7–15 digits)');
                     } else {
-                        alert('Please enter a valid phone number (7–15 digits).');
+                        alert(window.DBT_I18N.valid_phone);
                     }
                     if (phoneInput) phoneInput.focus();
                     return;
@@ -1684,10 +1686,10 @@
                         if (addressInput) {
                             addressInput.required = true;
                             addressInput.classList.add('is-invalid');
-                            addressInput.setCustomValidity('Please enter a complete mobile address (at least 10 characters).');
+                            addressInput.setCustomValidity('{{ __('booking.form.address_invalid') }}');
                             try { addressInput.focus(); } catch (focusErr) {}
                         }
-                        alert('Please enter a complete mobile service address (at least 10 characters) before submitting.');
+                        alert(window.DBT_I18N.complete_address);
                         return;
                     }
                     if (addressInput) {
@@ -1697,7 +1699,7 @@
                     }
 
                     if (!parkingInput) {
-                        alert('Please choose whether parking is free or paid for the mobile address.');
+                        alert(window.DBT_I18N.choose_parking);
                         const firstParking = document.getElementById('parking_type_free_cal') || document.getElementById('parking_type_paid_cal');
                         try { firstParking && firstParking.focus(); } catch (focusErr) {}
                         return;
@@ -1738,11 +1740,11 @@
                 if (data && data.success) {
                     showConfirmation(data.appointment);
                 } else {
-                    alert('Error: ' + ((data && data.message) ? data.message : 'Unknown error'));
+                    alert(window.dbtT('error_prefix', { message: (data && data.message) ? data.message : window.dbtT('unknown_error') }));
                 }
             })
             .catch(error => {
-                alert('Error booking appointment. Please try again.');
+                alert(window.DBT_I18N.booking_error);
             })
             .finally(() => {
                 submitBtn.innerHTML = originalText;
@@ -1838,7 +1840,7 @@
             }
 
             // Fallback success feedback if modal cannot be displayed
-            alert(`Booking submitted successfully!\nBooking ID: ${appointment.booking_id}\nConfirmation code: ${appointment.confirmation_code}`);
+            alert(window.dbtT('booking_success', { id: appointment.booking_id, code: appointment.confirmation_code }));
         }
 
         function previousMonth() {

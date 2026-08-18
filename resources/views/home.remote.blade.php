@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -24,7 +24,8 @@
     <meta property="og:image:height" content="630">
     <meta property="og:image:alt" content="Professional knotless and box braids by Dab's Beauty Touch in Ottawa">
     <meta property="og:site_name" content="Dab's Beauty Touch">
-    <meta property="og:locale" content="en_CA">
+    <meta property="og:locale" content="{{ \App\Support\Locale::openGraph() }}">
+    <meta property="og:locale:alternate" content="{{ app()->getLocale() === 'fr' ? 'en_CA' : 'fr_CA' }}">
 
     <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image">
@@ -2916,12 +2917,12 @@
         // Continue to booking modal
         window.continueToBooking = function() {
             if (!window.serviceSizeData.selectedSize) {
-                alert('Please select a braid size first');
+                alert(window.DBT_I18N.select_size_first);
                 return;
             }
             const braidSizeSection = document.getElementById('braidSizePickerSection');
             if (braidSizeSection && braidSizeSection.style.display !== 'none' && !window.serviceSizeData.braidSize) {
-                alert('Please choose a braid size first');
+                alert(window.DBT_I18N.choose_size_first);
                 return;
             }
 
@@ -2949,14 +2950,14 @@
             }
             if (window.serviceSizeData.weaveAddon)          serviceName += ' (With Weave)';
             if (window.serviceSizeData.rowOption === '10+')  serviceName += ' (10+ Rows)';
-            if (window.serviceSizeData.rowOption === '15+')  serviceName += ' (15+ Rows)';
+            if (window.serviceSizeData.rowOption === '15+')  serviceName += ' ({{ __('booking.size_modal.rows_15') }})';
 
             const stitchHidden = document.getElementById('stitch_rows_option');
             if (stitchHidden && window.serviceSizeData.rowOption) {
                 stitchHidden.value = window.rowOptionToStitchValue(window.serviceSizeData.rowOption);
             }
-            if (window.serviceSizeData.frontBackAddon)       serviceName += ' (Front + Back)';
-            if (window.serviceSizeData.selectedTipOption === 'finished') serviceName += ' (Finished Tip)';
+            if (window.serviceSizeData.frontBackAddon)       serviceName += ' ({{ __('booking.size_modal.front_back') }})';
+            if (window.serviceSizeData.selectedTipOption === 'finished') serviceName += ' ({{ __('booking.size_modal.finished') }})';
 
             // Calculate total price
             const totalPrice = (window.serviceSizeData.basePrice || 0) +
@@ -3528,10 +3529,10 @@
 
             const year = calendarCurrentDate.getFullYear();
             const month = calendarCurrentDate.getMonth();
-            console.log(`📅 Rendering calendar for: ${year}-${month + 1} (${year} ${new Date(year, month).toLocaleDateString('en-US', { month: 'long' })})`);
+            console.log(`📅 Rendering calendar for: ${year}-${month + 1} (${year} ${new Date(year, month).toLocaleDateString((window.DBT_I18N && window.DBT_I18N.locale) || document.documentElement.lang || 'en', { month: 'long' })})`);
 
             document.getElementById('calendarMonth').textContent =
-                new Date(year, month).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+                new Date(year, month).toLocaleDateString((window.DBT_I18N && window.DBT_I18N.locale) || document.documentElement.lang || 'en', { month: 'long', year: 'numeric' });
 
             const firstDay = new Date(year, month, 1);
             const lastDay = new Date(year, month + 1, 0);
@@ -3666,7 +3667,7 @@
 
             // Check if the clicked day is booked
             if (event && event.target && event.target.classList.contains('booked')) {
-                alert('This date is already booked with a pending or confirmed appointment. Please select another date.');
+                alert(window.DBT_I18N.date_booked);
                 return;
             }
 
@@ -3677,15 +3678,15 @@
                 const isFullDay = blockedInfo.full_day === true || blockedInfo.full_day === 1;
 
                 if (isFullDay) {
-                    const blockedTitle = blockedInfo.title || 'Blocked';
-                    alert(`This date is blocked: "${blockedTitle}". Please select another date.`);
+                    const blockedTitle = blockedInfo.title || window.dbtT('blocked');
+                    alert(window.dbtT('date_blocked_named', { title: blockedTitle }));
                     return;
                 }
                 // If it's a time-specific block, continue - user can still select the date
             }
 
             if (event && event.target && event.target.classList.contains('blocked-range')) {
-                alert('This date is blocked. Please select another date.');
+                alert(window.DBT_I18N.date_blocked);
                 return;
             }
 
@@ -3730,7 +3731,7 @@
             loading.style.display = 'block';
             timeSlotsContainer.style.display = 'none';
 
-            selectedDateText.textContent = date.toLocaleDateString('en-US', {
+            selectedDateText.textContent = date.toLocaleDateString((window.DBT_I18N && window.DBT_I18N.locale) || document.documentElement.lang || 'en', {
                 weekday: 'long',
                 year: 'numeric',
                 month: 'long',
@@ -3759,7 +3760,7 @@
                         } else if (data.slots && data.slots.length > 0) {
                             renderTimeSlotsInModal(markPastCalendarSlots(date, data.slots));
                         } else {
-                            slotError('No available slots for this date. Please select another date.');
+                            slotError(window.dbtT('no_slots'));
                         }
                     } else {
                         slotError('Could not load available times. Please try again.');
@@ -3779,7 +3780,7 @@
 
             if (slots.length === 0) {
                 if (instructionDiv) instructionDiv.style.display = 'none';
-                timeSlots.innerHTML = '<div class="col-12"><div class="alert alert-warning"><i class="bi bi-exclamation-triangle me-2"></i>No available slots for this date. Please select another date.</div></div>';
+                timeSlots.innerHTML = '<div class="col-12"><div class="alert alert-warning"><i class="bi bi-exclamation-triangle me-2"></i>' + window.dbtT('no_slots') + '</div></div>';
                 return;
             }
 
@@ -3789,7 +3790,7 @@
             const selectable = slots.filter(slot => slot.available);
             if (!selectable.length) {
                 if (instructionDiv) instructionDiv.style.display = 'none';
-                timeSlots.innerHTML = '<div class="col-12"><div class="alert alert-warning"><i class="bi bi-exclamation-triangle me-2"></i>No remaining times for this date. Please select another date.</div></div>';
+                timeSlots.innerHTML = '<div class="col-12"><div class="alert alert-warning"><i class="bi bi-exclamation-triangle me-2"></i>' + window.dbtT('no_remaining') + '</div></div>';
                 document.getElementById('confirmDateTimeBtn').disabled = true;
                 selectedCalendarTime = null;
                 return;
@@ -3835,7 +3836,7 @@
         window.confirmDateTime = function() {
             if (selectedCalendarDate && selectedCalendarTime) {
                 // Format date for display (readable format)
-                const formattedDate = selectedCalendarDate.toLocaleDateString('en-US', {
+                const formattedDate = selectedCalendarDate.toLocaleDateString((window.DBT_I18N && window.DBT_I18N.locale) || document.documentElement.lang || 'en', {
                     weekday: 'long',
                     year: 'numeric',
                     month: 'long',
@@ -3964,12 +3965,12 @@
         <div class="container text-center py-3">
             <h4 class="alert-heading mb-2">
                 <i class="bi bi-exclamation-triangle-fill me-2"></i>
-                Booking Error
+                {{ __('home.alerts.booking_error') }}
             </h4>
-            <p class="mb-2">{{ session('error_message', 'There was an issue processing your booking.') }}</p>
+            <p class="mb-2">{{ session('error_message', __('home.alerts.booking_error_default')) }}</p>
             <p class="mb-0">
                 <i class="bi bi-telephone-fill me-2"></i>
-                Please try again or call us at <strong>(647) 834-8549</strong>
+                {{ __('home.alerts.call_us') }} <strong>(647) 834-8549</strong>
             </p>
             <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert" aria-label="Close" style="position: absolute; top: 15px; right: 15px;"></button>
         </div>
@@ -3981,7 +3982,7 @@
         <div class="container text-center py-3">
             <h4 class="alert-heading mb-2">
                 <i class="bi bi-exclamation-triangle-fill me-2"></i>
-                Please Fix These Booking Details
+                {{ __('home.alerts.fix_details') }}
             </h4>
             <p class="mb-0">{{ $errors->first() }}</p>
             <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert" aria-label="Close" style="position: absolute; top: 15px; right: 15px;"></button>
@@ -3994,12 +3995,12 @@
         <div class="container text-center py-3">
             <h4 class="alert-heading mb-2">
                 <i class="bi bi-check-circle-fill me-2"></i>
-                Booking Submitted Successfully
+                {{ __('home.alerts.submitted') }}
             </h4>
             <p class="mb-0">
-                {{ session('success', 'Your appointment request has been received.') }}
+                {{ session('success', __('home.alerts.received')) }}
                 @if(data_get(session('booking_details'), 'email'))
-                    A confirmation email has been sent to <strong>{{ data_get(session('booking_details'), 'email') }}</strong>.
+                    {{ __('home.alerts.email_sent') }} <strong>{{ data_get(session('booking_details'), 'email') }}</strong>.
                 @endif
             </p>
             <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert" aria-label="Close" style="position: absolute; top: 15px; right: 15px;"></button>
@@ -4008,6 +4009,7 @@
     @endif
 
     @include('partials.cookie-consent')
+    @include('partials.i18n-js')
     @include('partials.site-header')
 
     @php
@@ -4024,23 +4026,23 @@
         <div class="container" style="padding-top: 120px; padding-bottom: 80px;">
             <div class="hero-content">
                 <h1>Dab's Beauty Touch</h1>
-                <p style="margin-bottom: 1.5rem;">Flawless Results - Looking for a stylist who delivers neat, long-lasting braids? Experience the expert touch at Dab's Beauty Touch today!</p>
+                <p style="margin-bottom: 1.5rem;">{{ __('home.hero.tagline') }}</p>
                 <div class="text-center">
                     <a href="{{ route('calendar') }}" class="btn btn-warning btn-lg px-5 py-3" style="font-weight: 700; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.25); font-size: 1.2rem;">
-                        <i class="bi bi-calendar-check me-2"></i>Book Appointment
+                        <i class="bi bi-calendar-check me-2"></i>{{ __('home.hero.book') }}
                     </a>
                 </div>
                 <div class="mt-3 small text-white-50">
-                    Choose a date/time → confirm your style → get instant confirmation.
+                    {{ __('home.hero.steps') }}
                     <br>
-                    <a href="javascript:void(0)" onclick="(window.openCalendarModal ? window.openCalendarModal() : window.location.assign('{{ route('calendar') }}'))" style="color: rgba(255,255,255,0.8); text-decoration: underline; font-weight: 500;">View Availability</a>
+                    <a href="javascript:void(0)" onclick="(window.openCalendarModal ? window.openCalendarModal() : window.location.assign('{{ route('calendar') }}'))" style="color: rgba(255,255,255,0.8); text-decoration: underline; font-weight: 500;">{{ __('home.hero.availability') }}</a>
                 </div>
                 <p style="font-size: 0.95rem; opacity: 0.9; font-weight: 500; margin-top: 1rem;">
                     <i class="bi bi-geo-alt-fill me-2"></i>Ottawa
                     <span class="mx-2">•</span>
                     <i class="bi bi-telephone-fill me-2"></i><a href="tel:+3432548848" style="color: #fff; text-decoration: none;">343-254-8848</a>
                     <span class="mx-2">•</span>
-                    By Appointment Only
+                    {{ __('home.hero.by_appointment') }}
                 </p>
             </div>
         </div>
@@ -4283,14 +4285,14 @@
                         @if(count($promoMedia) > 1)
                         <div class="promo-media-dots" id="promoMediaDots">
                             @foreach($promoMedia as $idx => $item)
-                                <button type="button" class="promo-media-dot{{ $idx === 0 ? ' is-active' : '' }}" data-promo-dot="{{ $idx }}" aria-label="Show promo {{ $idx + 1 }}"></button>
+                                <button type="button" class="promo-media-dot{{ $idx === 0 ? ' is-active' : '' }}" data-promo-dot="{{ $idx }}" aria-label="{{ __('home.promo.show', ['n' => $idx + 1]) }}"></button>
                             @endforeach
                         </div>
                         @endif
                     </div>
                     @endif
                     <div class="{{ $promoHasMedia ? 'col-md-7' : 'col-12' }}">
-                        <div class="promo-badge"><i class="bi bi-stars me-1"></i>Special</div>
+                        <div class="promo-badge"><i class="bi bi-stars me-1"></i>{{ __('home.promo.special') }}</div>
                         @if(trim((string) \App\Support\SiteSettings::get('promo_title', '')) !== '')
                             <h3 style="color:#030f68; font-weight:800; margin-bottom:8px;">{{ \App\Support\SiteSettings::get('promo_title') }}</h3>
                         @endif
@@ -4394,20 +4396,20 @@
     <section class="image-slider-section" style="padding: 50px 0; background: linear-gradient(135deg, #f8f9fa 0%, #e3eafc 100%);">
         <div class="container">
             <div class="text-center mb-5">
-                <h2 class="section-title" style="font-size: 2.5rem; font-weight: 700; color: #030f68;">Why DBT</h2>
-                <p class="lead" style="color: #666; font-size: 1.2rem;">Your Trusted Hair Care Experience in Ottawa</p>
+                <h2 class="section-title" style="font-size: 2.5rem; font-weight: 700; color: #030f68;">{{ __('home.why.title') }}</h2>
+                <p class="lead" style="color: #666; font-size: 1.2rem;">{{ __('home.why.subtitle') }}</p>
             </div>
 
             {{-- Prices are stored in config/service_prices.php --}}
             <div id="workSlider" class="carousel slide" data-bs-ride="carousel" data-bs-interval="6000">
                 <!-- Carousel Indicators -->
                 <div class="carousel-indicators">
-                    <button type="button" data-bs-target="#workSlider" data-bs-slide-to="0" class="active" aria-current="true" aria-label="Slide 1"></button>
-                    <button type="button" data-bs-target="#workSlider" data-bs-slide-to="1" aria-label="Slide 2"></button>
-                    <button type="button" data-bs-target="#workSlider" data-bs-slide-to="2" aria-label="Slide 3"></button>
-                    <button type="button" data-bs-target="#workSlider" data-bs-slide-to="3" aria-label="Slide 4"></button>
-                    <button type="button" data-bs-target="#workSlider" data-bs-slide-to="4" aria-label="Slide 5"></button>
-                    <button type="button" data-bs-target="#workSlider" data-bs-slide-to="5" aria-label="Slide 6"></button>
+                    <button type="button" data-bs-target="#workSlider" data-bs-slide-to="0" class="active" aria-current="true" aria-label="{{ __('home.why.slide', ['n' => 1]) }}"></button>
+                    <button type="button" data-bs-target="#workSlider" data-bs-slide-to="1" aria-label="{{ __('home.why.slide', ['n' => 2]) }}"></button>
+                    <button type="button" data-bs-target="#workSlider" data-bs-slide-to="2" aria-label="{{ __('home.why.slide', ['n' => 3]) }}"></button>
+                    <button type="button" data-bs-target="#workSlider" data-bs-slide-to="3" aria-label="{{ __('home.why.slide', ['n' => 4]) }}"></button>
+                    <button type="button" data-bs-target="#workSlider" data-bs-slide-to="4" aria-label="{{ __('home.why.slide', ['n' => 5]) }}"></button>
+                    <button type="button" data-bs-target="#workSlider" data-bs-slide-to="5" aria-label="{{ __('home.why.slide', ['n' => 6]) }}"></button>
                 </div>
 
                 <!-- Carousel Items -->
@@ -4417,32 +4419,32 @@
                         <div class="row align-items-center">
                             <div class="col-lg-6">
                                 <div class="slide-content" style="padding: 40px;">
-                                    <h3 style="color: #030f68; font-weight: 700; font-size: 2rem; margin-bottom: 20px;">Why Clients Choose DBT</h3>
+                                    <h3 style="color: #030f68; font-weight: 700; font-size: 2rem; margin-bottom: 20px;">{{ __('home.why.choose_title') }}</h3>
                                     <p style="color: #666; font-size: 1.1rem; line-height: 1.6; margin-bottom: 25px;">
-                                        Dab's Beauty Touch is where Ottawa clients come for braids and protective styles that look flawless on day one—and still look neat weeks later. With 10+ years of hands-on experience, we focus on clean parts, consistent tension, and a finish that suits your face, lifestyle, and hair goals. You'll get honest guidance, a comfortable appointment, and results you can feel confident wearing.
+                                        {{ __('home.why.choose_body') }}
                                     </p>
                                     <div class="slide-features">
                                         <div class="feature-item" style="display: flex; align-items: center; margin-bottom: 15px;">
                                             <i class="bi bi-award-fill" style="color: #ff6600; margin-right: 10px; font-size: 1.3rem;"></i>
-                                            <span style="color: #333; font-weight: 500;">Expert stylists with 10+ years experience</span>
+                                            <span style="color: #333; font-weight: 500;">{{ __('home.why.feature_experience') }}</span>
                                         </div>
                                         <div class="feature-item" style="display: flex; align-items: center; margin-bottom: 15px;">
                                             <i class="bi bi-heart-fill" style="color: #ff6600; margin-right: 10px; font-size: 1.3rem;"></i>
-                                            <span style="color: #333; font-weight: 500;">Hair health focused techniques</span>
+                                            <span style="color: #333; font-weight: 500;">{{ __('home.why.feature_health') }}</span>
                                         </div>
                                         <div class="feature-item" style="display: flex; align-items: center; margin-bottom: 15px;">
                                             <i class="bi bi-shield-check" style="color: #ff6600; margin-right: 10px; font-size: 1.3rem;"></i>
-                                            <span style="color: #333; font-weight: 500;">Premium products & sanitized tools</span>
+                                            <span style="color: #333; font-weight: 500;">{{ __('home.why.feature_products') }}</span>
                                         </div>
                                     </div>
                                     <button class="btn btn-warning mt-3" onclick="document.getElementById('services').scrollIntoView({behavior: 'smooth'});" style="font-weight: 600; padding: 12px 30px;">
-                                        <i class="bi bi-eye me-2"></i>View Our Services
+                                        <i class="bi bi-eye me-2"></i>{{ __('home.why.view_services') }}
                                     </button>
                                 </div>
                             </div>
                             <div class="col-lg-6">
                                 <div class="slide-image" style="text-align: center;">
-                                    <img src="{{ asset('images/why-choose-us.png') }}" alt="Why Choose Us? - Stand out from the crowd" style="width: 100%; max-width: 500px; height: 400px; object-fit: contain; border-radius: 20px;">
+                                    <img src="{{ asset('images/why-choose-us.png') }}" alt="{{ __('home.why.alt_choose') }}" style="width: 100%; max-width: 500px; height: 400px; object-fit: contain; border-radius: 20px;">
                                 </div>
                             </div>
                         </div>
@@ -4453,48 +4455,48 @@
                         <div class="row align-items-center">
                             <div class="col-lg-6">
                                 <div class="slide-content" style="padding: 40px;">
-                                    <h3 style="color: #030f68; font-weight: 700; font-size: 2rem; margin-bottom: 20px;">Your Appointment Experience</h3>
+                                    <h3 style="color: #030f68; font-weight: 700; font-size: 2rem; margin-bottom: 20px;">{{ __('home.why.experience_title') }}</h3>
                                     <p style="color: #666; font-size: 1.1rem; line-height: 1.6; margin-bottom: 25px;">
-                                        From booking to your finished style, everything at DBT is set up to be simple, comfortable, and stress-free. Here's what your visit looks like:
+                                        {{ __('home.why.experience_body') }}
                                     </p>
                                     <div class="slide-features">
                                         <div class="feature-item" style="display: flex; align-items: start; margin-bottom: 18px;">
                                             <div style="background: #ff6600; color: white; border-radius: 50%; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; font-weight: 700; margin-right: 12px; flex-shrink: 0;">1</div>
                                             <div>
-                                                <strong style="color: #030f68;">Book in Minutes</strong>
-                                                <p style="margin: 5px 0 0 0; color: #666; font-size: 0.95rem;">Choose your style, select a date/time, and receive instant confirmation.</p>
+                                                <strong style="color: #030f68;">{{ __('home.why.step1_title') }}</strong>
+                                                <p style="margin: 5px 0 0 0; color: #666; font-size: 0.95rem;">{{ __('home.why.step1_body') }}</p>
                                             </div>
                                         </div>
                                         <div class="feature-item" style="display: flex; align-items: start; margin-bottom: 18px;">
                                             <div style="background: #ff6600; color: white; border-radius: 50%; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; font-weight: 700; margin-right: 12px; flex-shrink: 0;">2</div>
                                             <div>
-                                                <strong style="color: #030f68;">Quick Style Check-In</strong>
-                                                <p style="margin: 5px 0 0 0; color: #666; font-size: 0.95rem;">We confirm your inspo, hair condition, and the right size/length so you get the look you want—without unnecessary tension.</p>
+                                                <strong style="color: #030f68;">{{ __('home.why.step2_title') }}</strong>
+                                                <p style="margin: 5px 0 0 0; color: #666; font-size: 0.95rem;">{{ __('home.why.step2_body') }}</p>
                                             </div>
                                         </div>
                                         <div class="feature-item" style="display: flex; align-items: start; margin-bottom: 18px;">
                                             <div style="background: #ff6600; color: white; border-radius: 50%; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; font-weight: 700; margin-right: 12px; flex-shrink: 0;">3</div>
                                             <div>
-                                                <strong style="color: #030f68;">Relax & Get Styled</strong>
-                                                <p style="margin: 5px 0 0 0; color: #666; font-size: 0.95rem;">Clean parting, consistent technique, and a comfortable, professional appointment from start to finish.</p>
+                                                <strong style="color: #030f68;">{{ __('home.why.step3_title') }}</strong>
+                                                <p style="margin: 5px 0 0 0; color: #666; font-size: 0.95rem;">{{ __('home.why.step3_body') }}</p>
                                             </div>
                                         </div>
                                         <div class="feature-item" style="display: flex; align-items: start; margin-bottom: 18px;">
                                             <div style="background: #ff6600; color: white; border-radius: 50%; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; font-weight: 700; margin-right: 12px; flex-shrink: 0;">4</div>
                                             <div>
-                                                <strong style="color: #030f68;">Leave With a Plan</strong>
-                                                <p style="margin: 5px 0 0 0; color: #666; font-size: 0.95rem;">You'll get personalized aftercare tips (and product guidance if needed) to keep your braids neat and long-lasting.</p>
+                                                <strong style="color: #030f68;">{{ __('home.why.step4_title') }}</strong>
+                                                <p style="margin: 5px 0 0 0; color: #666; font-size: 0.95rem;">{{ __('home.why.step4_body') }}</p>
                                             </div>
                                         </div>
                                     </div>
                                     <button class="btn btn-warning mt-3" onclick="window.scrollTo({top: 0, behavior: 'smooth'});" style="font-weight: 600; padding: 12px 30px;">
-                                        <i class="bi bi-calendar-check me-2"></i>Book Your Appointment
+                                        <i class="bi bi-calendar-check me-2"></i>{{ __('home.why.book_appointment') }}
                                     </button>
                                 </div>
                             </div>
                             <div class="col-lg-6">
                                 <div class="slide-image" style="text-align: center;">
-                                    <img src="{{ asset('images/easy-booking.png') }}" alt="Easy Online Booking System" style="width: 100%; max-width: 500px; height: 400px; object-fit: cover; border-radius: 20px; box-shadow: 0 15px 40px rgba(0,0,0,0.15);">
+                                    <img src="{{ asset('images/easy-booking.png') }}" alt="{{ __('home.why.alt_booking') }}" style="width: 100%; max-width: 500px; height: 400px; object-fit: cover; border-radius: 20px; box-shadow: 0 15px 40px rgba(0,0,0,0.15);">
                                 </div>
                             </div>
                         </div>
@@ -4505,51 +4507,51 @@
                         <div class="row align-items-center">
                             <div class="col-lg-6">
                                 <div class="slide-content" style="padding: 40px;">
-                                    <h3 style="color: #030f68; font-weight: 700; font-size: 2rem; margin-bottom: 20px;">Keep Your Braids Looking Fresh</h3>
+                                    <h3 style="color: #030f68; font-weight: 700; font-size: 2rem; margin-bottom: 20px;">{{ __('home.why.care_title') }}</h3>
                                     <p style="color: #666; font-size: 1.1rem; line-height: 1.6; margin-bottom: 25px;">
-                                        The right routine helps your style stay neat longer—and keeps your natural hair and edges healthy underneath. Here are our go-to tips:
+                                        {{ __('home.why.care_body') }}
                                     </p>
                                     <div class="slide-features">
                                         <div class="feature-item" style="display: flex; align-items: start; margin-bottom: 15px;">
                                             <i class="bi bi-droplet-fill" style="color: #ff6600; margin-right: 10px; font-size: 1.2rem; margin-top: 3px;"></i>
                                             <div>
-                                                <strong style="color: #030f68;">Moisturize (lightly, consistently)</strong>
-                                                <p style="margin: 3px 0 0 0; color: #666; font-size: 0.95rem;">Use a braid spray or light oil on the scalp <strong>2–3x per week</strong>. Avoid heavy buildup.</p>
+                                                <strong style="color: #030f68;">{{ __('home.why.moisturize_title') }}</strong>
+                                                <p style="margin: 3px 0 0 0; color: #666; font-size: 0.95rem;">{!! __('home.why.moisturize_body') !!}</p>
                                             </div>
                                         </div>
                                         <div class="feature-item" style="display: flex; align-items: start; margin-bottom: 15px;">
                                             <i class="bi bi-moon-stars-fill" style="color: #ff6600; margin-right: 10px; font-size: 1.2rem; margin-top: 3px;"></i>
                                             <div>
-                                                <strong style="color: #030f68;">Protect at night</strong>
-                                                <p style="margin: 3px 0 0 0; color: #666; font-size: 0.95rem;">Sleep in a <strong>satin bonnet/scarf</strong> or use a satin pillowcase to reduce frizz and preserve shine.</p>
+                                                <strong style="color: #030f68;">{{ __('home.why.night_title') }}</strong>
+                                                <p style="margin: 3px 0 0 0; color: #666; font-size: 0.95rem;">{!! __('home.why.night_body') !!}</p>
                                             </div>
                                         </div>
                                         <div class="feature-item" style="display: flex; align-items: start; margin-bottom: 15px;">
                                             <i class="bi bi-water" style="color: #ff6600; margin-right: 10px; font-size: 1.2rem; margin-top: 3px;"></i>
                                             <div>
-                                                <strong style="color: #030f68;">Cleanse your scalp gently</strong>
-                                                <p style="margin: 3px 0 0 0; color: #666; font-size: 0.95rem;">Wash <strong>weekly or as needed</strong> using diluted shampoo or a scalp cleanser. Focus on the scalp, then rinse well.</p>
+                                                <strong style="color: #030f68;">{{ __('home.why.cleanse_title') }}</strong>
+                                                <p style="margin: 3px 0 0 0; color: #666; font-size: 0.95rem;">{!! __('home.why.cleanse_body') !!}</p>
                                             </div>
                                         </div>
                                         <div class="feature-item" style="display: flex; align-items: start; margin-bottom: 15px;">
                                             <i class="bi bi-calendar2-check" style="color: #ff6600; margin-right: 10px; font-size: 1.2rem; margin-top: 3px;"></i>
                                             <div>
-                                                <strong style="color: #030f68;">Know when it's time to take them down</strong>
-                                                <p style="margin: 3px 0 0 0; color: #666; font-size: 0.95rem;">Most styles should be worn <strong>4–8 weeks max</strong> (sooner if there's tension, itching, or thinning).</p>
+                                                <strong style="color: #030f68;">{{ __('home.why.takedown_title') }}</strong>
+                                                <p style="margin: 3px 0 0 0; color: #666; font-size: 0.95rem;">{!! __('home.why.takedown_body') !!}</p>
                                             </div>
                                         </div>
                                     </div>
                                     <div class="mt-4" style="background: rgba(255, 102, 0, 0.1); padding: 15px; border-radius: 10px; border-left: 4px solid #ff6600; margin-bottom: 15px;">
-                                        <p style="margin: 0; color: #030f68; font-size: 0.95rem;"><i class="bi bi-info-circle-fill me-2"></i><strong>Pro Tip:</strong> Book a refresh/touch-up around <strong>6 weeks</strong> to keep your parts tidy and protect your edges.</p>
+                                        <p style="margin: 0; color: #030f68; font-size: 0.95rem;"><i class="bi bi-info-circle-fill me-2"></i>{!! __('home.why.pro_tip') !!}</p>
                                     </div>
                                     <div style="background: linear-gradient(135deg, #f8f9fa 0%, #e3eafc 100%); padding: 15px; border-radius: 10px;">
-                                        <p style="margin: 0; color: #030f68; font-size: 0.9rem; line-height: 1.6;"><strong style="color: #ff6600;">Hair Care Tools & Products:</strong> Satin bonnet/scarf • Scalp cleanser • Braid spray/leave-in • Light oil (jojoba/argan) • Edge-safe brush (soft bristles)</p>
+                                        <p style="margin: 0; color: #030f68; font-size: 0.9rem; line-height: 1.6;">{!! __('home.why.tools') !!}</p>
                                     </div>
                                 </div>
                             </div>
                             <div class="col-lg-6">
                                 <div class="slide-image" style="text-align: center;">
-                                    <img src="{{ asset('images/hair-care-tools.png') }}" alt="Hair Care Tools and Products" style="width: 100%; max-width: 500px; height: 400px; object-fit: cover; border-radius: 20px; box-shadow: 0 15px 40px rgba(0,0,0,0.15);">
+                                    <img src="{{ asset('images/hair-care-tools.png') }}" alt="{{ __('home.why.alt_tools') }}" style="width: 100%; max-width: 500px; height: 400px; object-fit: cover; border-radius: 20px; box-shadow: 0 15px 40px rgba(0,0,0,0.15);">
                                 </div>
                             </div>
                         </div>
@@ -4560,16 +4562,16 @@
                         <div class="row align-items-center">
                             <div class="col-lg-6">
                                 <div class="slide-content" style="padding: 40px;">
-                                    <h3 style="color: #030f68; font-weight: 700; font-size: 2rem; margin-bottom: 20px;">Real Clients. Real Results.</h3>
+                                    <h3 style="color: #030f68; font-weight: 700; font-size: 2rem; margin-bottom: 20px;">{{ __('home.why.results_title') }}</h3>
                                     <p style="color: #666; font-size: 1.1rem; line-height: 1.6; margin-bottom: 25px;">
-                                        Browse real transformations from DBT—neat parts, clean finishing, and styles that hold up beautifully. Whether you're booking knotless braids, box braids, or a special-occasion look, we focus on precision, comfort, and hair health so you leave feeling confident.
+                                        {{ __('home.why.results_body') }}
                                     </p>
                                     <div class="slide-features">
                                         <div style="background: linear-gradient(135deg, #f8f9fa 0%, #e3eafc 100%); border-radius: 12px; padding: 20px; margin-bottom: 15px;">
                                             <div style="display: flex; align-items: center; margin-bottom: 10px;">
                                                 <div style="color: #ff6600; font-size: 1.8rem; margin-right: 15px;"><i class="bi bi-chat-quote-fill"></i></div>
                                                 <div>
-                                                    <div style="color: #666; font-style: italic; font-size: 0.95rem;">"The best braiding experience in Ottawa. My knotless braids stayed neat for weeks."</div>
+                                                    <div style="color: #666; font-style: italic; font-size: 0.95rem;">"{{ __('home.why.quote1') }}"</div>
                                                     <div style="color: #030f68; font-weight: 600; font-size: 0.9rem; margin-top: 8px;">— <strong>Sarah M.</strong></div>
                                                 </div>
                                             </div>
@@ -4578,7 +4580,7 @@
                                             <div style="display: flex; align-items: center; margin-bottom: 10px;">
                                                 <div style="color: #ff6600; font-size: 1.8rem; margin-right: 15px;"><i class="bi bi-chat-quote-fill"></i></div>
                                                 <div>
-                                                    <div style="color: #666; font-style: italic; font-size: 0.95rem;">"Professional, clean, and so talented. My daughter's hair turned out perfect."</div>
+                                                    <div style="color: #666; font-style: italic; font-size: 0.95rem;">"{{ __('home.why.quote2') }}"</div>
                                                     <div style="color: #030f68; font-weight: 600; font-size: 0.9rem; margin-top: 8px;">— <strong>Jennifer T.</strong></div>
                                                 </div>
                                             </div>
@@ -4591,15 +4593,15 @@
                                             <i class="bi bi-star-fill"></i>
                                             <i class="bi bi-star-fill"></i>
                                             <i class="bi bi-star-fill"></i>
-                                            <span style="color: #030f68; font-weight: 700; font-size: 1.1rem; margin-left: 10px;">4.9/5 Average Rating</span>
+                                            <span style="color: #030f68; font-weight: 700; font-size: 1.1rem; margin-left: 10px;">{{ __('home.why.rating') }}</span>
                                         </div>
-                                        <p style="margin: 0; color: #030f68; font-size: 0.95rem; font-weight: 500;"><strong style="color: #ff6600;">Client Testimonials</strong> — Don't just take our word for it. See what clients are saying.</p>
+                                        <p style="margin: 0; color: #030f68; font-size: 0.95rem; font-weight: 500;">{!! __('home.why.testimonials') !!}</p>
                                     </div>
                                 </div>
                             </div>
                             <div class="col-lg-6">
                                 <div class="slide-image" style="text-align: center;">
-                                    <img src="{{ asset('images/client-testimonials.png') }}" alt="Client Testimonials - Don't just listen to us... listen to them" style="width: 100%; max-width: 500px; height: 400px; object-fit: cover; border-radius: 20px; box-shadow: 0 15px 40px rgba(0,0,0,0.15);">
+                                    <img src="{{ asset('images/client-testimonials.png') }}" alt="{{ __('home.why.alt_testimonials') }}" style="width: 100%; max-width: 500px; height: 400px; object-fit: cover; border-radius: 20px; box-shadow: 0 15px 40px rgba(0,0,0,0.15);">
                                 </div>
                             </div>
                         </div>
@@ -4610,39 +4612,39 @@
                         <div class="row align-items-center">
                             <div class="col-lg-6">
                                 <div class="slide-content" style="padding: 40px;">
-                                    <h3 style="color: #030f68; font-weight: 700; font-size: 2rem; margin-bottom: 20px;">We Come to You!</h3>
+                                    <h3 style="color: #030f68; font-weight: 700; font-size: 2rem; margin-bottom: 20px;">{{ __('home.why.mobile_title') }}</h3>
                                     <p style="color: #666; font-size: 1.1rem; line-height: 1.6; margin-bottom: 25px;">
-                                        Can't make it to our studio? No problem! We offer mobile braiding services throughout Ottawa. Enjoy professional hair styling in the comfort of your own home.
+                                        {{ __('home.why.mobile_body') }}
                                     </p>
                                     <div class="slide-features">
                                         <div class="feature-item" style="display: flex; align-items: center; margin-bottom: 15px;">
                                             <i class="bi bi-house-heart-fill" style="color: #ff6600; margin-right: 10px; font-size: 1.3rem;"></i>
-                                            <span style="color: #333; font-weight: 500;">Convenient at-home service</span>
+                                            <span style="color: #333; font-weight: 500;">{{ __('home.why.mobile_home') }}</span>
                                         </div>
                                         <div class="feature-item" style="display: flex; align-items: center; margin-bottom: 15px;">
                                             <i class="bi bi-clock-fill" style="color: #ff6600; margin-right: 10px; font-size: 1.3rem;"></i>
-                                            <span style="color: #333; font-weight: 500;">Flexible scheduling options</span>
+                                            <span style="color: #333; font-weight: 500;">{{ __('home.why.mobile_flex') }}</span>
                                         </div>
                                         <div class="feature-item" style="display: flex; align-items: center; margin-bottom: 15px;">
                                             <i class="bi bi-geo-alt-fill" style="color: #ff6600; margin-right: 10px; font-size: 1.3rem;"></i>
-                                            <span style="color: #333; font-weight: 500;">Serving all of Ottawa</span>
+                                            <span style="color: #333; font-weight: 500;">{{ __('home.why.mobile_ottawa') }}</span>
                                         </div>
                                         <div class="feature-item" style="display: flex; align-items: center; margin-bottom: 15px;">
                                             <i class="bi bi-people-fill" style="color: #ff6600; margin-right: 10px; font-size: 1.3rem;"></i>
-                                            <span style="color: #333; font-weight: 500;">Great for groups & parties</span>
+                                            <span style="color: #333; font-weight: 500;">{{ __('home.why.mobile_groups') }}</span>
                                         </div>
                                     </div>
                                     <div class="mt-4" style="background: linear-gradient(135deg, rgba(255,102,0,0.1) 0%, rgba(3,15,104,0.05) 100%); padding: 18px; border-radius: 12px; border-left: 4px solid #ff6600;">
-                                        <p style="margin: 0; color: #030f68; font-weight: 600; font-size: 1rem;">Select "Mobile Service" when booking to have us come to your location!</p>
+                                        <p style="margin: 0; color: #030f68; font-weight: 600; font-size: 1rem;">{{ __('home.why.mobile_note') }}</p>
                                     </div>
                                     <button class="btn btn-warning mt-3" onclick="window.scrollTo({top: 0, behavior: 'smooth'});" style="font-weight: 600; padding: 12px 30px;">
-                                        <i class="bi bi-calendar-check me-2"></i>Book Mobile Service
+                                        <i class="bi bi-calendar-check me-2"></i>{{ __('home.why.book_mobile') }}
                                     </button>
                                 </div>
                             </div>
                             <div class="col-lg-6">
                                 <div class="slide-image" style="text-align: center;">
-                                    <img src="{{ asset('images/mobile-home-service.png') }}" alt="Mobile Home Service - Beauty Services Anywhere, Anytime" style="width: 100%; max-width: 500px; height: 400px; object-fit: contain; border-radius: 20px; box-shadow: 0 15px 40px rgba(0,0,0,0.15); background: white; padding: 20px;">
+                                    <img src="{{ asset('images/mobile-home-service.png') }}" alt="{{ __('home.why.alt_mobile') }}" style="width: 100%; max-width: 500px; height: 400px; object-fit: contain; border-radius: 20px; box-shadow: 0 15px 40px rgba(0,0,0,0.15); background: white; padding: 20px;">
                                 </div>
                             </div>
                         </div>
@@ -4653,41 +4655,41 @@
                         <div class="row align-items-center">
                             <div class="col-lg-6">
                                 <div class="slide-content" style="padding: 40px;">
-                                    <h3 style="color: #030f68; font-weight: 700; font-size: 2rem; margin-bottom: 20px;">Ready for Your Transformation?</h3>
+                                    <h3 style="color: #030f68; font-weight: 700; font-size: 2rem; margin-bottom: 20px;">{{ __('home.why.ready_title') }}</h3>
                                     <p style="color: #666; font-size: 1.1rem; line-height: 1.6; margin-bottom: 25px;">
-                                        Book your appointment now and experience the DBT difference. We're here to make you look and feel amazing!
+                                        {{ __('home.why.ready_body') }}
                                     </p>
                                     <div class="slide-features">
                                         <div style="background: linear-gradient(135deg, #030f68 0%, #ff6600 100%); border-radius: 15px; padding: 25px; color: white; margin-bottom: 20px;">
-                                            <h4 style="color: white; font-weight: 700; margin-bottom: 15px; font-size: 1.4rem;">What You Get:</h4>
+                                            <h4 style="color: white; font-weight: 700; margin-bottom: 15px; font-size: 1.4rem;">{{ __('home.why.what_you_get') }}</h4>
                                             <div style="display: flex; align-items: center; margin-bottom: 10px;">
                                                 <i class="bi bi-check-circle-fill me-2"></i>
-                                                <span>Expert consultation & styling advice</span>
+                                                <span>{{ __('home.why.get_consult') }}</span>
                                             </div>
                                             <div style="display: flex; align-items: center; margin-bottom: 10px;">
                                                 <i class="bi bi-check-circle-fill me-2"></i>
-                                                <span>Premium quality hair extensions</span>
+                                                <span>{{ __('home.why.get_hair') }}</span>
                                             </div>
                                             <div style="display: flex; align-items: center; margin-bottom: 10px;">
                                                 <i class="bi bi-check-circle-fill me-2"></i>
-                                                <span>Comfortable, relaxing atmosphere</span>
+                                                <span>{{ __('home.why.get_atmosphere') }}</span>
                                             </div>
                                             <div style="display: flex; align-items: center; margin-bottom: 10px;">
                                                 <i class="bi bi-check-circle-fill me-2"></i>
-                                                <span>Aftercare tips & product recommendations</span>
+                                                <span>{{ __('home.why.get_aftercare') }}</span>
                                             </div>
                                             <div style="display: flex; align-items: center;">
                                                 <i class="bi bi-check-circle-fill me-2"></i>
-                                                <span>100% satisfaction guarantee</span>
+                                                <span>{{ __('home.why.get_guarantee') }}</span>
                                             </div>
                                         </div>
                                     </div>
                                     <div style="display: flex; gap: 10px; flex-wrap: wrap;">
                                         <button class="btn btn-warning" onclick="window.scrollTo({top: 0, behavior: 'smooth'});" style="font-weight: 600; padding: 12px 30px;">
-                                            <i class="bi bi-calendar-check me-2"></i>Book Now
+                                            <i class="bi bi-calendar-check me-2"></i>{{ __('home.why.book_now') }}
                                         </button>
                                         <button class="btn btn-outline-primary" onclick="document.getElementById('services').scrollIntoView({behavior: 'smooth'});" style="font-weight: 600; padding: 12px 30px; border: 2px solid #030f68; color: #030f68;">
-                                            <i class="bi bi-grid me-2"></i>View Services
+                                            <i class="bi bi-grid me-2"></i>{{ __('home.why.view_services_short') }}
                                         </button>
                                     </div>
                                 </div>
@@ -4697,8 +4699,8 @@
                                     <div style="position: absolute; inset: 0; background: url('{{ asset('images/stitch braid.jpg') }}') center/cover; opacity: 0.2;"></div>
                                     <div class="text-center" style="position: relative; z-index: 1; color: white; padding: 40px;">
                                         <i class="bi bi-stars" style="font-size: 4rem; margin-bottom: 20px;"></i>
-                                        <h4 style="font-weight: 700; margin-bottom: 15px; font-size: 1.8rem;">Your Hair Deserves the Best</h4>
-                                        <p style="font-size: 1.2rem; margin-bottom: 0;">Professional. Caring. Exceptional.</p>
+                                        <h4 style="font-weight: 700; margin-bottom: 15px; font-size: 1.8rem;">{{ __('home.why.deserves') }}</h4>
+                                        <p style="font-size: 1.2rem; margin-bottom: 0;">{{ __('home.why.tagline_short') }}</p>
                                     </div>
                                 </div>
                             </div>
@@ -4709,11 +4711,11 @@
                 <!-- Carousel Controls -->
                 <button class="carousel-control-prev" type="button" data-bs-target="#workSlider" data-bs-slide="prev">
                     <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-                    <span class="visually-hidden">Previous</span>
+                    <span class="visually-hidden">{{ __('home.why.previous') }}</span>
                 </button>
                 <button class="carousel-control-next" type="button" data-bs-target="#workSlider" data-bs-slide="next">
                     <span class="carousel-control-next-icon" aria-hidden="true"></span>
-                    <span class="visually-hidden">Next</span>
+                    <span class="visually-hidden">{{ __('home.why.next') }}</span>
                 </button>
             </div>
         </div>
@@ -4723,15 +4725,15 @@
     <section id="services" class="services-section">
         <div class="container" style="padding-top: 40px; padding-bottom: 40px;">
             <div class="text-center mb-5">
-                <h2 class="section-title" style="font-weight: 700;">Our Services</h2>
-                <p class="lead">Professional hair braiding and styling services</p>
+                <h2 class="section-title" style="font-weight: 700;">{{ __('home.services.title') }}</h2>
+                <p class="lead">{{ __('home.services.subtitle') }}</p>
             </div>
 
             <!-- Quick Pick Filter -->
             <div class="mb-4 text-center">
-                <div class="d-inline-flex flex-wrap gap-2 justify-content-center" role="group" aria-label="Service filter">
+                <div class="d-inline-flex flex-wrap gap-2 justify-content-center" role="group" aria-label="{{ __('home.services.filter') }}">
                     <button class="btn btn-sm btn-outline-primary filter-chip active" data-filter="all" onclick="filterServices('all')">
-                        All Services
+                        {{ __('home.services.all') }}
                     </button>
                     <button class="btn btn-sm btn-outline-primary filter-chip" data-filter="knotless" onclick="filterServices('knotless')">
                         Knotless Braids
@@ -4758,7 +4760,7 @@
                         Kids Braid
                     </button>
                     <button class="btn btn-sm btn-outline-primary filter-chip" data-filter="other" onclick="filterServices('other')">
-                        More Styles
+                        {{ __('home.services.more') }}
                     </button>
                 </div>
             </div>
@@ -4784,11 +4786,11 @@
                     <div class="service-card h-100" onclick="openServiceSizeModal('knotless')">
                         <img src="{{ $homeCardImage('knotless', asset('images/webbraids2.jpg')) }}" alt="{{ $catLabel('knotless', 'Knotless Braids') }}">
                         <h4>{{ $catLabel('knotless', 'Knotless Braids') }}</h4>
-                        <p class="mb-2">{{ $homeCardDesc('knotless', 'Versatile protective style available in multiple sizes—from ultra-fine to jumbo.') }}</p>
-                        <p class="mb-1"><strong>Time:</strong> 2–7 hrs • <strong>Sizes:</strong> Small, Smedium, Medium, Jumbo</p>
-                        <p class="mb-3"><strong>Hair:</strong> Not included</p>
-                        @include('partials.service-price', ['priceKey' => 'jumbo_knotless', 'priceDefault' => 100, 'priceLabel' => '(varies by size & length)'])
-                        <button class="btn btn-warning mt-3">Select Size & Book</button>
+                        <p class="mb-2">{{ $homeCardDesc('knotless', __('home.services.knotless_desc')) }}</p>
+                        <p class="mb-1"><strong>{{ __('home.services.time') }}:</strong> 2–7 hrs • <strong>{{ __('home.services.sizes') }}:</strong> {{ __('home.services.sizes_knotless') }}</p>
+                        <p class="mb-3"><strong>{{ __('home.services.hair') }}:</strong> {{ __('home.services.not_included') }}</p>
+                        @include('partials.service-price', ['priceKey' => 'jumbo_knotless', 'priceDefault' => 100, 'priceLabel' => __('home.services.varies_size_length')])
+                        <button class="btn btn-warning mt-3">{{ __('home.services.select_size') }}</button>
                     </div>
                 </div>
                 @endif
@@ -4797,11 +4799,11 @@
                     <div class="service-card h-100" onclick="openServiceSizeModal('french-curl')">
                         <img src="{{ $homeCardImage('french-curl', asset('images/french curl braid.jpg')) }}" alt="{{ $catLabel('french-curl', 'French Curl Braids') }}">
                         <h4>{{ $catLabel('french-curl', 'French Curl Braids') }}</h4>
-                        <p class="mb-2">{{ $homeCardDesc('french-curl', 'Elegant braids with beautiful curly ends for a sophisticated, romantic look.') }}</p>
-                        <p class="mb-1"><strong>Time:</strong> 3–7 hrs • <strong>Sizes:</strong> Small, Smedium, Medium, Large</p>
-                        <p class="mb-3"><strong>Hair:</strong> Not included</p>
-                        @include('partials.service-price', ['priceKey' => 'large_french_curl', 'priceDefault' => 120, 'priceLabel' => '(varies by size & length)'])
-                        <button class="btn btn-warning mt-3">Select Size & Book</button>
+                        <p class="mb-2">{{ $homeCardDesc('french-curl', __('home.services.french_desc')) }}</p>
+                        <p class="mb-1"><strong>{{ __('home.services.time') }}:</strong> 3–7 hrs • <strong>{{ __('home.services.sizes') }}:</strong> {{ __('home.services.sizes_french') }}</p>
+                        <p class="mb-3"><strong>{{ __('home.services.hair') }}:</strong> {{ __('home.services.not_included') }}</p>
+                        @include('partials.service-price', ['priceKey' => 'large_french_curl', 'priceDefault' => 120, 'priceLabel' => __('home.services.varies_size_length')])
+                        <button class="btn btn-warning mt-3">{{ __('home.services.select_size') }}</button>
                     </div>
                 </div>
                 @endif
@@ -4810,11 +4812,11 @@
                     <div class="service-card h-100" onclick="openServiceSizeModal('twist')">
                         <img src="{{ $homeCardImage('twist', asset('images/twist-main.jpg')) }}" alt="{{ $catLabel('twist', 'Twist Braid') }}">
                         <h4>{{ $catLabel('twist', 'Twist Braid') }}</h4>
-                        <p class="mb-2">{{ $homeCardDesc('twist', 'Twist braid') }}</p>
-                        <p class="mb-1"><strong>Time:</strong> 3–6 hrs • <strong>Sizes:</strong> Small, Medium, Jumbo/Large</p>
-                        <p class="mb-3"><strong>Hair:</strong> Not included</p>
-                        @include('partials.service-price', ['priceKey' => 'jumbo_twist', 'priceDefault' => 100, 'priceLabel' => '(varies by size & length)'])
-                        <button class="btn btn-warning mt-3">Select Size & Book</button>
+                        <p class="mb-2">{{ $homeCardDesc('twist', __('home.services.twist_desc')) }}</p>
+                        <p class="mb-1"><strong>{{ __('home.services.time') }}:</strong> 3–6 hrs • <strong>{{ __('home.services.sizes') }}:</strong> {{ __('home.services.sizes_twist') }}</p>
+                        <p class="mb-3"><strong>{{ __('home.services.hair') }}:</strong> {{ __('home.services.not_included') }}</p>
+                        @include('partials.service-price', ['priceKey' => 'jumbo_twist', 'priceDefault' => 100, 'priceLabel' => __('home.services.varies_size_length')])
+                        <button class="btn btn-warning mt-3">{{ __('home.services.select_size') }}</button>
                     </div>
                 </div>
                 @endif
@@ -4823,11 +4825,11 @@
                     <div class="service-card h-100" onclick="openServiceSizeModal('natural-hair-twist')">
                         <img src="{{ $homeCardImage('natural-hair-twist', asset('images/twists-natural-hair.jpg')) }}" alt="{{ $catLabel('natural-hair-twist', 'Natural Hair Twist') }}">
                         <h4>{{ $catLabel('natural-hair-twist', 'Natural Hair Twist') }}</h4>
-                        <p class="mb-2">{{ $homeCardDesc('natural-hair-twist', 'Two-strand twists using your natural hair—no extensions needed, perfect for low-manipulation styling.') }}</p>
-                        <p class="mb-1"><strong>Time:</strong> 2–3 hrs • <strong>Sizes:</strong> Small, Medium</p>
-                        <p class="mb-3"><strong>Hair:</strong> Not needed • <strong>Note:</strong> No length adjustment</p>
-                        @include('partials.service-price', ['priceKey' => 'medium_natural_hair_twist', 'priceDefault' => 60, 'priceLabel' => '(varies by size)'])
-                        <button class="btn btn-warning mt-3">Select Size & Book</button>
+                        <p class="mb-2">{{ $homeCardDesc('natural-hair-twist', __('home.services.natural_twist_desc')) }}</p>
+                        <p class="mb-1"><strong>{{ __('home.services.time') }}:</strong> 2–3 hrs • <strong>{{ __('home.services.sizes') }}:</strong> {{ __('home.services.sizes_natural') }}</p>
+                        <p class="mb-3"><strong>{{ __('home.services.hair') }}:</strong> {{ __('home.services.not_needed') }} • <strong>{{ __('home.services.note') }}:</strong> {{ __('home.services.no_length') }}</p>
+                        @include('partials.service-price', ['priceKey' => 'medium_natural_hair_twist', 'priceDefault' => 60, 'priceLabel' => __('home.services.varies_size')])
+                        <button class="btn btn-warning mt-3">{{ __('home.services.select_size') }}</button>
                     </div>
                 </div>
                 @endif
@@ -4836,11 +4838,11 @@
                     <div class="service-card h-100" onclick="openServiceSizeModal('kinky-passion-twist')">
                         <img src="{{ $homeCardImage('kinky-passion-twist', asset('images/kinky braid.jpeg')) }}" alt="{{ $catLabel('kinky-passion-twist', 'Kinky & Passion Twists') }}">
                         <h4>{{ $catLabel('kinky-passion-twist', 'Kinky & Passion Twists') }}</h4>
-                        <p class="mb-2">{{ $homeCardDesc('kinky-passion-twist', 'Stylish kinky and passion twists in various sizes—versatile protective styles with plenty of texture and dimension.') }}</p>
-                        <p class="mb-1"><strong>Time:</strong> 2.5–5 hrs • <strong>Types:</strong> Kinky & Passion Twists</p>
-                        <p class="mb-3"><strong>Hair:</strong> Not included • <strong>Sizes:</strong> Small, Medium, Jumbo</p>
-                        @include('partials.service-price', ['priceKey' => 'kinky_twist', 'priceDefault' => 90, 'priceLabel' => '(varies by type & size)'])
-                        <button class="btn btn-warning mt-3">Select Size & Book</button>
+                        <p class="mb-2">{{ $homeCardDesc('kinky-passion-twist', __('home.services.kinky_desc')) }}</p>
+                        <p class="mb-1"><strong>{{ __('home.services.time') }}:</strong> 2.5–5 hrs • <strong>{{ __('home.services.types') }}:</strong> {{ __('home.services.types_kinky') }}</p>
+                        <p class="mb-3"><strong>{{ __('home.services.hair') }}:</strong> {{ __('home.services.not_included') }} • <strong>{{ __('home.services.sizes') }}:</strong> {{ __('home.services.sizes_kinky') }}</p>
+                        @include('partials.service-price', ['priceKey' => 'kinky_twist', 'priceDefault' => 90, 'priceLabel' => __('home.services.varies_type_size')])
+                        <button class="btn btn-warning mt-3">{{ __('home.services.select_size') }}</button>
                     </div>
                 </div>
                 @endif
@@ -4849,11 +4851,11 @@
                     <div class="service-card h-100" onclick="openServiceSizeModal('crotchet')">
                         <img src="{{ $homeCardImage('crotchet', asset('images/kinky crotchet.png')) }}" alt="{{ $catLabel('crotchet', 'Crotchet Styles') }}">
                         <h4>{{ $catLabel('crotchet', 'Crotchet Styles') }}</h4>
-                        <p class="mb-2">{{ $homeCardDesc('crotchet', 'Quick protective styles with various crotchet options—versatile and low-maintenance.') }}</p>
-                        <p class="mb-1"><strong>Time:</strong> 1.5–5 hrs • <strong>Types:</strong> 2-3 line single crotchet, Afro, Individual Crotchet, Butterfly, Weave Crotchet</p>
-                        <p class="mb-3"><strong>Hair:</strong> Not included • <strong>Note:</strong> No length adjustment needed</p>
-                        @include('partials.service-price', ['priceKey' => 'weave_crotchet', 'priceDefault' => 80, 'priceLabel' => '(varies by type)'])
-                        <button class="btn btn-warning mt-3">Select Type & Book</button>
+                        <p class="mb-2">{{ $homeCardDesc('crotchet', __('home.services.crotchet_desc')) }}</p>
+                        <p class="mb-1"><strong>{{ __('home.services.time') }}:</strong> 1.5–5 hrs • <strong>{{ __('home.services.types') }}:</strong> {{ __('home.services.types_crotchet') }}</p>
+                        <p class="mb-3"><strong>{{ __('home.services.hair') }}:</strong> {{ __('home.services.not_included') }} • <strong>{{ __('home.services.note') }}:</strong> {{ __('home.services.no_length_needed') }}</p>
+                        @include('partials.service-price', ['priceKey' => 'weave_crotchet', 'priceDefault' => 80, 'priceLabel' => __('home.services.varies_type')])
+                        <button class="btn btn-warning mt-3">{{ __('home.services.select_type') }}</button>
                     </div>
                 </div>
                 @endif
@@ -4863,15 +4865,15 @@
                     <div class="service-card h-100" onclick="window.location.href='/kids-selector'">
                         <img src="{{ asset('images/kids hair style.webp') }}" alt="{{ $catLabel('kids', 'Kids Braids') }}">
                         <h4>{{ $catLabel('kids', 'Kids Braids') }}</h4>
-                        <p class="mb-2">{{ $homeCardDesc('kids', 'Fun, gentle braiding styles designed for children—knotless, cornrows, and more.') }}</p>
-                        <p class="mb-1"><strong>Time:</strong> 1–3 hrs • <strong>Sizes:</strong> Small, Medium, Large</p>
-                        <p class="mb-3"><strong>Hair:</strong> Not included</p>
+                        <p class="mb-2">{{ app()->getLocale() === 'en' ? $homeCardDesc('kids', __('home.services.kids_desc')) : __('home.services.kids_desc') }}</p>
+                        <p class="mb-1"><strong>{{ __('home.services.time') }}:</strong> 1–3 hrs • <strong>{{ __('home.services.sizes') }}:</strong> {{ __('home.services.sizes_kids') }}</p>
+                        <p class="mb-3"><strong>{{ __('home.services.hair') }}:</strong> {{ __('home.services.not_included') }}</p>
                         @php $kidsLowest = \App\Support\KidsStyleCatalog::lowestVisiblePrice(); @endphp
                         <p class="price">
                             <strong>${{ number_format($kidsLowest, 0) }}</strong>
-                            <small class="text-muted">(varies by style &amp; length)</small>
+                            <small class="text-muted">{{ __('home.services.varies_style_length') }}</small>
                         </p>
-                        <button class="btn btn-warning mt-3">Select Style & Book</button>
+                        <button class="btn btn-warning mt-3">{{ __('home.services.select_style') }}</button>
                     </div>
                 </div>
                 @endif
@@ -4880,12 +4882,12 @@
                     <div class="service-card h-100" onclick="openServiceSizeModal('cornrow')">
                         <img src="{{ $homeCardImage('cornrow', asset('images/stitch braid.jpg')) }}" alt="{{ $catLabel('cornrow', 'Cornrow/Feed-in Braids') }}">
                         <h4>{{ $catLabel('cornrow', 'Cornrow/Feed-in Braids') }}</h4>
-                        <p class="mb-2">{{ $homeCardDesc('cornrow', 'Classic cornrows and feed-in styles with or without weave extensions.') }}</p>
-                        <p class="mb-1"><strong>Time:</strong> 1–5 hrs • <strong>Types:</strong> Stitch Weave, Cornrow Weave, Under-wig Weave (no extension), Weave&Braid Mixed</p>
-                        <p class="mb-2"><strong>Hair:</strong> Not included</p>
-                        <p class="mb-3" style="font-size: 0.9rem;"><strong>Note:</strong> Stitch/Cornrow: 8-10 rows $100, 10+ rows $130. Under-wig: $30 (no length). Mixed: $150</p>
-                        @include('partials.service-price', ['priceKey' => 'under_wig_weave', 'priceDefault' => 30, 'priceLabel' => '(varies by type)'])
-                        <button class="btn btn-warning mt-3">Select Type & Book</button>
+                        <p class="mb-2">{{ $homeCardDesc('cornrow', __('home.services.cornrow_desc')) }}</p>
+                        <p class="mb-1"><strong>{{ __('home.services.time') }}:</strong> 1–5 hrs • <strong>{{ __('home.services.types') }}:</strong> {{ __('home.services.types_cornrow') }}</p>
+                        <p class="mb-2"><strong>{{ __('home.services.hair') }}:</strong> {{ __('home.services.not_included') }}</p>
+                        <p class="mb-3" style="font-size: 0.9rem;"><strong>{{ __('home.services.note') }}:</strong> {{ __('home.services.cornrow_note') }}</p>
+                        @include('partials.service-price', ['priceKey' => 'under_wig_weave', 'priceDefault' => 30, 'priceLabel' => __('home.services.varies_type')])
+                        <button class="btn btn-warning mt-3">{{ __('home.services.select_type') }}</button>
                     </div>
                 </div>
                 @endif
@@ -4894,11 +4896,11 @@
                     <div class="service-card h-100" onclick="openServiceSizeModal('hair-treatment')">
                         <img src="{{ $homeCardImage('hair-treatment', asset('images/hair_mask.png')) }}" alt="{{ $catLabel('hair-treatment', 'Hair Treatment Services') }}">
                         <h4>{{ $catLabel('hair-treatment', 'Hair Treatment Services') }}</h4>
-                        <p class="mb-2">{{ $homeCardDesc('hair-treatment', 'Professional hair care treatments for natural and relaxed hair.') }}</p>
-                        <p class="mb-1"><strong>Time:</strong> 45 min–2 hrs • <strong>Options:</strong> Natural Hair Mask, Chemical Relaxer</p>
-                        <p class="mb-3"><strong>Note:</strong> Optional weave treatment adds $30 to any service</p>
-                        @include('partials.service-price', ['priceKey' => 'hair_mask', 'priceDefault' => 50, 'priceLabel' => '(all treatments $50-$80)'])
-                        <button class="btn btn-warning mt-3">Select Treatment & Book</button>
+                        <p class="mb-2">{{ $homeCardDesc('hair-treatment', __('home.services.treatment_desc')) }}</p>
+                        <p class="mb-1"><strong>{{ __('home.services.time') }}:</strong> 45 min–2 hrs • <strong>{{ __('home.services.options') }}:</strong> {{ __('home.services.options_treatment') }}</p>
+                        <p class="mb-3"><strong>{{ __('home.services.note') }}:</strong> {{ __('home.services.treatment_note') }}</p>
+                        @include('partials.service-price', ['priceKey' => 'hair_mask', 'priceDefault' => 50, 'priceLabel' => __('home.services.all_treatments')])
+                        <button class="btn btn-warning mt-3">{{ __('home.services.select_treatment') }}</button>
                     </div>
                 </div>
                 @endif
@@ -4907,11 +4909,11 @@
                     <div class="service-card h-100" onclick="openServiceSizeModal('boho')">
                         <img src="{{ $homeCardImage('boho', asset('images/boho braid.jpg')) }}" alt="{{ $catLabel('boho', 'Boho Braids') }}">
                         <h4>{{ $catLabel('boho', 'Boho Braids') }}</h4>
-                        <p class="mb-2">{{ $homeCardDesc('boho', 'Knotless braids with curly ends left out for a free-spirited, bohemian look.') }}</p>
-                        <p class="mb-1"><strong>Time:</strong> 3–7 hrs • <strong>Sizes:</strong> Small, Smedium, Medium, Jumbo/Large</p>
-                        <p class="mb-3"><strong>Hair:</strong> Not included</p>
-                        @include('partials.service-price', ['priceKey' => 'jumbo_boho', 'priceDefault' => 100, 'priceLabel' => '(varies by size & length)'])
-                        <button class="btn btn-warning mt-3">Select Size & Book</button>
+                        <p class="mb-2">{{ $homeCardDesc('boho', __('home.services.boho_desc')) }}</p>
+                        <p class="mb-1"><strong>{{ __('home.services.time') }}:</strong> 3–7 hrs • <strong>{{ __('home.services.sizes') }}:</strong> {{ __('home.services.sizes_boho') }}</p>
+                        <p class="mb-3"><strong>{{ __('home.services.hair') }}:</strong> {{ __('home.services.not_included') }}</p>
+                        @include('partials.service-price', ['priceKey' => 'jumbo_boho', 'priceDefault' => 100, 'priceLabel' => __('home.services.varies_size_length')])
+                        <button class="btn btn-warning mt-3">{{ __('home.services.select_size') }}</button>
                     </div>
                 </div>
                 @endif
@@ -4921,9 +4923,9 @@
                         <div class="service-card h-100" onclick="openServiceSizeModal({{ json_encode($cmsCard['key']) }})">
                             <img src="{{ $cmsCard['image'] ?: $homeCardImage($cmsCard['key'], asset('images/braids.jpeg')) }}" alt="{{ $cmsCard['title'] }}">
                             <h4>{{ $cmsCard['title'] }}</h4>
-                            <p class="mb-2">{{ $cmsCard['description'] ?: $homeCardDesc($cmsCard['key'], 'Explore additional styles beyond our featured categories.') }}</p>
-                            <p class="mb-3"><strong>Hair:</strong> Not included</p>
-                            <button class="btn btn-warning mt-3">Select Style & Book</button>
+                            <p class="mb-2">{{ $cmsCard['description'] ?: $homeCardDesc($cmsCard['key'], __('home.services.custom_fallback')) }}</p>
+                            <p class="mb-3"><strong>{{ __('home.services.hair') }}:</strong> {{ __('home.services.not_included') }}</p>
+                            <button class="btn btn-warning mt-3">{{ __('home.services.select_style') }}</button>
                         </div>
                     </div>
                 @endforeach
@@ -4932,7 +4934,7 @@
             <!-- View More Services Button for Mobile -->
             <div class="text-center mt-4 d-md-none" id="viewMoreServicesContainer">
                 <button class="btn btn-primary" id="viewMoreServicesBtn" onclick="toggleMobileServices()" style="border-radius: 20px; padding: 8px 24px; font-size: 0.95rem; font-weight: 600; box-shadow: 0 3px 10px rgba(3, 15, 104, 0.15);">
-                    <span id="viewMoreServicesText">View More Services</span>
+                    <span id="viewMoreServicesText">{{ __('home.services.view_more') }}</span>
                     <i class="bi bi-chevron-down ms-2" id="viewMoreServicesIcon"></i>
                 </button>
             </div>
@@ -4943,7 +4945,7 @@
 <script>
 function openOtherServicesModal() {
     var modalEl = document.getElementById('customServiceRequestModal');
-    if (!modalEl) { alert('Custom service request form not found.'); return; }
+    if (!modalEl) { alert(@json(__('home.services.custom_missing'))); return; }
     if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
         new bootstrap.Modal(modalEl).show();
     } else {
@@ -4958,18 +4960,18 @@ function openOtherServicesModal() {
             <div class="row justify-content-center">
                 <div class="col-lg-8">
                     <h4 class="mb-3" style="color: #030f68; font-weight: 600;">
-                        <i class="bi bi-star me-2"></i>Don't See Your Desired Service?
+                        <i class="bi bi-star me-2"></i>{{ __('home.services.other_title') }}
                     </h4>
                     <p class="lead mb-4" style="color: #6c757d;">
-                        We offer many more services beyond what's listed above. Book a consultation and let us know what you need!
+                        {{ __('home.services.other_body') }}
                     </p>
                     <button type="button" class="btn btn-outline-primary btn-lg px-5" onclick="openOtherServicesModal()" style="font-weight: 600; border-radius: 25px; box-shadow: 0 4px 12px rgba(3, 15, 104, 0.2);">
-                        <i class="bi bi-plus-circle me-2"></i>Custom Service Request
+                        <i class="bi bi-plus-circle me-2"></i>{{ __('home.services.custom_request') }}
                     </button>
                     <div class="mt-3">
                         <small class="text-muted">
                             <i class="bi bi-info-circle me-1"></i>
-                            Tell us about your specific needs and we'll take care of you!
+                            {{ __('home.services.other_note') }}
                         </small>
                     </div>
                 </div>
@@ -4981,35 +4983,35 @@ function openOtherServicesModal() {
     <!-- Reviews Section -->
     <div class="section section-lg bg-gray-150" style="padding: 50px 0; background: #f8f9fa;">
         <div class="text-center mb-5">
-            <p class="subtitle" style="font-size:1.5rem; color:#ff6600; font-weight:600;">Our customers love DBT</p>
+            <p class="subtitle" style="font-size:1.5rem; color:#ff6600; font-weight:600;">{{ __('home.reviews.love') }}</p>
             <div class="subtitle-box" style="display:inline-block; margin-bottom:18px;">
-                <div class="subtitle-box-text" style="font-size:2rem; color:#030f68; font-weight:700;">Reviews</div>
+                <div class="subtitle-box-text" style="font-size:2rem; color:#030f68; font-weight:700;">{{ __('home.reviews.title') }}</div>
             </div>
         </div>
         <div class="owl-carousel owl-theme-1" data-items="1" data-sm-items="1" data-md-items="1" data-lg-items="1" data-xl-items="2" data-xxl-items="3" data-margin="15px" data-nav="false" data-dots="true" data-autoplay="5000">
             <div class="testimonial-box" style="background:linear-gradient(135deg,#e3eafc 0%,#f8f9fa 100%); border-radius:18px; box-shadow:0 8px 32px rgba(0,0,0,0.12); padding:38px 28px; margin:0 12px; position:relative;">
-                <div class="testimonial-title" style="font-size:1.3rem; color:#ff6600; font-weight:700; margin-top:32px;">Cool!</div>
-                <div class="testimonial-rate"><img src="{{ asset('images/star-ratings.webp') }}" alt="5 Star Rating" width="120" height="22"/></div>
-                <div class="testimonial-text" style="font-size:1.12rem; color:#222; margin:18px 0; font-style:italic;">"DBT offers great services and she delivers excellently. </div>
-                <div class="testimonial-name" style="font-size:1rem; color:#030f68; font-weight:500;">Client 1</div>
+                <div class="testimonial-title" style="font-size:1.3rem; color:#ff6600; font-weight:700; margin-top:32px;">{{ __('home.reviews.cool') }}</div>
+                <div class="testimonial-rate"><img src="{{ asset('images/star-ratings.webp') }}" alt="{{ __('home.reviews.stars') }}" width="120" height="22"/></div>
+                <div class="testimonial-text" style="font-size:1.12rem; color:#222; margin:18px 0; font-style:italic;">{{ __('home.reviews.r1') }} </div>
+                <div class="testimonial-name" style="font-size:1rem; color:#030f68; font-weight:500;">{{ __('home.reviews.client', ['n' => 1]) }}</div>
             </div>
             <div class="testimonial-box" style="background:linear-gradient(135deg,#fff6e3 0%,#ffe3e3 100%); border-radius:18px; box-shadow:0 8px 32px rgba(0,0,0,0.12); padding:38px 28px; margin:0 12px; position:relative;">
-                <div class="testimonial-title" style="font-size:1.3rem; color:#ff6600; font-weight:700; margin-top:32px;">Excellent!</div>
-                <div class="testimonial-rate"><img src="{{ asset('images/star-ratings.webp') }}" alt="5 Star Rating" width="120" height="22"/></div>
-                <div class="testimonial-text" style="font-size:1.12rem; color:#222; margin:18px 0; font-style:italic;">"Very patient and time conscious. She follows up and ensures customer comfortability. I always leave happy!"</div>
-                <div class="testimonial-name" style="font-size:1rem; color:#030f68; font-weight:500;">Client 2</div>
+                <div class="testimonial-title" style="font-size:1.3rem; color:#ff6600; font-weight:700; margin-top:32px;">{{ __('home.reviews.excellent') }}</div>
+                <div class="testimonial-rate"><img src="{{ asset('images/star-ratings.webp') }}" alt="{{ __('home.reviews.stars') }}" width="120" height="22"/></div>
+                <div class="testimonial-text" style="font-size:1.12rem; color:#222; margin:18px 0; font-style:italic;">{{ __('home.reviews.r2') }}</div>
+                <div class="testimonial-name" style="font-size:1rem; color:#030f68; font-weight:500;">{{ __('home.reviews.client', ['n' => 2]) }}</div>
             </div>
             <div class="testimonial-box" style="background:linear-gradient(135deg,#e3ffe3 0%,#e3f8ff 100%); border-radius:18px; box-shadow:0 8px 32px rgba(0,0,0,0.12); padding:38px 28px; margin:0 12px; position:relative;">
-                <div class="testimonial-title" style="font-size:1.3rem; color:#ff6600; font-weight:700; margin-top:32px;">Amazing!</div>
-                <div class="testimonial-rate"><img src="{{ asset('images/star-ratings.webp') }}" alt="5 Star Rating" width="120" height="22"/></div>
-                <div class="testimonial-text" style="font-size:1.12rem; color:#222; margin:18px 0; font-style:italic;">"DBT braided my child's hair and my child was very comfortable. Her braids don't hurt much and last long!"</div>
-                <div class="testimonial-name" style="font-size:1rem; color:#030f68; font-weight:500;">Client 3</div>
+                <div class="testimonial-title" style="font-size:1.3rem; color:#ff6600; font-weight:700; margin-top:32px;">{{ __('home.reviews.amazing') }}</div>
+                <div class="testimonial-rate"><img src="{{ asset('images/star-ratings.webp') }}" alt="{{ __('home.reviews.stars') }}" width="120" height="22"/></div>
+                <div class="testimonial-text" style="font-size:1.12rem; color:#222; margin:18px 0; font-style:italic;">{{ __('home.reviews.r3') }}</div>
+                <div class="testimonial-name" style="font-size:1rem; color:#030f68; font-weight:500;">{{ __('home.reviews.client', ['n' => 3]) }}</div>
             </div>
             <div class="testimonial-box" style="background:linear-gradient(135deg,#f8e3ff 0%,#e3eaff 100%); border-radius:18px; box-shadow:0 8px 32px rgba(0,0,0,0.12); padding:38px 28px; margin:0 12px; position:relative;">
-                <div class="testimonial-title" style="font-size:1.3rem; color:#ff6600; font-weight:700; margin-top:32px;">Excellent!</div>
-                <div class="testimonial-rate"><img src="{{ asset('images/star-ratings.webp') }}" alt="5 Star Rating" width="120" height="22"/></div>
-                <div class="testimonial-text" style="font-size:1.12rem; color:#222; margin:18px 0; font-style:italic;"> "Customer relationship is amazing. Very professional and very affordable service. Highly recommend DBT!"</div>
-                <div class="testimonial-name" style="font-size:1rem; color:#030f68; font-weight:500;">Client 4</div>
+                <div class="testimonial-title" style="font-size:1.3rem; color:#ff6600; font-weight:700; margin-top:32px;">{{ __('home.reviews.excellent') }}</div>
+                <div class="testimonial-rate"><img src="{{ asset('images/star-ratings.webp') }}" alt="{{ __('home.reviews.stars') }}" width="120" height="22"/></div>
+                <div class="testimonial-text" style="font-size:1.12rem; color:#222; margin:18px 0; font-style:italic;"> {{ __('home.reviews.r4') }}</div>
+                <div class="testimonial-name" style="font-size:1rem; color:#030f68; font-weight:500;">{{ __('home.reviews.client', ['n' => 4]) }}</div>
             </div>
         </div>
     </div>
@@ -5021,13 +5023,13 @@ function openOtherServicesModal() {
                 <div class="col-lg-10">
                     <div class="card flex-row shadow-lg border-0" style="border-radius: 24px; overflow: hidden; background: #fff;">
                         <div class="col-md-7 p-5 d-flex flex-column justify-content-center">
-                            <h2 class="section-title mb-3" style="font-size:2.5rem; font-weight:700;">About Dab's Beauty Touch</h2>
-                            <p class="lead mb-3" style="font-size:1.25rem; color:#333;">Professional hair braiding services with over 10 years of experience.</p>
-                            <p style="font-size:1.05rem; color:#444;">At Dab's Beauty Touch, we specialize in creating beautiful, long-lasting braided hairstyles that enhance your natural beauty. <br>We believe that confidence begins with feeling great about how you look. Known for our exceptional craftsmanship and creative hairstyle designs, we don't just transform appearances—we help you radiate self-assurance. Whether it's a fresh new look or a signature style, we're here to be the touch that enhances your natural beauty and leaves you feeling confident.</p>
+                            <h2 class="section-title mb-3" style="font-size:2.5rem; font-weight:700;">{{ __('home.about.title') }}</h2>
+                            <p class="lead mb-3" style="font-size:1.25rem; color:#333;">{{ __('home.about.lead') }}</p>
+                            <p style="font-size:1.05rem; color:#444;">{!! __('home.about.body') !!}</p>
 
                         </div>
                         <div class="col-md-5 d-flex align-items-center justify-content-center p-4" style="background:linear-gradient(135deg,#e3eafc 0%,#f8f9fa 100%);">
-                            <img src="{{ asset('images/About DBT.jpg') }}" alt="About Dab's Beauty Touch" class="img-fluid" style="max-width:320px; border-radius:18px; box-shadow:0 8px 32px rgba(0,0,0,0.12); border:6px solid #fff;">
+                            <img src="{{ asset('images/About DBT.jpg') }}" alt="{{ __('home.about.alt') }}" class="img-fluid" style="max-width:320px; border-radius:18px; box-shadow:0 8px 32px rgba(0,0,0,0.12); border:6px solid #fff;">
                         </div>
                     </div>
                 </div>
@@ -5056,12 +5058,12 @@ function openOtherServicesModal() {
                         <div class="d-flex align-items-center justify-content-center gap-3">
                             <div class="d-flex align-items-center" style="background: #030f68; color: white; padding: 8px 16px; border-radius: 50px; font-weight: 600;">
                                 <span class="me-2">1</span>
-                                <span>Select Size & Length</span>
+                                <span>{{ __('booking.size_modal.step1') }}</span>
                             </div>
                             <i class="bi bi-arrow-right" style="color: #ccc;"></i>
                             <div class="d-flex align-items-center" style="background: #e9ecef; color: #666; padding: 8px 16px; border-radius: 50px; font-weight: 600;">
                                 <span class="me-2">2</span>
-                                <span>Booking Details</span>
+                                <span>{{ __('booking.size_modal.step2') }}</span>
                             </div>
                         </div>
                     </div>
@@ -5069,21 +5071,21 @@ function openOtherServicesModal() {
                     <!-- Size Selection -->
                     <div class="mb-4">
                         <h6 style="font-weight: 700; color: #030f68; margin-bottom: 15px;">
-                            <i class="bi bi-grid-3x3 me-2"></i>Choose Braid Size
+                            <i class="bi bi-grid-3x3 me-2"></i>{{ __('booking.size_modal.choose_size') }}
                         </h6>
 
-                        <!-- Selected Service Display (moved to top so it appears right away on mobile) -->
+                        <!-- {{ __('booking.size_modal.selected') }} Display (moved to top so it appears right away on mobile) -->
                         <div id="selectedServiceDisplay" style="display: none; margin-bottom: 20px; padding: 15px; background: linear-gradient(135deg, #e7f3ff 0%, #cce5ff 100%); border-left: 6px solid #17a2b8; border-radius: 10px;">
                             <div style="display: flex; align-items: center; justify-content: space-between;">
                                 <div>
                                     <div style="font-size: 0.85rem; color: #6c757d; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 5px;">
-                                        Selected Service
+                                        {{ __('booking.size_modal.selected') }}
                                     </div>
                                     <div id="selectedServiceName" style="font-size: 1.1rem; font-weight: 700; color: #030f68;"></div>
                                     <div id="selectedServiceDescription" style="font-size: 0.9rem; color: #6c757d; margin-top: 8px; font-style: italic;"></div>
                                 </div>
                                 <div style="text-align: right;">
-                                    <div id="selectedServicePriceLabel" style="font-size: 0.85rem; color: #6c757d; margin-bottom: 3px;">Price</div>
+                                    <div id="selectedServicePriceLabel" style="font-size: 0.85rem; color: #6c757d; margin-bottom: 3px;">{{ __('booking.size_modal.price') }}</div>
                                     <div id="selectedServicePrice" style="font-size: 1.3rem; font-weight: 800; color: #ff6600;"></div>
                                 </div>
                             </div>
@@ -5097,10 +5099,10 @@ function openOtherServicesModal() {
                     <div class="mb-4" id="braidSizePickerSection" style="display: none;">
                         <div class="alert" style="background: linear-gradient(135deg, #fff7e0 0%, #ffe8cc 100%); border-left: 6px solid #ff6600; border-radius: 12px; padding: 20px;">
                             <h6 style="font-weight: 700; color: #030f68; margin-bottom: 15px;">
-                                <i class="bi bi-grid-3x3-gap me-2"></i>Choose Size of Braid
+                                <i class="bi bi-grid-3x3-gap me-2"></i>{{ __('booking.size_modal.choose_braid_size') }}
                             </h6>
                             <p style="margin-bottom: 15px; color: #555; font-size: 0.95rem;">
-                                Select how thin or thick you want the braids.
+                                {{ __('booking.size_modal.thin_thick') }}
                             </p>
                             <div class="d-flex flex-wrap gap-3" id="braidSizePickerOptions"></div>
                         </div>
@@ -5110,23 +5112,23 @@ function openOtherServicesModal() {
                     <div class="mb-4" id="weaveAddonSection" style="display: none;">
                         <div class="alert" style="background: linear-gradient(135deg, #fff7e0 0%, #ffe8cc 100%); border-left: 6px solid #ff6600; border-radius: 12px; padding: 20px;">
                             <h6 style="font-weight: 700; color: #030f68; margin-bottom: 15px;">
-                                <i class="bi bi-plus-circle me-2"></i>Add Weave Treatment
+                                <i class="bi bi-plus-circle me-2"></i>{{ __('booking.size_modal.add_weave') }}
                             </h6>
                             <p style="margin-bottom: 15px; color: #555; font-size: 0.95rem;">
-                                Do you want to weave your hair in a simple cornrow too?
+                                {{ __('booking.size_modal.weave_q') }}
                             </p>
                             <div class="d-flex gap-3">
                                 <div class="form-check flex-fill" style="background: #fff; padding: 15px; border-radius: 10px; border: 2px solid #e9ecef; cursor: pointer;" onclick="toggleWeaveAddon(false)">
                                     <input class="form-check-input" type="radio" name="weave_addon" id="weave_no" value="no" checked>
                                     <label class="form-check-label w-100" for="weave_no" style="cursor: pointer; font-weight: 600;">
-                                        <i class="bi bi-x-circle me-2"></i>No Weave
+                                        <i class="bi bi-x-circle me-2"></i>{{ __('booking.size_modal.no_weave') }}
                                         <span class="float-end text-muted">+$0</span>
                                     </label>
                                 </div>
                                 <div class="form-check flex-fill" style="background: #fff; padding: 15px; border-radius: 10px; border: 2px solid #e9ecef; cursor: pointer;" onclick="toggleWeaveAddon(true)">
                                     <input class="form-check-input" type="radio" name="weave_addon" id="weave_yes" value="yes">
                                     <label class="form-check-label w-100" for="weave_yes" style="cursor: pointer; font-weight: 600;">
-                                        <i class="bi bi-check-circle me-2"></i>Add Weave
+                                        <i class="bi bi-check-circle me-2"></i>{{ __('booking.size_modal.add_weave_yes') }}
                                         <span class="float-end text-success">+$30</span>
                                     </label>
                                 </div>
@@ -5138,30 +5140,30 @@ function openOtherServicesModal() {
                     <div class="mb-4" id="rowOptionsSection" style="display: none;">
                         <div class="alert" style="background: linear-gradient(135deg, #e7f3ff 0%, #cce5ff 100%); border-left: 6px solid #17a2b8; border-radius: 12px; padding: 20px;">
                             <h6 style="font-weight: 700; color: #030f68; margin-bottom: 15px;">
-                                <i class="bi bi-sliders me-2"></i>Choose Number of Rows
+                                <i class="bi bi-sliders me-2"></i>{{ __('booking.size_modal.choose_rows') }}
                             </h6>
                             <p id="rowOptionsNote" style="margin-bottom: 15px; color: #555; font-size: 0.95rem;">
-                                <strong>Note:</strong> 10+ rows (tiny) or 15+ rows attracts an extra $30.
+                                {!! __('booking.size_modal.rows_note') !!}
                             </p>
                             <div class="d-flex flex-wrap gap-3">
                                 <div class="form-check flex-fill" id="rowEightTenChoice" style="background: #fff; padding: 15px; border-radius: 10px; border: 2px solid #e9ecef; cursor: pointer; min-width: 160px;" onclick="toggleRowOption('8-10')">
                                     <input class="form-check-input" type="radio" name="row_option" id="row_8_10" value="8-10" checked>
                                     <label class="form-check-label w-100" for="row_8_10" style="cursor: pointer; font-weight: 600;">
-                                        <i class="bi bi-grid-3x2 me-2"></i>8-10 Rows
+                                        <i class="bi bi-grid-3x2 me-2"></i>{{ __('booking.size_modal.rows_8_10') }}
                                         <span class="float-end text-muted" id="rowEightTenPrice">+$0</span>
                                     </label>
                                 </div>
                                 <div class="form-check flex-fill" id="rowTenPlusChoice" style="background: #fff; padding: 15px; border-radius: 10px; border: 2px solid #e9ecef; cursor: pointer; min-width: 160px;" onclick="toggleRowOption('10+')">
                                     <input class="form-check-input" type="radio" name="row_option" id="row_10_plus" value="10+">
                                     <label class="form-check-label w-100" for="row_10_plus" style="cursor: pointer; font-weight: 600;">
-                                        <i class="bi bi-grid-fill me-2"></i>10+ Rows (Tiny)
+                                        <i class="bi bi-grid-fill me-2"></i>{{ __('booking.size_modal.rows_10') }}
                                         <span class="float-end text-info" id="rowTenPlusPrice">+$30</span>
                                     </label>
                                 </div>
                                 <div class="form-check flex-fill" id="rowFifteenPlusChoice" style="background: #fff; padding: 15px; border-radius: 10px; border: 2px solid #e9ecef; cursor: pointer; min-width: 160px;" onclick="toggleRowOption('15+')">
                                     <input class="form-check-input" type="radio" name="row_option" id="row_15_plus" value="15+">
                                     <label class="form-check-label w-100" for="row_15_plus" style="cursor: pointer; font-weight: 600;">
-                                        <i class="bi bi-grid-3x3-gap-fill me-2"></i>15+ Rows
+                                        <i class="bi bi-grid-3x3-gap-fill me-2"></i>{{ __('booking.size_modal.rows_15') }}
                                         <span class="float-end text-info" id="rowFifteenPlusPrice">+$30</span>
                                     </label>
                                 </div>
@@ -5173,23 +5175,23 @@ function openOtherServicesModal() {
                     <div class="mb-4" id="frontBackAddonSection" style="display: none;">
                         <div class="alert" style="background: linear-gradient(135deg, #fff7e0 0%, #ffe8cc 100%); border-left: 6px solid #ff6600; border-radius: 12px; padding: 20px;">
                             <h6 style="font-weight: 700; color: #030f68; margin-bottom: 15px;">
-                                <i class="bi bi-plus-circle me-2"></i>Add Back Coverage
+                                <i class="bi bi-plus-circle me-2"></i>{{ __('booking.size_modal.add_back') }}
                             </h6>
                             <p style="margin-bottom: 15px; color: #555; font-size: 0.95rem;">
-                                Would you like a single crotchet at back too?
+                                {{ __('booking.size_modal.back_q') }}
                             </p>
                             <div class="d-flex gap-3">
                                 <div class="form-check flex-fill" style="background: #fff; padding: 15px; border-radius: 10px; border: 2px solid #e9ecef; cursor: pointer;" onclick="toggleFrontBackAddon(false)">
                                     <input class="form-check-input" type="radio" name="frontback_addon" id="frontback_no" value="no" checked>
                                     <label class="form-check-label w-100" for="frontback_no" style="cursor: pointer; font-weight: 600;">
-                                        <i class="bi bi-x-circle me-2"></i>Front Only
+                                        <i class="bi bi-x-circle me-2"></i>{{ __('booking.size_modal.front_only') }}
                                         <span class="float-end text-muted">+$0</span>
                                     </label>
                                 </div>
                                 <div class="form-check flex-fill" style="background: #fff; padding: 15px; border-radius: 10px; border: 2px solid #e9ecef; cursor: pointer;" onclick="toggleFrontBackAddon(true)">
                                     <input class="form-check-input" type="radio" name="frontback_addon" id="frontback_yes" value="yes">
                                     <label class="form-check-label w-100" for="frontback_yes" style="cursor: pointer; font-weight: 600;">
-                                        <i class="bi bi-check-circle me-2"></i>Front + Back
+                                        <i class="bi bi-check-circle me-2"></i>{{ __('booking.size_modal.front_back') }}
                                         <span class="float-end text-success">+$20</span>
                                     </label>
                                 </div>
@@ -5201,82 +5203,82 @@ function openOtherServicesModal() {
                     <div class="mb-4" id="tipOptionSection" style="display: none;">
                         <div class="alert" style="background: linear-gradient(135deg, #f5f8ff 0%, #e7f3ff 100%); border-left: 6px solid #4a8bc2; border-radius: 12px; padding: 20px;">
                             <h6 style="font-weight: 700; color: #030f68; margin-bottom: 15px;">
-                                <i class="bi bi-stars me-2"></i>Choose Tip Finish
+                                <i class="bi bi-stars me-2"></i>{{ __('booking.size_modal.tip_title') }}
                             </h6>
                             <p style="margin-bottom: 15px; color: #555; font-size: 0.95rem;">
-                                Curled tip keeps base pricing. Finished tip adds <strong>+$20</strong> for mid-back to tailbone lengths.
+                                {!! __('booking.size_modal.tip_body') !!}
                             </p>
                             <div class="d-flex gap-3">
                                 <div class="form-check flex-fill" style="background: #fff; padding: 15px; border-radius: 10px; border: 2px solid #4a8bc2; cursor: pointer;" onclick="toggleTipOption('curled')">
                                     <input class="form-check-input" type="radio" name="tip_option" id="tip_curled" value="curled" checked>
                                     <label class="form-check-label w-100" for="tip_curled" style="cursor: pointer; font-weight: 600;">
-                                        <i class="bi bi-scissors me-2"></i>Curled Tip
+                                        <i class="bi bi-scissors me-2"></i>{{ __('booking.size_modal.curled') }}
                                         <span class="float-end text-muted">+$0</span>
                                     </label>
                                 </div>
                                 <div class="form-check flex-fill" style="background: #fff; padding: 15px; border-radius: 10px; border: 2px solid #e9ecef; cursor: pointer;" onclick="toggleTipOption('finished')">
                                     <input class="form-check-input" type="radio" name="tip_option" id="tip_finished" value="finished">
                                     <label class="form-check-label w-100" for="tip_finished" style="cursor: pointer; font-weight: 600;">
-                                        <i class="bi bi-check2-circle me-2"></i>Finished Tip
+                                        <i class="bi bi-check2-circle me-2"></i>{{ __('booking.size_modal.finished') }}
                                         <span class="float-end text-info">+$20*</span>
                                     </label>
                                 </div>
                             </div>
-                            <small class="text-muted d-block mt-2">* Applies to mid-back, waist, hip and tailbone/classic lengths.</small>
+                            <small class="text-muted d-block mt-2">{{ __('booking.size_modal.tip_note') }}</small>
                         </div>
                     </div>
 
                     <!-- Length Selection with Guide -->
                     <div class="mb-4" id="lengthSelectionSection">
                         <h6 style="font-weight: 700; color: #030f68; margin-bottom: 15px;">
-                            <i class="bi bi-rulers me-2"></i>Choose Hair Length
+                            <i class="bi bi-rulers me-2"></i>{{ __('booking.size_modal.choose_length') }}
                         </h6>
                         <div class="row align-items-center">
                             <div class="col-12 col-md-5 text-center mb-3 mb-md-0">
-                                <img src="{{ asset('images/braids-length-guide.jpg') }}" alt="Length guide" class="img-fluid" style="max-width: 100%; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+                                <img src="{{ asset('images/braids-length-guide.jpg') }}" alt="{{ __('booking.size_modal.length_guide') }}" class="img-fluid" style="max-width: 100%; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
                             </div>
                             <div class="col-12 col-md-7">
                                 <div class="d-flex flex-column gap-2" id="lengthOptionsContainer">
                                     <div class="form-check p-3" style="background: #f8f9fa; border-radius: 8px; border: 2px solid transparent; cursor: pointer;" onclick="selectSizeLength('neck')">
                                         <input class="form-check-input" type="radio" name="size_length" id="size_length_neck" value="neck">
                                         <label class="form-check-label w-100" for="size_length_neck" style="cursor: pointer;">
-                                            <strong>Neck length</strong> <span class="text-muted float-end">-$40</span>
+                                            <strong>{{ __('booking.size_modal.neck') }}</strong> <span class="text-muted float-end">-$40</span>
                                         </label>
                                     </div>
                                     <div class="form-check p-3" style="background: #f8f9fa; border-radius: 8px; border: 2px solid transparent; cursor: pointer;" onclick="selectSizeLength('shoulder')">
                                         <input class="form-check-input" type="radio" name="size_length" id="size_length_shoulder" value="shoulder">
                                         <label class="form-check-label w-100" for="size_length_shoulder" style="cursor: pointer;">
-                                            <strong>Shoulder length</strong> <span class="text-muted float-end">-$40</span>
+                                            <strong>{{ __('booking.size_modal.shoulder') }}</strong> <span class="text-muted float-end">-$40</span>
                                         </label>
                                     </div>
                                     <div class="form-check p-3" style="background: #f8f9fa; border-radius: 8px; border: 2px solid transparent; cursor: pointer;" onclick="selectSizeLength('armpit')">
                                         <input class="form-check-input" type="radio" name="size_length" id="size_length_armpit" value="armpit">
                                         <label class="form-check-label w-100" for="size_length_armpit" style="cursor: pointer;">
-                                            <strong>Armpit length</strong> <span class="text-muted float-end">-$40</span>
+                                            <strong>{{ __('booking.size_modal.armpit') }}</strong> <span class="text-muted float-end">-$40</span>
                                         </label>
                                     </div>
                                     <div class="form-check p-3" style="background: #fff7e0; border-radius: 8px; border: 2px solid #ff6600; cursor: pointer;" onclick="selectSizeLength('mid-back')">
                                         <input class="form-check-input" type="radio" name="size_length" id="size_length_midback" value="mid-back" checked>
                                         <label class="form-check-label w-100" for="size_length_midback" style="cursor: pointer;">
-                                            <strong>Mid-back length</strong> <span class="badge bg-warning text-dark float-end">Base Price</span>
+                                            <strong>{{ __('booking.size_modal.mid_back') }}</strong> <span class="badge bg-warning text-dark float-end">{{ __('booking.size_modal.base_price') }}</span>
                                         </label>
                                     </div>
                                     <div class="form-check p-3" style="background: #f8f9fa; border-radius: 8px; border: 2px solid transparent; cursor: pointer;" onclick="selectSizeLength('waist')">
                                         <input class="form-check-input" type="radio" name="size_length" id="size_length_waist" value="waist">
                                         <label class="form-check-label w-100" for="size_length_waist" style="cursor: pointer;">
-                                            <strong>Waist length</strong> <span class="text-muted float-end">+$20</span>
+                                            <strong>{{ __('booking.size_modal.waist') }}</strong> <span class="text-muted float-end">+$20</span>
                                         </label>
                                     </div>
                                     <div class="form-check p-3" style="background: #f8f9fa; border-radius: 8px; border: 2px solid transparent; cursor: pointer;" onclick="selectSizeLength('hip')">
                                         <input class="form-check-input" type="radio" name="size_length" id="size_length_hip" value="hip">
                                         <label class="form-check-label w-100" for="size_length_hip" style="cursor: pointer;">
-                                            <strong>Hip length</strong> <span class="text-muted float-end">+$40</span>
+                                            <strong>{{ __('booking.size_modal.hip') }}</strong> <span class="text-muted float-end">+$40</span>
                                         </label>
                                     </div>
                                     <div class="form-check p-3" style="background: #f8f9fa; border-radius: 8px; border: 2px solid transparent; cursor: pointer;" onclick="selectSizeLength('tailbone')">
                                         <input class="form-check-input" type="radio" name="size_length" id="size_length_tailbone" value="tailbone">
                                         <label class="form-check-label w-100" for="size_length_tailbone" style="cursor: pointer;">
-                                            <strong>Tailbone / Classic length</strong> <span class="text-muted float-end">+$60</span>
+                                            <strong>{{ __('booking.size_modal.tailbone') }}</strong> <span class="text-muted float-end">+$60</span>
                                         </label>
                                     </div>
                                 </div>
@@ -5288,21 +5290,21 @@ function openOtherServicesModal() {
                     <div class="alert" style="background: linear-gradient(135deg, #fff7e0 0%, #ffe8cc 100%); border-left: 6px solid #ff6600; border-radius: 12px;">
                         <div class="d-flex justify-content-between align-items-center">
                             <div>
-                                <div style="font-size: 0.9rem; color: #666; font-weight: 500;">Estimated Total</div>
+                                <div style="font-size: 0.9rem; color: #666; font-weight: 500;">{{ __('booking.size_modal.estimated') }}</div>
                                 <div id="sizeLengthPriceDisplay" style="font-size: 2rem; font-weight: 800; color: #030f68;">$--</div>
                             </div>
                             <div class="text-end">
-                                <small class="text-muted">Base + Length adjustment</small>
+                                <small class="text-muted">{{ __('booking.size_modal.base_plus') }}</small>
                             </div>
                         </div>
                     </div>
                 </div>
                 <div class="modal-footer" style="border-top: 2px solid #e9ecef; padding: 20px 30px;">
                     <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal" style="padding: 10px 24px; border-radius: 8px;">
-                        <i class="bi bi-x-circle me-2"></i>Cancel
+                        <i class="bi bi-x-circle me-2"></i>{{ __('booking.cancel') }}
                     </button>
                     <button type="button" class="btn btn-warning" id="continueToBookingBtn" onclick="continueToBooking()" style="padding: 10px 30px; border-radius: 8px; font-weight: 700; background: linear-gradient(135deg, #ff6600 0%, #ff8533 100%); border: none;">
-                        <i class="bi bi-arrow-right-circle me-2"></i>Continue to Booking
+                        <i class="bi bi-arrow-right-circle me-2"></i>{{ __('booking.size_modal.continue_booking') }}
                     </button>
                 </div>
             </div>
@@ -5314,10 +5316,10 @@ function openOtherServicesModal() {
                         <div class="modal-dialog modal-lg modal-dialog-centered">
                             <div class="modal-content" style="border-radius: 12px;">
                                 <div class="modal-header" style="background: linear-gradient(135deg, #17a2b8 0%, #20c997 100%); color: white; border-radius: 12px 12px 0 0;">
-                                    <button type="button" class="btn btn-link text-white p-0 me-2" id="backToServiceSelectionBtn" onclick="backToServiceSelection()" style="display: none; text-decoration: none; font-size: 1.2rem;" title="Back to Service Selection">
+                                    <button type="button" class="btn btn-link text-white p-0 me-2" id="backToServiceSelectionBtn" onclick="backToServiceSelection()" style="display: none; text-decoration: none; font-size: 1.2rem;" title="{{ __('booking.back_selection') }}">
                                         <i class="bi bi-arrow-left"></i>
                                     </button>
-                                    <h5 class="modal-title" id="bookingModalLabel" style="flex: 1;">Book Service</h5>
+                                    <h5 class="modal-title" id="bookingModalLabel" style="flex: 1;">{{ __('booking.size_modal.book_service') }}</h5>
                                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                                 </div>
                                 <div class="modal-body p-4">
@@ -5341,46 +5343,46 @@ function openOtherServicesModal() {
                             <!-- Service Selection -->
                             <div class="col-12">
                                 <div class="form-group">
-                                    <label for="serviceSelection" class="form-label">Service *</label>
+                                    <label for="serviceSelection" class="form-label">{{ __('booking.form.service') }}</label>
                                     <div class="input-group">
                                         <input type="text" class="form-control" id="serviceDisplay" name="service_display" readonly style="background-color: #f8f9fa;">
 <button class="btn btn-outline-secondary" type="button" onclick="openServiceSelectionModal()">
-                                            <i class="bi bi-pencil"></i> Change
+                                            <i class="bi bi-pencil"></i> {{ __('booking.change') }}
                                         </button>
                                     </div>
                                     <small class="form-text text-muted mt-2">
                                         <i class="bi bi-info-circle me-1"></i>
-                                        Selected service. Click "Change" to select a different service or add a custom service.
+                                        {{ __('booking.form.service_help') }}
                                     </small>
                                 </div>
                             </div>
                             <!-- Date Selection -->
                             <div class="col-md-6">
-                                <label class="form-label">Appointment Date *</label>
+                                <label class="form-label">{{ __('booking.form.date') }}</label>
                                 <div class="input-group">
-                                    <input type="text" class="form-control" id="bookingDate" placeholder="Click calendar to select date" readonly required style="background-color: #f8f9fa; cursor: pointer;" onclick="openCalendarModal()">
+                                    <input type="text" class="form-control" id="bookingDate" placeholder="{{ __('booking.form.date_placeholder') }}" readonly required style="background-color: #f8f9fa; cursor: pointer;" onclick="openCalendarModal()">
                                     <button class="btn btn-outline-secondary" type="button" onclick="openCalendarModal()">
                                         <i class="bi bi-calendar"></i>
                                     </button>
                                 </div>
                                 <small class="form-text text-muted mt-2">
                                     <i class="bi bi-calendar me-1"></i>
-                                    Click the calendar button to select your preferred date and time
+                                    {{ __('booking.form.date_help') }}
                                 </small>
                             </div>
 
                             <!-- Time Selection -->
                             <div class="col-md-6">
-                                <label class="form-label">Appointment Time *</label>
+                                <label class="form-label">{{ __('booking.form.time') }}</label>
                                 <div class="input-group">
-                                    <input type="text" class="form-control" id="timeInput" placeholder="Click calendar to select time" readonly required style="background-color: #f8f9fa; cursor: pointer;" onclick="openCalendarModal()">
+                                    <input type="text" class="form-control" id="timeInput" placeholder="{{ __('booking.form.time_placeholder') }}" readonly required style="background-color: #f8f9fa; cursor: pointer;" onclick="openCalendarModal()">
                                     <button class="btn btn-outline-secondary" type="button" onclick="openCalendarModal()">
                                         <i class="bi bi-calendar"></i>
                                     </button>
                                 </div>
                                 <small class="form-text text-muted mt-2">
                                     <i class="bi bi-calendar me-1"></i>
-                                    Click the calendar button to select your preferred date and time
+                                    {{ __('booking.form.date_help') }}
                                 </small>
                             </div>
 
@@ -5388,43 +5390,43 @@ function openOtherServicesModal() {
                             <!-- Personal Details -->
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label for="name" class="form-label">Full Name *</label>
-                                    <input type="text" class="form-control" id="name" name="name" placeholder="Enter your full name" required autocomplete="off">
+                                    <label for="name" class="form-label">{{ __('booking.form.name') }}</label>
+                                    <input type="text" class="form-control" id="name" name="name" placeholder="{{ __('booking.form.name_placeholder') }}" required autocomplete="off">
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label for="phone" class="form-label">Phone Number *</label>
-                                    <input type="tel" class="form-control" id="phone" name="phone" placeholder="Enter your phone number" required autocomplete="off">
+                                    <label for="phone" class="form-label">{{ __('booking.form.phone') }}</label>
+                                    <input type="tel" class="form-control" id="phone" name="phone" placeholder="{{ __('booking.form.phone_placeholder') }}" required autocomplete="off">
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label for="email" class="form-label">Email *</label>
-                                    <input type="email" class="form-control" id="email" name="email" placeholder="Enter your email address" autocomplete="off" required>
+                                    <label for="email" class="form-label">{{ __('booking.form.email') }}</label>
+                                    <input type="email" class="form-control" id="email" name="email" placeholder="{{ __('booking.form.email_placeholder') }}" autocomplete="off" required>
                                 </div>
                             </div>
 
                             <!-- Appointment Type -->
                             <div class="col-12">
                                 <div class="form-group">
-                                    <label class="form-label">Appointment Type *</label>
+                                    <label class="form-label">{{ __('booking.form.type') }}</label>
                                     <div class="d-flex gap-3">
                                         <div class="form-check">
                                             <input class="form-check-input" type="radio" name="appointment_type" id="appointment_type_in_studio" value="in-studio" checked onclick="toggleAddressField()" onchange="toggleAddressField()">
                                             <label class="form-check-label" for="appointment_type_in_studio">
-                                                <i class="bi bi-house-door me-1"></i>Stylist address
+                                                <i class="bi bi-house-door me-1"></i>{{ __('booking.form.in_studio') }}
                                             </label>
                                         </div>
                                         <div class="form-check">
                                             <input class="form-check-input" type="radio" name="appointment_type" id="appointment_type_mobile" value="mobile" onclick="toggleAddressField()" onchange="toggleAddressField()">
                                             <label class="form-check-label" for="appointment_type_mobile">
-                                                <i class="bi bi-truck me-1"></i>Mobile (I want you to come to me)
+                                                <i class="bi bi-truck me-1"></i>{{ __('booking.form.mobile') }}
                                             </label>
                                         </div>
                                     </div>
                                     <small class="form-text text-muted mt-2">
-                                        <i class="bi bi-info-circle me-1"></i>Mobile service available in Ottawa/Gatineau. Travel fee may apply based on distance.
+                                        <i class="bi bi-info-circle me-1"></i>{{ __('booking.form.mobile_help') }}
                                     </small>
                                 </div>
                             </div>
@@ -5432,33 +5434,33 @@ function openOtherServicesModal() {
                             <!-- Service Address (conditional) -->
                             <div class="col-12" id="addressFieldContainer" style="display: none;">
                                 <div class="form-group">
-                                    <label for="address" class="form-label">Mobile Service Address (Ottawa) *</label>
-                                    <input type="text" class="form-control" id="address" name="address" placeholder="Enter your complete address" autocomplete="off" minlength="10">
-                                    <div class="invalid-feedback">Please enter a complete mobile address (at least 10 characters).</div>
+                                    <label for="address" class="form-label">{{ __('booking.form.address') }}</label>
+                                    <input type="text" class="form-control" id="address" name="address" placeholder="{{ __('booking.form.address_placeholder') }}" autocomplete="off" minlength="10">
+                                    <div class="invalid-feedback">{{ __('booking.form.address_invalid') }}</div>
                                     <small class="form-text text-muted mt-2">
-                                        <i class="bi bi-geo-alt me-1"></i>Required for mobile appointments so we can confirm travel availability and any travel fee.
+                                        <i class="bi bi-geo-alt me-1"></i>{{ __('booking.form.address_help') }}
                                     </small>
                                 </div>
                             </div>
 
                             <div class="col-12" id="parkingFieldContainer" style="display: none;">
                                 <div class="form-group parking-choice-group">
-                                    <label class="form-label">Parking at Address *</label>
+                                    <label class="form-label">{{ __('booking.form.parking') }}</label>
                                     <div class="d-flex gap-3">
                                         <div class="form-check">
                                             <input class="form-check-input parking-option-main" type="radio" name="parking_type" id="parking_type_free" value="free">
-                                            <label class="form-check-label" for="parking_type_free">Free parking</label>
+                                            <label class="form-check-label" for="parking_type_free">{{ __('booking.form.parking_free') }}</label>
                                         </div>
                                         <div class="form-check">
                                             <input class="form-check-input parking-option-main" type="radio" name="parking_type" id="parking_type_paid" value="paid">
-                                            <label class="form-check-label" for="parking_type_paid">Paid parking</label>
+                                            <label class="form-check-label" for="parking_type_paid">{{ __('booking.form.parking_paid') }}</label>
                                         </div>
                                     </div>
                                     <div class="alert alert-warning py-2 mt-2 mb-0 paid-parking-note" style="font-size:0.95rem;">
-                                        <strong>Please note:</strong> You are responsible for covering the paid parking ticket so the stylist can park at your address.
+                                        {!! __('booking.form.parking_note') !!}
                                     </div>
                                     <small class="form-text text-muted mt-2">
-                                        <i class="bi bi-p-circle me-1"></i>Required for mobile appointments. Paid parking is covered by the client.
+                                        <i class="bi bi-p-circle me-1"></i>{{ __('booking.form.parking_help') }}
                                     </small>
                                 </div>
                             </div>
@@ -5466,35 +5468,35 @@ function openOtherServicesModal() {
                             <div class="col-12">
                                 <div class="alert" style="background: linear-gradient(135deg, #fff7e0 0%, #ffe8cc 100%); border-left: 5px solid #ff6600; border-radius: 10px; margin-bottom: 14px;">
                                     <div style="font-weight: 700; color: #030f68; margin-bottom: 6px;">
-                                        <i class="bi bi-megaphone me-2"></i>Announcement: Braiding Extensions Available
+                                        <i class="bi bi-megaphone me-2"></i>{{ __('booking.form.extensions_title') }}
                                     </div>
                                     <div style="font-size: 0.95rem; color: #444;">
-                                        We now have braiding extensions in various colors for sale. Please tell your stylist your preferred color in the comment box below, or message admin on
+                                        {{ __('booking.form.extensions_body') }}
                                         <a href="https://wa.me/3432548848" target="_blank" rel="noopener" style="font-weight: 700; color: #128c7e; text-decoration: none;">WhatsApp</a>.
                                     </div>
                                 </div>
                                 <div class="form-group">
-                                    <label for="message" class="form-label">Special Requests or Notes</label>
-                                    <textarea class="form-control" id="message" name="message" placeholder="Any special requests or additional information..." rows="3" autocomplete="off"></textarea>
+                                    <label for="message" class="form-label">{{ __('booking.form.notes') }}</label>
+                                    <textarea class="form-control" id="message" name="message" placeholder="{{ __('booking.form.notes_placeholder') }}" rows="3" autocomplete="off"></textarea>
                                 </div>
                             </div>
                             <div class="col-12">
                                 <div class="form-group">
                                     <label for="sample_picture" class="form-label">
-                                        <i class="bi bi-image me-2"></i>Upload Reference Image (Optional)
+                                        <i class="bi bi-image me-2"></i>{{ __('booking.form.upload') }}
                                     </label>
                                     <input type="file" class="form-control" id="sample_picture" name="sample_picture" accept="image/*" autocomplete="off">
                                     <small class="form-text text-muted mt-2">
                                         <i class="bi bi-info-circle me-1"></i>
-                                        Upload a reference image of the hairstyle you want. Accepted formats: JPG, PNG, GIF (Max: 5MB)
+                                        {{ __('booking.form.upload_help') }}
                                     </small>
                                     <div class="mt-2" id="imagePreview" style="display: none;">
                                         <div class="d-flex align-items-center">
-                                            <img id="previewImg" src="" alt="Preview" style="max-width: 100px; max-height: 100px; border-radius: 8px; border: 2px solid #dee2e6;">
+                                            <img id="previewImg" src="" alt="{{ __('booking.form.preview') }}" style="max-width: 100px; max-height: 100px; border-radius: 8px; border: 2px solid #dee2e6;">
                                             <div class="ms-3">
                                                 <small class="text-muted d-block" id="fileName"></small>
                                                 <button type="button" class="btn btn-sm btn-outline-danger mt-1" onclick="clearImagePreview()">
-                                                    <i class="bi bi-trash me-1"></i>Remove
+                                                    <i class="bi bi-trash me-1"></i>{{ __('booking.remove') }}
                                                 </button>
                                             </div>
                                         </div>
@@ -5510,17 +5512,17 @@ function openOtherServicesModal() {
                                 <input class="form-check-input" type="checkbox" id="termsAcceptedMain" name="terms_accepted" value="1" required autocomplete="off">
                                 <div>
                                     <label for="termsAcceptedMain" style="text-align:left;">
-                                        I agree to the <a href="#" class="js-terms-popup" style="color:#030f68; font-weight:600; text-decoration:none;">Terms &amp; Conditions</a>.
+                                        {{ __('booking.form.agree') }} <a href="#" class="js-terms-popup" style="color:#030f68; font-weight:600; text-decoration:none;">{{ __('booking.form.terms') }}</a>.
                                     </label>
                                 </div>
                             </div>
                             <div class="mb-3">
                                 <div class="alert alert-warning py-2 mb-0" style="font-size:0.95rem;">
-                                    <strong>Note:</strong> We do not accept style changes on the day of the appointment. Please review your selection before confirming.
+                                    {!! __('booking.form.no_changes') !!}
                                 </div>
                             </div>
                             <button type="submit" class="btn btn-warning" id="bookAppointmentBtn" style="font-size:1.1rem; padding:12px 40px; font-weight:600; transition: all 0.3s ease; box-shadow: 0 4px 12px rgba(255, 193, 7, 0.3);">
-                                <i class="bi bi-calendar-check me-2"></i>Book Appointment
+                                <i class="bi bi-calendar-check me-2"></i>{{ __('booking.form.book') }}
                             </button>
                             @php
                                 $depositLabel = \App\Support\InteracDeposit::amountLabel();
@@ -5529,8 +5531,8 @@ function openOtherServicesModal() {
                             <div class="mt-3">
                                 <small class="text-muted">
                                     <i class="bi bi-info-circle me-1"></i>
-                                    A {{ $depositLabel }} deposit is required to confirm your appointment. Mobile appointments are confirmed after deposit + address verification.
-                                    (<a href="#" class="js-terms-popup text-decoration-none" style="color: #030f68; font-weight: 500;">Terms & Conditions</a>)
+                                    {{ __('booking.form.deposit', ['amount' => $depositLabel]) }}
+                                    (<a href="#" class="js-terms-popup text-decoration-none" style="color: #030f68; font-weight: 500;">{{ __('booking.form.terms') }}</a>)
                                 </small>
                             </div>
                         </div>
@@ -5547,7 +5549,7 @@ function openOtherServicesModal() {
                 <div class="modal-header" style="background: linear-gradient(135deg, #17a2b8 0%, #20c997 100%); color: white;">
                     <h5 class="modal-title">
                         <i class="bi bi-calendar-event me-2"></i>
-                        Select Date & Time
+                        {{ __('booking.select_datetime') }}
                     </h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
@@ -5556,7 +5558,7 @@ function openOtherServicesModal() {
                     <div class="row align-items-center mb-3">
                         <div class="col-md-4">
                             <button class="btn btn-outline-primary" onclick="previousMonth()">
-                                <i class="bi bi-chevron-left"></i> Previous
+                                <i class="bi bi-chevron-left"></i> {{ __('booking.previous') }}
                             </button>
                         </div>
                         <div class="col-md-4 text-center">
@@ -5564,7 +5566,7 @@ function openOtherServicesModal() {
                         </div>
                         <div class="col-md-4 text-end">
                             <button class="btn btn-outline-primary" onclick="nextMonth()">
-                                Next <i class="bi bi-chevron-right"></i>
+                                {{ __('booking.next') }} <i class="bi bi-chevron-right"></i>
                             </button>
                         </div>
                     </div>
@@ -5572,22 +5574,22 @@ function openOtherServicesModal() {
                     <!-- Calendar Grid -->
                     <div class="calendar-grid mb-3">
                         <div class="row">
-                            <div class="col text-center fw-bold">Sun</div>
-                            <div class="col text-center fw-bold">Mon</div>
-                            <div class="col text-center fw-bold">Tue</div>
-                            <div class="col text-center fw-bold">Wed</div>
-                            <div class="col text-center fw-bold">Thu</div>
-                            <div class="col text-center fw-bold">Fri</div>
-                            <div class="col text-center fw-bold">Sat</div>
+                            <div class="col text-center fw-bold">{{ __('booking.sun') }}</div>
+                            <div class="col text-center fw-bold">{{ __('booking.mon') }}</div>
+                            <div class="col text-center fw-bold">{{ __('booking.tue') }}</div>
+                            <div class="col text-center fw-bold">{{ __('booking.wed') }}</div>
+                            <div class="col text-center fw-bold">{{ __('booking.thu') }}</div>
+                            <div class="col text-center fw-bold">{{ __('booking.fri') }}</div>
+                            <div class="col text-center fw-bold">{{ __('booking.sat') }}</div>
                         </div>
                         <div id="calendarDays" class="row mt-2"></div>
                     </div>
 
                     <!-- Time Slots -->
                     <div id="timeSlotsContainer" style="display: none;">
-                        <h6 class="mb-3" style="font-weight: 600; color: #0b3a66;">Available Time Slots for <span id="selectedDateText"></span></h6>
+                        <h6 class="mb-3" style="font-weight: 600; color: #0b3a66;">{{ __('booking.slots_for') }} <span id="selectedDateText"></span></h6>
                         <div id="timeSlotsInstruction" class="alert alert-info mb-3" style="display: none; background: #e7f3ff; border-left: 4px solid #17a2b8; border-radius: 8px;">
-                            <i class="bi bi-info-circle me-2"></i>Click a time slot to select it.
+                            <i class="bi bi-info-circle me-2"></i>{{ __('booking.click_slot') }}
                         </div>
                         <div id="timeSlots" class="row g-2 row-cols-2 row-cols-md-3 row-cols-lg-4"></div>
                     </div>
@@ -5595,15 +5597,15 @@ function openOtherServicesModal() {
                     <!-- Loading -->
                     <div id="calendarLoading" class="text-center" style="display: none;">
                         <div class="spinner-border text-primary" role="status">
-                            <span class="visually-hidden">Loading...</span>
+                            <span class="visually-hidden">{{ __('booking.loading') }}</span>
                         </div>
-                        <p class="mt-2">Loading available slots...</p>
+                        <p class="mt-2">{{ __('booking.loading_slots') }}</p>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ __('booking.cancel') }}</button>
                     <button type="button" class="btn btn-primary" onclick="confirmDateTime()" id="confirmDateTimeBtn" disabled>
-                        <i class="bi bi-check-circle me-2"></i>CONFIRM SELECTION
+                        <i class="bi bi-check-circle me-2"></i>{{ __('booking.confirm_selection') }}
                     </button>
                 </div>
             </div>
@@ -5616,7 +5618,7 @@ function openOtherServicesModal() {
             <div class="modal-content" style="border-radius: 12px;">
                 <div class="modal-header" style="background: linear-gradient(135deg, #030f68 0%, #4a8bc2 100%); color: white; border-radius: 12px 12px 0 0;">
                     <h5 class="modal-title" id="customServiceRequestModalLabel">
-                        <i class="bi bi-stars me-2"></i>Custom Service Request
+                        <i class="bi bi-stars me-2"></i>{{ __('booking.custom.title') }}
                     </h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
@@ -5625,12 +5627,12 @@ function openOtherServicesModal() {
                         <div class="d-flex align-items-start">
                             <i class="bi bi-info-circle me-2" style="font-size: 1.2rem; color: #ff6600; margin-top: 2px;"></i>
                             <div>
-                                <strong style="color: #0b3a66;">Custom Service Information</strong>
+                                <strong style="color: #0b3a66;">{{ __('booking.custom.info_title') }}</strong>
                                 <ul class="mb-0 mt-2" style="color: #0b3a66; font-size: 0.9rem; padding-left: 20px;">
-                                    <li>Prices vary based on <strong>hair length, thickness, and design complexity</strong></li>
-                                    <li>Length adjustments apply: <strong>+$20 for longer, -$40 for shorter</strong> than mid-back</li>
-                                    <li>Final pricing will be <strong>confirmed during consultation</strong> before service</li>
-                                    <li>You'll receive email confirmation with estimated pricing</li>
+                                    <li>{!! __('booking.custom.info_1') !!}</li>
+                                    <li>{!! __('booking.custom.info_2') !!}</li>
+                                    <li>{!! __('booking.custom.info_3') !!}</li>
+                                    <li>{{ __('booking.custom.info_4') }}</li>
                                 </ul>
                             </div>
                         </div>
@@ -5646,48 +5648,48 @@ function openOtherServicesModal() {
                             <!-- Service Name -->
                             <div class="col-12">
                                 <label for="customServiceInput" class="form-label fw-semibold">
-                                    <i class="bi bi-pencil-square me-1"></i>Service Name <span class="text-danger">*</span>
+                                    <i class="bi bi-pencil-square me-1"></i>{{ __('booking.custom.service_name') }} <span class="text-danger">*</span>
                                 </label>
                                 <input type="text" class="form-control form-control-lg" id="customServiceInput" name="service_name" placeholder="e.g., Goddess Braids, Box Braids, Passion Twists, Feed-in Braids, etc." maxlength="255" required style="border-radius: 8px;">
                                 <small class="form-text text-muted d-block mt-1">
                                     <i class="bi bi-lightbulb me-1"></i>
-                                    Be specific about the style you want
+                                    {{ __('booking.custom.be_specific') }}
                                 </small>
                             </div>
 
-                            <!-- Service Category -->
+                            <!-- {{ __('booking.custom.category') }} -->
                             <div class="col-md-6 mb-3">
                                 <label class="form-label fw-semibold">
-                                    <i class="bi bi-tags me-1"></i>Service Category
+                                    <i class="bi bi-tags me-1"></i>{{ __('booking.custom.category') }}
                                 </label>
                                 <div class="radio-group-container">
                                     <div class="form-check mb-2">
                                         <input class="form-check-input" type="radio" name="service_category" id="cat_braids" value="braids">
-                                        <label class="form-check-label" for="cat_braids">Braids</label>
+                                        <label class="form-check-label" for="cat_braids">{{ __('booking.custom.braids') }}</label>
                                     </div>
                                     <div class="form-check mb-2">
                                         <input class="form-check-input" type="radio" name="service_category" id="cat_twists" value="twists">
-                                        <label class="form-check-label" for="cat_twists">Twists</label>
+                                        <label class="form-check-label" for="cat_twists">{{ __('booking.custom.twists') }}</label>
                                     </div>
                                     <div class="form-check mb-2">
                                         <input class="form-check-input" type="radio" name="service_category" id="cat_weaves" value="weaves">
-                                        <label class="form-check-label" for="cat_weaves">Weaves</label>
+                                        <label class="form-check-label" for="cat_weaves">{{ __('booking.custom.weaves') }}</label>
                                     </div>
                                     <div class="form-check mb-2">
                                         <input class="form-check-input" type="radio" name="service_category" id="cat_wigs" value="wigs">
-                                        <label class="form-check-label" for="cat_wigs">Wig Installation</label>
+                                        <label class="form-check-label" for="cat_wigs">{{ __('booking.custom.wigs') }}</label>
                                     </div>
                                     <div class="form-check mb-2">
                                         <input class="form-check-input" type="radio" name="service_category" id="cat_color" value="color">
-                                        <label class="form-check-label" for="cat_color">Hair Coloring</label>
+                                        <label class="form-check-label" for="cat_color">{{ __('booking.custom.color') }}</label>
                                     </div>
                                     <div class="form-check mb-2">
                                         <input class="form-check-input" type="radio" name="service_category" id="cat_treatment" value="treatment">
-                                        <label class="form-check-label" for="cat_treatment">Hair Treatment</label>
+                                        <label class="form-check-label" for="cat_treatment">{{ __('booking.custom.treatment') }}</label>
                                     </div>
                                     <div class="form-check">
                                         <input class="form-check-input" type="radio" name="service_category" id="cat_other" value="other">
-                                        <label class="form-check-label" for="cat_other">Other</label>
+                                        <label class="form-check-label" for="cat_other">{{ __('booking.custom.other') }}</label>
                                     </div>
                                 </div>
                             </div>
@@ -5695,36 +5697,36 @@ function openOtherServicesModal() {
                             <!-- Braid Size Preference -->
                             <div class="col-md-6 mb-3">
                                 <label class="form-label fw-semibold">
-                                    <i class="bi bi-rulers me-1"></i>Braid/Twist Size
+                                    <i class="bi bi-rulers me-1"></i>{{ __('booking.custom.size') }}
                                 </label>
                                 <div class="radio-group-container">
                                     <div class="form-check mb-2">
                                         <input class="form-check-input" type="radio" name="braid_size" id="size_micro" value="micro">
-                                        <label class="form-check-label" for="size_micro">Micro (Very Small)</label>
+                                        <label class="form-check-label" for="size_micro">{{ __('booking.custom.micro') }}</label>
                                     </div>
                                     <div class="form-check mb-2">
                                         <input class="form-check-input" type="radio" name="braid_size" id="size_small" value="small">
-                                        <label class="form-check-label" for="size_small">Small</label>
+                                        <label class="form-check-label" for="size_small">{{ __('booking.custom.small') }}</label>
                                     </div>
                                     <div class="form-check mb-2">
                                         <input class="form-check-input" type="radio" name="braid_size" id="size_medium" value="medium">
-                                        <label class="form-check-label" for="size_medium">Medium</label>
+                                        <label class="form-check-label" for="size_medium">{{ __('booking.custom.medium') }}</label>
                                     </div>
                                     <div class="form-check mb-2">
                                         <input class="form-check-input" type="radio" name="braid_size" id="size_large" value="large">
-                                        <label class="form-check-label" for="size_large">Large</label>
+                                        <label class="form-check-label" for="size_large">{{ __('booking.custom.large') }}</label>
                                     </div>
                                     <div class="form-check mb-2">
                                         <input class="form-check-input" type="radio" name="braid_size" id="size_jumbo" value="jumbo">
-                                        <label class="form-check-label" for="size_jumbo">Jumbo (Very Large)</label>
+                                        <label class="form-check-label" for="size_jumbo">{{ __('booking.custom.jumbo') }}</label>
                                     </div>
                                     <div class="form-check mb-2">
                                         <input class="form-check-input" type="radio" name="braid_size" id="size_mixed" value="mixed">
-                                        <label class="form-check-label" for="size_mixed">Mixed Sizes</label>
+                                        <label class="form-check-label" for="size_mixed">{{ __('booking.custom.mixed') }}</label>
                                     </div>
                                     <div class="form-check">
                                         <input class="form-check-input" type="radio" name="braid_size" id="size_na" value="not-applicable">
-                                        <label class="form-check-label" for="size_na">Not Applicable</label>
+                                        <label class="form-check-label" for="size_na">{{ __('booking.custom.na') }}</label>
                                     </div>
                                 </div>
                             </div>
@@ -5732,57 +5734,57 @@ function openOtherServicesModal() {
                             <!-- Hair Length -->
                             <div class="col-md-6 mb-3">
                                 <label class="form-label fw-semibold">
-                                    <i class="bi bi-scissors me-1"></i>Current Hair Length
+                                    <i class="bi bi-scissors me-1"></i>{{ __('booking.custom.current_length') }}
                                 </label>
                                 <div class="radio-group-container" style="max-height: 250px; overflow-y: auto;">
                                     <div class="form-check mb-2">
                                         <input class="form-check-input" type="radio" name="hair_length" id="len_neck" value="neck">
-                                        <label class="form-check-label" for="len_neck">Neck Length</label>
+                                        <label class="form-check-label" for="len_neck">{{ __('booking.custom.neck') }}</label>
                                     </div>
                                     <div class="form-check mb-2">
                                         <input class="form-check-input" type="radio" name="hair_length" id="len_shoulder" value="shoulder">
-                                        <label class="form-check-label" for="len_shoulder">Shoulder Length</label>
+                                        <label class="form-check-label" for="len_shoulder">{{ __('booking.custom.shoulder') }}</label>
                                     </div>
                                     <div class="form-check mb-2">
                                         <input class="form-check-input" type="radio" name="hair_length" id="len_armpit" value="armpit">
-                                        <label class="form-check-label" for="len_armpit">Armpit Length</label>
+                                        <label class="form-check-label" for="len_armpit">{{ __('booking.custom.armpit') }}</label>
                                     </div>
                                     <div class="form-check mb-2">
                                         <input class="form-check-input" type="radio" name="hair_length" id="len_bra_strap" value="bra_strap">
-                                        <label class="form-check-label" for="len_bra_strap">Bra Strap Length</label>
+                                        <label class="form-check-label" for="len_bra_strap">{{ __('booking.custom.bra_strap') }}</label>
                                     </div>
                                     <div class="form-check mb-2">
                                         <input class="form-check-input" type="radio" name="hair_length" id="len_mid_back" value="mid_back">
-                                        <label class="form-check-label" for="len_mid_back">Mid-Back Length</label>
+                                        <label class="form-check-label" for="len_mid_back">{{ __('booking.custom.mid_back') }}</label>
                                     </div>
                                     <div class="form-check mb-2">
                                         <input class="form-check-input" type="radio" name="hair_length" id="len_waist" value="waist">
-                                        <label class="form-check-label" for="len_waist">Waist Length</label>
+                                        <label class="form-check-label" for="len_waist">{{ __('booking.custom.waist') }}</label>
                                     </div>
                                     <div class="form-check mb-2">
                                         <input class="form-check-input" type="radio" name="hair_length" id="len_hip" value="hip">
-                                        <label class="form-check-label" for="len_hip">Hip Length</label>
+                                        <label class="form-check-label" for="len_hip">{{ __('booking.custom.hip') }}</label>
                                     </div>
                                     <div class="form-check mb-2">
                                         <input class="form-check-input" type="radio" name="hair_length" id="len_tailbone" value="tailbone">
-                                        <label class="form-check-label" for="len_tailbone">Tailbone Length</label>
+                                        <label class="form-check-label" for="len_tailbone">{{ __('booking.custom.tailbone') }}</label>
                                     </div>
                                     <div class="form-check">
                                         <input class="form-check-input" type="radio" name="hair_length" id="len_classic" value="classic">
-                                        <label class="form-check-label" for="len_classic">Classic Length</label>
+                                        <label class="form-check-label" for="len_classic">{{ __('booking.custom.classic') }}</label>
                                     </div>
                                 </div>
                             </div>
 
-                            <!-- Estimated Budget Range -->
+                            <!-- {{ __('booking.custom.budget') }} -->
                             <div class="col-md-6 mb-3">
                                 <label class="form-label fw-semibold">
-                                    <i class="bi bi-currency-dollar me-1"></i>Estimated Budget Range
+                                    <i class="bi bi-currency-dollar me-1"></i>{{ __('booking.custom.budget') }}
                                 </label>
                                 <div class="radio-group-container">
                                     <div class="form-check mb-2">
                                         <input class="form-check-input" type="radio" name="budget_range" id="budget_under100" value="under-100">
-                                        <label class="form-check-label" for="budget_under100">Under $100</label>
+                                        <label class="form-check-label" for="budget_under100">{{ __('booking.custom.under_100') }}</label>
                                     </div>
                                     <div class="form-check mb-2">
                                         <input class="form-check-input" type="radio" name="budget_range" id="budget_100_150" value="100-150">
@@ -5810,11 +5812,11 @@ function openOtherServicesModal() {
                                     </div>
                                     <div class="form-check mb-2">
                                         <input class="form-check-input" type="radio" name="budget_range" id="budget_over500" value="over-500">
-                                        <label class="form-check-label" for="budget_over500">Over $500</label>
+                                        <label class="form-check-label" for="budget_over500">{{ __('booking.custom.over_500') }}</label>
                                     </div>
                                     <div class="form-check">
                                         <input class="form-check-input" type="radio" name="budget_range" id="budget_flexible" value="flexible">
-                                        <label class="form-check-label" for="budget_flexible">Flexible</label>
+                                        <label class="form-check-label" for="budget_flexible">{{ __('booking.custom.flexible') }}</label>
                                     </div>
                                 </div>
                             </div>
@@ -5822,43 +5824,43 @@ function openOtherServicesModal() {
                             <!-- Style Preferences -->
                             <div class="col-12">
                                 <label class="form-label fw-semibold">
-                                    <i class="bi bi-palette me-1"></i>Style Preferences (Select all that apply)
+                                    <i class="bi bi-palette me-1"></i>{{ __('booking.custom.prefs') }}
                                 </label>
                                 <div class="row g-2">
                                     <div class="col-md-4">
                                         <div class="form-check">
                                             <input class="form-check-input" type="checkbox" id="prefProtective" name="style_preferences[]" value="protective">
-                                            <label class="form-check-label" for="prefProtective">Protective Style</label>
+                                            <label class="form-check-label" for="prefProtective">{{ __('booking.custom.protective') }}</label>
                                         </div>
                                     </div>
                                     <div class="col-md-4">
                                         <div class="form-check">
                                             <input class="form-check-input" type="checkbox" id="prefLowMaintenance" name="style_preferences[]" value="low-maintenance">
-                                            <label class="form-check-label" for="prefLowMaintenance">Low Maintenance</label>
+                                            <label class="form-check-label" for="prefLowMaintenance">{{ __('booking.custom.low_maintenance') }}</label>
                                         </div>
                                     </div>
                                     <div class="col-md-4">
                                         <div class="form-check">
                                             <input class="form-check-input" type="checkbox" id="prefLongLasting" name="style_preferences[]" value="long-lasting">
-                                            <label class="form-check-label" for="prefLongLasting">Long Lasting</label>
+                                            <label class="form-check-label" for="prefLongLasting">{{ __('booking.custom.long_lasting') }}</label>
                                         </div>
                                     </div>
                                     <div class="col-md-4">
                                         <div class="form-check">
                                             <input class="form-check-input" type="checkbox" id="prefWithExtensions" name="style_preferences[]" value="with-extensions">
-                                            <label class="form-check-label" for="prefWithExtensions">With Extensions</label>
+                                            <label class="form-check-label" for="prefWithExtensions">{{ __('booking.custom.with_extensions') }}</label>
                                         </div>
                                     </div>
                                     <div class="col-md-4">
                                         <div class="form-check">
                                             <input class="form-check-input" type="checkbox" id="prefWithBeads" name="style_preferences[]" value="with-beads">
-                                            <label class="form-check-label" for="prefWithBeads">With Beads/Accessories</label>
+                                            <label class="form-check-label" for="prefWithBeads">{{ __('booking.custom.with_beads') }}</label>
                                         </div>
                                     </div>
                                     <div class="col-md-4">
                                         <div class="form-check">
                                             <input class="form-check-input" type="checkbox" id="prefWithColor" name="style_preferences[]" value="with-color">
-                                            <label class="form-check-label" for="prefWithColor">With Color/Highlights</label>
+                                            <label class="form-check-label" for="prefWithColor">{{ __('booking.custom.with_color') }}</label>
                                         </div>
                                     </div>
                                 </div>
@@ -5867,39 +5869,39 @@ function openOtherServicesModal() {
                             <!-- Special Requirements -->
                             <div class="col-12">
                                 <label for="customSpecialRequirements" class="form-label fw-semibold">
-                                    <i class="bi bi-clipboard-check me-1"></i>Special Requirements or Notes
+                                    <i class="bi bi-clipboard-check me-1"></i>{{ __('booking.custom.special') }}
                                 </label>
                                 <textarea class="form-control" id="customSpecialRequirements" name="special_requirements" rows="3" placeholder="Any specific requirements, allergies, previous service history, or additional details..." style="border-radius: 8px;"></textarea>
                                 <small class="form-text text-muted d-block mt-1">
-                                    Include any important information that will help us provide the best service
+                                    {{ __('booking.custom.special_help') }}
                                 </small>
                             </div>
 
                             <!-- Urgency/Timeline -->
                             <div class="col-md-6 mb-3">
                                 <label class="form-label fw-semibold">
-                                    <i class="bi bi-clock me-1"></i>When do you need this service?
+                                    <i class="bi bi-clock me-1"></i>{{ __('booking.custom.when') }}
                                 </label>
                                 <div class="radio-group-container">
                                     <div class="form-check mb-2">
                                         <input class="form-check-input" type="radio" name="urgency" id="urgent_asap" value="asap">
-                                        <label class="form-check-label" for="urgent_asap">As Soon As Possible</label>
+                                        <label class="form-check-label" for="urgent_asap">{{ __('booking.custom.asap') }}</label>
                                     </div>
                                     <div class="form-check mb-2">
                                         <input class="form-check-input" type="radio" name="urgency" id="urgent_week" value="within-week">
-                                        <label class="form-check-label" for="urgent_week">Within a Week</label>
+                                        <label class="form-check-label" for="urgent_week">{{ __('booking.custom.week') }}</label>
                                     </div>
                                     <div class="form-check mb-2">
                                         <input class="form-check-input" type="radio" name="urgency" id="urgent_month" value="within-month">
-                                        <label class="form-check-label" for="urgent_month">Within a Month</label>
+                                        <label class="form-check-label" for="urgent_month">{{ __('booking.custom.month') }}</label>
                                     </div>
                                     <div class="form-check mb-2">
                                         <input class="form-check-input" type="radio" name="urgency" id="urgent_flexible" value="flexible">
-                                        <label class="form-check-label" for="urgent_flexible">Flexible</label>
+                                        <label class="form-check-label" for="urgent_flexible">{{ __('booking.custom.flexible') }}</label>
                                     </div>
                                     <div class="form-check">
                                         <input class="form-check-input" type="radio" name="urgency" id="urgent_specific" value="specific-date">
-                                        <label class="form-check-label" for="urgent_specific">I have a specific date in mind</label>
+                                        <label class="form-check-label" for="urgent_specific">{{ __('booking.custom.specific') }}</label>
                                     </div>
                                 </div>
                             </div>
@@ -5907,24 +5909,24 @@ function openOtherServicesModal() {
                             <!-- Reference Image Upload -->
                             <div class="col-md-6">
                                 <label for="customReferenceImage" class="form-label fw-semibold">
-                                    <i class="bi bi-image me-1"></i>Reference Image (Optional)
+                                    <i class="bi bi-image me-1"></i>{{ __('booking.custom.ref_image') }}
                                 </label>
                                 <input type="file" class="form-control form-control-lg" id="customReferenceImage" name="reference_image" accept="image/*" style="border-radius: 8px;">
                                 <small class="form-text text-muted d-block mt-1">
-                                    Upload a photo of the style you want (max 5MB)
+                                    {{ __('booking.custom.ref_help') }}
                                 </small>
                             </div>
                         </div>
 
                         <div class="mt-4">
                             <button type="button" class="btn btn-primary btn-lg w-100" onclick="submitCustomServiceRequestFromModal()" style="border-radius: 8px; font-weight: 600;">
-                                <i class="bi bi-send me-2"></i>Submit Request
+                                <i class="bi bi-send me-2"></i>{{ __('booking.custom.submit') }}
                             </button>
                         </div>
                     </form>
                 </div>
                 <div class="modal-footer" style="border-top: none;">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ __('booking.cancel') }}</button>
                 </div>
             </div>
         </div>
@@ -5936,17 +5938,17 @@ function openOtherServicesModal() {
             <div class="modal-content" style="border-radius: 20px; border: none;">
                 <div class="modal-header" style="background: linear-gradient(135deg, #030f68 0%, #4a8bc2 100%); color: white; border-radius: 20px 20px 0 0;">
                     <h5 class="modal-title" id="serviceSelectionModalLabel">
-                        <i class="bi bi-scissors me-2"></i>Select Service
+                        <i class="bi bi-scissors me-2"></i>{{ __('booking.custom.select_title') }}
                     </h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body p-4">
                     <div class="alert alert-info" style="background:#e7f3ff; border-left: 4px solid #17a2b8; border-radius: 10px;">
-                        <i class="bi bi-info-circle me-2"></i>Choose a service to continue booking, or submit a custom request.
+                        <i class="bi bi-info-circle me-2"></i>{{ __('booking.custom.select_help') }}
                     </div>
                     <div class="d-grid gap-3">
                         <button type="button" class="btn btn-primary btn-lg" onclick="openNonKidsServicesModal()" style="border-radius: 12px; font-weight: 700;">
-                            <i class="bi bi-list-check me-2"></i>Browse Adult Services
+                            <i class="bi bi-list-check me-2"></i>{{ __('booking.custom.browse_adult') }}
                         </button>
                         <button type="button" class="btn btn-outline-primary btn-lg" onclick="openOtherServicesModal()" style="border-radius: 12px; font-weight: 700;">
                             <i class="bi bi-stars me-2"></i>Custom Service Request
@@ -5954,37 +5956,37 @@ function openOtherServicesModal() {
                     </div>
                 </div>
                 <div class="modal-footer" style="border-top: none;">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ __('booking.cancel') }}</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Who is this service for? Modal -->
+    <!-- {{ __('booking.custom.who_title') }} Modal -->
     <div class="modal fade" id="serviceForWhoModal" tabindex="-1" aria-labelledby="serviceForWhoModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content" style="border-radius: 18px; border: none; overflow: hidden;">
                 <div class="modal-header" style="background: linear-gradient(135deg, #030f68 0%, #4a8bc2 100%); color: white;">
                     <h5 class="modal-title" id="serviceForWhoModalLabel" style="font-weight: 700;">
-                        <i class="bi bi-question-circle me-2"></i>Who is this service for?
+                        <i class="bi bi-question-circle me-2"></i>{{ __('booking.custom.who_title') }}
                     </h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body p-4">
-                    <p class="mb-3" style="color:#0b3a66; font-weight: 600;">Select one option:</p>
+                    <p class="mb-3" style="color:#0b3a66; font-weight: 600;">{{ __('booking.custom.who_help') }}</p>
                     <div class="d-grid gap-3">
                         <button type="button" class="btn btn-outline-primary btn-lg" onclick="chooseServiceForKids()"
                                 style="border-radius: 14px; font-weight: 700; padding: 14px 16px;">
-                            <i class="bi bi-emoji-smile me-2"></i>Kid (0–8 years)
+                            <i class="bi bi-emoji-smile me-2"></i>{{ __('booking.custom.kid') }}
                         </button>
                         <button type="button" class="btn btn-primary btn-lg" onclick="chooseServiceForNotKids()"
                                 style="border-radius: 14px; font-weight: 700; padding: 14px 16px;">
-                            <i class="bi bi-person-check me-2"></i>Not a kid
+                            <i class="bi bi-person-check me-2"></i>{{ __('booking.custom.not_kid') }}
                         </button>
                     </div>
                 </div>
                 <div class="modal-footer" style="border-top: none;">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ __('booking.cancel') }}</button>
                 </div>
             </div>
         </div>
@@ -5996,18 +5998,18 @@ function openOtherServicesModal() {
             <div class="modal-content" style="border-radius: 18px; border: none; overflow: hidden;">
                 <div class="modal-header" style="background: linear-gradient(135deg, #030f68 0%, #4a8bc2 100%); color: white;">
                     <h5 class="modal-title" id="nonKidsServicesModalLabel" style="font-weight: 700;">
-                        <i class="bi bi-scissors me-2"></i>Select a service
+                        <i class="bi bi-scissors me-2"></i>{{ __('booking.custom.select_a_service') }}
                     </h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="{{ __('booking.close') }}"></button>
                 </div>
                 <div class="modal-body p-4">
                     <div class="alert alert-info" style="background:#e7f3ff; border-left: 4px solid #17a2b8; border-radius: 10px;">
-                        <i class="bi bi-info-circle me-2"></i>These are all services (excluding Kids Braids). Choose one to continue booking.
+                        <i class="bi bi-info-circle me-2"></i>{{ __('booking.custom.adult_help') }}
                     </div>
                     <div id="nonKidsServicesList" class="row g-2"></div>
                 </div>
                 <div class="modal-footer" style="border-top: none;">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Back</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ __('booking.custom.back') }}</button>
                 </div>
             </div>
         </div>
@@ -6046,7 +6048,7 @@ function openOtherServicesModal() {
                     </div>
                 </div>
                 <div class="modal-footer" style="border-top: none;">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ __('booking.cancel') }}</button>
                 </div>
             </div>
         </div>
@@ -6094,7 +6096,7 @@ function openOtherServicesModal() {
             <div class="row justify-content-center">
                 <div class="col-lg-10">
                     <div class="text-center mb-5">
-                        <h2 class="section-title" style="font-size: 2.5rem; font-weight: 700; color: #030f68;">Important Information</h2>
+                        <h2 class="section-title" style="font-size: 2.5rem; font-weight: 700; color: #030f68;">{{ __('home.info.title') }}</h2>
                     </div>
                     <div class="card shadow-lg border-0" style="border-radius: 20px; background: linear-gradient(135deg, #f8f9fa 0%, #e3eafc 100%);">
                         <div class="card-body p-5">
@@ -6104,37 +6106,37 @@ function openOtherServicesModal() {
                                         <div class="info-item mb-4">
                                             <h5 style="color: #030f68; font-weight: 600; margin-bottom: 15px;">
                                                 <i class="bi bi-shield-check me-2" style="color: #ff6600;"></i>
-                                                Health & Safety Standards
+                                                {{ __('home.info.health_title') }}
                                             </h5>
                                             <p style="color: #333; font-size: 1.1rem; line-height: 1.6;">
-                                                We sterilize all combs, brushes and equipment used on clients daily to ensure the highest standards of hygiene and safety.
+                                                {{ __('home.info.health_body') }}
                                             </p>
                                         </div>
 
                                         <div class="info-item mb-4">
                                             <h5 style="color: #030f68; font-weight: 600; margin-bottom: 15px;">
                                                 <i class="bi bi-house-heart me-2" style="color: #ff6600;"></i>
-                                                Home Service Salon
+                                                {{ __('home.info.home_title') }}
                                             </h5>
                                             <p style="color: #333; font-size: 1.1rem; line-height: 1.6;">
-                                                We are a home service salon that offers a variety of services to cater to your needs. travel fee is not included in the service price. Clientsare responsible for providing transportation to the address where service is required.
+                                                {{ __('home.info.home_body') }}
                                             </p>
                                         </div>
 
                                         <div class="info-item mb-4">
                                             <h5 style="color: #030f68; font-weight: 600; margin-bottom: 15px;">
                                                 <i class="bi bi-tools me-2" style="color: #ff6600;"></i>
-                                                Professional Equipment
+                                                {{ __('home.info.equipment_title') }}
                                             </h5>
                                             <p style="color: #333; font-size: 1.1rem; line-height: 1.6;">
-                                                Our stylists use professional-grade equipment including sterilized scissors, brushes, hair dryers, and styling tools to ensure the best results for your hair. </br> We also sell varieties of colored hair braiding extensions.
+                                                {!! __('home.info.equipment_body') !!}
                                             </p>
                                         </div>
 
                                         <div class="info-item mt-4">
                                             <h5 style="color: #030f68; font-weight: 600; margin-bottom: 15px;">
                                                 <i class="bi bi-telephone-fill me-2" style="color: #ff6600;"></i>
-                                                For More Information Contact Us
+                                                {{ __('home.info.more_title') }}
                                             </h5>
                                             <div class="contact-info-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
                                                 <div class="contact-item" style="background: rgba(255, 102, 0, 0.1); padding: 15px; border-radius: 10px; border-left: 4px solid #ff6600;">
@@ -6173,62 +6175,62 @@ function openOtherServicesModal() {
         <div class="container">
             <div class="row row-md-80 row-sm-50">
                 <div class="col-sm-12 col-lg-4 mb-4">
-                    <div class="subtitle" style="font-size: 2rem; color: #ff6600; font-weight: 700; letter-spacing:-1px;">Frequently Asked <br class="br-none">Questions</div>
+                    <div class="subtitle" style="font-size: 2rem; color: #ff6600; font-weight: 700; letter-spacing:-1px;">{{ __('home.faq.title') }}</div>
                 </div>
                 <div class="col-sm-12 col-lg-8">
                     <ul class="faq-list" style="list-style:none; padding:0; margin:0;">
                         <li class="faq-list-item" style="display:flex; flex-direction:column; border-bottom:1px solid #eee; padding:32px 0 16px 0;">
                             <div class="faq-question" style="display:flex; align-items:center; justify-content:space-between; font-size:1.45rem; color:#1a237e; font-weight:400; cursor:pointer;">
-                                <span>Do you provide services for children below 3 years?</span>
+                                <span>{{ __('home.faq.q1') }}</span>
                                 <span class="faq-arrow" style="font-size:1.7rem; color:#030f68; transition:transform 0.2s;">&#x25BC;</span>
                             </div>
                             <div class="faq-answer" style="color:#222; font-size:1.08rem; margin-top:12px;">
-                                Yes, at Dab's Beauty Touch, we offer gentle and tailored hair care services for children under 4 years. We are experienced in working with young children. We use age-appropriate, safe, and non-irritating products that are specifically designed for sensitive scalps. If you have any special requests, please feel free to reach out to us. We are here to make the experience enjoyable for both children and parents.
+                                {{ __('home.faq.a1') }}
                             </div>
                         </li>
                         <li class="faq-list-item" style="display:flex; flex-direction:column; border-bottom:1px solid #eee; padding:32px 0 16px 0;">
                             <div class="faq-question" style="display:flex; align-items:center; justify-content:space-between; font-size:1.45rem; color:#1a237e; font-weight:400; cursor:pointer;">
-                                <span>How many hours is your cancellation notice and any penalty?</span>
+                                <span>{{ __('home.faq.q2') }}</span>
                                 <span class="faq-arrow" style="font-size:1.7rem; color:#030f68; transition:transform 0.2s;">&#x25BC;</span>
                             </div>
                             <div class="faq-answer" style="color:#222; font-size:1.08rem; margin-top:12px;">
-                                We kindly request a minimum 2-day cancellation notice for all appointments. If you cancel within less than 2 days, a deposit fee will be non-refundable. This helps us accommodate other clients who may need the time slot. We appreciate your understanding and cooperation.
+                                {{ __('home.faq.a2') }}
                             </div>
                         </li>
                         <li class="faq-list-item" style="display:flex; flex-direction:column; border-bottom:1px solid #eee; padding:32px 0 16px 0;">
                             <div class="faq-question" style="display:flex; align-items:center; justify-content:space-between; font-size:1.45rem; color:#1a237e; font-weight:400; cursor:pointer;">
-                                <span>Do you render home services and do you charge differently for that?</span>
+                                <span>{{ __('home.faq.q3') }}</span>
                                 <span class="faq-arrow" style="font-size:1.7rem; color:#030f68; transition:transform 0.2s;">&#x25BC;</span>
                             </div>
                             <div class="faq-answer" style="color:#222; font-size:1.08rem; margin-top:12px;">
-                                Yes, we offer home services for your convenience! Please note, we do not charge differently for home service fee, our clients take charge of the transportation to and fro. Clients can book a ride or use any other means.
+                                {{ __('home.faq.a3') }}
                             </div>
                         </li>
                         <li class="faq-list-item" style="display:flex; flex-direction:column; border-bottom:1px solid #eee; padding:32px 0 16px 0;">
                             <div class="faq-question" style="display:flex; align-items:center; justify-content:space-between; font-size:1.45rem; color:#1a237e; font-weight:400; cursor:pointer;">
-                                <span>Do you also do men's hair?</span>
+                                <span>{{ __('home.faq.q4') }}</span>
                                 <span class="faq-arrow" style="font-size:1.7rem; color:#030f68; transition:transform 0.2s;">&#x25BC;</span>
                             </div>
                             <div class="faq-answer" style="color:#222; font-size:1.08rem; margin-top:12px;">
-                                Absolutely! We provide a variety of grooming and hairstyling services for men, including braids, twists, and basic grooming. We ensure that each style is tailored to fit your preferences.
+                                {{ __('home.faq.a4') }}
                             </div>
                         </li>
                         <li class="faq-list-item" style="display:flex; flex-direction:column; border-bottom:1px solid #eee; padding:32px 0 16px 0;">
                             <div class="faq-question" style="display:flex; align-items:center; justify-content:space-between; font-size:1.45rem; color:#1a237e; font-weight:400; cursor:pointer;">
-                                <span>What kind of extensions should I get for my appointment?</span>
+                                <span>{{ __('home.faq.q5') }}</span>
                                 <span class="faq-arrow" style="font-size:1.7rem; color:#030f68; transition:transform 0.2s;">&#x25BC;</span>
                             </div>
                             <div class="faq-answer" style="color:#222; font-size:1.08rem; margin-top:12px;">
-                                The type of hair extensions depends on the style you're looking for. For braids we recommend Xpression extension/attachment. We recommend human hair extensions for a natural look and durability. For a temporary style or budget-friendly option, synthetic extensions work well. Feel free to consult us before your appointment for personalized recommendations.
+                                {{ __('home.faq.a5') }}
                             </div>
                         </li>
                         <li class="faq-list-item" style="display:flex; flex-direction:column; border-bottom:1px solid #eee; padding:32px 0 16px 0;">
                             <div class="faq-question" style="display:flex; align-items:center; justify-content:space-between; font-size:1.45rem; color:#1a237e; font-weight:400; cursor:pointer;">
-                                <span>Do you charge the same amount for all ages?</span>
+                                <span>{{ __('home.faq.q6') }}</span>
                                 <span class="faq-arrow" style="font-size:1.7rem; color:#030f68; transition:transform 0.2s;">&#x25BC;</span>
                             </div>
                             <div class="faq-answer" style="color:#222; font-size:1.08rem; margin-top:12px;">
-                                Our pricing varies depending on the age group and the complexity of the service. For children under 10, we offer discounted rates for selected hairstyles. For adults and teens, standard pricing applies. We believe in providing fair pricing while maintaining the highest quality of service for all our clients, regardless of age.
+                                {{ __('home.faq.a6') }}
                             </div>
                         </li>
                     </ul>
@@ -6243,16 +6245,16 @@ function openOtherServicesModal() {
                 <div class="col-lg-10">
                     <div class="card flex-row shadow-lg border-0" style="border-radius: 24px; overflow: hidden; background: #fff;">
                         <div class="col-md-6 p-5 d-flex flex-column justify-content-center" style="border-right:1px solid #e3eafc;">
-                            <h2 class="section-title mb-3" style="font-size:2.2rem; font-weight:700;">Contact Information</h2>
+                            <h2 class="section-title mb-3" style="font-size:2.2rem; font-weight:700;">{{ __('home.contact.title') }}</h2>
                             <ul class="list-unstyled mb-4" style="font-size:1.08rem;">
-                                <li class="mb-3"><i class="bi bi-arrow-right-circle-fill text-primary me-2"></i><strong>Phone:</strong> <a href="tel:+13432458848" style="color:#030f68; text-decoration:none;">(+1)343-245-8848</a></li>
-                                <li class="mb-3"><i class="bi bi-arrow-right-circle-fill text-warning me-2"></i><strong>Email:</strong> <a href="mailto:info@dabsbeautytouch.com" style="color:#ff6600; text-decoration:none;">info@dabsbeautytouch.com</a></li>
-                                <li class="mb-3"><i class="bi bi-arrow-right-circle-fill text-danger me-2"></i><strong>Address:</strong> Ottawa</li>
-                                <li class="mb-3"><i class="bi bi-arrow-right-circle-fill text-success me-2"></i><strong>Hours:</strong>
+                                <li class="mb-3"><i class="bi bi-arrow-right-circle-fill text-primary me-2"></i><strong>{{ __('home.contact.phone') }}:</strong> <a href="tel:+13432458848" style="color:#030f68; text-decoration:none;">(+1)343-245-8848</a></li>
+                                <li class="mb-3"><i class="bi bi-arrow-right-circle-fill text-warning me-2"></i><strong>{{ __('home.contact.email') }}:</strong> <a href="mailto:info@dabsbeautytouch.com" style="color:#ff6600; text-decoration:none;">info@dabsbeautytouch.com</a></li>
+                                <li class="mb-3"><i class="bi bi-arrow-right-circle-fill text-danger me-2"></i><strong>{{ __('home.contact.address') }}:</strong> Ottawa</li>
+                                <li class="mb-3"><i class="bi bi-arrow-right-circle-fill text-success me-2"></i><strong>{{ __('home.contact.hours') }}:</strong>
                                     <ul class="ps-4 mb-0" style="font-size:0.98rem;">
-                                        <li>Monday - Friday: 9:00 AM - 7:00 PM</li>
-                                        <li>Saturday: 10:00 AM - 6:00 PM</li>
-                                        <li>Sunday: Closed</li>
+                                        <li>{{ __('home.contact.weekday') }}</li>
+                                        <li>{{ __('home.contact.saturday') }}</li>
+                                        <li>{{ __('home.contact.sunday') }}</li>
                                     </ul>
                                 </li>
                             </ul>
@@ -6263,12 +6265,12 @@ function openOtherServicesModal() {
                             </div>
                         </div>
                         <div class="col-md-6 p-5 d-flex flex-column justify-content-center">
-                            <h2 class="section-title mb-4" style="font-size:2rem; font-weight:700;">Send us a Message</h2>
+                            <h2 class="section-title mb-4" style="font-size:2rem; font-weight:700;">{{ __('home.contact.send_title') }}</h2>
 
                             @if(session('success'))
                                 <div class="alert alert-success alert-dismissible fade show mb-4" role="alert" style="border-radius: 10px; border-left: 4px solid #28a745;">
                                     <i class="bi bi-check-circle-fill me-2"></i>
-                                    <strong>Success!</strong> {{ session('success') }}
+                                    <strong>{{ __('home.alerts.success') }}</strong> {{ session('success') }}
                                     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                                 </div>
                             @endif
@@ -6276,7 +6278,7 @@ function openOtherServicesModal() {
                             @if($errors->any())
                                 <div class="alert alert-danger alert-dismissible fade show mb-4" role="alert" style="border-radius: 10px; border-left: 4px solid #dc3545;">
                                     <i class="bi bi-exclamation-triangle-fill me-2"></i>
-                                    <strong>Please fix the following errors:</strong>
+                                    <strong>{{ __('home.alerts.fix_errors') }}</strong>
                                     <ul class="mb-0 mt-2">
                                         @foreach($errors->all() as $error)
                                             <li>{{ $error }}</li>
@@ -6295,30 +6297,30 @@ function openOtherServicesModal() {
                                 <div class="row g-4">
                                     <div class="col-12 mb-3">
                                         <div class="form-floating">
-                                            <input type="text" class="form-control" id="contact_name" name="name" placeholder="Name *" required>
-                                            <label for="contact_name">Name *</label>
+                                            <input type="text" class="form-control" id="contact_name" name="name" placeholder="{{ __('home.contact.name') }}" required>
+                                            <label for="contact_name">{{ __('home.contact.name') }}</label>
                                         </div>
                                     </div>
                                     <div class="col-12 mb-3">
                                         <div class="form-floating">
-                                            <input type="email" class="form-control" id="contact_email" name="email" placeholder="Email *" required>
-                                            <label for="contact_email">Email *</label>
+                                            <input type="email" class="form-control" id="contact_email" name="email" placeholder="{{ __('home.contact.email') }} *" required>
+                                            <label for="contact_email">{{ __('home.contact.email') }} *</label>
                                         </div>
                                     </div>
                                     <div class="col-12 mb-3">
                                         <div class="form-floating">
-                                            <input type="text" class="form-control" id="contact_subject" name="subject" placeholder="Subject">
-                                            <label for="contact_subject">Subject</label>
+                                            <input type="text" class="form-control" id="contact_subject" name="subject" placeholder="{{ __('home.contact.subject') }}">
+                                            <label for="contact_subject">{{ __('home.contact.subject') }}</label>
                                         </div>
                                     </div>
                                     <div class="col-12 mb-3">
                                         <div class="form-floating">
-                                            <textarea class="form-control" id="contact_message" name="message" placeholder="Message *" style="height: 120px" required></textarea>
-                                            <label for="contact_message">Message *</label>
+                                            <textarea class="form-control" id="contact_message" name="message" placeholder="{{ __('home.contact.message') }}" style="height: 120px" required></textarea>
+                                            <label for="contact_message">{{ __('home.contact.message') }}</label>
                                         </div>
                                     </div>
                                 </div>
-                                <button type="submit" class="btn btn-primary w-100" style="font-size:1.1rem; font-weight:700; border-radius:8px;">Send Message</button>
+                                <button type="submit" class="btn btn-primary w-100" style="font-size:1.1rem; font-weight:700; border-radius:8px;">{{ __('home.contact.send') }}</button>
                             </form>
                         </div>
                     </div>
@@ -6329,10 +6331,10 @@ function openOtherServicesModal() {
 
     <section class="py-5" style="background: linear-gradient(135deg, #030f68 0%, #05137c 100%);">
         <div class="container text-center" style="max-width: 720px;">
-            <h3 style="color:#fff; font-weight:800; margin-bottom:10px;">Loved your look?</h3>
-            <p style="color:rgba(255,255,255,0.85); margin-bottom:18px;">Search <strong>Dabs Beauty Touch Ottawa</strong> on Google and leave a review. It helps other clients find us.</p>
+            <h3 style="color:#fff; font-weight:800; margin-bottom:10px;">{{ __('home.review_cta.title') }}</h3>
+            <p style="color:rgba(255,255,255,0.85); margin-bottom:18px;">{!! __('home.review_cta.body') !!}</p>
             <a href="{{ \App\Support\GoogleReview::url() }}" target="_blank" rel="noopener noreferrer" class="btn btn-warning" style="font-weight:800; border-radius:25px; padding:12px 28px;">
-                <i class="bi bi-google me-2"></i>Leave a Google Review
+                <i class="bi bi-google me-2"></i>{{ __('home.review_cta.button') }}
             </a>
         </div>
     </section>
@@ -6433,7 +6435,7 @@ function openOtherServicesModal() {
         if(depositModal) depositModal.hide();
 
         // Show contact information
-        alert('Please contact us at:\n\nPhone: (343) 254-8848\nEmail: info@dabsbeautytouch.com\nWhatsApp: https://wa.me/3432548848\n\nWe will provide you with payment details and confirm your appointment once payment is received.');
+        alert(window.dbtT('contact_payment'));
     }
 
     // Function to scroll to services section
@@ -6592,7 +6594,7 @@ console.log('=== LOADING BOOKING FUNCTIONS ===');
             // Find the modal element
             var modalEl = document.getElementById('bookingModal');
             if (!modalEl) {
-                alert('Booking modal not found on page');
+                alert(window.dbtT('modal_missing'));
                 return;
             }
 
@@ -6669,7 +6671,7 @@ console.log('=== LOADING BOOKING FUNCTIONS ===');
 
         } catch (error) {
             console.error('Error in openBookingModal:', error);
-            alert('Error opening booking modal: ' + error.message);
+            alert(window.dbtT('modal_open_error'));
         }
     };
 
@@ -6709,7 +6711,7 @@ console.log('=== LOADING BOOKING FUNCTIONS ===');
 
             if (!modalEl) {
                 console.warn('customServiceRequestModal not found on page');
-                alert('Custom service request form not found. Please try again.');
+                alert(window.dbtT('custom_form_missing'));
                 return;
             }
 
@@ -6741,7 +6743,7 @@ console.log('=== LOADING BOOKING FUNCTIONS ===');
         } catch (error) {
             console.error('✗ Error in openOtherServicesModal:', error);
             console.error('Error stack:', error.stack);
-            alert('Error: ' + error.message);
+            alert(window.dbtT('error_prefix', { message: error.message }));
         }
     };
 
@@ -6754,7 +6756,7 @@ console.log('=== LOADING BOOKING FUNCTIONS ===');
 // Global fallback — ensures openOtherServicesModal is always callable from onclick
 function openOtherServicesModal() {
     var modalEl = document.getElementById('customServiceRequestModal');
-    if (!modalEl) { alert('Custom service request form not found.'); return; }
+    if (!modalEl) { alert(@json(__('home.services.custom_missing'))); return; }
     if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
         new bootstrap.Modal(modalEl).show();
     } else {
@@ -6907,7 +6909,7 @@ function openOtherServicesModal() {
         window.openServiceSelectionModal();
     }
 
-    // Guided service flow: Who is this service for?
+    // Guided service flow: {{ __('booking.custom.who_title') }}
     window.openServiceForWhoModal = function() {
         const modalEl = document.getElementById('serviceForWhoModal');
         if (!modalEl) {
@@ -7627,7 +7629,7 @@ function openOtherServicesModal() {
         const customService = customInput.value.trim();
 
         if (!customService) {
-            alert('Please enter a service name');
+            alert(window.DBT_I18N.enter_service_name);
             return;
         }
 
@@ -7722,7 +7724,7 @@ function openOtherServicesModal() {
                 messageText += `Category: ${customServiceDetails.service_category}\n`;
             }
             if (customServiceDetails.braid_size) {
-                messageText += `Braid/Twist Size: ${customServiceDetails.braid_size}\n`;
+                messageText += `{{ __('booking.custom.size') }}: ${customServiceDetails.braid_size}\n`;
             }
             if (customServiceDetails.hair_length) {
                 messageText += `Hair Length: ${customServiceDetails.hair_length}\n`;
@@ -7750,7 +7752,7 @@ function openOtherServicesModal() {
     function openCustomServiceRequestModal() {
         const modalEl = document.getElementById('customServiceRequestModal');
         if (!modalEl) {
-            alert('Custom service request form not found');
+            alert(window.dbtT('custom_form_missing'));
             return;
         }
 
@@ -7800,7 +7802,7 @@ function openOtherServicesModal() {
         const customService = customInput?.value?.trim() || '';
 
         if (!customService) {
-            alert('Please enter a service name');
+            alert(window.DBT_I18N.enter_service_name);
             customInput?.focus();
             return;
         }
@@ -7828,7 +7830,7 @@ function openOtherServicesModal() {
 
         // Get custom service details from global storage
         if (!window.customServiceRequestDetails) {
-            alert('Custom service details not found. Please try again.');
+            alert(window.dbtT('custom_details_missing'));
             return;
         }
 
@@ -7860,7 +7862,7 @@ function openOtherServicesModal() {
         let messageText = `Custom Service Request:\n\n`;
         messageText += `Service: ${details.service_name}\n`;
         if (details.service_category) messageText += `Category: ${details.service_category}\n`;
-        if (details.braid_size) messageText += `Braid/Twist Size: ${details.braid_size}\n`;
+        if (details.braid_size) messageText += `{{ __('booking.custom.size') }}: ${details.braid_size}\n`;
         if (details.hair_length) messageText += `Hair Length: ${details.hair_length}\n`;
         if (details.budget_range) messageText += `Budget Range: ${details.budget_range}\n`;
         if (details.urgency) messageText += `Timeline: ${details.urgency}\n`;
@@ -7905,7 +7907,7 @@ function openOtherServicesModal() {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                alert('Your custom service request has been submitted successfully! We will contact you within 24-48 hours.');
+                alert(window.DBT_I18N.custom_submitted);
                 // Close all modals
                 const requestModal = bootstrap.Modal.getInstance(document.getElementById('customServiceRequestModal'));
                 if (requestModal) requestModal.hide();
@@ -7917,12 +7919,12 @@ function openOtherServicesModal() {
                 // Clear stored details
                 window.customServiceRequestDetails = null;
             } else {
-                alert('Failed to submit request: ' + (data.message || 'Unknown error'));
+                alert(window.dbtT('submit_failed_named', { message: data.message || window.dbtT('unknown_error') }));
             }
         })
         .catch(error => {
             console.error('Error submitting custom service request:', error);
-            alert('An error occurred while submitting your request. Please try again.');
+            alert(window.DBT_I18N.submit_failed);
         })
         .finally(() => {
             // Restore button state
@@ -8058,7 +8060,7 @@ function openOtherServicesModal() {
 
             if (missingFields.length > 0) {
                 e.preventDefault();
-                alert('Please fill in all required fields: ' + missingFields.join(', '));
+                alert(window.dbtT('required_fields', { fields: missingFields.join(', ') }));
                 return;
             }
 
@@ -8074,8 +8076,8 @@ function openOtherServicesModal() {
                     // Only prevent booking if it's a full-day block
                     if (isFullDay) {
                         e.preventDefault();
-                        const blockedTitle = blockedInfo.title || 'Blocked';
-                        alert(`This date is blocked: "${blockedTitle}". Please select another date.`);
+                        const blockedTitle = blockedInfo.title || window.dbtT('blocked');
+                        alert(window.dbtT('date_blocked_named', { title: blockedTitle }));
                         return;
                     }
                     // If it's a time-specific block, allow the booking (time validation happens on backend)
@@ -8089,7 +8091,7 @@ function openOtherServicesModal() {
                 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
                 if (!emailRegex.test(emailValue)) {
                     e.preventDefault();
-                    alert('Please enter a valid email address');
+                    alert(window.DBT_I18N.valid_email);
                     return;
                 }
             }
@@ -8097,7 +8099,7 @@ function openOtherServicesModal() {
             const phoneField = document.getElementById('phone');
             if (!phoneField || !phoneField.value.trim()) {
                 e.preventDefault();
-                alert('Phone number is required');
+                alert(window.DBT_I18N.phone_required);
                 return;
             }
 
@@ -8112,10 +8114,10 @@ function openOtherServicesModal() {
                     if (addressField) {
                         addressField.required = true;
                         addressField.classList.add('is-invalid');
-                        addressField.setCustomValidity('Please enter a complete mobile address (at least 10 characters).');
+                        addressField.setCustomValidity('{{ __('booking.form.address_invalid') }}');
                         try { addressField.focus(); } catch (focusErr) {}
                     }
-                    alert('Please enter a complete mobile service address (at least 10 characters) before submitting.');
+                    alert(window.DBT_I18N.complete_address);
                     return;
                 }
                 if (addressField) {
@@ -8127,7 +8129,7 @@ function openOtherServicesModal() {
                 const hasParkingSelection = Array.from(parkingOptions || []).some(opt => opt.checked);
                 if (!hasParkingSelection) {
                     e.preventDefault();
-                    alert('Please choose whether parking is free or paid for the mobile address.');
+                    alert(window.DBT_I18N.choose_parking);
                     const firstParking = document.getElementById('parking_type_free') || document.getElementById('parking_type_paid');
                     try { firstParking && firstParking.focus(); } catch (focusErr) {}
                     return;
@@ -8257,7 +8259,7 @@ function openOtherServicesModal() {
 
                 if (!String(braid || '').trim()) {
                     e.preventDefault();
-                    alert('Please choose braid type in Kids Selector before submitting. Redirecting now.');
+                    alert(window.DBT_I18N.choose_kids);
                     try { window.location.href = '/kids-selector'; } catch (navErr) { console.warn('Failed to redirect to kids selector on missing braid', navErr); }
                     return;
                 }
@@ -8291,7 +8293,7 @@ function openOtherServicesModal() {
                             m.show();
                         }
                     } catch (e) {}
-                    alert('Please select Stitch Braids rows (8–10, 10+, or 15+) to continue.');
+                    alert(window.DBT_I18N.choose_rows);
                     return;
                 }
             }
@@ -8328,7 +8330,7 @@ function openOtherServicesModal() {
                             customDetailsText += `Category: ${details.service_category}\n`;
                         }
                         if (details.braid_size) {
-                            customDetailsText += `Braid/Twist Size: ${details.braid_size}\n`;
+                            customDetailsText += `{{ __('booking.custom.size') }}: ${details.braid_size}\n`;
                         }
                         if (details.budget_range) {
                             customDetailsText += `Budget Range: ${details.budget_range}\n`;
@@ -9092,7 +9094,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Validate file type
                 const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
                 if (!allowedTypes.includes(file.type)) {
-                    alert('Please select a valid image file (JPG, PNG, or GIF)');
+                    alert(window.dbtT('valid_image'));
                     e.target.value = '';
                     return;
                 }
@@ -9100,7 +9102,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Validate file size (5MB)
                 const maxSize = 5 * 1024 * 1024; // 5MB in bytes
                 if (file.size > maxSize) {
-                    alert('File size must be less than 5MB');
+                    alert(window.dbtT('file_too_large'));
                     e.target.value = '';
                     return;
                 }
@@ -9435,12 +9437,12 @@ document.addEventListener('DOMContentLoaded', function() {
     <div id="termsPreviewOverlay" style="display:none; position:fixed; inset:0; z-index:20000; background:rgba(3,15,104,0.55); align-items:center; justify-content:center; padding:16px;">
         <div style="background:#fff; max-width:960px; width:100%; max-height:90vh; display:flex; flex-direction:column; border-radius:18px; overflow:hidden; box-shadow:0 12px 40px rgba(0,0,0,0.25);">
             <div style="background:linear-gradient(135deg, #030f68 0%, #4a8bc2 100%); color:#fff; padding:16px 20px; display:flex; align-items:center; justify-content:space-between;">
-                <strong style="font-size:1.1rem;">Terms &amp; Conditions</strong>
-                <button type="button" data-terms-close="1" style="background:transparent; border:0; color:#fff; font-size:1.6rem; line-height:1; cursor:pointer;" aria-label="Close">&times;</button>
+                <strong style="font-size:1.1rem;">{{ __('booking.form.terms') }}</strong>
+                <button type="button" data-terms-close="1" style="background:transparent; border:0; color:#fff; font-size:1.6rem; line-height:1; cursor:pointer;" aria-label="{{ __('booking.close') }}">&times;</button>
             </div>
             <div id="termsPreviewOverlayBody" style="overflow:auto; padding:20px; background:#f8f9fa; flex:1;"></div>
             <div style="padding:14px 20px; text-align:right; background:#fff;">
-                <button type="button" data-terms-close="1" class="btn btn-primary" style="background:#030f68; border:none; font-weight:700;">Back to booking</button>
+                <button type="button" data-terms-close="1" class="btn btn-primary" style="background:#030f68; border:none; font-weight:700;">{{ __('booking.back_booking') }}</button>
             </div>
         </div>
     </div>
@@ -9451,46 +9453,46 @@ document.addEventListener('DOMContentLoaded', function() {
             <div class="modal-content" style="border-radius: 18px; overflow: hidden;">
                 <div class="modal-header" style="background: linear-gradient(135deg, #030f68 0%, #4a8bc2 100%); color: white;">
                     <h5 class="modal-title" id="termsGateModalLabel" style="font-weight: 800;">
-                        <i class="bi bi-shield-check me-2"></i>Terms &amp; Policies
+                        <i class="bi bi-shield-check me-2"></i>{{ __('booking.gate.title') }}
                     </h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body p-4">
                     <p class="mb-3" style="color:#0b3a66; font-weight: 600;">
-                        Please review and accept our Terms &amp; Conditions before booking.
+                        {{ __('booking.gate.intro') }}
                     </p>
 
                     <div class="alert alert-info" style="border-left: 5px solid #0ea5e9; border-radius: 12px;">
-                        <div class="mb-1" style="font-weight:800;">Quick summary</div>
+                        <div class="mb-1" style="font-weight:800;">{{ __('booking.gate.summary') }}</div>
                         <ul class="mb-0" style="padding-left: 18px;">
-                            <li>Deposits are non-refundable once the appointment is confirmed.</li>
-                            <li>Mobile appointments are confirmed after deposit + address verification.</li>
-                            <li>No style changes allowed on the day of appointment or after confirmation (time window is reserved).</li>
-                            <li>Minimum 48 hours notice is required for cancellations.</li>
-                            <li>Rescheduling requires 48 hours notice and must be within 1 month of the initial appointment date.</li>
-                            <li>No-shows may result in a full charge and may affect future bookings.</li>
-                            <li>For home service: clients cover fueling for the stylist's transportation; fees vary by distance.</li>
-                            <li>If parking at the home-service address is paid, the client covers the parking ticket.</li>
-                            <li>For mobile service: travel fee may apply based on distance in Ottawa/Gatineau area.</li>
+                            <li>{{ __('booking.gate.s1') }}</li>
+                            <li>{{ __('booking.gate.s2') }}</li>
+                            <li>{{ __('booking.gate.s3') }}</li>
+                            <li>{{ __('booking.gate.s4') }}</li>
+                            <li>{{ __('booking.gate.s5') }}</li>
+                            <li>{{ __('booking.gate.s6') }}</li>
+                            <li>{{ __('booking.gate.s7') }}</li>
+                            <li>{{ __('booking.gate.s8') }}</li>
+                            <li>{{ __('booking.gate.s9') }}</li>
                     </div>
 
                     <div class="form-check mt-3">
                         <input class="form-check-input" type="checkbox" id="termsGateAgree">
                         <label class="form-check-label" for="termsGateAgree" style="font-weight: 700; color:#0b3a66;">
-                            I agree to the Terms &amp; Conditions
+                            {{ __('booking.gate.agree') }}
                         </label>
                     </div>
                     <div class="mt-3">
                         <a href="#" class="js-terms-popup"
                            style="color:#030f68; font-weight:600; text-decoration:none;">
-                            View full Terms &amp; Conditions
+                            {{ __('booking.gate.view_full') }}
                         </a>
                     </div>
                 </div>
                 <div class="modal-footer" style="border-top: none;">
-                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">{{ __('booking.cancel') }}</button>
                     <button type="button" class="btn btn-primary" id="termsGateContinueBtn" disabled>
-                        Continue
+                        {{ __('booking.continue') }}
                     </button>
                 </div>
             </div>
@@ -10344,7 +10346,7 @@ document.addEventListener('DOMContentLoaded', function(){
                     // Clear the form before showing success message
                     clearOtherServicesForm();
 
-                    alert('Thank you for your service inquiry! Your request has been received and we will contact you within 24 hours to discuss your requirements and provide a personalized quote.');
+                    alert(window.dbtT('inquiry_thanks'));
 
                     // Refresh the page after user clicks OK on the alert
                     setTimeout(function() {
@@ -10420,7 +10422,7 @@ document.addEventListener('DOMContentLoaded', function(){
                 })
                 .catch(error => {
                     console.error('Error:', error);
-                    alert('There was an error submitting your request. Please try again or contact us directly.');
+                    alert(window.dbtT('inquiry_error'));
                 });
             });
         } else {
@@ -10878,7 +10880,7 @@ document.addEventListener('DOMContentLoaded', function(){
                 const nameField = document.getElementById('kids_name');
                 const nameValue = nameField ? nameField.value.trim() : '';
                 if(!nameValue) {
-                    showFieldError('kids_name', 'Please enter the child\'s name.');
+                    showFieldError('kids_name', window.dbtT('child_name'));
                     isValid = false;
                     errors.push('Child\'s name');
                 } else {
@@ -10888,7 +10890,7 @@ document.addEventListener('DOMContentLoaded', function(){
                 const parentField = document.getElementById('kids_parent_name');
                 const parentValue = parentField ? parentField.value.trim() : '';
                 if(!parentValue) {
-                    showFieldError('kids_parent_name', 'Please enter the parent or guardian name.');
+                    showFieldError('kids_parent_name', window.dbtT('parent_name'));
                     isValid = false;
                     errors.push('Parent name');
                 } else {
@@ -10898,7 +10900,7 @@ document.addEventListener('DOMContentLoaded', function(){
                 const ageField = document.getElementById('kids_age');
                 const ageValue = ageField ? ageField.value.trim() : '';
                 if(!ageValue) {
-                    showFieldError('kids_age', 'Please choose the child\'s age.');
+                    showFieldError('kids_age', window.dbtT('child_age'));
                     isValid = false;
                     errors.push('Child age');
                 } else {
@@ -10910,11 +10912,11 @@ document.addEventListener('DOMContentLoaded', function(){
                 const phoneValue = phoneField ? phoneField.value.trim() : '';
                 const phonePattern = phoneField ? new RegExp(phoneField.getAttribute('pattern') || '[0-9+()\\s\\-]{7,}') : null;
                 if(!phoneValue) {
-                    showFieldError('kids_phone', 'Please enter a parent/guardian phone number.');
+                    showFieldError('kids_phone', window.dbtT('parent_phone'));
                     isValid = false;
                     errors.push('Phone number');
                 } else if(phonePattern && !phonePattern.test(phoneValue)) {
-                    showFieldError('kids_phone', 'Please enter a valid phone number format.');
+                    showFieldError('kids_phone', window.dbtT('phone_format'));
                     isValid = false;
                     errors.push('Phone number');
                 } else {
@@ -10925,13 +10927,13 @@ document.addEventListener('DOMContentLoaded', function(){
                 const emailField = document.getElementById('kids_email');
                 const emailValue = emailField ? emailField.value.trim() : '';
                 if(!emailValue) {
-                    showFieldError('kids_email', 'Please enter parent/guardian email address.');
+                    showFieldError('kids_email', window.dbtT('parent_email'));
                     isValid = false;
                     errors.push('Email');
                 } else {
                     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
                     if(!emailRegex.test(emailValue)) {
-                        showFieldError('kids_email', 'Please enter a valid email address.');
+                        showFieldError('kids_email', window.dbtT('valid_email'));
                         isValid = false;
                         errors.push('Email');
                     } else {
@@ -10947,7 +10949,7 @@ document.addEventListener('DOMContentLoaded', function(){
                 const selectedDate = appointmentDateValue || dateValue;
 
                 if(!dateValue && !appointmentDateValue) {
-                    showFieldError('kidsBookingDate', 'Please select a date for the appointment.');
+                    showFieldError('kidsBookingDate', window.dbtT('select_date_appt'));
                     isValid = false;
                     errors.push('Date');
                 } else if(selectedDate) {
@@ -10959,8 +10961,8 @@ document.addEventListener('DOMContentLoaded', function(){
 
                         // Only show error if it's a full-day block
                         if (isFullDay) {
-                            const blockedTitle = blockedInfo.title || 'Blocked';
-                            showFieldError('kidsBookingDate', `This date is blocked: "${blockedTitle}". Please select another date.`);
+                            const blockedTitle = blockedInfo.title || window.dbtT('blocked');
+                            showFieldError('kidsBookingDate', window.dbtT('date_blocked_named', { title: blockedTitle }));
                             isValid = false;
                             errors.push('Date');
                         } else {
@@ -10980,7 +10982,7 @@ document.addEventListener('DOMContentLoaded', function(){
                 const appointmentTimeField = document.querySelector('input[name="appointment_time"]');
                 const appointmentTimeValue = appointmentTimeField ? appointmentTimeField.value.trim() : '';
                 if(!timeValue && !appointmentTimeValue) {
-                    showFieldError('kidsBookingTime', 'Please select a time for the appointment.');
+                    showFieldError('kidsBookingTime', window.dbtT('select_time_appt'));
                     isValid = false;
                     errors.push('Time');
                 } else {
@@ -10997,7 +10999,7 @@ document.addEventListener('DOMContentLoaded', function(){
                         if (kidsAddressField) {
                             kidsAddressField.required = true;
                             kidsAddressField.classList.add('is-invalid');
-                            kidsAddressField.setCustomValidity('Please enter a complete mobile address (at least 10 characters).');
+                            kidsAddressField.setCustomValidity('{{ __('booking.form.address_invalid') }}');
                         }
                         isValid = false;
                         errors.push('Mobile address');
@@ -11140,12 +11142,12 @@ document.addEventListener('DOMContentLoaded', function(){
                         const kidsParkingSelection = document.querySelector('#kidsBookingForm input[name="parking_type"]:checked');
                         const addressMissing = !!(kidsMobileRadio && kidsMobileRadio.checked && kidsAddressField && kidsAddressValue.length < 10);
                         if (addressMissing) {
-                            alert('Please enter a complete mobile service address (at least 10 characters) before submitting.');
+                            alert(window.DBT_I18N.complete_address);
                             try { kidsAddressField.focus(); } catch (focusErr) {}
                             return false;
                         }
                         if (kidsMobileRadio && kidsMobileRadio.checked && !kidsParkingSelection) {
-                            alert('Please choose whether parking is free or paid for the mobile address.');
+                            alert(window.DBT_I18N.choose_parking);
                             const firstParking = document.getElementById('parking_type_free_kids') || document.getElementById('parking_type_paid_kids');
                             try { firstParking && firstParking.focus(); } catch (focusErr) {}
                             return false;

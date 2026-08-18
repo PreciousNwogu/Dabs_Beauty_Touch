@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -20,7 +20,8 @@
     <meta property="og:description" content="@yield('og_description', "Professional hair braiding services in Ottawa. Expert stylists specializing in knotless braids, box braids, wig installation, and custom styles.")">
     <meta property="og:image" content="@yield('og_image', asset('images/backgroundbraid.jpg'))">
     <meta property="og:site_name" content="Dab's Beauty Touch">
-    <meta property="og:locale" content="en_CA">
+    <meta property="og:locale" content="{{ \App\Support\Locale::openGraph() }}">
+    <meta property="og:locale:alternate" content="{{ app()->getLocale() === 'fr' ? 'en_CA' : 'fr_CA' }}">
 
     <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image">
@@ -41,6 +42,7 @@
 </head>
 <body>
 
+@include('partials.i18n-js')
 @include('partials.cookie-consent')
 @include('partials.site-header')
 

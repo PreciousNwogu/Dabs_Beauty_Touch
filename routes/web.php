@@ -12,6 +12,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Request as HttpRequest;
 use Illuminate\Support\Facades\Artisan;
 use App\Http\Controllers\PublicAuthController;
+use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\AccountController;
 use App\Exceptions\SlotUnavailableException;
 use App\Services\BookingSlotGuard;
@@ -60,6 +61,8 @@ Route::get('/', function () {
 
     return view('home', compact('servicePrices', 'extraServices'));
 })->name('home');
+
+Route::get('/locale/{locale}', LocaleController::class)->name('locale.switch');
 
 // Admin CMS routes for services
 Route::prefix('admin')->name('admin.')->middleware('admin')->group(function () {
@@ -1484,11 +1487,11 @@ Route::post('/bookings', function(Request $request) {
             $providedBraid = $bookingData['kb_braid_type'] ?? $request->input('braid_type') ?? $request->input('kb_braid_type') ?? null;
             if (empty($providedBraid)) {
                 if ($request->wantsJson() || $request->header('X-Requested-With') === 'XMLHttpRequest') {
-                    return response()->json(['success' => false, 'message' => 'Please choose a braid type for kids braids.'], 422);
+                    return response()->json(['success' => false, 'message' => __('kids.choose_braid_server')], 422);
                 }
-                return redirect()->route('kids.selector')->withErrors(['kb_braid_type' => 'Please choose a braid type for kids braids'])->withInput()->with([
+                return redirect()->route('kids.selector')->withErrors(['kb_braid_type' => __('kids.choose_braid_server')])->withInput()->with([
                     'booking_error' => true,
-                    'error_message' => 'Please choose a braid type for kids braids.',
+                    'error_message' => __('kids.choose_braid_server'),
                 ]);
             }
             $bookingData['kb_braid_type'] = strtolower(trim((string) $providedBraid));
@@ -1497,11 +1500,11 @@ Route::post('/bookings', function(Request $request) {
             if (empty($providedLength)) {
                 // Return early with a validation-like error so the user can correct the form
                 if ($request->wantsJson() || $request->header('X-Requested-With') === 'XMLHttpRequest') {
-                    return response()->json(['success' => false, 'message' => 'Please select a hair length for kids braids.'], 422);
+                    return response()->json(['success' => false, 'message' => __('kids.choose_length_server')], 422);
                 }
-                return redirect()->route('kids.selector')->withErrors(['length' => 'Please select a hair length for kids braids'])->withInput()->with([
+                return redirect()->route('kids.selector')->withErrors(['length' => __('kids.choose_length_server')])->withInput()->with([
                     'booking_error' => true,
-                    'error_message' => 'Please select a hair length for kids braids.',
+                    'error_message' => __('kids.choose_length_server'),
                 ]);
             }
 

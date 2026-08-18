@@ -28,14 +28,14 @@
 <div id="termsPreviewOverlay" style="display:none; position:fixed; inset:0; z-index:20000; background:rgba(3,15,104,0.55); align-items:center; justify-content:center; padding:16px;">
     <div style="background:#fff; max-width:720px; width:100%; max-height:90vh; display:flex; flex-direction:column; border-radius:18px; overflow:hidden;">
         <div style="background:linear-gradient(135deg, #030f68 0%, #4a8bc2 100%); color:#fff; padding:16px 20px; display:flex; justify-content:space-between;">
-            <strong>Terms &amp; Conditions</strong>
-            <button type="button" data-terms-close="1" style="background:transparent; border:0; color:#fff; font-size:1.6rem; cursor:pointer;" aria-label="Close">&times;</button>
+            <strong>{{ __('booking.form.terms') }}</strong>
+            <button type="button" data-terms-close="1" style="background:transparent; border:0; color:#fff; font-size:1.6rem; cursor:pointer;" aria-label="{{ __('booking.close') }}">&times;</button>
         </div>
         <div id="termsPreviewOverlayBody" style="overflow:auto; padding:20px; background:#f8f9fa; flex:1;">
-            <p>A {{ \App\Support\InteracDeposit::amountLabel() }} Interac deposit holds your appointment. Style changes are not taken on the day. You can cancel or reschedule from your confirmation email. Full terms are also on the homepage.</p>
+            <p>{{ __('kids.terms_preview', ['amount' => \App\Support\InteracDeposit::amountLabel()]) }}</p>
         </div>
         <div style="padding:14px 20px; text-align:right; background:#fff;">
-            <button type="button" data-terms-close="1" class="btn btn-primary" style="background:#030f68; border:none; font-weight:700;">Back to booking</button>
+            <button type="button" data-terms-close="1" class="btn btn-primary" style="background:#030f68; border:none; font-weight:700;">{{ __('booking.back_booking') }}</button>
         </div>
     </div>
 </div>
@@ -100,7 +100,7 @@
         if (!monthEl || !calendarDays) return;
         const year = calendarCurrentDate.getFullYear();
         const month = calendarCurrentDate.getMonth();
-        monthEl.textContent = new Date(year, month).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+        monthEl.textContent = new Date(year, month).toLocaleDateString((window.DBT_I18N && window.DBT_I18N.locale) || document.documentElement.lang || 'en', { month: 'long', year: 'numeric' });
         const firstDay = new Date(year, month, 1);
         const startDate = new Date(firstDay);
         startDate.setDate(startDate.getDate() - firstDay.getDay());
@@ -124,10 +124,10 @@
                 dayDiv.classList.add('past');
             } else if (bookedDatesCache.indexOf(dateString) !== -1) {
                 dayDiv.classList.add('booked');
-                dayDiv.title = 'Fully booked';
+                dayDiv.title = window.dbtT('fully_booked');
             } else if (blockedIndex[dateString] && (blockedIndex[dateString].full_day === true || blockedIndex[dateString].full_day === 1)) {
                 dayDiv.classList.add('blocked-range');
-                dayDiv.title = blockedIndex[dateString].title || 'Blocked';
+                dayDiv.title = blockedIndex[dateString].title || window.dbtT('blocked');
             } else {
                 dayDiv.classList.add('available');
                 dayDiv.addEventListener('click', function (ev) { selectCalendarDate(date, ev); });
@@ -151,7 +151,7 @@
         const selectedDateText = document.getElementById('selectedDateText');
         if (loading) loading.style.display = 'block';
         if (timeSlotsContainer) timeSlotsContainer.style.display = 'none';
-        if (selectedDateText) selectedDateText.textContent = date.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+        if (selectedDateText) selectedDateText.textContent = date.toLocaleDateString((window.DBT_I18N && window.DBT_I18N.locale) || document.documentElement.lang || 'en', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
         fetch('/bookings/slots?date=' + formatYMD(date))
             .then(function (r) { return r.json(); })
             .then(function (data) {
@@ -163,7 +163,7 @@
             .catch(function () {
                 if (loading) loading.style.display = 'none';
                 if (timeSlotsContainer) timeSlotsContainer.style.display = 'block';
-                if (timeSlots) timeSlots.innerHTML = '<div class="alert alert-warning">Could not load times. Try again.</div>';
+                if (timeSlots) timeSlots.innerHTML = '<div class="alert alert-warning">' + window.dbtT('could_not_load_times') + '</div>';
             });
     }
 
@@ -176,7 +176,7 @@
         if (confirmBtn) confirmBtn.disabled = true;
         const open = slots.filter(function (s) { return s.available; });
         if (!open.length) {
-            timeSlots.innerHTML = '<div class="alert alert-warning">No remaining times for this date.</div>';
+            timeSlots.innerHTML = '<div class="alert alert-warning">' + window.dbtT('no_remaining_times') + '</div>';
             return;
         }
         slots.forEach(function (slot) {
@@ -215,7 +215,7 @@
 
     window.confirmDateTime = function () {
         if (!selectedCalendarDate || !selectedCalendarTime) return;
-        const formattedDate = selectedCalendarDate.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+        const formattedDate = selectedCalendarDate.toLocaleDateString((window.DBT_I18N && window.DBT_I18N.locale) || document.documentElement.lang || 'en', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
         const dateYmd = formatYMD(selectedCalendarDate);
         const dateInput = document.getElementById('kidsBookingDate');
         const timeInput = document.getElementById('kidsBookingTime');
@@ -266,13 +266,13 @@
             } catch (e) {}
             var type = payload.kb_braid_type || payload.braid_type || '';
             var meta = (window.__kidsStyleMeta && window.__kidsStyleMeta[type]) || {};
-            var name = payload.style_label || meta.label || 'Kids Braids';
+            var name = payload.style_label || meta.label || window.dbtT('kids_braids');
             var image = payload.style_image || meta.image || '';
             var duration = payload.style_duration || meta.duration || '';
             var disableSteps = !!meta.disable_steps;
-            var finishMap = { plain: 'Without curl', curled: 'With curled tip' };
-            var lengthMap = { shoulder: 'Shoulder', armpit: 'Armpit', mid_back: 'Mid back', waist: 'Waist' };
-            var addonMap = { kb_add_detangle: 'Detangle / Blowdry', kb_add_beads: 'Tiny beading', kb_add_beads_full: 'Big eye beading', kb_add_extension: 'Hair Extension', kb_add_rest: '15-min break' };
+            var finishMap = { plain: window.DBT_KIDS.finishLabel('plain'), curled: window.DBT_KIDS.finishLabel('curled') };
+            var lengthMap = { shoulder: window.DBT_KIDS.lengthLabel('shoulder'), armpit: window.DBT_KIDS.lengthLabel('armpit'), mid_back: window.DBT_KIDS.lengthLabel('mid_back'), waist: window.DBT_KIDS.lengthLabel('waist') };
+            var addonMap = { kb_add_detangle: window.DBT_KIDS.addonLabel('kb_add_detangle'), kb_add_beads: window.DBT_KIDS.addonLabel('kb_add_beads'), kb_add_beads_full: window.DBT_KIDS.addonLabel('kb_add_beads_full'), kb_add_extension: window.DBT_KIDS.addonLabel('kb_add_extension'), kb_add_rest: window.DBT_KIDS.addonLabel('kb_add_rest') };
             var finish = payload.finish_label || finishMap[payload.kb_finish || payload.finish] || '';
             var length = payload.length_label || lengthMap[payload.kb_length || payload.hair_length || payload.length] || '';
             var extras = [];
@@ -293,7 +293,7 @@
             var imgEl = document.getElementById('kidsRecapImage');
             if (nameEl) nameEl.textContent = name;
             if (detailsEl) detailsEl.textContent = details.join(' · ');
-            if (timeEl) timeEl.textContent = duration ? ('About ' + duration) : '';
+            if (timeEl) timeEl.textContent = duration ? window.dbtT('about_duration', { duration: duration }) : '';
             if (imgEl) {
                 if (image) { imgEl.src = image; imgEl.alt = name; imgEl.style.display = ''; }
                 else { imgEl.removeAttribute('src'); imgEl.style.display = 'none'; }
@@ -391,7 +391,7 @@
                 const terms = document.getElementById('termsAcceptedKids');
                 if (!name || !parent || !age || !email || !phone || !date || !(terms && terms.checked)) {
                     e.preventDefault();
-                    alert('Please fill in the child and parent details, pick a date, and accept the terms.');
+                    alert(window.dbtT('fill_details'));
                     return false;
                 }
             });
